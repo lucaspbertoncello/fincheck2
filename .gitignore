@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+*.tsbuildinfo
+apps/web/.tanstack/
+
+# local database and backups
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+apps/api/data/
+
+# environment and secrets
+.env
+.env.*
+!.env.example
+
+# logs and caches
+*.log
+.eslintcache
+coverage/
+
+# editors and OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db

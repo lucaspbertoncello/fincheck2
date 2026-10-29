@@ -8,7 +8,7 @@ Regra do dono para o repositório inteiro, front e back (29/10/2026). Todo agent
 
 - **Código novo:** nasce neste padrão, em qualquer app ou pacote. O repositório começa agora: não há código antigo a migrar.
 - **Idioma:** nomes de arquivo, pasta, classe, tabela e rota em inglês. Documentação e texto da interface em português.
-- **Marca †:** depende da stack. Fica provisório até a etapa 0 (ver "A fechar com a stack", no fim).
+- **Marca †:** depende de uma biblioteca ainda não escolhida. Fica provisório até a primeira feature que precisar dela (ver "Fechado com a stack", no fim).
 - **"(exemplo)":** nome inventado para ilustrar. Não existe no repositório.
 
 ## Nome de arquivo
@@ -19,7 +19,7 @@ Regra do dono para o repositório inteiro, front e back (29/10/2026). Todo agent
 4. **O nome diz o que o arquivo faz,** não onde ele está. Serviço e caso de uso começam pelo verbo: `list-transactions.service.ts`, `close-invoice.usecase.ts` (exemplo).
 5. **Um assunto por arquivo.** Nunca um hook universal por feature, que junta tudo da tela: cada hook faz uma coisa e tem o próprio arquivo (`use-transaction-form.hook.ts`, `use-month-filter.hook.ts`, exemplo).
 6. **A extensão segue o conteúdo:** `.tsx` quando o arquivo tem JSX, `.ts` quando não tem. O sufixo não muda por isso: `dashboard.viewmodel.tsx` ou `dashboard.viewmodel.ts`.
-7. **Nomes que a ferramenta exige ficam como a ferramenta quer:** `main.ts`, `main.tsx`, `index.ts` (só no `packages/ui`, ver a regra 7 de Pastas), `vite.config.ts`, `eslint.config.js`, `vitest.config.ts`, `*.d.ts`, `package.json`, arquivo de migração do banco †. Arquivo de estilo, imagem e fonte não leva sufixo de tipo: a extensão já diz o que é (`fincheck.css`, `favicon.svg`, exemplo).
+7. **Nomes que a ferramenta exige ficam como a ferramenta quer:** `main.ts`, `main.tsx`, `index.ts` (só no `packages/ui`, ver a regra 7 de Pastas), `vite.config.ts`, `eslint.config.js`, `vitest.config.ts`, `*.d.ts`, `package.json`, `tsconfig.json`, `index.html`, o arquivo de migração do banco (ver Sufixos), o `mockServiceWorker.js` do MSW e o que a ferramenta gera (`*.gen.ts`). Arquivo de estilo, imagem e fonte não leva sufixo de tipo: a extensão já diz o que é (`fincheck.css`, `favicon.svg`, exemplo).
 
 ### Nomes dentro do arquivo
 
@@ -46,21 +46,19 @@ Um tipo, um sufixo. Tipo que não está na tabela: escolher o nome no singular, 
 | `.viewmodel.ts(x)`           | ViewModel do MVVM: adapta estado e navegação para a View                                         | sim   |      |
 | `.model.ts`                  | Model do MVVM: junta os hooks do domínio e os da tela                                            | sim   |      |
 | `.page.tsx`                  | Página consumida por uma rota                                                                    | sim   |      |
-| `.route.ts(x)`               | Rota de tela (front). No back, só se a stack pedir um arquivo que registra as rotas de um assunto † | sim   | sim† |
+| `.route.ts(x)`               | Rota de tela (front). No back, o arquivo que registra no Hono as rotas HTTP de um assunto (`main/http/routes/`) | sim   | sim  |
 | `.guard.ts`                  | Guarda de rota, se houver                                                                        | sim   |      |
 | `.controller.ts`             | Um arquivo por rota HTTP: valida a entrada com o esquema, chama o caso de uso, monta a resposta  |       | sim  |
-| `.middleware.ts`             | Peça que roda antes da rota: token local, log de requisição †                                    |       | sim† |
-| `.plugin.ts`                 | Plugin do servidor (só se for Fastify) †                                                         |       | sim† |
+| `.middleware.ts`             | Middleware do Hono, roda antes da rota: token local, log de requisição                           |       | sim  |
 | `.usecase.ts`                | Caso de uso: orquestra (carrega, chama a entidade, salva, avisa)                                 |       | sim  |
 | `.entity.ts`                 | Entidade (classe pura, com a regra do conceito)                                                  |       | sim  |
 | `.value-object.ts`           | Objeto de valor (classe imutável, só no back): `Money`                                           |       | sim  |
 | `.repository.ts`             | Repositório; só para raiz de agregado                                                            |       | sim  |
 | `.item.ts`                   | Entidade ↔ linha do banco (`fromEntity`, `toDomain`)                                             |       | sim  |
-| `.table.ts`                  | Tabela em código (só se a camada de banco for Drizzle) †                                         |       | sim† |
 | `.service.ts`                | Front: chamada à API. Back: serviço de domínio (regra que não cabe numa entidade nem é caso de uso) | sim   | sim  |
 | `.query.ts`                  | Leitura: chave e busca do cache (front) ou consulta direta ao banco, sem montar entidade (back)  | sim   | sim  |
 | `.schema.ts`                 | Esquema Zod                                                                                      | sim   | sim  |
-| `.type.ts`                   | Só tipos (inclui o `database.type.ts` do Kysely †)                                               | sim   | sim  |
+| `.type.ts`                   | Só tipos (inclui o `database.type.ts` do Kysely e os tipos de cada tabela)                       | sim   | sim  |
 | `.constant.ts`               | Valores fixos                                                                                    | sim   | sim  |
 | `.util.ts`                   | Função auxiliar sem estado; uma função por arquivo                                               | sim   | sim  |
 | `.rule.ts`                   | Regra de negócio que não depende de tela (front, em `domain`)                                    | sim   |      |
@@ -78,7 +76,7 @@ Um tipo, um sufixo. Tipo que não está na tabela: escolher o nome no singular, 
 | `.schedule.ts`               | Quando as tarefas de um assunto rodam sozinhas, pelo relógio, dentro da API (`main/schedules/`)  |       | sim  |
 | `.test.ts(x)`                | Teste                                                                                            | sim   | sim  |
 
-- **Migração do banco †:** o arquivo fica em `apps/api/migrations/` e leva o nome que a ferramenta de banco exige. É exceção à regra 1.
+- **Migração do banco:** escrita à mão para o migrator do Kysely, em `apps/api/src/database/migrations/`, com o nome `AAAAMMDDHHmm-o-que-faz.ts` (`202611051430-create-transactions.ts`, exemplo). O carimbo de data dá a ordem; ela exporta `up` e `down`. É exceção à regra 2 (sem sufixo de tipo). Migração aplicada não se edita: faz-se outra.
 - **Fora da tabela de propósito:** `.fictitious.ts` (o front constrói sobre o contrato aprovado, com `.mock.ts`) e `.worker.ts` (as tarefas do relógio chamam o caso de uso direto; não há fila).
 
 ## Pastas
@@ -91,15 +89,23 @@ Um tipo, um sufixo. Tipo que não está na tabela: escolher o nome no singular, 
    - um grupo de arquivos só faz sentido junto (o componente, o hook e a função que só ele usa).
 5. **Quando não criar:** pasta para um arquivo só, a não ser quando a estrutura pede (um contexto novo, que vai crescer). Separação sem critério claro também não vale: na dúvida, menos pastas.
 6. **O que só um assunto usa mora na pasta dele.** Só sobe para a pasta comum (`utils/`, `hooks/`) o que é usado por mais de um assunto. Funções auxiliares ficam em `utils/`, nunca em `lib/` ou `helpers/`.
-7. **Barrel (`index.ts` que reexporta) só no `packages/ui`.** Ali cada pasta de assunto tem um `index.ts`, a porta pública dela, que só reexporta o que é público. **Em todo o resto é proibido:** `apps/web`, `apps/api` e `packages/shared` não têm `index.ts` nem arquivo que reexporta, e o import aponta para o arquivo de verdade (`@/domain/transactions/transactions/hooks/use-transactions.hook`, exemplo). A lint barra `export * from` e `export { … } from`.
+7. **Barrel (`index.ts` que reexporta) só no `packages/ui`.** Ali cada pasta de assunto tem um `index.ts`, a porta pública dela, que só reexporta o que é público. **Em todo o resto é proibido:** `apps/web`, `apps/api` e `packages/shared` não têm `index.ts` nem arquivo que reexporta, e o import aponta para o arquivo de verdade (`#/domain/transactions/transactions/hooks/use-transactions.hook.ts`, exemplo). A lint barra `export * from` e `export { … } from`.
+
+## Imports
+
+- **Atalho `#/` em todo app e pacote:** aponta para o `src/` do próprio pacote, pelo campo `imports` do `package.json` (`"#/*": "./src/*"`). O apoio de teste vem por `#tests/` (`"#tests/*": "./tests/*"`). Sem `@/` nem `paths` no tsconfig: o Node roda o TypeScript da API direto e ignora o `paths`, e o web lê o código da API para o tipo do cliente; o `#/` resolve certo nos dois casos.
+- **O import nomeia o arquivo com a extensão:** `#/database/sqlite.client.ts`, `#/pages/home/home.page.tsx`. É o que o Node exige.
+- **Nos apps, nada de caminho relativo** (`./`, `../`): sempre `#/`. A lint barra. No `packages/shared`, dentro do pacote, caminho relativo (`./health.schema.ts`).
+- **Entre pacotes,** pelo nome do pacote e o caminho do arquivo a partir do `src/`: `@fincheck/shared/system/health/health.type.ts`. O `packages/ui` é a exceção: importa-se pela porta pública (`@fincheck/ui`) e o CSS por `@fincheck/ui/styles/fincheck.css`.
+- **O web nunca importa `mocks/`** (atalho `#mocks/`); só o `main.tsx` liga o MSW, no modo de mocks. A lint barra o resto.
 
 ## Testes
 
 - **Pasta `tests/` na raiz do app ou pacote, espelhando o `src/`.** O teste de `src/components/table/data-table.component.tsx` é `tests/components/table/data-table.component.test.tsx` (exemplo).
 - **Sufixo `.test.ts(x)`.**
-- **O teste importa pelo atalho do projeto** (`@/` nos apps, `@ui/` no `packages/ui`), nunca por caminho relativo. O apoio de teste vem por `@tests/` (`@tests/support/...`).
+- **O teste importa pelo atalho do pacote** (`#/`), nunca por caminho relativo. O apoio de teste vem por `#tests/` (`#tests/support/...`).
 - **Apoio de teste** (configuração, fábricas de dado, utilitários) em `tests/support/`. Configuração inicial: `tests/setup.ts`.
-- **No back,** dentro de `tests/` ficam `unit/`, `integration/` e `e2e/`, e cada uma espelha o `src/`, com o contexto e o assunto. O apoio também vai por contexto e assunto: `support/transactions/transactions/create-test-transaction.util.ts` (exemplo). Fora de contexto, só `support/app/` (subir a API) e `support/database/` (o banco de teste).
+- **No back,** dentro de `tests/` ficam `unit/`, `integration/` e `e2e/`, e cada uma espelha o `src/` (`integration/modules/health/http/health/health.route.test.ts`). O apoio vai por módulo e assunto: `support/transactions/transaction/create-test-transaction.util.ts` (exemplo). Fora de contexto, só `support/app/` (subir a API) e `support/database/` (o banco de teste).
 - **Os testes do front** ficam em `tests/` do `apps/web`, nunca ao lado do código. Um padrão só para o repositório inteiro.
 
 ## Modelos de pasta
@@ -138,7 +144,7 @@ apps/web/
 │  └─ transactions/transactions/  transactions.mock.ts
 └─ tests/                         o mesmo desenho do src/, com .test.ts(x)
    ├─ pages/<contexto>/           os testes de tela inteira: transactions/transaction-list.test.tsx
-   ├─ support/                    apoios de teste, importados por @tests/support/…
+   ├─ support/                    apoios de teste, importados por #tests/support/…
    └─ setup.ts
 ```
 
@@ -172,106 +178,90 @@ packages/ui/
 
 ### App de back (`apps/api`)
 
-**Toda pasta de camada se divide em contexto e assunto: `<camada>/<contexto>/<assunto>/<arquivo>`, desde o primeiro arquivo,** sem esperar a pasta passar de 8. Vale para `controllers`, `usecases`, `entities`, `value-objects`, `errors`, `services`, `queries`, `events` e, no banco, `items`, `repositories`, `uow` e os tipos das tabelas. O mesmo assunto tem o mesmo nome em todas as camadas: `controllers/invoices/invoices/close-invoice.controller.ts`, `usecases/invoices/invoices/close-invoice.usecase.ts`, `errors/invoices/invoices/invoice-already-closed.error.ts` (exemplo).
+**Por contexto primeiro (módulo), depois camada, depois assunto: `modules/<contexto>/<camada>/<assunto>/<arquivo>`,** desde o primeiro arquivo (`modules/invoices/domain/invoice/invoice.entity.ts`, exemplo). Decidido pelo PM em 29/10/2026, no lugar de `<camada>/<contexto>/<assunto>/`.
 
-- **Contexto:** os da tabela abaixo, os mesmos do `packages/shared`.
-- **Assunto:** o que a pessoa procura, no plural e em kebab-case. Nunca a técnica (`helpers/`, `common/`, `misc/`).
-- **Nunca arquivo solto na pasta do contexto.** O que mais de um assunto usa fica no assunto dono do conceito.
-- **Ficam fora da regra, e só estes:**
-  - `application/interfaces/` (portas: relógio, calendário, notificador, sem contexto);
-  - `application/value-objects/money.value-object.ts` (a base de dinheiro que todo contexto usa);
-  - `application/errors/application.error.ts`;
-  - `infra/clients/` (um cliente por serviço externo: SQLite, Pluggy, Telegram);
-  - `infra/database/database.type.ts` (junta os tipos das tabelas) †;
-  - `apps/api/migrations/` †;
-  - `main/main.ts`, `main/http/` (token local, log de requisição), `main/schedules/` (um arquivo por assunto que tem tarefa no relógio);
-  - `shared/config/`;
-  - `tests/support/app/` e `tests/support/database/`.
-- **`shared/` segue a mesma regra:** `shared/schemas/transactions/transactions/transaction-id-param.schema.ts`, `shared/constants/invoices/invoices/closing-day.constant.ts`, `shared/utils/transactions/installments/split-cents.util.ts` (exemplo). Na raiz do tipo fica só a base que todo contexto usa e que não é de assunto nenhum: `utils/with-timeout.util.ts` (exemplo).
-- **Dono entre contextos:** um contexto nunca lê nem grava a tabela de outro. Ele pede ao dono: uma `query` para ler, um caso de uso do dono para alterar. Escrita que cruza contextos passa por um caso de uso só, com unidade de trabalho (`uow/`). A lint barra, pelo caminho da pasta, importar repositório, item ou `uow` de outro contexto.
-- **Repositório só por raiz de agregado.** Contexto simples (categorias, tags) usa caso de uso e `query`, sem entidade nem repositório de agregado.
-- **Assunto novo** só quando nenhum da tabela abaixo serve; ele entra na tabela no mesmo commit.
+| Pasta de `src/`                   | O que tem                                                                                                                                                         |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `modules/<contexto>/domain/`      | Entidades ricas, objetos de valor, erros de domínio (`.error.ts`), interfaces de repositório (portas)                                                              |
+| `modules/<contexto>/application/` | Casos de uso, queries (leitura direta com Kysely, sem entidade) e as portas que o caso de uso precisa                                                             |
+| `modules/<contexto>/infra/`       | Repositórios Kysely, `.item.ts`, tipos das tabelas do contexto, gateways e translators (Pluggy, Telegram)                                                         |
+| `modules/<contexto>/http/`        | Controllers (sem framework: recebem e devolvem dado) e o `.route.ts` que registra as rotas no Hono                                                               |
+| `shared/`                         | Núcleo compartilhado: `errors/` (a base e as famílias), `config/` e, quando chegarem, `Money`, `BusinessDate`, `Clock` e a unidade de trabalho                    |
+| `database/`                       | Conexão (`sqlite.client.ts`), `database.type.ts` (junta os tipos das tabelas), `migrate-to-latest.util.ts` e `migrations/`                                        |
+| `main/`                           | `main.ts` (sobe tudo), `http/` (`create-app.util.ts` monta os controllers à mão e as rotas; `app.type.ts`; `handle-error.util.ts`; `middlewares/`) e `schedules/` |
+
+- **A dependência aponta para dentro:** `http` → `application` → `domain`; `infra` implementa as portas do `domain` e do `application`. O `domain` não importa Kysely, Hono, Zod nem `node:`. Só o `main` monta tudo (injeção à mão, sem container). A lint barra.
+- **Dono entre contextos:** um módulo não importa o `domain`, o `infra` nem o `http` de outro. Lê pela query do outro e altera pelo caso de uso do dono (os dois em `application`). Escrita que cruza contextos passa por um caso de uso só, com unidade de trabalho. A lint barra.
+- **Pasta só existe quando tem arquivo.** Contexto simples (categorias) tem entidade e caso de uso, sem camada vazia. Sem barramento de eventos e sem CQRS separado.
+- **Assunto:** o que a pessoa procura, em kebab-case, no singular dentro do módulo (`invoice/`, `invoice-payment/`). Nunca a técnica (`helpers/`, `common/`, `misc/`). Nunca arquivo solto na pasta da camada.
+- **Erros:** toda exceção de propósito estende `shared/errors/application.error.ts` por uma família (`DomainError` 422, `NotFoundError` 404, `ConflictError` 409, `ValidationError` 400), com `code` estável em MAIÚSCULAS (`INVOICE_ALREADY_CLOSED`). Cada contexto declara os seus em `domain/<assunto>/`. A regra de negócio nunca lança erro HTTP nem `Error` solto. Um handler só, `main/http/handle-error.util.ts`, traduz para o status e o corpo `{ code, message, details? }` (esquema em `packages/shared/src/common/api-error/`); erro desconhecido vira 500 genérico.
+- **Repositório só por raiz de agregado.**
 - **Padrão de código da classe** (dos repositórios de back do dono; onde divergem, vale o template, que é mais novo):
   - os tipos de uma classe ficam em `export namespace <Classe>` logo abaixo dela: `Input` e `Output` no caso de uso, `Body`, `Query` e `Response` no controller, `Attributes` na entidade;
   - o construtor da entidade recebe os atributos e gera o id quando falta;
   - entidade ↔ linha do banco só no `.item.ts` (`fromEntity`, `toDomain`);
   - uma função auxiliar por `.util.ts`; nenhum tipo nem função solta no meio de um arquivo;
-  - erro de regra é classe tipada (`.error.ts`), nunca erro HTTP dentro da regra de negócio.
+  - campo da classe declarado e atribuído no construtor (o Node não aceita `constructor(private x)`).
 
 **Contextos e assuntos (proposta, a confirmar na primeira modelagem de cada contexto):**
 
-| Contexto         | Assuntos                                                                                                                                                  |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `accounts`       | `accounts` (contas) · `credit-cards` (cartões) · `wallets` (carteira manual, dinheiro em espécie) · `institutions` (bancos pré-cadastrados)              |
-| `transactions`   | `transactions` (lançamentos) · `installments` (parcelas) · `transfers` (transferências) · `friend-debts` (dívida com amigo) · `provenance` (procedência e original do banco, com a edição do usuário protegida da sincronização) |
-| `invoices`       | `invoices` (faturas: competência e caixa, fechamento) · `invoice-payments` (pagamento da fatura)                                                         |
-| `recurrences`    | `recurrences` (modelos) · `occurrences` (execuções e confirmação automática) · `matching` (casar lançamento com recorrência) · `business-days` (dia útil, feriado) |
-| `bills`          | `bills` (contas a pagar e a receber) · `settlements` (baixa)                                                                                              |
-| `categorization` | `categories` · `tags` · `rules` (regras de categorização) · `suggestions` (sugestão de regra ao recategorizar)                                           |
-| `planning`       | `dashboard` · `projection` (projeção do mês) · `month-comparison` (mês a mês) · `free-balance` (o quanto ainda pode gastar)                              |
-| `alerts`         | `alerts` (o que avisar e quando) · `telegram` (o canal)                                                                                                   |
-| `sync`           | `pluggy` (adaptador e camada anticorrupção) · `connections` (conexões bancárias) · `runs` (execuções da sincronização)                                    |
-| `backup`         | `backups` (cópia diária do arquivo do banco) · `restores`                                                                                                 |
-| `settings`       | `preferences` · `credentials` (segredos das integrações)                                                                                                  |
+| Contexto       | Assuntos                                                                                                      |
+| -------------- | ------------------------------------------------------------------------------------------------------------- |
+| `accounts`     | `account` · `credit-card` · `wallet` (carteira manual) · `institution` (bancos pré-cadastrados)              |
+| `transactions` | `transaction` · `installment` · `transfer` · `friend-debt` · `provenance` (procedência e original do banco)  |
+| `invoices`     | `invoice` (competência e caixa, fechamento) · `invoice-payment`                                               |
+| `recurrences`  | `recurrence` · `occurrence` · `matching` · `business-day` (dia útil, feriado)                                 |
+| `bills`        | `bill` (contas a pagar e a receber) · `settlement` (baixa)                                                    |
+| `categories`   | `category` · `tag` · `rule` (regra de categorização) · `suggestion`                                           |
+| `dashboard`    | `summary` · `projection` (projeção do mês) · `month-comparison` · `free-balance` (o quanto ainda pode gastar) |
+| `sync`         | `pluggy` (adaptador e camada anticorrupção) · `connection` · `run`                                            |
+| `backup`       | `backup` (cópia diária do arquivo) · `restore`                                                                |
+| `health`       | `health` (`GET /health`, estado da API e do banco). Técnico, sem regra de negócio                             |
+
+- **`alerts`:** não existe no MVP. Telegram e notificações são fase 2 (`product/business rules/alerts.md`, no vault); o contexto nasce na fase 2.
+- **`settings`:** não é contexto do back. A tela de Configurações só junta o que é de outros: a pasta de backup é do `backup`, as conexões e o consentimento são do `sync`, e o tema é só do front.
 
 ```text
 apps/api/                                                          (exemplo)
-├─ migrations/                            † arquivos da ferramenta de banco
 ├─ src/
-│  ├─ application/
-│  │  ├─ interfaces/                      clock.interface.ts · calendar.interface.ts · notifier.interface.ts
-│  │  ├─ controllers/transactions/transactions/   list-transactions.controller.ts · edit-transaction.controller.ts
-│  │  ├─ usecases/invoices/invoices/      close-invoice.usecase.ts
-│  │  ├─ entities/invoices/invoices/      invoice.entity.ts
-│  │  ├─ value-objects/                   money.value-object.ts
-│  │  ├─ services/transactions/installments/   split-installments.service.ts
-│  │  ├─ queries/planning/dashboard/      month-summary.query.ts
-│  │  ├─ events/ · mesma divisão, quando houver
-│  │  └─ errors/                          application.error.ts · invoices/invoices/invoice-already-closed.error.ts
-│  ├─ infra/
-│  │  ├─ clients/                         sqlite.client.ts · pluggy.client.ts · telegram.client.ts
-│  │  ├─ gateways/sync/pluggy/            pluggy.gateway.ts · pluggy-transaction.translator.ts
-│  │  ├─ gateways/alerts/telegram/        telegram.gateway.ts
-│  │  └─ database/
-│  │     ├─ database.type.ts              †
-│  │     ├─ types/transactions/transactions/    transactions-table.type.ts †
-│  │     ├─ items/transactions/transactions/    transaction.item.ts
-│  │     ├─ repositories/invoices/invoices/     invoice.repository.ts
-│  │     └─ uow/transactions/installments/      create-installment-plan.uow.ts
-│  ├─ main/
-│  │  ├─ main.ts
-│  │  ├─ http/                            middlewares/local-token.middleware.ts · request-log.middleware.ts †
-│  │  └─ schedules/                       sync-pluggy.schedule.ts · telegram-alerts.schedule.ts · daily-backup.schedule.ts
-│  └─ shared/                             config/ · e, por contexto e assunto: constants/ · schemas/ · utils/
-└─ tests/                                 unit/ · integration/ · e2e/, cada uma com o mesmo caminho do src/
-   ├─ unit/application/usecases/invoices/invoices/            close-invoice.usecase.test.ts
-   ├─ integration/application/controllers/transactions/transactions/   list-transactions.controller.test.ts
-   └─ support/                            app/ · database/ · e, por contexto e assunto: transactions/transactions/create-test-transaction.util.ts
+│  ├─ modules/
+│  │  ├─ invoices/
+│  │  │  ├─ domain/invoice/          invoice.entity.ts · invoice-already-closed.error.ts · invoice-repository.interface.ts
+│  │  │  ├─ application/invoice/     close-invoice.usecase.ts · list-invoices.query.ts
+│  │  │  ├─ infra/invoice/           invoice.repository.ts · invoice.item.ts · invoices-table.type.ts
+│  │  │  └─ http/invoice/            close-invoice.controller.ts · invoice.route.ts
+│  │  ├─ sync/infra/pluggy/          pluggy.client.ts · pluggy.gateway.ts · pluggy-transaction.translator.ts
+│  │  └─ health/                     application/health/check-database.query.ts · http/health/get-health.controller.ts · health.route.ts
+│  ├─ shared/                        errors/ (application · domain · not-found · conflict · validation) · config/
+│  ├─ database/                      sqlite.client.ts · database.type.ts · migrate-to-latest.util.ts · migrations/202611051430-create-invoices.ts
+│  └─ main/                          main.ts · http/ (create-app.util.ts · app.type.ts · handle-error.util.ts · middlewares/) · schedules/
+└─ tests/                            unit/ · integration/ · e2e/, cada uma com o mesmo caminho do src/
+   ├─ unit/modules/invoices/domain/invoice/       invoice.entity.test.ts
+   ├─ integration/modules/health/http/health/     health.route.test.ts
+   └─ support/                       app/ · database/ · e, por módulo e assunto: invoices/invoice/create-test-invoice.util.ts
 ```
 
-- Pasta de camada vazia leva um `.gitkeep`.
-- As tarefas do relógio (sincronizar o Pluggy, avisar no Telegram, backup diário) moram na API. Cada `.schedule.ts` só diz quando e chama o caso de uso. A API sobe com o Windows.
-- A API só escuta em `127.0.0.1` e confere um token local (`local-token.middleware.ts`). Não há login, permissão nem auditoria.
+- As tarefas do relógio (sincronizar o Pluggy, avisar no Telegram, backup diário) moram na API, em `main/schedules/`. Cada `.schedule.ts` só diz quando e chama o caso de uso. A API sobe com o Windows.
+- A API só escuta em `127.0.0.1` e confere um token local (`main/http/middlewares/local-token.middleware.ts`, a criar). Não há login, permissão nem auditoria.
 
 ### Pacote de contrato (`packages/shared`)
 
-Uma pasta por recurso, no singular, agrupada por contexto, os mesmos do back, mais `common`.
+Uma pasta por recurso, no singular, agrupada por contexto, os mesmos módulos do back, mais `common`.
 
 ```text
 packages/shared/                                                   (exemplo)
 ├─ src/
-│  ├─ common/         money · api-error · pagination · date
+│  ├─ common/         api-error (existe) · money · pagination · date
+│  ├─ health/         health (existe)
 │  ├─ accounts/       account · credit-card · wallet · institution
 │  ├─ transactions/   transaction · installment · transfer · friend-debt
 │  ├─ invoices/       invoice · invoice-payment
 │  ├─ recurrences/    recurrence · occurrence
 │  ├─ bills/          bill
-│  ├─ categorization/ category · tag · rule
-│  ├─ planning/       dashboard · projection · month-comparison
-│  ├─ alerts/         alert
-│  ├─ sync/           sync-run · connection
-│  ├─ backup/         backup
-│  └─ settings/       preference
+│  ├─ categories/     category · tag · rule
+│  ├─ dashboard/      summary · projection · month-comparison
+│  ├─ sync/           run · connection
+│  └─ backup/         backup
 └─ tests/             o mesmo caminho de src
 ```
 
@@ -288,7 +278,7 @@ Dentro da pasta do recurso, um arquivo por papel:
 - **Sem código de framework** (servidor, React, banco) no `shared`.
 - **Namespace só com tipo:** nenhum valor dentro de namespace.
 - **Dinheiro:** inteiro em centavos. Data: instante em UTC e data do negócio `YYYY-MM-DD`, fuso America/Sao_Paulo. Os esquemas disso moram em `common/`.
-- **Import:** os apps importam o arquivo de verdade, `@fincheck/shared/transactions/transaction/transaction.type` (exemplo). Dentro do pacote, caminho relativo.
+- **Import:** os apps importam o arquivo de verdade, com a extensão: `@fincheck/shared/transactions/transaction/transaction.type.ts` (exemplo). O pacote não tem build: o Node e o Vite leem o TypeScript direto. Dentro do pacote, caminho relativo, também com a extensão.
 
 ## Antes de criar um arquivo ou pasta
 
@@ -297,16 +287,18 @@ Dentro da pasta do recurso, um arquivo por papel:
 3. A pasta tem mais de uns 8 arquivos e uma separação clara? Criar a subpasta do assunto e levar para ela o que for do assunto.
 4. Só um assunto usa o arquivo? Ele mora na pasta desse assunto.
 5. O teste vai em `tests/`, no mesmo caminho.
-6. **No back:** o arquivo vai em `<camada>/<contexto>/<assunto>/`, com o assunto da tabela de "App de back". Nunca solto na pasta do contexto.
+6. **No back:** o arquivo vai em `modules/<contexto>/<camada>/<assunto>/`, com o contexto e o assunto da tabela de "App de back". Nunca solto na pasta da camada.
 
-## A fechar com a stack
+## Fechado com a stack
 
-Decide-se na etapa 0, uma decisão por vez, com o Lucas. Até lá, o que tem † fica provisório.
+Etapa 0 (29/10/2026). A stack está no vault (`architecture/stack.md`); os comandos e versões, no `AGENTS.md`.
 
-| Item                          | Pergunta                                                           | Opções e recomendação                                                                                                                                                                        |
-| ----------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Ferramenta de monorepo        | Só workspaces ou também orquestrador de tarefas?                   | **pnpm workspaces (recomendado).** pnpm + Turborepo: exagero para 4 pacotes.                                                                                                                  |
-| Sufixos que dependem do back  | Fastify e Hono não têm `.module`, `.pipe`, `.filter`. O que usar?  | **Recomendado:** `.controller.ts` por rota, `.middleware.ts` para o que roda antes da rota e `.plugin.ts` só no Fastify. Não usar `.hook.ts` no back: é do React no front. NestJS (não recomendado) manteria `.module`, `.filter`, `.interceptor`, `.decorator`, `.pipe`. |
-| Camada de banco               | Kysely ou Drizzle?                                                 | **Kysely (recomendação da pesquisa):** sem `.table.ts`; tabelas como tipos em `database.type.ts` (junta os tipos por contexto e assunto) e `migrations/`. Drizzle: `.table.ts` por tabela. A recomendação segue a decisão da stack. |
-| Lint e formatação             | ESLint + Prettier ou Biome?                                        | **ESLint + Prettier (recomendado):** as regras de camada, de barrel e de fronteira entre contextos precisam de plugins do ESLint. Biome: um binário só, mas sem essas regras.                  |
-| Runtime e versões exatas      | Qual Node, quais versões, extensão nos imports do `shared`?        | Etapa 0. Nada aqui assume versão.                                                                                                                                                              |
+| Item                       | Fechado                                                                                                                                                         |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Monorepo                   | pnpm workspaces, sem orquestrador de tarefas.                                                                                                                   |
+| Sufixos do back (Hono)     | `.controller.ts` por rota (sem framework: recebe e devolve dado), `.route.ts` registra as rotas de um assunto no Hono, `.middleware.ts` roda antes da rota. Sem `.plugin.ts`, `.module`, `.pipe`, `.filter`. `.hook.ts` só no front. |
+| Camada de banco (Kysely)   | Sem `.table.ts`: cada tabela é um tipo (`<tabela>-table.type.ts`) no `infra/` do módulo dono, juntado em `src/database/database.type.ts`. Migração escrita à mão, nome na seção Sufixos. |
+| Lint e formatação          | ESLint + Prettier. A lint barra: a camada errada (`http` → `application` → `domain`; o domínio não importa Kysely, Hono, Zod nem `node:`), o `domain`, o `infra` e o `http` de outro módulo, barrel fora do `packages/ui`, import relativo nos apps, `mocks/` no `src/` do web e, na View, `domain`, `router` e as bibliotecas de rota e cache. |
+| Runtime e imports          | Node 26, que roda o TypeScript direto (só sintaxe apagável: sem `enum`, sem `namespace` com valor, sem propriedade no parâmetro do construtor). Imports na seção Imports. |
+
+**Ainda em aberto (marca †):** `.columns.tsx` (biblioteca de tabela) e `.store.ts` (estado no navegador). Fecham na primeira feature que precisar deles.

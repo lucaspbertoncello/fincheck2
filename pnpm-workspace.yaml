@@ -1,0 +1,8 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Build scripts run only for the packages listed here (pnpm blocks the rest).
+allowBuilds:
+  simple-git-hooks: false
+  msw: false

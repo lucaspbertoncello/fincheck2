@@ -1,0 +1,92 @@
+@import 'tailwindcss';
+@import './tokens.css';
+
+@source '../';
+
+@font-face {
+  font-family: 'Fustat';
+  src: url('../fonts/fustat-variable.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Inter Tight';
+  src: url('../fonts/inter-tight-variable.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+@theme inline {
+  --color-page: var(--color-bg-page);
+  --color-page-top: var(--color-bg-top);
+  --color-glass: var(--color-surface-glass);
+  --color-subtle: var(--color-surface-subtle);
+  --color-modal: var(--color-surface-modal);
+  --color-popover: var(--color-surface-popover);
+  --color-menu: var(--color-surface-menu);
+  --color-field: var(--color-surface-field);
+  --color-scrim: var(--color-overlay-scrim);
+  --color-line: var(--color-border-default);
+  --color-fg-primary: var(--color-text-primary);
+  --color-fg-secondary: var(--color-text-secondary);
+  --color-fg-tertiary: var(--color-text-tertiary);
+  --color-fg-on-accent: var(--color-text-on-accent);
+  --color-brand: var(--color-accent-default);
+  --color-brand-highlight: var(--color-accent-highlight);
+  --color-brand-weak: var(--color-accent-weak);
+  --color-btn-start: var(--color-button-start);
+  --color-btn-end: var(--color-button-end);
+  --color-gain: var(--color-income);
+  --color-gain-weak: var(--color-income-weak);
+  --color-loss: var(--color-expense);
+  --color-loss-weak: var(--color-expense-weak);
+  --color-caution: var(--color-warn);
+  --color-caution-weak: var(--color-warn-weak);
+  --color-alert: var(--color-danger);
+
+  --font-title: var(--font-family-title);
+  --font-body: var(--font-family-body);
+  --font-money: var(--font-family-money);
+
+  --font-weight-numeric: var(--font-weight-money);
+  --font-weight-emphasis: var(--font-weight-strong);
+  --font-weight-heading: var(--font-weight-title);
+
+  --text-hero: var(--font-size-hero);
+  --text-page-title: var(--font-size-page-title);
+  --text-money-xl: var(--font-size-money-xl);
+  --text-money-row: var(--font-size-money-row);
+  --text-body: var(--font-size-body);
+  --text-label: var(--font-size-label);
+  --text-meta: var(--font-size-meta);
+
+  --radius-panel: var(--radius-card);
+  --radius-input: var(--radius-field);
+  --radius-capsule: var(--radius-pill);
+  --radius-tiny: var(--radius-mini);
+
+  --spacing-s4: var(--space-4);
+  --spacing-s8: var(--space-8);
+  --spacing-s12: var(--space-12);
+  --spacing-s16: var(--space-16);
+  --spacing-s24: var(--space-24);
+  --spacing-s32: var(--space-32);
+  --spacing-s48: var(--space-48);
+  --spacing-s64: var(--space-64);
+}
+
+@layer base {
+  body {
+    min-height: 100dvh;
+    background: var(--gradient-page) no-repeat var(--color-bg-page);
+    color: var(--color-text-primary);
+    font-family: var(--font-family-body);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+  }
+}

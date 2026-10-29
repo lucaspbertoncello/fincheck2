@@ -1,0 +1,33 @@
+{
+  "name": "@fincheck/api",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./src/*"
+  },
+  "imports": {
+    "#/*": "./src/*",
+    "#tests/*": "./tests/*"
+  },
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=.env src/main/main.ts",
+    "start": "node --env-file-if-exists=.env src/main/main.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fincheck/shared": "workspace:*",
+    "@hono/node-server": "2.1.5",
+    "@hono/zod-validator": "0.9.1",
+    "better-sqlite3": "13.0.3",
+    "hono": "4.13.14",
+    "kysely": "0.29.7",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "9.6.0",
+    "@types/node": "26.6.6",
+    "typescript": "6.0.3",
+    "vitest": "5.0.5"
+  }
+}
