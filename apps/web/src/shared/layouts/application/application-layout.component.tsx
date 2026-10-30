@@ -15,6 +15,12 @@ import { ApplicationTopBar } from '#/shared/layouts/application/top-bar/applicat
  * Shell of the app: top bar, the summary panel on the left (desktop, every screen but
  * Configurações), the page on the right inside the animated `tab-content` container, and the
  * bottom bar on mobile. Links are React Aria links that navigate through the TanStack router.
+ *
+ * The frame is `relative` with `overflow-y: clip` so nothing inside can stretch the page past
+ * its own bottom. The Visão geral used to scroll into a blank band: the `sr-only` data table of
+ * each chart is absolutely positioned and a `<table>` ignores the 1 px height of `sr-only`, so
+ * its ~30 rows pushed the document down. Clipping at the frame keeps the scroll height equal to
+ * the content for every screen, now and for any future hidden table.
  */
 export function ApplicationLayout() {
   const router = useRouter();
@@ -26,7 +32,7 @@ export function ApplicationLayout() {
 
   return (
     <AriaRouterProvider navigate={(href) => navigateToHref(router, href)}>
-      <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col pb-bottom-nav lg:pb-s32">
+      <div className="relative mx-auto flex min-h-dvh w-full max-w-7xl flex-col overflow-y-clip pb-bottom-nav lg:pb-s32">
         <ApplicationTopBar screen={screen} monthParam={monthParam} />
         <div
           className={`grid gap-s24 px-gutter-mobile pt-s8 lg:px-gutter lg:pt-s4 ${

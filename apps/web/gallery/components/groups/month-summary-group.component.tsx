@@ -41,6 +41,33 @@ export const MONTH_SUMMARY_SECTIONS: GallerySectionDef[] = [
             />
           </MonthSummaryCards>
         </GalleryVariant>
+        <GalleryVariant
+          caption="cartões clicáveis (href): hover sutil, foco no cartão inteiro"
+          width={1040}
+        >
+          <MonthSummaryCards>
+            <IncomeSummaryCard
+              receivedCents={450000}
+              expectedCents={870000}
+              pendingNote="Vale Verde ainda vem"
+              href="#recorrentes"
+            />
+            <ExpenseSummaryCard
+              spentCents={318000}
+              previousSamePointCents={290000}
+              previousTotalCents={520000}
+              previousMonthLabel="setembro"
+              href="#transacoes"
+            />
+            <ResultSummaryCard
+              receivedCents={450000}
+              spentCents={318000}
+              previousResultCents={60000}
+              previousMonthLabel="setembro"
+              href="#transacoes"
+            />
+          </MonthSummaryCards>
+        </GalleryVariant>
         <GalleryVariant caption="resultado negativo, despesa em queda, tudo recebido" width={1040}>
           <MonthSummaryCards>
             <IncomeSummaryCard receivedCents={870000} expectedCents={870000} />

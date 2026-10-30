@@ -1,5 +1,11 @@
 import type { Timeline } from '@fincheck/shared/dashboard/timeline/timeline.type.ts';
-import type { ChartPoint, DayStripDay, DonutSlice, RemainingLineData } from '@fincheck/ui';
+import type {
+  ChartPoint,
+  DayStripDay,
+  DayStripMode,
+  DonutSlice,
+  RemainingLineData,
+} from '@fincheck/ui';
 
 /** What one block of the screen is doing: each block loads, fails and retries on its own. */
 export type SectionState<Data> =
@@ -24,6 +30,13 @@ export type SummaryCardsData = {
   /** "setembro". */
   previousMonthLabel: string;
   previousResultCents: number;
+};
+
+/** Where each summary card leads, already filtered by the month. */
+export type SummaryLinks = {
+  income: string;
+  expense: string;
+  result: string;
 };
 
 /** A day of the strip carries the timeline items of that day. */
@@ -72,10 +85,14 @@ export type OverviewModel = {
   alerts: OverviewAlert[];
   summary: SectionState<SummaryCardsData>;
   strip: SectionState<StripData>;
+  /** The view of "Até o fim do mês": the slider of days or the weeks. Lives in the URL. */
+  stripMode: DayStripMode;
+  onStripModeChange: (mode: DayStripMode) => void;
   selectedDate: string;
   onSelectDate: (date: string) => void;
   spend: SectionState<SpendData>;
   categories: SectionState<CategoriesData>;
   billsHref: string;
+  summaryLinks: SummaryLinks;
   allCategoriesHref: string;
 };

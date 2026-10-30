@@ -38,7 +38,10 @@ export const DAY_STRIP_SECTIONS: GallerySectionDef[] = [
     content: (
       <State initial="2026-10-28">
         {(selected, set) => (
-          <GalleryVariant caption="10 dias, saldo projetado, detalhe do dia" width={1040}>
+          <GalleryVariant
+            caption="Dia | Semana: slider de dias (setas, teclado, pontos) ou as semanas que faltam; detalhe do dia embaixo"
+            width={1040}
+          >
             <DayStripSection
               title="Até o fim do mês"
               variant="projection"

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Link } from 'react-aria-components';
 
 import { Icon } from '#/components/icons/icon.component.tsx';
 import type { IconName } from '#/components/icons/icon-markup.constant.ts';
@@ -17,8 +18,14 @@ type MonthSummaryCardProps = {
   bar: ReactNode;
   /** Legend under the bar ("Recebido do esperado"). */
   barLegend: string;
+  /** Makes the whole card a link to where the number comes from (already filtered by the month). */
+  href?: string;
   className?: string;
 };
+
+/** The card is one link: the label carries it and stretches over the box. Focus rings the card. */
+const LINKED_CLASS =
+  'cursor-pointer hover:bg-subtle has-[[data-focus-visible]]:outline-2 has-[[data-focus-visible]]:outline-offset-2 has-[[data-focus-visible]]:outline-(--color-focus-ring) motion-reduce:transition-none';
 
 /**
  * Frame of the three month summary cards (components.md 3.2): round icon and label, badge, value,
@@ -33,14 +40,16 @@ export function MonthSummaryCard({
   subtext,
   bar,
   barLegend,
+  href,
   className,
 }: MonthSummaryCardProps) {
   return (
     <article
       aria-label={label}
       className={cx(
-        'flex h-full w-full flex-col gap-s8 rounded-panel p-s16 transition-colors duration-(--duration-fast)',
-        'max-lg:border max-lg:border-line max-lg:bg-glass lg:hover:bg-glass',
+        'relative flex h-full w-full flex-col gap-s8 rounded-panel p-s16 transition-colors duration-(--duration-fast)',
+        'max-lg:border max-lg:border-line max-lg:bg-glass',
+        href && LINKED_CLASS,
         className,
       )}
     >
@@ -52,7 +61,16 @@ export function MonthSummaryCard({
           <Icon name={icon} size="sm" />
         </span>
         <h3 className="min-w-0 flex-1 truncate text-label font-emphasis text-fg-primary">
-          {label}
+          {href ? (
+            <Link
+              href={href}
+              className="cursor-pointer text-fg-primary no-underline outline-none after:absolute after:inset-0 after:rounded-panel after:content-['']"
+            >
+              {label}
+            </Link>
+          ) : (
+            label
+          )}
         </h3>
         {badge}
       </header>

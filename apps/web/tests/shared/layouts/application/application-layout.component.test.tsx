@@ -22,6 +22,15 @@ describe('ApplicationLayout', () => {
     expect(screen.getAllByRole('status').length).toBeGreaterThan(0);
   });
 
+  it('clips the frame so a hidden chart table cannot stretch the page into a blank band', async () => {
+    renderApp('/');
+    await screen.findByRole('heading', { level: 1, name: 'Visão geral' });
+
+    const frame = screen.getByRole('main').parentElement?.parentElement;
+
+    expect(frame).toHaveClass('relative', 'overflow-y-clip', 'min-h-dvh');
+  });
+
   it('navigates between tabs and marks the current one', async () => {
     renderApp('/');
     await screen.findByRole('heading', { name: 'Visão geral' });

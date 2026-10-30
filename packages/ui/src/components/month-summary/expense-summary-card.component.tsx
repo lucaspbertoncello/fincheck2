@@ -15,6 +15,8 @@ type ExpenseSummaryCardProps = {
   /** Name of the previous month, lower case ("setembro"). */
   previousMonthLabel: string;
   label?: string;
+  /** Makes the card a link (see `MonthSummaryCard`). */
+  href?: string;
 };
 
 /**
@@ -27,12 +29,14 @@ export function ExpenseSummaryCard({
   previousTotalCents,
   previousMonthLabel,
   label = 'Despesas',
+  href,
 }: ExpenseSummaryCardProps) {
   const deltaCents = spentCents - previousSamePointCents;
   const percent = previousSamePointCents > 0 ? (deltaCents / previousSamePointCents) * 100 : null;
 
   return (
     <MonthSummaryCard
+      href={href}
       icon="receipt"
       label={label}
       badge={percent === null ? null : <VariationBadge percent={percent} />}

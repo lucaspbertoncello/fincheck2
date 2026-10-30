@@ -10,6 +10,8 @@ type IncomeSummaryCardProps = {
   /** What is still to come, in words ("Maxxy ainda vem"). */
   pendingNote?: string;
   label?: string;
+  /** Makes the card a link (see `MonthSummaryCard`). */
+  href?: string;
 };
 
 /** "Receitas" card (components.md 3.2): received over expected, with the percent as the badge. */
@@ -18,11 +20,13 @@ export function IncomeSummaryCard({
   expectedCents,
   pendingNote,
   label = 'Receitas',
+  href,
 }: IncomeSummaryCardProps) {
   const percent = expectedCents > 0 ? Math.round((receivedCents / expectedCents) * 100) : 0;
 
   return (
     <MonthSummaryCard
+      href={href}
       icon="trend"
       label={label}
       badge={

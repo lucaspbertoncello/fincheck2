@@ -6,6 +6,8 @@ export type {
   DayMarkerFlow,
   DayMarkerStatus,
   DayStripDay,
+  DayStripMode,
   DayStripVariant,
+  WeekSummary,
 } from '#/components/day-strip/day-strip.type.ts';
 export { formatDayTotal } from '#/components/day-strip/format-day-total.util.ts';

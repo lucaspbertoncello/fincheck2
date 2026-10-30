@@ -30,13 +30,13 @@ export function OverviewView(model: OverviewModel) {
           ) : summary.status === 'error' ? (
             <SectionError what="o resumo do mês" onRetry={summary.retry} />
           ) : (
-            <SummaryCardsSection data={summary.data} />
+            <SummaryCardsSection data={summary.data} links={model.summaryLinks} />
           )}
         </div>
 
         <div className="order-1 lg:order-2">
           {strip.status === 'loading' ? (
-            <SectionSkeleton label="Carregando os dias até o fim do mês" bodyClassName="h-48" />
+            <SectionSkeleton label="Carregando os dias até o fim do mês" bodyClassName="h-56" />
           ) : strip.status === 'error' ? (
             <SectionError what="os dias até o fim do mês" onRetry={strip.retry} />
           ) : (
@@ -44,6 +44,8 @@ export function OverviewView(model: OverviewModel) {
               data={strip.data}
               selectedDate={model.selectedDate}
               onSelectDate={model.onSelectDate}
+              mode={model.stripMode}
+              onModeChange={model.onStripModeChange}
               billsHref={model.billsHref}
             />
           )}

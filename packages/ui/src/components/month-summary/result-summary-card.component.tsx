@@ -14,6 +14,8 @@ type ResultSummaryCardProps = {
   /** Name of the previous month, lower case ("setembro"). */
   previousMonthLabel: string;
   label?: string;
+  /** Makes the card a link (see `MonthSummaryCard`). */
+  href?: string;
 };
 
 /**
@@ -26,12 +28,14 @@ export function ResultSummaryCard({
   previousResultCents,
   previousMonthLabel,
   label = 'Resultado do mês',
+  href,
 }: ResultSummaryCardProps) {
   const resultCents = receivedCents - spentCents;
   const positive = resultCents >= 0;
 
   return (
     <MonthSummaryCard
+      href={href}
       icon="wallet"
       label={label}
       badge={<ResultBadge deltaCents={resultCents - previousResultCents} />}

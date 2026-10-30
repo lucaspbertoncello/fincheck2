@@ -5,32 +5,39 @@ import {
   ResultSummaryCard,
 } from '@fincheck/ui';
 
-import type { SummaryCardsData } from '#/features/overview/overview/overview.model.ts';
+import type {
+  SummaryCardsData,
+  SummaryLinks,
+} from '#/features/overview/overview/overview.model.ts';
 
 type SummaryCardsSectionProps = {
   data: SummaryCardsData;
+  links: SummaryLinks;
 };
 
-/** Receitas, Despesas and Resultado do mês (RF-DSH-010): the numbers come ready from the API. */
-export function SummaryCardsSection({ data }: SummaryCardsSectionProps) {
+/** Receitas, Despesas and Resultado do mês (RF-DSH-010): the numbers come ready from the API. Each card is a link to where the number comes from, filtered by the month. */
+export function SummaryCardsSection({ data, links }: SummaryCardsSectionProps) {
   return (
     <MonthSummaryCards>
       <IncomeSummaryCard
         receivedCents={data.receivedCents}
         expectedCents={data.expectedCents}
         pendingNote={data.pendingNote}
+        href={links.income}
       />
       <ExpenseSummaryCard
         spentCents={data.spentCents}
         previousSamePointCents={data.previousSamePointCents}
         previousTotalCents={data.previousTotalCents}
         previousMonthLabel={data.previousMonthLabel}
+        href={links.expense}
       />
       <ResultSummaryCard
         receivedCents={data.receivedCents}
         spentCents={data.spentCents}
         previousResultCents={data.previousResultCents}
         previousMonthLabel={data.previousMonthLabel}
+        href={links.result}
       />
     </MonthSummaryCards>
   );

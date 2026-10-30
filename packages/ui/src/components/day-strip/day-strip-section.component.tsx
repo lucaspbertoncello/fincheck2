@@ -1,10 +1,19 @@
-import { type ReactNode, useRef } from 'react';
+import { MotionConfig } from 'motion/react';
+import { type ReactNode, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 
 import { dayLongLabel } from '#/components/day-strip/day-date.util.ts';
+import { DaySlider } from '#/components/day-strip/day-slider.component.tsx';
 import { DayStrip } from '#/components/day-strip/day-strip.component.tsx';
-import type { DayStripDay, DayStripVariant } from '#/components/day-strip/day-strip.type.ts';
+import type {
+  DayStripDay,
+  DayStripMode,
+  DayStripVariant,
+} from '#/components/day-strip/day-strip.type.ts';
 import { DayStripLegend } from '#/components/day-strip/day-strip-legend.component.tsx';
+import { groupDaysByWeek } from '#/components/day-strip/group-days-by-week.util.ts';
+import { WeekCards } from '#/components/day-strip/week-cards.component.tsx';
+import { SegmentedControl } from '#/components/forms/segmented-control.component.tsx';
 import { Icon } from '#/components/icons/icon.component.tsx';
 import { Section } from '#/components/sections/section.component.tsx';
 
@@ -12,6 +21,9 @@ type DayStripSectionProps<TItem> = {
   /** "Até o fim do mês" or "Outubro, dia a dia". */
   title: string;
   variant: DayStripVariant;
+  /** Projection only: the chosen view, "day" (slider) or "week" (cards). Without it the section keeps its own. */
+  mode?: DayStripMode;
+  onModeChange?: (mode: DayStripMode) => void;
   days: readonly DayStripDay<TItem>[];
   today: string;
   selectedDate: string;
@@ -27,6 +39,11 @@ type DayStripSectionProps<TItem> = {
   className?: string;
 };
 
+const MODE_OPTIONS = [
+  { key: 'day', label: 'Dia' },
+  { key: 'week', label: 'Semana' },
+];
+
 const ARROW =
   'group relative hidden size-ctl-sm cursor-pointer place-items-center rounded-capsule text-fg-secondary outline-none transition-[background-color,color] duration-(--duration-fast) after:absolute after:-inset-1.5 after:content-[""] data-[hovered]:bg-brand-weak data-[hovered]:text-brand data-[focus-visible]:outline-2 data-[focus-visible]:outline-offset-2 data-[focus-visible]:outline-brand lg:grid lg:size-8';
 
@@ -40,13 +57,17 @@ function scrollByPage(list: HTMLElement | null, direction: -1 | 1) {
 }
 
 /**
- * The two forms of the strip with their section: "Até o fim do mês" (10 days, projected
- * balance, header link) and "Outubro, dia a dia" (the month, markers, legend and arrows), plus
- * the detail of the chosen day (components.md 4). The rows of the detail are a slot.
+ * The two forms of the strip with their section. "Até o fim do mês" (projection) has a Dia | Semana
+ * selector (BR-DSH-014): "Dia" is a slider of days with the figures of the chosen one, "Semana" is
+ * the weeks that are left; it never shows all the days at once. "Outubro, dia a dia" (occurrences)
+ * is the month with markers, legend and arrows. Both end with the detail of the chosen day
+ * (components.md 4), whose rows are a slot.
  */
 export function DayStripSection<TItem>({
   title,
   variant,
+  mode,
+  onModeChange,
   days,
   today,
   selectedDate,
@@ -59,6 +80,14 @@ export function DayStripSection<TItem>({
 }: DayStripSectionProps<TItem>) {
   const listRef = useRef<HTMLDivElement | null>(null);
   const selectedDay = days.find((day) => day.date === selectedDate);
+  const [ownMode, setOwnMode] = useState<DayStripMode>('day');
+  const activeMode = mode ?? ownMode;
+  const showsWeeks = variant === 'projection' && activeMode === 'week';
+
+  function changeMode(next: DayStripMode) {
+    setOwnMode(next);
+    onModeChange?.(next);
+  }
 
   const header =
     variant === 'occurrences' ? (
@@ -84,17 +113,48 @@ export function DayStripSection<TItem>({
 
   return (
     <Section title={title} action={header} className={className}>
+      {variant === 'projection' ? (
+        <SegmentedControl
+          label="Ver por"
+          options={MODE_OPTIONS}
+          value={activeMode}
+          onChange={(key) => changeMode(key === 'week' ? 'week' : 'day')}
+        />
+      ) : null}
       {variant === 'occurrences' ? <DayStripLegend /> : null}
-      <DayStrip
-        scrollerRef={listRef}
-        days={days}
-        today={today}
-        selectedDate={selectedDate}
-        onSelectDate={onSelectDate}
-        variant={variant}
-        label={title}
-      />
-      {renderDay && selectedDay ? (
+      {variant === 'occurrences' ? (
+        <DayStrip
+          scrollerRef={listRef}
+          days={days}
+          today={today}
+          selectedDate={selectedDate}
+          onSelectDate={onSelectDate}
+          variant={variant}
+          label={title}
+        />
+      ) : showsWeeks ? (
+        <MotionConfig reducedMotion="user">
+          <WeekCards
+            label={`Semanas: ${title}`}
+            weeks={groupDaysByWeek(days, today)}
+            onSelectWeek={(week) => {
+              onSelectDate(week.startDate);
+              changeMode('day');
+            }}
+          />
+        </MotionConfig>
+      ) : (
+        <MotionConfig reducedMotion="user">
+          <DaySlider
+            days={days}
+            today={today}
+            selectedDate={selectedDate}
+            onSelectDate={onSelectDate}
+            label={title}
+          />
+        </MotionConfig>
+      )}
+      {renderDay && selectedDay && !showsWeeks ? (
         <div aria-live="polite" className="flex flex-col gap-s8 border-t border-line pt-s12">
           <p className="text-meta text-fg-secondary">{dayLongLabel(selectedDay.date)}</p>
           {selectedDay.items.length > 0 ? (

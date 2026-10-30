@@ -1,4 +1,4 @@
-import { Chip, DayStripSection, Money } from '@fincheck/ui';
+import { Chip, type DayStripMode, DayStripSection, Money } from '@fincheck/ui';
 
 import { DayItems } from '#/features/overview/overview/components/day-items.component.tsx';
 import { OverviewLink } from '#/features/overview/overview/components/overview-link.component.tsx';
@@ -8,17 +8,28 @@ type DayStripBlockProps = {
   data: StripData;
   selectedDate: string;
   onSelectDate: (date: string) => void;
+  mode: DayStripMode;
+  onModeChange: (mode: DayStripMode) => void;
   billsHref: string;
 };
 
-/** "Até o fim do mês": the strip of days with the projected balance, the chosen day and the late/undated chips. */
-export function DayStripBlock({ data, selectedDate, onSelectDate, billsHref }: DayStripBlockProps) {
+/** "Até o fim do mês": the Dia | Semana selector (BR-DSH-014), the day slider or the week cards, the chosen day and the late/undated chips. */
+export function DayStripBlock({
+  data,
+  selectedDate,
+  onSelectDate,
+  mode,
+  onModeChange,
+  billsHref,
+}: DayStripBlockProps) {
   const hasChips = data.overdue.length > 0 || data.undated.length > 0;
 
   return (
     <DayStripSection
       title="Até o fim do mês"
       variant="projection"
+      mode={mode}
+      onModeChange={onModeChange}
       days={data.days}
       today={data.today}
       selectedDate={selectedDate}

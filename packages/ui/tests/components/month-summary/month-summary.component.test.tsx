@@ -126,6 +126,28 @@ describe('ResultSummaryCard', () => {
   });
 });
 
+describe('linked cards', () => {
+  it('makes the label a link that stretches over the whole card, with no white hover', () => {
+    const html = renderToStaticMarkup(
+      <IncomeSummaryCard receivedCents={1} expectedCents={2} href="/recurrences?month=2026-10" />,
+    );
+
+    expect(html).toContain('<a ');
+    expect(html).toContain('href="/recurrences?month=2026-10"');
+    expect(html).toContain('after:absolute');
+    expect(html).toContain('hover:bg-subtle');
+    expect(html).toContain('has-[[data-focus-visible]]:outline-2');
+    expect(html).not.toContain('hover:bg-glass');
+  });
+
+  it('stays a plain card without href', () => {
+    const html = renderToStaticMarkup(<IncomeSummaryCard receivedCents={1} expectedCents={2} />);
+
+    expect(html).not.toContain('<a ');
+    expect(html).not.toContain('hover:bg-subtle');
+  });
+});
+
 describe('MonthSummaryCards', () => {
   it('puts the three cards in one named group of equal height', () => {
     const html = renderToStaticMarkup(

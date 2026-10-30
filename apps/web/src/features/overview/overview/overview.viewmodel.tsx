@@ -5,6 +5,7 @@ import { useCategoryBreakdown } from '#/domain/dashboard/category-breakdown/hook
 import { useMonthSummary } from '#/domain/dashboard/month-summary/hooks/use-month-summary.hook.ts';
 import { useSpendingCurve } from '#/domain/dashboard/spending-curve/hooks/use-spending-curve.hook.ts';
 import { useTimeline } from '#/domain/dashboard/timeline/hooks/use-timeline.hook.ts';
+import { useOverviewSearch } from '#/features/overview/overview/hooks/use-overview-search.hook.ts';
 import type { OverviewModel } from '#/features/overview/overview/overview.model.ts';
 import { OverviewView } from '#/features/overview/overview/overview.view.tsx';
 import { buildAlerts } from '#/features/overview/overview/utils/build-alerts.util.ts';
@@ -24,9 +25,17 @@ import { buildHref } from '#/shared/layouts/application/navigation/build-href.ut
 /** Where "Ver todas" lands: Transações in its "Por categoria" view (the `view` param belongs to that screen). */
 const BY_CATEGORY_PATH = '/transactions?view=category';
 
+/** Where the three summary cards lead: Receitas to Recorrentes, Despesas to the expenses, Resultado to every transaction. */
+const SUMMARY_PATHS = {
+  income: '/recurrences',
+  expense: '/transactions?type=expense',
+  result: '/transactions',
+} as const;
+
 function useOverviewModel(): OverviewModel {
   const isDesktop = useIsDesktop();
   const { month } = useSelectedMonth();
+  const { strip: stripMode, setStrip } = useOverviewSearch();
   const [chosen, setChosen] = useState<{ month: string; date: string } | null>(null);
 
   const monthSummary = useMonthSummary(month);
@@ -58,6 +67,8 @@ function useOverviewModel(): OverviewModel {
       buildSummaryCards(month, data, curve.data, breakdown.data),
     ),
     strip,
+    stripMode,
+    onStripModeChange: setStrip,
     selectedDate,
     onSelectDate: (date) => setChosen({ month, date }),
     spend: toSectionState(curve, buildSpend),
@@ -77,6 +88,11 @@ function useOverviewModel(): OverviewModel {
               data: buildCategories(month, breakdown.data, categories.data.items),
             },
     billsHref: buildHref('/recurrences/bills', month),
+    summaryLinks: {
+      income: buildHref(SUMMARY_PATHS.income, month),
+      expense: buildHref(SUMMARY_PATHS.expense, month),
+      result: buildHref(SUMMARY_PATHS.result, month),
+    },
     allCategoriesHref: buildHref(BY_CATEGORY_PATH, month),
   };
 }

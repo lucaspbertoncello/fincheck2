@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -34,16 +35,94 @@ describe('OverviewPage', () => {
     expect(screen.getByText(/^Faltam/)).toBeInTheDocument();
   });
 
-  it('opens the day chosen in the strip', async () => {
+  it('shows one day at a time in a slider, never the whole list of days', async () => {
     renderApp('/');
-    const strip = await screen.findByRole('listbox', { name: 'Até o fim do mês' });
-    const options = within(strip).getAllByRole('option');
-    expect(options.length).toBeGreaterThan(1);
+    const slider = await screen.findByRole('group', { name: 'Até o fim do mês' });
 
-    const last = options.at(-1)!;
-    fireEvent.click(last);
+    expect(screen.queryByRole('listbox', { name: 'Até o fim do mês' })).not.toBeInTheDocument();
+    expect(within(slider).getByText('Entra')).toBeInTheDocument();
+    expect(within(slider).getByText('Sai')).toBeInTheDocument();
+    expect(within(slider).getByText('Saldo projetado')).toBeInTheDocument();
+    expect(screen.getByText(/^Dia \d+ de \d+$/)).toBeInTheDocument();
+  });
 
-    await waitFor(() => expect(last).toHaveAttribute('aria-selected', 'true'));
+  it('moves between days with the arrows and the keyboard', async () => {
+    const user = userEvent.setup();
+    renderApp('/');
+    const slider = await screen.findByRole('group', { name: 'Até o fim do mês' });
+    const counter = () => screen.getByText(/^Dia \d+ de \d+$/).textContent ?? '';
+    const total = counter().split(' de ')[1];
+    expect(Number(total)).toBeGreaterThanOrEqual(2);
+
+    slider.focus();
+    await user.keyboard('{End}');
+    await waitFor(() => expect(counter()).toBe(`Dia ${total} de ${total}`));
+    expect(within(slider).getByRole('button', { name: 'Próximo dia' })).toBeDisabled();
+
+    await user.keyboard('{Home}');
+    await waitFor(() => expect(counter()).toBe(`Dia 1 de ${total}`));
+    expect(within(slider).getByRole('button', { name: 'Dia anterior' })).toBeDisabled();
+
+    await user.keyboard('{ArrowRight}');
+    await waitFor(() => expect(counter()).toBe(`Dia 2 de ${total}`));
+    await user.click(within(slider).getByRole('button', { name: 'Dia anterior' }));
+    await waitFor(() => expect(counter()).toBe(`Dia 1 de ${total}`));
+    await user.click(within(slider).getByRole('button', { name: 'Próximo dia' }));
+    await waitFor(() => expect(counter()).toBe(`Dia 2 de ${total}`));
+  });
+
+  it('switches to the weeks, keeps the view in the URL and opens a week in the Dia view', async () => {
+    const user = userEvent.setup();
+    renderApp('/?month=2026-10');
+    await screen.findByRole('group', { name: 'Até o fim do mês' });
+
+    await user.click(screen.getByRole('radio', { name: 'Semana' }));
+
+    const weeks = await screen.findByRole('list', { name: /^Semanas/ });
+    expect(window.location.search).toContain('strip=week');
+    expect(screen.queryByRole('group', { name: 'Até o fim do mês' })).not.toBeInTheDocument();
+    const cards = within(weeks).getAllByRole('button');
+    expect(cards.length).toBeGreaterThan(0);
+    expect(within(weeks).getAllByText('Saldo ao fim').length).toBe(cards.length);
+
+    await user.click(cards.at(-1)!);
+
+    expect(await screen.findByRole('group', { name: 'Até o fim do mês' })).toBeInTheDocument();
+    expect(window.location.search).not.toContain('strip=');
+  });
+
+  it('opens the weeks straight from the URL', async () => {
+    renderApp('/?month=2026-10&strip=week');
+
+    expect(await screen.findByRole('list', { name: /^Semanas/ })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Semana' })).toBeChecked();
+  });
+
+  it('turns each summary card into a link to the month in the right place', async () => {
+    renderApp('/?month=2026-10');
+    const cards = await screen.findByRole('region', { name: 'Resumo do mês' });
+
+    expect(within(cards).getByRole('link', { name: 'Receitas' }).getAttribute('href')).toBe(
+      '/recurrences?month=2026-10',
+    );
+    expect(within(cards).getByRole('link', { name: 'Despesas' }).getAttribute('href')).toBe(
+      '/transactions?type=expense&month=2026-10',
+    );
+    expect(within(cards).getByRole('link', { name: 'Resultado do mês' }).getAttribute('href')).toBe(
+      '/transactions?month=2026-10',
+    );
+  });
+
+  it('takes the Despesas card to Transações already filtered by expenses', async () => {
+    const user = userEvent.setup();
+    renderApp('/?month=2026-10');
+    const cards = await screen.findByRole('region', { name: 'Resumo do mês' });
+
+    await user.click(within(cards).getByRole('link', { name: 'Despesas' }));
+
+    await waitFor(() => expect(window.location.pathname).toBe('/transactions'));
+    expect(window.location.search).toContain('type=expense');
+    expect(window.location.search).toContain('month=2026-10');
   });
 
   it('links to A pagar e receber and to Transações by category with the month of the URL', async () => {

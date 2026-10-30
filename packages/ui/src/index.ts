@@ -128,7 +128,9 @@ export {
   type DayMarkerFlow,
   type DayMarkerStatus,
   type DayStripDay,
+  type DayStripMode,
   type DayStripVariant,
+  type WeekSummary,
 } from '#/components/day-strip/index.ts';
 export { Section } from '#/components/sections/index.ts';
 export {

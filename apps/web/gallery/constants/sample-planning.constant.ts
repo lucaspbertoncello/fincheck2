@@ -45,13 +45,15 @@ function pad(day: number): string {
   return `2026-10-${String(day).padStart(2, '0')}`;
 }
 
-/** The 10 days from today to the end of the month, with the projected balance. */
+/** The 10 days from today to the end of the month, with what comes in, goes out and the projected balance. */
 export const PROJECTION_DAYS: DayStripDay<DayItem>[] = Array.from({ length: 10 }, (_, index) => {
   const date = pad(22 + index);
   const items = dayItems(date);
   return {
     date,
     items,
+    inCents: items.filter((item) => item.cents > 0).reduce((sum, item) => sum + item.cents, 0),
+    outCents: items.filter((item) => item.cents < 0).reduce((sum, item) => sum - item.cents, 0),
     totalCents: items.length > 0 ? 250000 + index * 15000 - (index > 3 ? 190000 : 0) : undefined,
   };
 });

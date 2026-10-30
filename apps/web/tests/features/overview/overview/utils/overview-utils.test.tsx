@@ -134,6 +134,25 @@ describe('buildStrip', () => {
     expect(strip.days[0]?.totalCents).toBeUndefined();
   });
 
+  it('sums what comes in and what goes out of each day', () => {
+    const items = [
+      { key: 'a', flow: 'in', amountCents: 420000 },
+      { key: 'b', flow: 'out', amountCents: 12990 },
+      { key: 'c', flow: 'out', amountCents: 1000 },
+    ] as Timeline.Item[];
+    const strip = buildStrip({
+      month: '2026-10',
+      today: '2026-10-22',
+      days: [day('2026-10-22', { isToday: true, items }), day('2026-10-23')],
+      overdue: [],
+      undated: [],
+      endBalanceCents: 0,
+    });
+
+    expect(strip.days[0]).toMatchObject({ inCents: 420000, outCents: 13990 });
+    expect(strip.days[1]).toMatchObject({ inCents: 0, outCents: 0 });
+  });
+
   it('opens on the first day that has something', () => {
     const item = { key: 'k' } as Timeline.Item;
     expect(
