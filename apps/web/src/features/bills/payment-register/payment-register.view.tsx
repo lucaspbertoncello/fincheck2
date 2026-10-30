@@ -1,10 +1,17 @@
-import { Button, EditDateField, FineNote, Modal, Money, MoneyField } from '@fincheck/ui';
+import {
+  AmountField,
+  ChoiceChip,
+  DateQuickField,
+  FineNote,
+  FormModal,
+  FormModalSplit,
+  Money,
+} from '@fincheck/ui';
 
-import { PaymentCandidatePicker } from '#/features/bills/components/payment-candidate-picker.component.tsx';
+import { CandidateRowsField } from '#/features/bills/components/candidate-rows-field.component.tsx';
 import type { PaymentRegisterViewProps } from '#/features/bills/payment-register/payment-register.model.ts';
 
 export function PaymentRegisterView({
-  formRef,
   isOpen,
   onClose,
   title,
@@ -14,6 +21,7 @@ export function PaymentRegisterView({
   onAmountChange,
   paidOn,
   onPaidOnChange,
+  today,
   errors,
   remainingCents,
   candidates,
@@ -21,71 +29,72 @@ export function PaymentRegisterView({
   isSaving,
   onSubmit,
 }: PaymentRegisterViewProps) {
+  const isIncome = flow === 'income';
+  const half = Math.round(remainingCents / 2);
+  const showsHalf = half > 0 && half !== remainingCents;
+
   return (
-    <Modal
+    <FormModal
       isOpen={isOpen}
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
-      isDismissable={!isSaving}
       title={title}
-      subtitle={subtitle}
-      actions={
-        <>
-          <Button variant="secondary" isDisabled={isSaving} onPress={onClose}>
-            Cancelar
-          </Button>
-          <Button form="payment-register-form" type="submit" loading={isSaving}>
-            {flow === 'income' ? 'Registrar recebimento' : 'Registrar pagamento'}
-          </Button>
-        </>
-      }
+      description={subtitle}
+      submitLabel={isIncome ? 'Registrar recebimento' : 'Registrar pagamento'}
+      onSubmit={onSubmit}
+      isSubmitting={isSaving}
+      error={submitError ?? undefined}
     >
-      <form
-        id="payment-register-form"
-        ref={formRef}
-        noValidate
-        className="flex flex-col gap-s16"
-        onSubmit={(event) => {
-          event.preventDefault();
-          onSubmit();
-        }}
+      <FormModalSplit
+        aside={
+          <>
+            <AmountField
+              label={isIncome ? 'Quanto você recebeu' : 'Quanto você pagou'}
+              cents={amountCents}
+              onChange={onAmountChange}
+              kind={flow}
+              error={errors.amountCents}
+            />
+            <div role="group" aria-label="Valores rápidos" className="flex flex-wrap gap-s8">
+              <ChoiceChip
+                selected={amountCents === remainingCents}
+                onChange={() => onAmountChange(remainingCents)}
+              >
+                Tudo que falta
+              </ChoiceChip>
+              {showsHalf ? (
+                <ChoiceChip selected={amountCents === half} onChange={() => onAmountChange(half)}>
+                  Metade
+                </ChoiceChip>
+              ) : null}
+            </div>
+            <FineNote icon="calendar">
+              Falta <Money cents={remainingCents} sign="none" weight="plain" />. Pode registrar só
+              uma parte: o restante continua {isIncome ? 'a receber' : 'a pagar'}.
+            </FineNote>
+          </>
+        }
       >
+        <DateQuickField
+          label={isIncome ? 'Recebido em' : 'Pago em'}
+          value={paidOn}
+          onChange={onPaidOnChange}
+          today={today}
+          error={errors.paidOn}
+        />
         {candidates ? (
-          <PaymentCandidatePicker
-            label={flow === 'income' ? 'Pix recebido' : 'Pix já feito'}
+          <CandidateRowsField
+            label={isIncome ? 'Pix recebido' : 'Pix já feito'}
             optional
             options={candidates.options}
             value={candidates.selected}
             onChange={candidates.onSelect}
             isLoading={candidates.isLoading}
-            noneLabel="Registrar à mão"
             emptyText="Nenhuma transação recente serve. Registre à mão."
           />
         ) : null}
-        <MoneyField
-          label={flow === 'income' ? 'Quanto você recebeu' : 'Quanto você pagou'}
-          cents={amountCents}
-          onChange={onAmountChange}
-          error={errors.amountCents}
-          autoFocus
-        />
-        <EditDateField
-          label={flow === 'income' ? 'Recebido em' : 'Pago em'}
-          value={paidOn}
-          onChange={onPaidOnChange}
-          error={errors.paidOn}
-        />
-        <FineNote icon="calendar">
-          Falta <Money cents={remainingCents} sign="none" weight="plain" />. Pode registrar só uma
-          parte: o restante continua {flow === 'income' ? 'a receber' : 'a pagar'}.
-        </FineNote>
-        {submitError ? (
-          <p role="alert" className="text-label text-loss">
-            {submitError}
-          </p>
-        ) : null}
-      </form>
-    </Modal>
+      </FormModalSplit>
+    </FormModal>
   );
 }

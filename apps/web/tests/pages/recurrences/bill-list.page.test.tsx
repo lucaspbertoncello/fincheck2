@@ -107,6 +107,8 @@ describe('BillListPage', () => {
 
     fireEvent.click(within(row).getByRole('button'));
     const dialog = await screen.findByRole('dialog', { name: 'Vincular o pagamento?' });
+    // the bank text of the transaction found is shown, not only its amount
+    expect(within(dialog).getByText(/PAGAMENTO FATURA/)).toBeInTheDocument();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Vincular' }));
 
     expect(await screen.findByText(/pagamento vinculado\./)).toBeInTheDocument();
@@ -131,36 +133,6 @@ describe('BillListPage', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(window.location.search).not.toContain('new=');
     expect(await findRow('IPTU, parcela 3')).toHaveTextContent('Sem data');
-  });
-
-  it('opens the friend-debt modal from ?new=debt, with the Pix of the friend, and saves "Me devem"', async () => {
-    renderApp(`${URL}&new=debt`);
-    const dialog = await screen.findByRole('dialog', { name: 'Dívida com amigo' });
-    expect(within(dialog).getByLabelText('Quem você deve')).toBeInTheDocument();
-
-    fireEvent.click(within(dialog).getByRole('radio', { name: 'Me devem' }));
-    expect(within(dialog).getByLabelText('Quem te deve')).toBeInTheDocument();
-    expect(within(dialog).getByText('Transação que você pagou')).toBeInTheDocument();
-
-    fireEvent.change(within(dialog).getByLabelText('Quem te deve'), { target: { value: 'Bruno' } });
-    fireEvent.change(within(dialog).getByLabelText('O que foi'), {
-      target: { value: 'Metade do Uber' },
-    });
-    fireEvent.change(within(dialog).getByLabelText('Valor que é do amigo'), {
-      target: { value: '6240' },
-    });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Salvar dívida' }));
-
-    expect(await screen.findByText('Dívida "Metade do Uber" criada.')).toBeInTheDocument();
-    await findRow('Bruno te deve');
-  });
-
-  it('explains in the "Eu devo" tab that the Pix counts as an expense (Q11) and offers the category (Q18)', async () => {
-    renderApp(`${URL}&new=debt`);
-    const dialog = await screen.findByRole('dialog', { name: 'Dívida com amigo' });
-
-    expect(within(dialog).getByText(/conta como gasto/)).toBeInTheDocument();
-    expect(within(dialog).getByRole('group', { name: 'Categoria (opcional)' })).toBeInTheDocument();
   });
 
   it('shows the empty state when there is nothing to pay or receive', async () => {

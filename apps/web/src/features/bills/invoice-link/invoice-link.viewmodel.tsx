@@ -34,6 +34,7 @@ function InvoiceLinkForm({ item, onClose }: InvoiceLinkFormProps) {
       isOpen
       onClose={onClose}
       invoiceName={item.title}
+      description={item.paymentFound.description ?? null}
       accountName={account ? (account.institutionName ?? account.name) : ''}
       amountCents={Math.abs(item.paymentFound.amountCents)}
       dateText={formatDayMonth(item.paymentFound.occurredOn)}

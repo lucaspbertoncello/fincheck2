@@ -58,6 +58,10 @@ export function buildBillRows(items: readonly Agenda.Item[], context: RowContext
       amountCents: item.amountCents,
       settledCents: status === 'partial' ? item.paidCents : undefined,
       actionable: status !== 'settled',
+      editBillId:
+        status !== 'settled' && item.badge === 'bill' && item.source.type === 'bill'
+          ? (item.source.billId ?? undefined)
+          : undefined,
     };
   });
 }

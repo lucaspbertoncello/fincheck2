@@ -1,4 +1,4 @@
-import { Button, Icon, Modal, Money } from '@fincheck/ui';
+import { FormModal, FormModalGroup, Icon, Money } from '@fincheck/ui';
 
 import type { InvoiceLinkViewProps } from '#/features/bills/invoice-link/invoice-link.model.ts';
 
@@ -12,6 +12,7 @@ export function InvoiceLinkView({
   isOpen,
   onClose,
   invoiceName,
+  description,
   accountName,
   amountCents,
   dateText,
@@ -21,43 +22,46 @@ export function InvoiceLinkView({
   onDismiss,
 }: InvoiceLinkViewProps) {
   return (
-    <Modal
+    <FormModal
       isOpen={isOpen}
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
-      isDismissable={!isSaving}
-      size="dialog"
+      size="wide"
       title="Vincular o pagamento?"
-      subtitle={invoiceName}
-      actions={
-        <>
-          <Button variant="secondary" isDisabled={isSaving} onPress={onDismiss}>
-            Não é este
-          </Button>
-          <Button icon="link" loading={isSaving} onPress={onLink}>
-            Vincular
-          </Button>
-        </>
-      }
+      description={invoiceName}
+      submitLabel="Vincular"
+      submittingLabel="Vinculando..."
+      cancelLabel="Agora não"
+      onSubmit={onLink}
+      isSubmitting={isSaving}
+      error={submitError ?? undefined}
+      destructive={{ label: 'Não é este', icon: 'close', onPress: onDismiss }}
     >
-      <p className="text-body text-fg-primary">
-        Encontramos o pagamento de <Money cents={amountCents} sign="none" weight="plain" />
-        {accountName ? ` no ${accountName}` : ''} em {dateText}. Vincular a esta fatura?
-      </p>
-      <ul className="m-0 flex list-none flex-col gap-s12 rounded-panel bg-subtle p-s16">
-        {EFFECTS.map((effect) => (
-          <li key={effect} className="flex items-start gap-s8 text-label text-fg-secondary">
-            <Icon name="chevron-right" size="sm" className="mt-px shrink-0" />
-            <span>{effect}</span>
-          </li>
-        ))}
-      </ul>
-      {submitError ? (
-        <p role="alert" className="text-label text-loss">
-          {submitError}
-        </p>
-      ) : null}
-    </Modal>
+      <FormModalGroup label="Pagamento encontrado">
+        <div className="flex items-center gap-s16 rounded-panel border border-line bg-subtle p-s16">
+          <div className="flex min-w-0 flex-1 flex-col gap-s4">
+            <span className="truncate text-body font-emphasis text-fg-primary">
+              {description ?? `Pagamento${accountName ? ` no ${accountName}` : ''}`}
+            </span>
+            <span className="truncate text-label text-fg-secondary">
+              {accountName ? `${accountName} · ` : ''}
+              {dateText}
+            </span>
+          </div>
+          <Money cents={amountCents} sign="none" weight="emphasis" className="text-money-md" />
+        </div>
+      </FormModalGroup>
+      <FormModalGroup label="Ao vincular">
+        <ul className="m-0 flex list-none flex-col gap-s12 p-0">
+          {EFFECTS.map((effect) => (
+            <li key={effect} className="flex items-start gap-s8 text-label text-fg-secondary">
+              <Icon name="check" size="sm" className="mt-px shrink-0 text-brand" />
+              <span>{effect}</span>
+            </li>
+          ))}
+        </ul>
+      </FormModalGroup>
+    </FormModal>
   );
 }

@@ -16,6 +16,8 @@ export type BillRowModel = {
   settledCents: number | undefined;
   /** False on settled rows: they have no button. */
   actionable: boolean;
+  /** The id of a one-off bill that can be edited (tap the name); undefined on invoices, debts and recurrences. */
+  editBillId: string | undefined;
 };
 
 /** A summary card ("A pagar", "A receber de amigos"). */
@@ -53,5 +55,7 @@ export type BillListViewProps = {
   actionError: string | null;
   onDismissActionError: () => void;
   onRowAction: (key: string) => void;
+  /** Tap on the name of an editable bill: opens the edit modal. */
+  onRowEdit: (billId: string) => void;
   onNewDebt: () => void;
 };

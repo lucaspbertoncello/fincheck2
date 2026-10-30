@@ -1,9 +1,6 @@
-import type { RefObject } from 'react';
-
 import type { PaymentCandidateOption } from '#/features/bills/types/payment-candidate-option.type.ts';
 
 export type PaymentRegisterViewProps = {
-  formRef: RefObject<HTMLFormElement | null>;
   isOpen: boolean;
   onClose: () => void;
   /** "Registrar pagamento" or "Registrar recebimento". */
@@ -15,8 +12,10 @@ export type PaymentRegisterViewProps = {
   onAmountChange: (cents: number) => void;
   paidOn: string;
   onPaidOnChange: (date: string) => void;
+  /** Today as `YYYY-MM-DD` in the business time zone, for the "Hoje" and "Ontem" shortcuts. */
+  today: string;
   errors: { amountCents?: string; paidOn?: string };
-  /** What is left to pay or receive, shown under the amount. */
+  /** What is left to pay or receive. */
   remainingCents: number;
   /** Bills only: the recent transactions that could be the Pix. Null for an invoice. */
   candidates: {

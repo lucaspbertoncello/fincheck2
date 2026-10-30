@@ -11,6 +11,7 @@ type BillAgendaSectionProps = {
   rows: readonly BillRowModel[];
   divider?: boolean;
   onRowAction: (key: string) => void;
+  onRowEdit?: (billId: string) => void;
 };
 
 /** A section of the agenda: header with its note and the rows as `BillRow`. Renders nothing when empty. */
@@ -21,6 +22,7 @@ export function BillAgendaSection({
   rows,
   divider = true,
   onRowAction,
+  onRowEdit,
 }: BillAgendaSectionProps) {
   if (rows.length === 0) return null;
 
@@ -31,7 +33,18 @@ export function BillAgendaSection({
       action={note ? <span className="text-label text-fg-secondary">{note}</span> : undefined}
     >
       {intro ? <p className="-mt-s8 text-label text-fg-secondary">{intro}</p> : null}
-      <ul className="m-0 flex list-none flex-col divide-y divide-line p-0">
+      <ul
+        onClick={(event) => {
+          // BillRow (packages/ui) has no edit slot: a tap on the name of a one-off bill edits it.
+          const target = event.target as HTMLElement;
+          const item = target.closest('li');
+          const name = target.closest('p');
+          if (!item || !name || name !== item.querySelector('p')) return;
+          const row = rows[Array.from(event.currentTarget.children).indexOf(item)];
+          if (row?.editBillId) onRowEdit?.(row.editBillId);
+        }}
+        className="m-0 flex list-none flex-col divide-y divide-line p-0"
+      >
         {rows.map((row) => (
           <BillRow
             key={row.key}
@@ -44,6 +57,11 @@ export function BillAgendaSection({
             foundPayment={row.foundPayment}
             amountCents={row.amountCents}
             settledCents={row.settledCents}
+            className={
+              row.editBillId
+                ? '[&>div>p:first-child]:cursor-pointer [&>div>p:first-child]:hover:underline'
+                : undefined
+            }
             onAction={row.actionable ? () => onRowAction(row.key) : undefined}
           />
         ))}

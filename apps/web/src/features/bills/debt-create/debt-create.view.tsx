@@ -1,21 +1,25 @@
 import {
-  Button,
-  CategoryChoices,
-  ChoiceChip,
-  EditDateField,
+  AmountField,
+  ChoiceField,
   FineNote,
-  Modal,
+  FormModal,
+  FormModalMore,
+  FormModalSplit,
   Money,
-  MoneyField,
-  SegmentedControl,
   TextField,
+  formatCentsInput,
 } from '@fincheck/ui';
 
-import { PaymentCandidatePicker } from '#/features/bills/components/payment-candidate-picker.component.tsx';
+import { CandidateRowsField } from '#/features/bills/components/candidate-rows-field.component.tsx';
+import { CategoryChipsField } from '#/features/bills/components/category-chips-field.component.tsx';
+import { DueDateField } from '#/features/bills/components/due-date-field.component.tsx';
+import { PersonField } from '#/features/bills/components/person-field.component.tsx';
 import type {
   DebtCreateViewProps,
   DebtNote,
 } from '#/features/bills/debt-create/debt-create.model.ts';
+import { NO_CATEGORY_ID } from '#/features/bills/hooks/use-category-options.hook.ts';
+import { formatDayMonth } from '#/features/bills/utils/format-day-month.util.ts';
 
 const MODES = [
   { key: 'owe', label: 'Eu devo' },
@@ -51,7 +55,6 @@ function DebtNoteText({ note }: { note: DebtNote }) {
 }
 
 export function DebtCreateView({
-  formRef,
   isOpen,
   onClose,
   mode,
@@ -74,129 +77,110 @@ export function DebtCreateView({
   isSaving,
   onSubmit,
 }: DebtCreateViewProps) {
+  const isOwe = mode === 'owe';
+  const selectedOrigin = origin?.options.find((option) => option.transactionId === origin.selected);
+  const moreSummary = [
+    dueOn ? `vence ${formatDayMonth(dueOn)}` : null,
+    pix.selected ? 'Pix ligado' : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
   return (
-    <Modal
+    <FormModal
       isOpen={isOpen}
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
-      isDismissable={!isSaving}
-      size="wide"
       title="Dívida com amigo"
-      subtitle="Dinheiro que você deve ou que devem a você"
-      actions={
-        <>
-          <Button variant="secondary" isDisabled={isSaving} onPress={onClose}>
-            Cancelar
-          </Button>
-          <Button form="debt-create-form" type="submit" loading={isSaving}>
-            Salvar dívida
-          </Button>
-        </>
-      }
+      description="Dinheiro que você deve ou que devem a você."
+      submitLabel="Salvar dívida"
+      onSubmit={onSubmit}
+      isSubmitting={isSaving}
+      error={submitError ?? undefined}
     >
-      <form
-        id="debt-create-form"
-        ref={formRef}
-        noValidate
-        className="flex flex-col gap-s16"
-        onSubmit={(event) => {
-          event.preventDefault();
-          onSubmit();
-        }}
+      <FormModalSplit
+        aside={
+          <>
+            <ChoiceField
+              label="Sentido da dívida"
+              variant="segmented"
+              options={MODES}
+              value={mode}
+              onChange={(key) => onModeChange(key === 'owed' ? 'owed' : 'owe')}
+            />
+            <AmountField
+              label={isOwe ? 'Valor total' : 'Valor que é do amigo'}
+              cents={amountCents}
+              onChange={onAmountChange}
+              kind={isOwe ? 'expense' : 'income'}
+              error={errors.amountCents}
+              description={
+                selectedOrigin
+                  ? `Você pagou R$ ${formatCentsInput(selectedOrigin.amountCents)} no total. Já vem a metade: ajuste se não for.`
+                  : undefined
+              }
+            />
+            <FineNote icon="calendar">
+              <DebtNoteText note={note} />
+            </FineNote>
+          </>
+        }
       >
-        <SegmentedControl
-          label="Sentido da dívida"
-          options={MODES}
-          value={mode}
-          onChange={(key) => onModeChange(key === 'owed' ? 'owed' : 'owe')}
+        <PersonField
+          label={isOwe ? 'Quem você deve' : 'Quem te deve'}
+          recent={counterpartySuggestions}
+          value={counterparty}
+          onChange={onCounterpartyChange}
+          error={errors.counterparty}
         />
-        <div className="grid gap-s16 lg:grid-cols-2">
-          <TextField
-            label={mode === 'owe' ? 'Quem você deve' : 'Quem te deve'}
-            value={counterparty}
-            onChange={onCounterpartyChange}
-            error={errors.counterparty}
-            maxLength={80}
-            autoComplete="off"
-            autoFocus
-          />
-          <TextField
-            label="O que foi"
-            value={description}
-            onChange={onDescriptionChange}
-            error={errors.description}
-            placeholder="Ingresso do show"
-            maxLength={120}
-            autoComplete="off"
-          />
-        </div>
-        {counterpartySuggestions.length > 0 ? (
-          <div role="group" aria-label="Nomes já usados" className="flex flex-wrap gap-s8">
-            {counterpartySuggestions.map((name) => (
-              <ChoiceChip
-                key={name}
-                selected={name === counterparty}
-                onChange={() => onCounterpartyChange(name)}
-              >
-                {name}
-              </ChoiceChip>
-            ))}
-          </div>
-        ) : null}
-        <div className="grid gap-s16 lg:grid-cols-2">
-          <MoneyField
-            label={mode === 'owe' ? 'Valor total' : 'Valor que é do amigo'}
-            cents={amountCents}
-            onChange={onAmountChange}
-            error={errors.amountCents}
-          />
-          <EditDateField
-            label="Vence em (opcional)"
-            value={dueOn}
-            onChange={onDueOnChange}
-            error={errors.dueOn}
-          />
-        </div>
+        <TextField
+          label="O que foi"
+          value={description}
+          onChange={onDescriptionChange}
+          error={errors.description}
+          placeholder="Ingresso do show"
+          maxLength={120}
+          autoComplete="off"
+        />
         {categories ? (
-          <CategoryChoices
-            label="Categoria (opcional)"
+          <CategoryChipsField
+            label="Categoria do que foi pago"
             categories={categories.options}
+            noneId={NO_CATEGORY_ID}
             value={categories.value}
             onChange={categories.onChange}
           />
         ) : null}
         {origin ? (
-          <PaymentCandidatePicker
+          <CandidateRowsField
             label="Transação que você pagou"
             optional
             options={origin.options}
             value={origin.selected}
             onChange={origin.onSelect}
             isLoading={origin.isLoading}
-            noneLabel="Sem transação"
             emptyText="Nenhuma saída recente para ligar."
           />
         ) : null}
-        <PaymentCandidatePicker
-          label="Pix ligado a esta dívida"
-          optional
-          options={pix.options}
-          value={pix.selected}
-          onChange={pix.onSelect}
-          isLoading={pix.isLoading}
-          noneLabel="Sem Pix por enquanto"
-          emptyText="Nenhum Pix recente encontrado. Você liga depois, quando o Pix acontecer."
-        />
-        <FineNote icon="calendar">
-          <DebtNoteText note={note} />
-        </FineNote>
-        {submitError ? (
-          <p role="alert" className="text-label text-loss">
-            {submitError}
-          </p>
-        ) : null}
-      </form>
-    </Modal>
+        <FormModalMore summary={moreSummary || undefined} hasError={!!errors.dueOn}>
+          <DueDateField
+            label="Vence em"
+            value={dueOn}
+            onChange={onDueOnChange}
+            error={errors.dueOn}
+          />
+          <CandidateRowsField
+            label={isOwe ? 'Pix de volta já feito' : 'Pix já recebido'}
+            optional
+            options={pix.options}
+            value={pix.selected}
+            onChange={pix.onSelect}
+            isLoading={pix.isLoading}
+            emptyText="Nenhum Pix recente encontrado. Você liga depois, quando o Pix acontecer."
+          />
+        </FormModalMore>
+      </FormModalSplit>
+    </FormModal>
   );
 }

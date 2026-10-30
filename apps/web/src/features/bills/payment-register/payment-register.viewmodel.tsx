@@ -1,6 +1,6 @@
 import type { Agenda } from '@fincheck/shared/dashboard/agenda/agenda.type.ts';
 import { useToast } from '@fincheck/ui';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
 import { useBillPaymentCandidates } from '#/domain/bills/bill/hooks/use-bill-payment-candidates.hook.ts';
 import { useCreateBillPayment } from '#/domain/bills/bill-payment/hooks/use-create-bill-payment.hook.ts';
@@ -27,7 +27,6 @@ function PaymentRegisterForm({ item, onClose }: PaymentRegisterFormProps) {
   const remainingCents = Math.max(0, item.amountCents - item.paidCents);
   const flow = item.flow === 'in' ? 'income' : 'expense';
 
-  const formRef = useRef<HTMLFormElement>(null);
   const [amountCents, setAmountCents] = useState(item.remainingCents || remainingCents);
   const [paidOn, setPaidOn] = useState(getBusinessToday());
   const [transactionId, setTransactionId] = useState<string | null>(null);
@@ -46,7 +45,7 @@ function PaymentRegisterForm({ item, onClose }: PaymentRegisterFormProps) {
   const deleteInvoicePayment = useDeleteInvoicePayment();
   const isSaving = createBillPayment.isPending || createInvoicePayment.isPending;
 
-  useFocusFirstInvalid(formRef, attempt);
+  useFocusFirstInvalid(attempt);
 
   function selectCandidate(next: string | null) {
     setTransactionId(next);
@@ -115,7 +114,6 @@ function PaymentRegisterForm({ item, onClose }: PaymentRegisterFormProps) {
 
   return (
     <PaymentRegisterView
-      formRef={formRef}
       isOpen
       onClose={onClose}
       title={flow === 'income' ? 'Registrar recebimento' : 'Registrar pagamento'}
@@ -124,6 +122,7 @@ function PaymentRegisterForm({ item, onClose }: PaymentRegisterFormProps) {
       amountCents={amountCents}
       onAmountChange={setAmountCents}
       paidOn={paidOn}
+      today={getBusinessToday()}
       onPaidOnChange={setPaidOn}
       errors={errors}
       remainingCents={remainingCents}

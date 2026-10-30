@@ -3,6 +3,8 @@ export type InvoiceLinkViewProps = {
   onClose: () => void;
   /** "Fatura Bradesco". */
   invoiceName: string;
+  /** What the bank wrote on the found transaction ("PIX BRADESCO CARTOES"); null until the API sends it. */
+  description: string | null;
   /** Where the payment was found: "Bradesco". Empty when the account is not known. */
   accountName: string;
   /** The found payment, without the sign. */

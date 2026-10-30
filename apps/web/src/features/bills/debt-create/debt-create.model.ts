@@ -1,5 +1,4 @@
 import type { CategoryOption } from '@fincheck/ui';
-import type { RefObject } from 'react';
 
 import type { PaymentCandidateOption } from '#/features/bills/types/payment-candidate-option.type.ts';
 
@@ -20,7 +19,7 @@ type CandidatePicker = {
   isLoading: boolean;
 };
 
-/** What the note under the Pix says; the numbers go through `Money` in the view. */
+/** What the note under the amount says; the numbers go through `Money` in the view. */
 export type DebtNote = {
   mode: DebtMode;
   /** The friend, for "o que Júlia te deve". */
@@ -32,14 +31,13 @@ export type DebtNote = {
 };
 
 export type DebtCreateViewProps = {
-  formRef: RefObject<HTMLFormElement | null>;
   isOpen: boolean;
   onClose: () => void;
   mode: DebtMode;
   onModeChange: (mode: DebtMode) => void;
   counterparty: string;
   onCounterpartyChange: (name: string) => void;
-  /** Names already used, offered as quick choices. */
+  /** Names already used, offered as quick choices (most recent first). */
   counterpartySuggestions: string[];
   description: string;
   onDescriptionChange: (text: string) => void;

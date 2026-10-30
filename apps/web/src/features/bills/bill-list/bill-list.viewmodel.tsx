@@ -7,7 +7,7 @@ import { useCategories } from '#/domain/categories/category/hooks/use-categories
 import { useAgenda } from '#/domain/dashboard/agenda/hooks/use-agenda.hook.ts';
 import { useSettleOccurrence } from '#/domain/recurrences/occurrence/hooks/use-settle-occurrence.hook.ts';
 import { useUnsettleOccurrence } from '#/domain/recurrences/occurrence/hooks/use-unsettle-occurrence.hook.ts';
-import { BillCreateModal } from '#/features/bills/bill-create/bill-create.viewmodel.tsx';
+import { BillFormModal } from '#/features/bills/bill-form/bill-form.viewmodel.tsx';
 import { BillListView } from '#/features/bills/bill-list/bill-list.view.tsx';
 import type { BillSectionsModel } from '#/features/bills/bill-list/bill-list.model.ts';
 import { buildBillRows } from '#/features/bills/bill-list/utils/build-bill-rows.util.ts';
@@ -138,9 +138,10 @@ export function BillList() {
         actionError={actionError}
         onDismissActionError={() => setActionError(null)}
         onRowAction={(key) => void handleRowAction(key)}
+        onRowEdit={search.openEditBill}
         onNewDebt={() => search.openNewModal('debt')}
       />
-      <BillCreateModal />
+      <BillFormModal />
       <DebtCreateModal />
       <InvoiceLinkDialog item={showsLink ? payItem : null} onClose={closePayment} />
       <PaymentRegisterDialog item={showsLink ? null : payItem} onClose={closePayment} />

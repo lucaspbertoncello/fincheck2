@@ -1,6 +1,6 @@
 import { createBillRequestSchema } from '@fincheck/shared/bills/bill/bill.schema.ts';
 import { useToast } from '@fincheck/ui';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
 import { useBillCounterparties } from '#/domain/bills/bill/hooks/use-bill-counterparties.hook.ts';
 import { useCreateBill } from '#/domain/bills/bill/hooks/use-create-bill.hook.ts';
@@ -26,7 +26,6 @@ const MESSAGES = {
 };
 
 function DebtCreateForm({ onClose }: { onClose: () => void }) {
-  const formRef = useRef<HTMLFormElement>(null);
   const [mode, setMode] = useState<DebtMode>('owe');
   const [counterparty, setCounterparty] = useState('');
   const [description, setDescription] = useState('');
@@ -36,7 +35,6 @@ function DebtCreateForm({ onClose }: { onClose: () => void }) {
   const [pixId, setPixId] = useState<string | null>(null);
   const [originId, setOriginId] = useState<string | null>(null);
   const [errors, setErrors] = useState<DebtCreateErrors>({});
-  const [attempt, setAttempt] = useState(0);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const { showUndoToast } = useToast();
@@ -45,6 +43,8 @@ function DebtCreateForm({ onClose }: { onClose: () => void }) {
   const names = useBillCounterparties();
   const categoryOptions = useCategoryOptions('expense');
   const name = counterparty.trim();
+  const [attempt, setAttempt] = useState(0);
+  useFocusFirstInvalid(attempt);
 
   const pixQuery = usePaymentCandidatesForNewBill({
     direction: mode === 'owe' ? 'payable' : 'receivable',
@@ -59,8 +59,6 @@ function DebtCreateForm({ onClose }: { onClose: () => void }) {
   const selectedPix = pixOptions.find((option) => option.transactionId === pixId) ?? null;
   const selectedOrigin = originOptions.find((option) => option.transactionId === originId) ?? null;
 
-  useFocusFirstInvalid(formRef, attempt);
-
   function changeMode(next: DebtMode) {
     setMode(next);
     setPixId(null); // the Pix candidates are of the other direction
@@ -70,7 +68,7 @@ function DebtCreateForm({ onClose }: { onClose: () => void }) {
   function selectOrigin(next: string | null) {
     setOriginId(next);
     const option = originOptions.find((entry) => entry.transactionId === next);
-    if (option && amountCents === 0) setAmountCents(option.amountCents);
+    if (option) setAmountCents(Math.round(option.amountCents / 2)); // half is the usual split; editable
   }
 
   async function submit() {
@@ -118,7 +116,6 @@ function DebtCreateForm({ onClose }: { onClose: () => void }) {
 
   return (
     <DebtCreateView
-      formRef={formRef}
       isOpen
       onClose={onClose}
       mode={mode}
