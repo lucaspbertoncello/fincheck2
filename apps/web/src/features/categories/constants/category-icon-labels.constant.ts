@@ -1,0 +1,32 @@
+import type { Category } from '@fincheck/shared/categories/category/category.type.ts';
+
+/** Accessible names of the icons a category may use, in pt-BR. */
+export const CATEGORY_ICON_LABELS: Record<Category.Icon, string> = {
+  food: 'Comida',
+  deliv: 'Entrega',
+  cart: 'Carrinho',
+  car: 'Carro',
+  fuel: 'Combustível',
+  house: 'Casa',
+  health: 'Saúde',
+  fun: 'Lazer',
+  subs: 'Assinatura',
+  phone: 'Telefone',
+  wifi: 'Internet',
+  gym: 'Academia',
+  gift: 'Presente',
+  plane: 'Viagem',
+  pet: 'Pet',
+  shirt: 'Roupa',
+  book: 'Livro',
+  ticket: 'Ingresso',
+  receipt: 'Recibo',
+  shield: 'Seguro',
+  salary: 'Salário',
+  coins: 'Moedas',
+  dollar: 'Dinheiro',
+  handmoney: 'Mesada',
+  trend: 'Investimento',
+  wallet: 'Carteira',
+  tag: 'Etiqueta',
+};
