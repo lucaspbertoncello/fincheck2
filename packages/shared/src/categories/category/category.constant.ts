@@ -1,0 +1,32 @@
+export const CATEGORY_KINDS = ['expense', 'income'] as const;
+
+// Names of the files in design/assets/icons/ that a category may use.
+export const CATEGORY_ICONS = [
+  'food',
+  'deliv',
+  'cart',
+  'car',
+  'fuel',
+  'house',
+  'health',
+  'fun',
+  'subs',
+  'phone',
+  'wifi',
+  'gym',
+  'gift',
+  'plane',
+  'pet',
+  'shirt',
+  'book',
+  'ticket',
+  'receipt',
+  'shield',
+  'salary',
+  'coins',
+  'dollar',
+  'handmoney',
+  'trend',
+  'wallet',
+  'tag',
+] as const;
