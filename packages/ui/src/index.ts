@@ -94,3 +94,15 @@ export {
   type InvoiceInstallment,
   type InvoiceStatus,
 } from '#/components/bank-cards/index.ts';
+export {
+  DayStrip,
+  DayStripLegend,
+  DayStripSection,
+  formatDayTotal,
+  type DayMarker,
+  type DayMarkerFlow,
+  type DayMarkerStatus,
+  type DayStripDay,
+  type DayStripVariant,
+} from '#/components/day-strip/index.ts';
+export { Section } from '#/components/sections/index.ts';
