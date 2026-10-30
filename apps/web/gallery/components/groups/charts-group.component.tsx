@@ -2,6 +2,8 @@ import {
   AccountSparkline,
   CategoryDonut,
   MonthSpendChart,
+  SpendHeatmap,
+  SpendHeatmapLegend,
   VariationBadge,
   type DonutSlice,
 } from '@fincheck/ui';
@@ -11,6 +13,7 @@ import {
   SPEND_CURRENT,
   SPEND_PREVIOUS,
 } from '#gallery/constants/sample-summary.constant.ts';
+import { SAMPLE_HEATMAP_DAYS } from '#gallery/constants/sample-heatmap.constant.ts';
 import { BALANCE_CURVE } from '#gallery/constants/sample-bank.constant.ts';
 import type { GallerySectionDef } from '#gallery/types/gallery-group.type.ts';
 import { GalleryVariant } from '#gallery/components/shell/gallery-variant.component.tsx';
@@ -24,6 +27,25 @@ const BADGED_SLICES: DonutSlice[] = DONUT_SLICES.map((slice, index) =>
 );
 
 export const CHARTS_SECTIONS: GallerySectionDef[] = [
+  {
+    id: 'spend-heatmap',
+    title: 'SpendHeatmap',
+    content: (
+      <>
+        <GalleryVariant
+          caption="12 meses, tamanho do desktop (passe o mouse ou use as setas)"
+          width={820}
+        >
+          <SpendHeatmap
+            days={SAMPLE_HEATMAP_DAYS}
+            label="Gasto por dia nos últimos 12 meses"
+            onSelectDay={() => undefined}
+          />
+          <SpendHeatmapLegend className="mt-s12 justify-end" />
+        </GalleryVariant>
+      </>
+    ),
+  },
   {
     id: 'month-spend-chart',
     title: 'MonthSpendChart',

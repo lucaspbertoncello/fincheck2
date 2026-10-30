@@ -1,4 +1,4 @@
-import { Button, TextField } from '@fincheck/ui';
+import { Button, FormModal, FormModalGroup, TextField } from '@fincheck/ui';
 
 export type FolderRowProps = {
   folderPath: string | null;
@@ -12,7 +12,7 @@ export type FolderRowProps = {
   onCancel: () => void;
 };
 
-/** The backup folder: its path with "Trocar pasta", or the text field that the API checks. */
+/** The backup folder: its path with "Trocar pasta"; changing it opens a form modal the API checks. */
 export function FolderRow({
   folderPath,
   isEditing,
@@ -24,39 +24,6 @@ export function FolderRow({
   onSave,
   onCancel,
 }: FolderRowProps) {
-  if (isEditing) {
-    return (
-      <form
-        noValidate
-        onSubmit={(event) => {
-          event.preventDefault();
-          onSave();
-        }}
-        className="flex flex-col gap-s12"
-      >
-        <TextField
-          label="Caminho da pasta"
-          value={draft}
-          onChange={onDraftChange}
-          error={error ?? undefined}
-          description="A pasta precisa existir e aceitar gravação."
-          placeholder="D:\Backups\Fincheck"
-          autoComplete="off"
-          autoFocus
-          maxLength={260}
-        />
-        <div className="flex flex-wrap gap-s8">
-          <Button type="submit" size="sm" loading={isSaving}>
-            Usar esta pasta
-          </Button>
-          <Button variant="secondary" size="sm" isDisabled={isSaving} onPress={onCancel}>
-            Cancelar
-          </Button>
-        </div>
-      </form>
-    );
-  }
-
   return (
     <div className="flex items-start justify-between gap-s16 max-lg:flex-col">
       <div className="flex min-w-0 flex-col gap-s4">
@@ -72,6 +39,31 @@ export function FolderRow({
       <Button variant="tertiary" size="sm" icon="folder" onPress={onStartEditing}>
         {folderPath ? 'Trocar pasta' : 'Escolher pasta'}
       </Button>
+      <FormModal
+        isOpen={isEditing}
+        onOpenChange={(open) => {
+          if (!open) onCancel();
+        }}
+        size="default"
+        title="Pasta dos backups"
+        description="Onde o app guarda uma cópia do banco por dia."
+        submitLabel="Usar esta pasta"
+        onSubmit={onSave}
+        isSubmitting={isSaving}
+      >
+        <FormModalGroup>
+          <TextField
+            label="Caminho da pasta"
+            value={draft}
+            onChange={onDraftChange}
+            error={error ?? undefined}
+            description="A pasta precisa existir e aceitar gravação."
+            placeholder="D:\Backups\Fincheck"
+            autoComplete="off"
+            maxLength={260}
+          />
+        </FormModalGroup>
+      </FormModal>
     </div>
   );
 }

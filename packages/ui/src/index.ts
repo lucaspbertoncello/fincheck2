@@ -278,3 +278,9 @@ export {
   type ManagedCategory,
   type TagItem,
 } from '#/components/categories/index.ts';
+export {
+  SpendHeatmap,
+  SpendHeatmapLegend,
+  type SpendHeatmapDay,
+  type SpendHeatmapLevel,
+} from '#/components/heatmap/index.ts';

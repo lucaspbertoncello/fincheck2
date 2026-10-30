@@ -50,8 +50,9 @@ describe('getSectionFromHash', () => {
   it('reads the section of the hash and falls back to the first', () => {
     expect(getSectionFromHash('#backup')).toBe('backup');
     expect(getSectionFromHash('#appearance')).toBe('appearance');
-    expect(getSectionFromHash('')).toBe('connections');
-    expect(getSectionFromHash('#nada')).toBe('connections');
+    expect(getSectionFromHash('#connections')).toBe('connections');
+    expect(getSectionFromHash('')).toBe('profile');
+    expect(getSectionFromHash('#nada')).toBe('profile');
   });
 });
 

@@ -10,6 +10,7 @@ type SettingsViewProps = {
   activeKey: string;
   /** Each section sits in an element with this prefix plus its key as id. */
   sectionIdPrefix: string;
+  profile: ReactNode;
   connections: ReactNode;
   backup: ReactNode;
   appearance: ReactNode;
@@ -27,7 +28,7 @@ function Notes() {
 }
 
 /**
- * Configurações: no summary panel. On the desktop the left column is the list of the sections and
+ * Configurações: no summary panel. On the desktop the left column is the list of the four sections (Perfil first) and
  * the two notes (ui adjustment 13: it does not repeat the page title); on the phone the sections
  * stack in a column and the notes close the page.
  */
@@ -36,6 +37,7 @@ export function SettingsView({
   navItems,
   activeKey,
   sectionIdPrefix,
+  profile,
   connections,
   backup,
   appearance,
@@ -50,6 +52,9 @@ export function SettingsView({
       ) : null}
       <div className="flex min-w-0 flex-col gap-s16 lg:gap-s24">
         <ScreenHeader screen={SCREENS.settings} />
+        <div id={`${sectionIdPrefix}profile`} className="scroll-mt-s16">
+          {profile}
+        </div>
         <div id={`${sectionIdPrefix}connections`} className="scroll-mt-s16">
           {connections}
         </div>

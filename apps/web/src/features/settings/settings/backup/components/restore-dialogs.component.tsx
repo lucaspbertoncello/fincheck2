@@ -1,4 +1,12 @@
-import { Button, ChoiceChip, ConfirmDialog, Modal, Skeleton } from '@fincheck/ui';
+import {
+  Button,
+  ChoiceField,
+  ConfirmDialog,
+  FormModal,
+  FormModalGroup,
+  SelectField,
+  Skeleton,
+} from '@fincheck/ui';
 
 import type { BackupFileItem } from '#/features/settings/settings/backup/types/backup-file-item.type.ts';
 
@@ -36,63 +44,61 @@ export function RestoreDialogs({
   onConfirm,
   onRetryFiles,
 }: RestoreDialogsProps) {
+  const options = files.map((file) => ({ key: file.fileName, label: file.label }));
+
   return (
     <>
-      <Modal
+      <FormModal
         isOpen={step === 'choose'}
         onOpenChange={(open) => {
           if (!open) onClose();
         }}
+        size="default"
         title="Restaurar um backup"
-        subtitle="Escolha o dia a que o app deve voltar."
-        actions={
-          <>
-            <Button variant="secondary" onPress={onClose}>
-              Cancelar
-            </Button>
-            <Button isDisabled={selectedFile === null} onPress={onContinue}>
-              Continuar
-            </Button>
-          </>
-        }
+        description="Escolha o dia a que o app deve voltar."
+        submitLabel="Continuar"
+        onSubmit={onContinue}
+        submitDisabled={selectedFile === null}
+        submitHint={selectedFile === null ? 'Escolha um backup para continuar.' : undefined}
+        error={error ?? undefined}
       >
-        {isFilesLoading ? (
-          <div role="status" aria-label="Carregando os backups" className="flex flex-col gap-s8">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-        ) : null}
-        {isFilesError ? (
-          <div role="alert" className="flex flex-col items-start gap-s12">
-            <p className="text-label text-fg-secondary">Não deu para ler a pasta dos backups.</p>
-            <Button variant="secondary" size="sm" icon="sync" onPress={onRetryFiles}>
-              Tentar de novo
-            </Button>
-          </div>
-        ) : null}
-        {!isFilesLoading && !isFilesError && files.length === 0 ? (
-          <p className="text-label text-fg-secondary">Ainda não há backups nessa pasta.</p>
-        ) : null}
-        {files.length > 0 ? (
-          <div role="group" aria-label="Backups da pasta" className="flex flex-col gap-s8">
-            {files.map((file) => (
-              <ChoiceChip
-                key={file.fileName}
-                selected={selectedFile === file.fileName}
-                onChange={() => onSelectFile(file.fileName)}
-                className="justify-start"
-              >
-                {file.label}
-              </ChoiceChip>
-            ))}
-          </div>
-        ) : null}
-        {error ? (
-          <p role="alert" className="text-meta text-loss">
-            {error}
-          </p>
-        ) : null}
-      </Modal>
+        <FormModalGroup>
+          {isFilesLoading ? (
+            <div role="status" aria-label="Carregando os backups" className="flex flex-col gap-s8">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ) : null}
+          {isFilesError ? (
+            <div role="alert" className="flex flex-col items-start gap-s12">
+              <p className="text-label text-fg-secondary">Não deu para ler a pasta dos backups.</p>
+              <Button variant="secondary" size="sm" icon="sync" onPress={onRetryFiles}>
+                Tentar de novo
+              </Button>
+            </div>
+          ) : null}
+          {!isFilesLoading && !isFilesError && files.length === 0 ? (
+            <p className="text-label text-fg-secondary">Ainda não há backups nessa pasta.</p>
+          ) : null}
+          {files.length > 0 && files.length <= 6 ? (
+            <ChoiceField
+              label="Backups da pasta"
+              options={options}
+              value={selectedFile}
+              onChange={onSelectFile}
+            />
+          ) : null}
+          {files.length > 6 ? (
+            <SelectField
+              label="Backups da pasta"
+              options={options}
+              value={selectedFile}
+              onChange={onSelectFile}
+              placeholder="Escolher um dia"
+            />
+          ) : null}
+        </FormModalGroup>
+      </FormModal>
       <ConfirmDialog
         isOpen={step === 'confirm'}
         onOpenChange={(open) => {

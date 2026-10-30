@@ -354,7 +354,7 @@ describe('SettingsPage', () => {
 
       await user.click(await screen.findByRole('button', { name: 'Restaurar um backup' }));
       const choose = await screen.findByRole('dialog', { name: 'Restaurar um backup' });
-      const options = await within(choose).findAllByRole('button', { name: /às 03:00 · / });
+      const options = await within(choose).findAllByRole('radio', { name: /às 03:00 · / });
       expect(options.length).toBe(5);
       expect(within(choose).getByRole('button', { name: 'Continuar' })).toBeDisabled();
 
@@ -391,7 +391,7 @@ describe('SettingsPage', () => {
 
       await user.click(await screen.findByRole('button', { name: 'Restaurar um backup' }));
       const choose = await screen.findByRole('dialog', { name: 'Restaurar um backup' });
-      await user.click((await within(choose).findAllByRole('button', { name: /às 03:00 · / }))[0]!);
+      await user.click((await within(choose).findAllByRole('radio', { name: /às 03:00 · / }))[0]!);
       await user.click(within(choose).getByRole('button', { name: 'Continuar' }));
       await user.click(
         within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Restaurar' }),
@@ -475,13 +475,14 @@ describe('SettingsPage', () => {
           .getAllByRole('link')
           .map((link) => link.textContent),
       ).toEqual([
+        expect.stringContaining('Perfil'),
         expect.stringContaining('Conexões'),
         expect.stringContaining('Backup'),
         expect.stringContaining('Aparência'),
       ]);
       expect(await within(nav).findByText('Pluggy, Bradesco e Nubank')).toBeInTheDocument();
       expect(screen.getAllByText('Configurações')).toHaveLength(1);
-      expect(within(nav).getByRole('link', { name: /Conexões/ })).toHaveAttribute(
+      expect(within(nav).getByRole('link', { name: /Perfil/ })).toHaveAttribute(
         'aria-current',
         'page',
       );

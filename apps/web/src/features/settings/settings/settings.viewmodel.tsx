@@ -10,6 +10,7 @@ import {
   type SettingsSectionKey,
 } from '#/features/settings/settings/constants/settings-sections.constant.ts';
 import { getSectionFromHash } from '#/features/settings/settings/utils/get-section-from-hash.util.ts';
+import { ProfileViewModel } from '#/features/settings/settings/profile/profile.viewmodel.tsx';
 import { joinNames } from '#/features/settings/settings/utils/join-names.util.ts';
 import { useSettingsModel } from '#/features/settings/settings/settings.model.ts';
 import { SettingsView } from '#/features/settings/settings/settings.view.tsx';
@@ -17,9 +18,9 @@ import { useIsDesktop } from '#/shared/hooks/use-is-desktop.hook.ts';
 
 export const SECTION_ID_PREFIX = 'settings-';
 
-/** Screen of Configurações: the side menu (desktop) and the three sections, the section in the URL hash. */
+/** Screen of Configurações: the side menu (desktop) and the four sections, the section in the URL hash. */
 export function SettingsViewModel() {
-  const { connections } = useSettingsModel();
+  const { connections, profile } = useSettingsModel();
   const isDesktop = useIsDesktop();
   // The section is the anchor of the URL; the side menu links (`#backup`) go through the shell router.
   const hash = useRouterState({ select: (state) => state.location.hash });
@@ -42,7 +43,9 @@ export function SettingsViewModel() {
     subtitle:
       section.key === 'connections' && bankNames.length > 0
         ? `Pluggy, ${joinNames(bankNames)}`
-        : section.subtitle,
+        : section.key === 'profile' && profile.data
+          ? profile.data.name
+          : section.subtitle,
     icon: section.icon,
     href: `#${section.key}`,
   }));
@@ -53,6 +56,7 @@ export function SettingsViewModel() {
       navItems={navItems}
       activeKey={activeKey}
       sectionIdPrefix={SECTION_ID_PREFIX}
+      profile={<ProfileViewModel />}
       connections={<ConnectionsViewModel />}
       backup={<BackupViewModel />}
       appearance={<AppearanceViewModel />}

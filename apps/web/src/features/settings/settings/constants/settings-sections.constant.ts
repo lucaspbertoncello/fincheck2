@@ -1,6 +1,6 @@
 import type { IconName } from '@fincheck/ui';
 
-export type SettingsSectionKey = 'connections' | 'backup' | 'appearance';
+export type SettingsSectionKey = 'profile' | 'connections' | 'backup' | 'appearance';
 
 type SettingsSectionDefinition = {
   key: SettingsSectionKey;
@@ -12,6 +12,7 @@ type SettingsSectionDefinition = {
 
 /** The sections of Configurações, in the order of the side menu and of the page. */
 export const SETTINGS_SECTIONS: SettingsSectionDefinition[] = [
+  { key: 'profile', title: 'Perfil', subtitle: 'Nome, renda e gastos', icon: 'user' },
   { key: 'connections', title: 'Conexões', subtitle: 'Pluggy e bancos', icon: 'plug' },
   { key: 'backup', title: 'Backup', subtitle: 'Pasta, restaurar', icon: 'database' },
   { key: 'appearance', title: 'Aparência', subtitle: 'Tema', icon: 'sun' },
