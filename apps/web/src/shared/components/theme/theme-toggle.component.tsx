@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { ToggleButton } from 'react-aria-components';
 
+import { getTheme, setTheme } from '#/shared/stores/theme.store.ts';
+
 export function ThemeToggle() {
-  const [isDark, setIsDark] = useState(
-    () => document.documentElement.getAttribute('data-theme') === 'dark',
-  );
+  const [isDark, setIsDark] = useState(() => getTheme() === 'dark');
 
   function handleChange(next: boolean) {
     setIsDark(next);
-    document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
+    setTheme(next ? 'dark' : 'light');
   }
 
   return (

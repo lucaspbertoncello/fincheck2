@@ -2,6 +2,7 @@ import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
 
 import type { createAppRouter } from '#/router/create-router.util.tsx';
+import { MoneyVisibilityProvider } from '#/shared/providers/money-visibility-provider.component.tsx';
 
 type AppProvidersProps = {
   queryClient: QueryClient;
@@ -11,7 +12,9 @@ type AppProvidersProps = {
 export function AppProviders({ queryClient, router }: AppProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <MoneyVisibilityProvider>
+        <RouterProvider router={router} />
+      </MoneyVisibilityProvider>
     </QueryClientProvider>
   );
 }

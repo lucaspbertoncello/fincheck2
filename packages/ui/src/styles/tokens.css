@@ -46,6 +46,9 @@
   --color-toast-bg: oklch(0.24 0.02 190);   /* #142221 */
   --color-toast-text: oklch(0.97 0.01 170);   /* #eff7f4 */
   --color-toast-accent: oklch(0.84 0.1 168);   /* #85e0be */
+  /* Logo (added by front app chat 2: the logo SVGs used literals; these two are the same values) */
+  --color-logo-ink: #0b2d22;
+  --color-logo-back: #abdec9;
 
   --shadow-panel: 0 1px 0 oklch(1 0 0 / .9) inset, 0 0 0 1px oklch(1 0 0 / .5) inset;
   --shadow-button-inset: 0 1px 0 oklch(1 0 0 / .35) inset;
@@ -203,6 +206,8 @@
   --color-toast-bg: oklch(0.34 0.02 190);   /* #2c3b3a */
   --color-toast-text: oklch(0.97 0.01 170);   /* #eff7f4 */
   --color-toast-accent: oklch(0.86 0.1 168);   /* #8ce6c4 */
+  --color-logo-ink: #e5f2ec;
+  --color-logo-back: #24604d;
   --shadow-panel: 0 1px 0 oklch(1 0 0 / .08) inset;
   --shadow-plus: 0 1px 0 oklch(1 0 0 / .4) inset, 0 8px 16px -6px oklch(0.46 0.1 168 / .6);
   --shadow-tooltip: 0 4px 16px oklch(0 0 0 / .4);

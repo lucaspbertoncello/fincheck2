@@ -1,0 +1,83 @@
+/* Tab change: glass plates (motion.md 1). Only the right container animates; the top bar and the
+   summary panel stay still as a static cut-out of `root`. Chrome and Edge 125+; elsewhere the
+   change happens without animation. Only transform and opacity move. */
+
+.tab-content {
+  view-transition-name: content;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+::view-transition-group(content) {
+  animation: none;
+}
+
+::view-transition-group(tab-ind) {
+  animation-duration: var(--duration-slide);
+  animation-timing-function: var(--ease-standard);
+}
+
+html:active-view-transition-type(tab)::view-transition-old(content) {
+  animation: 120ms var(--ease-standard) both tab-sink;
+  transform-origin: 50% 0;
+}
+
+html:active-view-transition-type(tab)::view-transition-new(content) {
+  animation: 180ms var(--ease-standard) 40ms both tab-land-forward;
+  transform-origin: 50% 0;
+}
+
+html:active-view-transition-type(tab):active-view-transition-type(back)::view-transition-new(
+    content
+  ) {
+  animation-name: tab-land-back;
+}
+
+@keyframes tab-sink {
+  to {
+    transform: scale(0.98);
+    opacity: 0;
+  }
+}
+
+@keyframes tab-land-forward {
+  from {
+    transform: translateX(16px) scale(1.01);
+    opacity: 0;
+  }
+}
+
+@keyframes tab-land-back {
+  from {
+    transform: translateX(-16px) scale(1.01);
+    opacity: 0;
+  }
+}
+
+/* Reduced motion: no movement and no scale, only a 100 ms fade; the indicator jumps. */
+html:active-view-transition-type(reduce)::view-transition-old(content) {
+  animation: none;
+  opacity: 0;
+}
+
+html:active-view-transition-type(reduce)::view-transition-new(content) {
+  animation: 100ms linear both tab-fade-in;
+}
+
+html:active-view-transition-type(reduce)::view-transition-group(tab-ind) {
+  animation: none;
+}
+
+html:active-view-transition-type(reduce)::view-transition-old(tab-ind) {
+  animation: none;
+  opacity: 0;
+}
+
+@keyframes tab-fade-in {
+  from {
+    opacity: 0;
+  }
+}
