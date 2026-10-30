@@ -1,0 +1,16 @@
+import type { RecurrenceFormValues } from '#/features/recurrences/recurrence-list/recurrence-form/types/recurrence-form.type.ts';
+
+/** The form of "Nova recorrência": an expense on a fixed day. */
+export const EMPTY_FORM_VALUES: RecurrenceFormValues = {
+  kind: 'expense',
+  name: '',
+  amountCents: 0,
+  counterparty: '',
+  matchText: '',
+  ruleType: 'fixed_day',
+  day: '',
+  businessDayNumber: '',
+  toleranceDays: '',
+  maxPayments: '1',
+  applyFrom: 'next_month',
+};
