@@ -46,6 +46,7 @@ function ExpectedAmountSession({ occurrence, onSave }: SessionProps) {
   return (
     <ExpectedAmountView
       name={occurrence.recurrenceName}
+      kind={occurrence.kind}
       scopeLabel={`só em ${monthLabel.toLowerCase()}`}
       cents={cents}
       onChange={(next) => {

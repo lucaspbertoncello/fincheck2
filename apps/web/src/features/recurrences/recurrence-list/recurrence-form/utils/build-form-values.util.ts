@@ -12,6 +12,9 @@ export function buildFormValues(recurrence: Recurrence.Dto): RecurrenceFormValue
     amountCents: recurrence.expectedAmountCents,
     counterparty: recurrence.counterparty ?? '',
     matchText: recurrence.matchText ?? '',
+    employmentRegime: recurrence.employmentRegime ?? '',
+    categoryId: recurrence.categoryId,
+    accountId: recurrence.accountId,
     ruleType: dateRule.type,
     day: dateRule.day === null ? '' : String(dateRule.day),
     businessDayNumber:

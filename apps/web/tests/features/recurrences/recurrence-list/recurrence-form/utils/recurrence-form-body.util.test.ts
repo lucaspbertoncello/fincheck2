@@ -2,11 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import { EMPTY_FORM_VALUES } from '#/features/recurrences/recurrence-list/recurrence-form/constants/empty-form-values.constant.ts';
 import { buildCreateBody } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-create-body.util.ts';
-import { buildDateRuleOptions } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-date-rule-options.util.ts';
 import { buildFormValues } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-form-values.util.ts';
+import { buildPreviewTiles } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-preview-tiles.util.ts';
 import { buildHistoryNote } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-history-note.util.ts';
 import { buildUpdateBody } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-update-body.util.ts';
-import { formatPreviewDate } from '#/features/recurrences/recurrence-list/recurrence-form/utils/format-preview-date.util.ts';
 import { createTestOccurrence } from '#tests/support/recurrences/occurrence/create-test-occurrence.util.ts';
 import { createTestRecurrence } from '#tests/support/recurrences/recurrence/create-test-recurrence.util.ts';
 
@@ -32,6 +31,23 @@ describe('buildCreateBody', () => {
     const result = buildCreateBody({ ...filled, matchText: ' G PRADO ' });
 
     expect(result.status === 'ok' && result.body.matchText).toBe('G PRADO');
+  });
+
+  it('sends the category and the account, and the regime only for income', () => {
+    const expense = buildCreateBody({
+      ...filled,
+      categoryId: '3f0c3a1e-0000-4000-8000-000000000010',
+      accountId: '3f0c3a1e-0000-4000-8000-000000000011',
+      employmentRegime: 'clt',
+    });
+    const income = buildCreateBody({ ...filled, kind: 'income', employmentRegime: 'pj' });
+
+    expect(expense.status === 'ok' && expense.body).toMatchObject({
+      categoryId: '3f0c3a1e-0000-4000-8000-000000000010',
+      accountId: '3f0c3a1e-0000-4000-8000-000000000011',
+    });
+    expect(expense.status === 'ok' && expense.body.employmentRegime).toBeUndefined();
+    expect(income.status === 'ok' && income.body.employmentRegime).toBe('pj');
   });
 
   it('points at each field the schema rejects', () => {
@@ -69,6 +85,23 @@ describe('buildUpdateBody', () => {
     });
   });
 
+  it('sends the new category, account and regime of an income', () => {
+    const income = createTestRecurrence({ kind: 'income', employmentRegime: 'clt' });
+    const result = buildUpdateBody(
+      {
+        ...buildFormValues(income),
+        categoryId: '3f0c3a1e-0000-4000-8000-000000000010',
+        employmentRegime: 'pj',
+      },
+      income,
+    );
+
+    expect(result.status === 'ok' && result.body).toMatchObject({
+      categoryId: '3f0c3a1e-0000-4000-8000-000000000010',
+      employmentRegime: 'pj',
+    });
+  });
+
   it('clears an optional field with null and sends the whole rule when it changes', () => {
     const values = {
       ...buildFormValues(saved),
@@ -86,23 +119,19 @@ describe('buildUpdateBody', () => {
 });
 
 describe('form helpers', () => {
-  it('repeats the typed values on the chosen rule card only', () => {
-    const options = buildDateRuleOptions({
-      ruleType: 'around_day',
-      day: '25',
-      businessDayNumber: '',
-      toleranceDays: '2',
-    });
+  it('splits the preview dates into tiles of the trail, three at most', () => {
+    const tiles = buildPreviewTiles([
+      { month: '2026-11', expectedOn: '2026-11-20' },
+      { month: '2026-12', expectedOn: null },
+      { month: '2027-01', expectedOn: '2027-01-20' },
+      { month: '2027-02', expectedOn: '2027-02-20' },
+    ]);
 
-    expect(options.find((item) => item.key === 'around_day')?.hint).toBe(
-      'Dia 25, 2 dias para mais ou menos',
-    );
-    expect(options.find((item) => item.key === 'fixed_day')?.hint).toBe('Sempre no mesmo dia');
-  });
-
-  it('writes the preview date with the weekday', () => {
-    expect(formatPreviewDate('2026-11-20', '2026-11')).toBe('sex, 20/11');
-    expect(formatPreviewDate(null, '2026-11')).toBe('qualquer dia de novembro');
+    expect(tiles).toHaveLength(3);
+    expect(tiles[0]).toMatchObject({ weekday: 'sex', day: '20', month: 'nov' });
+    expect(tiles[0]?.label).toBe('sexta-feira, 20 de novembro');
+    expect(tiles[1]).toMatchObject({ weekday: '', day: '…', month: 'dez' });
+    expect(tiles[1]?.label).toBe('qualquer dia de dezembro');
   });
 
   it('writes the history of confirmations', () => {
@@ -119,8 +148,8 @@ describe('form helpers', () => {
       createTestOccurrence({ status: 'confirmed', payments: payment('2026-07-24') }),
     ];
 
-    expect(buildHistoryNote(history, true)).toBe(
-      'Confirmada em 25/09 (R$ ••••), 27/08 e 24/07. Mudar o valor não altera o que já foi confirmado.',
+    expect(buildHistoryNote(history, true)).toMatch(
+      /^Confirmada em 25\/09 \(R\$\s•\.•••,••\), 27\/08 e 24\/07\. Mudar o valor não altera o que já foi confirmado\.$/,
     );
     expect(buildHistoryNote([], false)).toMatch(/^Ainda sem confirmações\./);
   });

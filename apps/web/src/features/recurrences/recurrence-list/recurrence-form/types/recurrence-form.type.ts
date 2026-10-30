@@ -7,6 +7,10 @@ export type RecurrenceFormValues = {
   amountCents: number;
   counterparty: string;
   matchText: string;
+  /** Only income uses it; "" while none was chosen. */
+  employmentRegime: '' | Recurrence.EmploymentRegime;
+  categoryId: string | null;
+  accountId: string | null;
   ruleType: Recurrence.DateRuleType;
   day: string;
   businessDayNumber: string;

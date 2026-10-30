@@ -1,4 +1,12 @@
-import { Banner, Button, CategoryIcon, ContentSkeleton, Modal, Money } from '@fincheck/ui';
+import {
+  Banner,
+  CategoryIcon,
+  ContentSkeleton,
+  FormModal,
+  FormModalGroup,
+  Money,
+} from '@fincheck/ui';
+import { Radio, RadioGroup } from 'react-aria-components';
 
 import type { LinkCandidateData } from '#/features/recurrences/recurrence-list/link-occurrence/types/link-candidate.type.ts';
 
@@ -6,41 +14,50 @@ type LinkOccurrenceViewProps = {
   name: string;
   state: 'loading' | 'error' | 'ready';
   candidates: LinkCandidateData[];
-  /** Transaction being linked right now. */
-  linkingId: string | null;
+  /** The transaction chosen (the closest one starts chosen). */
+  selectedId: string | null;
+  onSelect: (transactionId: string) => void;
+  /** True while the link is being saved. */
+  linking: boolean;
   linkError: string | null;
-  onLink: (transactionId: string) => void;
+  onLink: () => void;
   onRetry: () => void;
   onClose: () => void;
 };
 
-/** "Vincular transação": the recent transactions near the occurrence, closest to the amount first. */
+/**
+ * "Vincular transação": the recent transactions near the occurrence as rows to pick from, the
+ * closest to the amount first and already chosen; the primary button links the chosen one.
+ */
 export function LinkOccurrenceView({
   name,
   state,
   candidates,
-  linkingId,
+  selectedId,
+  onSelect,
+  linking,
   linkError,
   onLink,
   onRetry,
   onClose,
 }: LinkOccurrenceViewProps) {
+  const ready = state === 'ready' && candidates.length > 0;
+
   return (
-    <Modal
+    <FormModal
       isOpen
       onOpenChange={(open) => !open && onClose()}
-      isDismissable={linkingId === null}
+      size="wide"
       title="Vincular transação"
-      subtitle={`Qual lançamento do banco é o pagamento de ${name}?`}
-      actions={
-        <Button variant="secondary" onPress={onClose}>
-          Fechar
-        </Button>
-      }
+      description={`Qual lançamento do banco é o pagamento de ${name}?`}
+      submitLabel="Vincular"
+      submittingLabel="Vinculando..."
+      onSubmit={onLink}
+      isSubmitting={linking}
+      submitDisabled={!ready || selectedId === null}
+      submitHint={ready ? undefined : 'Sem transação para vincular.'}
+      error={linkError ?? undefined}
     >
-      {linkError ? (
-        <Banner variant="error" title="Não foi possível vincular" description={linkError} />
-      ) : null}
       {state === 'loading' ? <ContentSkeleton variant="sections" /> : null}
       {state === 'error' ? (
         <Banner
@@ -56,41 +73,45 @@ export function LinkOccurrenceView({
           &quot;Marcar como paga&quot; na lista.
         </p>
       ) : null}
-      {state === 'ready' && candidates.length > 0 ? (
-        <ul className="flex flex-col divide-y divide-line">
-          {candidates.map((candidate) => (
-            <li key={candidate.transactionId} className="flex items-center gap-s12 py-s12">
-              <CategoryIcon icon="transfer" type={candidate.flow} />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-body font-emphasis text-fg-primary">
-                  {candidate.description}
-                </p>
-                <p className="text-label text-fg-secondary">
-                  {candidate.dateLabel}
-                  {candidate.detail ? `, ${candidate.detail}` : ''}
-                </p>
-              </div>
-              <Money
-                cents={candidate.amountCents}
-                sign={candidate.flow === 'income' ? 'plus' : 'minus'}
-                signColumn
-                weight="plain"
-                tone={candidate.flow === 'income' ? 'income' : 'inherit'}
-                className="text-money-row"
-              />
-              <Button
-                size="sm"
-                variant="secondary"
-                loading={linkingId === candidate.transactionId}
-                isDisabled={linkingId !== null}
-                onPress={() => onLink(candidate.transactionId)}
+      {ready ? (
+        <FormModalGroup label="Transações perto desta data">
+          <RadioGroup
+            aria-label="Transações perto desta data"
+            value={selectedId}
+            onChange={onSelect}
+            isDisabled={linking}
+            className="flex flex-col gap-s8"
+          >
+            {candidates.map((candidate) => (
+              <Radio
+                key={candidate.transactionId}
+                value={candidate.transactionId}
+                aria-label={`${candidate.description}, ${candidate.dateLabel}`}
+                className="group focus-ring flex min-h-16 cursor-pointer items-center gap-s12 rounded-input border border-line px-s12 py-s8 transition-[background-color,border-color] duration-(--duration-fast) ease-(--ease-standard) data-[hovered]:bg-subtle data-[selected]:border-brand data-[selected]:bg-brand-weak"
               >
-                Vincular
-              </Button>
-            </li>
-          ))}
-        </ul>
+                <CategoryIcon icon="transfer" type={candidate.flow} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-body font-emphasis text-fg-primary">
+                    {candidate.description}
+                  </span>
+                  <span className="block truncate text-label text-fg-secondary">
+                    {candidate.dateLabel}
+                    {candidate.detail ? `, ${candidate.detail}` : ''}
+                  </span>
+                </span>
+                <Money
+                  cents={candidate.amountCents}
+                  sign={candidate.flow === 'income' ? 'plus' : 'minus'}
+                  signColumn
+                  weight="plain"
+                  tone={candidate.flow === 'income' ? 'income' : 'inherit'}
+                  className="text-money-row"
+                />
+              </Radio>
+            ))}
+          </RadioGroup>
+        </FormModalGroup>
       ) : null}
-    </Modal>
+    </FormModal>
   );
 }

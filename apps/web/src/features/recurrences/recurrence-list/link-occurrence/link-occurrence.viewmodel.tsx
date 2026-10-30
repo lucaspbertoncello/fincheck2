@@ -15,7 +15,8 @@ export function LinkOccurrenceViewModel() {
   const { month } = useSelectedMonth();
   const { showUndoToast } = useToast();
   const model = useLinkOccurrenceModel(month, link);
-  const [linkingId, setLinkingId] = useState<string | null>(null);
+  const [chosenId, setChosenId] = useState<string | null>(null);
+  const [linking, setLinking] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
 
   const occurrence = model.occurrences.data?.items.find((item) => item.id === link);
@@ -32,8 +33,12 @@ export function LinkOccurrenceViewModel() {
     flow: item.amountCents >= 0 ? 'income' : 'expense',
   }));
 
-  async function handleLink(transactionId: string) {
-    setLinkingId(transactionId);
+  const selectedId = chosenId ?? candidates[0]?.transactionId ?? null;
+
+  async function handleLink() {
+    const transactionId = selectedId;
+    if (transactionId === null) return;
+    setLinking(true);
     setLinkError(null);
     try {
       const linked = await model.link.mutateAsync({ id: link as string, body: { transactionId } });
@@ -48,7 +53,7 @@ export function LinkOccurrenceViewModel() {
     } catch (error) {
       setLinkError(isApiError(error) ? error.message : 'Tente de novo em instantes.');
     } finally {
-      setLinkingId(null);
+      setLinking(false);
     }
   }
 
@@ -57,9 +62,11 @@ export function LinkOccurrenceViewModel() {
       name={occurrence.recurrenceName}
       state={model.candidates.isError ? 'error' : model.candidates.data ? 'ready' : 'loading'}
       candidates={candidates}
-      linkingId={linkingId}
+      selectedId={selectedId}
+      onSelect={setChosenId}
+      linking={linking}
       linkError={linkError}
-      onLink={(transactionId) => void handleLink(transactionId)}
+      onLink={() => void handleLink()}
       onRetry={() => void model.candidates.refetch()}
       onClose={closeModals}
     />

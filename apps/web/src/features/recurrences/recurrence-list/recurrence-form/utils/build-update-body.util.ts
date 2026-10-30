@@ -35,6 +35,12 @@ export function buildUpdateBody(
   }
   if (matchText !== (saved.matchText ?? ''))
     draft['matchText'] = matchText === '' ? null : matchText;
+  if (values.categoryId !== saved.categoryId) draft['categoryId'] = values.categoryId;
+  if (values.accountId !== saved.accountId) draft['accountId'] = values.accountId;
+  const regime = values.kind === 'income' ? values.employmentRegime : '';
+  if (regime !== (saved.employmentRegime ?? '')) {
+    draft['employmentRegime'] = regime === '' ? null : regime;
+  }
   if (RULE_FIELDS.some((field) => rule[field] !== saved.dateRule[field])) draft['dateRule'] = rule;
   if (maxPayments !== String(saved.maxPayments)) {
     draft['maxPayments'] = maxPayments === '' ? undefined : Number(maxPayments);

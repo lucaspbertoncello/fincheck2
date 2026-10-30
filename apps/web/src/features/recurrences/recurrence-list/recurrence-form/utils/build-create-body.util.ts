@@ -22,6 +22,12 @@ export function buildCreateBody(
     expectedAmountCents: values.amountCents,
     counterparty: counterparty === '' ? undefined : counterparty,
     matchText: matchText === '' ? undefined : matchText,
+    employmentRegime:
+      values.kind === 'income' && values.employmentRegime !== ''
+        ? values.employmentRegime
+        : undefined,
+    categoryId: values.categoryId ?? undefined,
+    accountId: values.accountId ?? undefined,
     dateRule: buildDateRule(values),
     maxPayments: maxPayments === '' ? undefined : Number(maxPayments),
   });

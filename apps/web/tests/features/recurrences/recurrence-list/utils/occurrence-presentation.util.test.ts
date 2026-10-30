@@ -154,8 +154,8 @@ describe('buildOccurrenceStatusNote', () => {
     expect(buildOccurrenceStatusNote(different, context)).toMatch(
       /^Cobrado R\$\s23,90, R\$\s2,00 a mais$/,
     );
-    expect(buildOccurrenceStatusNote(different, { ...context, hidden: true })).toBe(
-      'Cobrado R$ ••••, R$ •••• a mais',
+    expect(buildOccurrenceStatusNote(different, { ...context, hidden: true })).toMatch(
+      /^Cobrado R\$\s••,••, R\$\s•,•• a mais$/,
     );
   });
 

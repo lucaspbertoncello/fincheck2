@@ -1,4 +1,4 @@
-import { Banner, Button, ContentSkeleton, Modal } from '@fincheck/ui';
+import { Banner, ContentSkeleton, FormModal } from '@fincheck/ui';
 
 type RecurrenceFormStatusModalProps = {
   /** "loading" while the recurrence being edited arrives; "error" when it did not. */
@@ -9,16 +9,16 @@ type RecurrenceFormStatusModalProps = {
 /** The edit modal before it has data: a skeleton, or the error with a way out. */
 export function RecurrenceFormStatusModal({ state, onClose }: RecurrenceFormStatusModalProps) {
   return (
-    <Modal
+    <FormModal
       isOpen
       onOpenChange={(open) => !open && onClose()}
       title="Editar recorrência"
-      size="wide"
-      actions={
-        <Button variant="secondary" onPress={onClose}>
-          Fechar
-        </Button>
-      }
+      description={state === 'loading' ? 'Abrindo a recorrência...' : undefined}
+      submitLabel="Salvar alterações"
+      submitDisabled
+      submitHint={state === 'loading' ? 'Espere a recorrência abrir.' : undefined}
+      onSubmit={onClose}
+      cancelLabel="Fechar"
     >
       {state === 'loading' ? (
         <ContentSkeleton variant="sections" />
@@ -29,6 +29,6 @@ export function RecurrenceFormStatusModal({ state, onClose }: RecurrenceFormStat
           description="Ela pode ter sido excluída. Feche e confira a lista."
         />
       )}
-    </Modal>
+    </FormModal>
   );
 }

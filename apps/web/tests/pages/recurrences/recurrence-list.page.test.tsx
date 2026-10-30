@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 
@@ -153,6 +154,46 @@ describe('RecurrenceListPage', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
+  it('starts with the closest candidate chosen and links the one picked instead', async () => {
+    const first = '3f0c3a1e-0000-4000-8000-000000000001';
+    const second = '3f0c3a1e-0000-4000-8000-000000000005';
+    let linked: unknown;
+    server.use(
+      http.get('/api/occurrences/:id/candidates', () =>
+        HttpResponse.json({
+          items: ['PIX M SOUZA', 'PIX LUME DESIGN'].map((description, index) => ({
+            transactionId: index === 0 ? first : second,
+            description,
+            occurredOn: `${CURRENT_MONTH}-26`,
+            amountCents: 395_000,
+            accountId: '3f0c3a1e-0000-4000-8000-000000000002',
+            counterparty: null,
+          })),
+        }),
+      ),
+      http.post('/api/occurrences/:id/payments', async ({ request }) => {
+        linked = await request.json();
+        return HttpResponse.json({ message: 'stop' }, { status: 500 });
+      }),
+    );
+    renderApp(URL);
+    const attention = await findAttentionStrip();
+
+    fireEvent.click(
+      within(attention.getByText('Lume Design (freela)').closest('li')!).getByRole('button', {
+        name: 'Vincular transação',
+      }),
+    );
+    const dialog = await screen.findByRole('dialog', { name: 'Vincular transação' });
+    const rows = await within(dialog).findAllByRole('radio');
+    expect(rows[0]).toBeChecked();
+
+    await userEvent.click(rows[1]!);
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Vincular' }));
+
+    await waitFor(() => expect(linked).toEqual({ transactionId: second }));
+  });
+
   it('says so when no transaction is near the occurrence', async () => {
     server.use(http.get('/api/occurrences/:id/candidates', () => HttpResponse.json({ items: [] })));
     renderApp(URL);
@@ -201,10 +242,13 @@ describe('RecurrenceListPage', () => {
       fireEvent.change(within(dialog).getByRole('textbox', { name: 'Dia do mês' }), {
         target: { value: '10' },
       });
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Mais opções' }));
       fireEvent.change(within(dialog).getByRole('textbox', { name: /Aparece no extrato como/ }), {
         target: { value: 'seguro auto' },
       });
-      expect(await within(dialog).findByText('Próximas datas')).toBeInTheDocument();
+      expect(
+        await within(dialog).findByRole('list', { name: 'Próximas datas' }),
+      ).toBeInTheDocument();
       fireEvent.click(within(dialog).getByRole('button', { name: 'Salvar recorrência' }));
 
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -230,7 +274,7 @@ describe('RecurrenceListPage', () => {
       expect(within(dialog).getByText(/Dê um nome à recorrência/)).toBeInTheDocument();
       expect(within(dialog).getByText('Informe um dia de 1 a 31.')).toBeInTheDocument();
       await waitFor(() =>
-        expect(within(dialog).getByRole('textbox', { name: 'Nome' })).toHaveFocus(),
+        expect(within(dialog).getByRole('textbox', { name: 'Valor esperado' })).toHaveFocus(),
       );
     });
 
@@ -244,6 +288,44 @@ describe('RecurrenceListPage', () => {
         await within(dialog).findByRole('textbox', { name: 'Qual dia útil' }),
       ).toBeInTheDocument();
       expect(within(dialog).queryByRole('textbox', { name: 'Dia do mês' })).not.toBeInTheDocument();
+    });
+  });
+
+  describe('"Nova recorrência" choices', () => {
+    it('opens with the focus on the name and the next dates under the rule', async () => {
+      renderApp(`${URL}&new=recurrence`);
+      const dialog = await screen.findByRole('dialog', { name: 'Nova recorrência' });
+
+      await waitFor(() =>
+        expect(within(dialog).getByRole('textbox', { name: 'Nome' })).toHaveFocus(),
+      );
+      await userEvent.type(within(dialog).getByRole('textbox', { name: 'Dia do mês' }), '15');
+
+      const trail = await within(dialog).findByRole('list', { name: 'Próximas datas' });
+      expect(within(trail).getAllByRole('listitem')).toHaveLength(3);
+    });
+
+    it('asks the regime only for income, inside "Mais opções"', async () => {
+      renderApp(`${URL}&new=recurrence`);
+      const dialog = await screen.findByRole('dialog', { name: 'Nova recorrência' });
+      expect(within(dialog).getByText('Para quem')).toBeInTheDocument();
+      expect(within(dialog).queryByText('Regime')).not.toBeInTheDocument();
+
+      await userEvent.click(within(dialog).getByRole('radio', { name: 'Receita' }));
+
+      expect(within(dialog).getByText('Vem de quem')).toBeInTheDocument();
+      expect(within(dialog).getByText('Regime')).toBeInTheDocument();
+    });
+
+    it('shows the most used categories as chips and searches the rest from "Outras…"', async () => {
+      renderApp(`${URL}&new=recurrence`);
+      const dialog = await screen.findByRole('dialog', { name: 'Nova recorrência' });
+
+      await userEvent.click(await within(dialog).findByRole('radio', { name: 'Outras…' }));
+
+      expect(
+        await within(dialog).findByRole('combobox', { name: 'Buscar outra categoria' }),
+      ).toBeInTheDocument();
     });
   });
 

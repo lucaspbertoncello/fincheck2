@@ -1,14 +1,18 @@
 import { dateRuleSchema } from '@fincheck/shared/recurrences/recurrence/recurrence.schema.ts';
 import type { Recurrence } from '@fincheck/shared/recurrences/recurrence/recurrence.type.ts';
 import { useToast } from '@fincheck/ui';
+import type { CategoryOption, ChoiceOption } from '@fincheck/ui';
 import { useState } from 'react';
 
+import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 import { useRecurrenceListSearch } from '#/features/recurrences/recurrence-list/hooks/use-recurrence-list-search.hook.ts';
 import { RecurrenceFormStatusModal } from '#/features/recurrences/recurrence-list/recurrence-form/components/recurrence-form-status-modal.component.tsx';
 import { EMPTY_FORM_VALUES } from '#/features/recurrences/recurrence-list/recurrence-form/constants/empty-form-values.constant.ts';
 import { useFocusFirstInvalid } from '#/features/recurrences/recurrence-list/recurrence-form/hooks/use-focus-first-invalid.hook.ts';
 import {
+  useRecurrenceFormAccounts,
   useRecurrenceFormActions,
+  useRecurrenceFormCategories,
   useRecurrenceFormSource,
   useRecurrenceRulePreview,
 } from '#/features/recurrences/recurrence-list/recurrence-form/recurrence-form.model.ts';
@@ -22,11 +26,9 @@ import { buildDateRule } from '#/features/recurrences/recurrence-list/recurrence
 import { buildFormValues } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-form-values.util.ts';
 import { buildHistoryNote } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-history-note.util.ts';
 import { buildUpdateBody } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-update-body.util.ts';
-import { formatPreviewDate } from '#/features/recurrences/recurrence-list/recurrence-form/utils/format-preview-date.util.ts';
+import { buildPreviewTiles } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-preview-tiles.util.ts';
 import { isApiError } from '#/shared/api/api.error.ts';
 import { useHideValues } from '#/shared/hooks/use-hide-values.hook.ts';
-
-const FORM_ID = 'recurrence-form';
 
 type SessionProps = {
   /** Present when editing: the saved recurrence with its history. */
@@ -47,9 +49,11 @@ function RecurrenceFormSession({ saved }: SessionProps) {
   const [formError, setFormError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
+  const categoriesQuery = useRecurrenceFormCategories(values.kind);
+  const accountsQuery = useRecurrenceFormAccounts();
   const dateRule = buildDateRule(values);
   const preview = useRecurrenceRulePreview(dateRule, dateRuleSchema.safeParse(dateRule).success);
-  useFocusFirstInvalid(FORM_ID, attempt);
+  useFocusFirstInvalid(attempt);
 
   function handleChange(patch: Partial<RecurrenceFormValues>) {
     setValues((current) => ({ ...current, ...patch }));
@@ -120,11 +124,20 @@ function RecurrenceFormSession({ saved }: SessionProps) {
     });
   }
 
+  const categories: CategoryOption[] = [...(categoriesQuery.data?.items ?? [])]
+    .sort((a, b) => b.transactionCount - a.transactionCount || a.name.localeCompare(b.name))
+    .map((category) => ({
+      id: category.id,
+      name: category.name,
+      icon: mapCategoryIcon(category.icon),
+    }));
+  const accounts: ChoiceOption[] = (accountsQuery.data?.items ?? [])
+    .filter((account) => account.type !== 'credit_card')
+    .map((account) => ({ key: account.id, label: account.name, icon: 'wallet' }));
   const saving = actions.create.isPending || actions.update.isPending;
 
   return (
     <RecurrenceFormView
-      formId={FORM_ID}
       mode={saved ? 'edit' : 'create'}
       subtitle={
         saved
@@ -134,10 +147,9 @@ function RecurrenceFormSession({ saved }: SessionProps) {
       values={values}
       errors={errors}
       onChange={handleChange}
-      preview={
-        preview.data?.occurrences.map((item) => formatPreviewDate(item.expectedOn, item.month)) ??
-        []
-      }
+      tiles={buildPreviewTiles(preview.data?.occurrences ?? [])}
+      categories={categories}
+      accounts={accounts}
       historyNote={saved ? buildHistoryNote(saved.history, isHidden) : undefined}
       paused={saved?.pausedAt != null}
       formError={formError}
