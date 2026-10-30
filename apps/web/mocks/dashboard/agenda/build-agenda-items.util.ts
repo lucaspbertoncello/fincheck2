@@ -109,7 +109,9 @@ function billItems(database: MockState.Database): Agenda.Item[] {
       flow: bill.direction === 'payable' ? 'out' : 'in',
       title:
         bill.counterparty && bill.kind === 'friend'
-          ? `${bill.counterparty}, ${bill.description.toLowerCase()}`
+          ? bill.direction === 'payable'
+            ? `Você deve a ${bill.counterparty}`
+            : `${bill.counterparty} te deve`
           : bill.description,
       badge: friendReceivable ? 'friend_receivable' : bill.kind === 'friend' ? 'debt' : 'bill',
       counterparty: bill.counterparty,

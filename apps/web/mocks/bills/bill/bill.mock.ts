@@ -9,7 +9,10 @@ import {
 } from '@fincheck/shared/bills/bill/bill.schema.ts';
 import { createBillPaymentRequestSchema } from '@fincheck/shared/bills/bill-payment/bill-payment.schema.ts';
 import { listResponseSchema } from '@fincheck/shared/common/list/list.schema.ts';
-import { dismissPaymentSuggestionRequestSchema } from '@fincheck/shared/common/payment-suggestion/payment-suggestion.schema.ts';
+import {
+  dismissPaymentSuggestionQuerySchema,
+  dismissPaymentSuggestionRequestSchema,
+} from '@fincheck/shared/common/payment-suggestion/payment-suggestion.schema.ts';
 import { normalizeText } from '@fincheck/shared/common/text/normalize-text.util.ts';
 import { http } from 'msw';
 
@@ -337,12 +340,12 @@ export const billMock = [
   http.delete(
     '/api/bills/:id/payment-suggestion/dismiss',
     handleRoute(
-      { body: dismissPaymentSuggestionRequestSchema, response: billDtoSchema },
-      ({ params, body }) => {
+      { query: dismissPaymentSuggestionQuerySchema, response: billDtoSchema },
+      ({ params, query }) => {
         const bill = findBill(idOf(params));
-        findTransaction(db, body.transactionId);
+        findTransaction(db, query.transactionId);
         bill.dismissedTransactionIds = bill.dismissedTransactionIds.filter(
-          (id) => id !== body.transactionId,
+          (id) => id !== query.transactionId,
         );
 
         return presentBill(db, bill);

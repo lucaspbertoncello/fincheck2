@@ -1,5 +1,8 @@
 import { listResponseSchema } from '@fincheck/shared/common/list/list.schema.ts';
-import { dismissPaymentSuggestionRequestSchema } from '@fincheck/shared/common/payment-suggestion/payment-suggestion.schema.ts';
+import {
+  dismissPaymentSuggestionQuerySchema,
+  dismissPaymentSuggestionRequestSchema,
+} from '@fincheck/shared/common/payment-suggestion/payment-suggestion.schema.ts';
 import { monthSchema } from '@fincheck/shared/common/date/date.schema.ts';
 import {
   invoiceDetailDtoSchema,
@@ -188,14 +191,14 @@ export const invoiceMock = [
   http.delete(
     '/api/cards/:accountId/invoices/:month/payment-suggestion/dismiss',
     handleRoute(
-      { body: dismissPaymentSuggestionRequestSchema, response: invoiceDtoSchema },
-      ({ params, body }) => {
+      { query: dismissPaymentSuggestionQuerySchema, response: invoiceDtoSchema },
+      ({ params, query }) => {
         const month = readMonth(params);
         computeInvoice(db, accountOf(params), month);
-        findTransaction(db, body.transactionId);
+        findTransaction(db, query.transactionId);
         const row = ensureInvoiceRow(db, accountOf(params), month);
         row.dismissedTransactionIds = row.dismissedTransactionIds.filter(
-          (id) => id !== body.transactionId,
+          (id) => id !== query.transactionId,
         );
 
         return computeInvoice(db, accountOf(params), month).dto;

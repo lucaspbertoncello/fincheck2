@@ -39,27 +39,12 @@ export const monthSummaryMock = [
         period.previousUntilOn,
       );
 
-      // Expected income: each occurrence counts the larger of expected and received, plus income that
-      // matched no occurrence.
+      // Expected income: the expected amount of every income occurrence of the month (received,
+      // partial and pending); skipped ones stay out.
       const occurrences = listMonthOccurrences(db, query.month).filter(
         (item) => item.kind === 'income' && item.status !== 'skipped' && !item.carriedOver,
       );
-      const linked = new Set(
-        db.occurrences.flatMap((item) => item.payments.map((payment) => payment.transactionId)),
-      );
-      const unlinked = lines
-        .filter(
-          (line) =>
-            line.nature === 'income' &&
-            line.competenceOn.slice(0, 7) === query.month &&
-            !linked.has(line.transactionId),
-        )
-        .reduce((sum, line) => sum + line.amountCents, 0);
-      const expected =
-        occurrences.reduce(
-          (sum, item) => sum + Math.max(item.expectedAmountCents, item.receivedCents),
-          0,
-        ) + unlinked;
+      const expected = occurrences.reduce((sum, item) => sum + item.expectedAmountCents, 0);
 
       const alerts: MonthSummary.Alert[] = [
         ...db.connections

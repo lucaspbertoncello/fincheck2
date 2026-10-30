@@ -4,6 +4,7 @@ import { freeBalanceDtoSchema } from '@fincheck/shared/dashboard/free-balance/fr
 import { monthSummaryDtoSchema } from '@fincheck/shared/dashboard/month-summary/month-summary.schema.ts';
 import { spendingCurveDtoSchema } from '@fincheck/shared/dashboard/spending-curve/spending-curve.schema.ts';
 import { timelineDtoSchema } from '@fincheck/shared/dashboard/timeline/timeline.schema.ts';
+import { recurrenceSummarySchema } from '@fincheck/shared/recurrences/recurrence/recurrence.schema.ts';
 import { transactionSummaryDtoSchema } from '@fincheck/shared/transactions/transaction-summary/transaction-summary.schema.ts';
 import { describe, expect, it } from 'vitest';
 
@@ -68,6 +69,31 @@ describe('dashboard routes', () => {
     expect(view.friendsReceivable).toMatchObject({ peopleCount: 1, totalCents: 5800 });
     expect(view.undated.map((item) => item.title)).toEqual(['Conserto do notebook']);
     expect(view.settled.some((item) => item.title === 'Seguro do celular')).toBe(true);
+  });
+
+  it('titles a friend debt by the direction: "Você deve a <nome>" and "<nome> te deve"', async () => {
+    const view = await agenda();
+    const titles = [
+      ...view.thisMonth,
+      ...view.openInvoices,
+      ...view.receivable,
+      ...view.undated,
+      ...view.settled,
+    ]
+      .filter((item) => item.badge === 'debt' || item.badge === 'friend_receivable')
+      .map((item) => item.title);
+    expect(titles).toContain('Você deve a Rafa');
+    expect(titles.every((title) => /^Você deve a |^.+ te deve$/.test(title))).toBe(true);
+  });
+
+  it('sums the expected income of every income occurrence of the month, skipped ones out', async () => {
+    const summary = monthSummaryDtoSchema.parse(
+      (await callApi('GET', `/dashboard/month-summary?month=${CURRENT_MONTH}`)).json,
+    );
+    const recurrences = recurrenceSummarySchema.parse(
+      (await callApi('GET', `/recurrences/summary?month=${CURRENT_MONTH}`)).json,
+    );
+    expect(summary.income.expectedCents).toBe(recurrences.incomes.expectedCents);
   });
 
   it('moves the Livre when a bill is paid and when a transaction is created', async () => {

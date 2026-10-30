@@ -114,9 +114,10 @@ describe('invoices routes', () => {
     expect(dismissed.remainingCents).toBeGreaterThan(0);
     const restored = invoiceDtoSchema.parse(
       (
-        await callApi('DELETE', `${base}/payment-suggestion/dismiss`, {
-          transactionId: found?.transactionId,
-        })
+        await callApi(
+          'DELETE',
+          `${base}/payment-suggestion/dismiss?transactionId=${found?.transactionId}`,
+        )
       ).json,
     );
     expect(restored.paymentSuggestion?.transactionId).toBe(found?.transactionId);
