@@ -12,9 +12,9 @@ import {
   type BankThemeKey,
 } from '@fincheck/ui';
 
-import { BALANCE_CURVE, INSTALLMENTS } from '../../constants/sample-bank.constant.ts';
-import type { GallerySectionDef } from '../../types/gallery-group.type.ts';
-import { GalleryVariant } from '../shell/gallery-variant.component.tsx';
+import { BALANCE_CURVE, INSTALLMENTS } from '#gallery/constants/sample-bank.constant.ts';
+import type { GallerySectionDef } from '#gallery/types/gallery-group.type.ts';
+import { GalleryVariant } from '#gallery/components/shell/gallery-variant.component.tsx';
 
 const noop = () => undefined;
 const THEME_KEYS = Object.keys(BANK_THEMES) as BankThemeKey[];

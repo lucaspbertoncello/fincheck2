@@ -9,8 +9,8 @@ import {
   VariationBadge,
 } from '@fincheck/ui';
 
-import type { GallerySectionDef } from '../../types/gallery-group.type.ts';
-import { GalleryVariant } from '../shell/gallery-variant.component.tsx';
+import type { GallerySectionDef } from '#gallery/types/gallery-group.type.ts';
+import { GalleryVariant } from '#gallery/components/shell/gallery-variant.component.tsx';
 
 const TONES = ['brand', 'gain', 'muted', 'strong', 'loss'] as const;
 

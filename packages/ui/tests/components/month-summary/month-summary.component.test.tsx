@@ -83,6 +83,12 @@ describe('ExpenseSummaryCard', () => {
     expect(html).toContain('data-tone="neutral"');
   });
 
+  it('writes "igual a" instead of "+R$ 0,00" when nothing differs from the month', () => {
+    const html = renderToStaticMarkup(<ExpenseSummaryCard {...BASE} spentCents={317275} />);
+    expect(html).toContain('igual a setembro');
+    expect(html).not.toContain('0,00');
+  });
+
   it('has no badge when the previous month had nothing at the same point', () => {
     const html = renderToStaticMarkup(<ExpenseSummaryCard {...BASE} previousSamePointCents={0} />);
     expect(html).not.toContain('data-tone');

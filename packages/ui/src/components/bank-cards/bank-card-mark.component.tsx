@@ -29,6 +29,7 @@ export function BankCardMark({ theme, fallbackName }: BankCardMarkProps) {
         viewBox={art.viewBox}
         aria-hidden="true"
         focusable="false"
+        fill="currentColor"
         className="block h-full w-auto overflow-visible"
         dangerouslySetInnerHTML={{ __html: art.markup }}
       />

@@ -1,8 +1,8 @@
 import { CategoryIcon, Icon, type IconSize } from '@fincheck/ui';
 
-import { CATEGORY_ICON_SAMPLES, ICON_NAMES } from '../../constants/gallery-icons.constant.ts';
-import type { GallerySectionDef } from '../../types/gallery-group.type.ts';
-import { GalleryVariant } from '../shell/gallery-variant.component.tsx';
+import { CATEGORY_ICON_SAMPLES, ICON_NAMES } from '#gallery/constants/gallery-icons.constant.ts';
+import type { GallerySectionDef } from '#gallery/types/gallery-group.type.ts';
+import { GalleryVariant } from '#gallery/components/shell/gallery-variant.component.tsx';
 
 const SIZES: IconSize[] = ['xs', 'sm', 'md', 'base', 'xl', 'lg'];
 

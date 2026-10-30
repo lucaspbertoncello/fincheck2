@@ -18,7 +18,10 @@ type TabNavProps = {
  */
 export function TabNav({ items, activeKey, label, className }: TabNavProps) {
   return (
-    <nav aria-label={label} className={cx('hidden items-center gap-s24 lg:flex', className)}>
+    <nav
+      aria-label={label}
+      className={cx('hidden items-center gap-s4 lg:flex xl:gap-s24', className)}
+    >
       {items.map((item) => {
         const active = item.key === activeKey;
         return (
@@ -27,7 +30,7 @@ export function TabNav({ items, activeKey, label, className }: TabNavProps) {
             href={item.href}
             aria-current={active ? 'page' : undefined}
             className={cx(
-              'relative flex min-h-ctl-sm cursor-pointer items-center gap-s8 rounded-capsule px-s12 py-s8 text-label font-emphasis no-underline outline-none transition-colors duration-(--duration-fast)',
+              'relative flex min-h-ctl-sm cursor-pointer items-center gap-s8 rounded-capsule px-s8 py-s8 text-label font-emphasis whitespace-nowrap no-underline outline-none transition-colors duration-(--duration-fast) xl:px-s12',
               'data-[hovered]:text-fg-primary',
               active ? 'text-fg-primary' : 'text-fg-secondary',
             )}

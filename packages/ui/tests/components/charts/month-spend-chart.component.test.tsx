@@ -112,6 +112,21 @@ describe('MonthSpendChart', () => {
     expect(html).toContain('sem dado');
   });
 
+  it('says so, and draws no current line, when the month has no spending yet', () => {
+    const html = renderToStaticMarkup(
+      <MonthSpendChart
+        currentLabel="Outubro"
+        previousLabel="Setembro"
+        current={[]}
+        previous={previous}
+        today={4}
+        daysInMonth={6}
+      />,
+    );
+    expect(html).toContain('Sem gasto em Outubro ainda');
+    expect(html).not.toContain('Sem gasto em Setembro');
+  });
+
   it('never leaks the numbers in the table when the values are hidden', () => {
     const html = render(true);
     expect(html).toContain('valor oculto');

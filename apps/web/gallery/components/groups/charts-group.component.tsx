@@ -10,10 +10,10 @@ import {
   DONUT_SLICES,
   SPEND_CURRENT,
   SPEND_PREVIOUS,
-} from '../../constants/sample-summary.constant.ts';
-import { BALANCE_CURVE } from '../../constants/sample-bank.constant.ts';
-import type { GallerySectionDef } from '../../types/gallery-group.type.ts';
-import { GalleryVariant } from '../shell/gallery-variant.component.tsx';
+} from '#gallery/constants/sample-summary.constant.ts';
+import { BALANCE_CURVE } from '#gallery/constants/sample-bank.constant.ts';
+import type { GallerySectionDef } from '#gallery/types/gallery-group.type.ts';
+import { GalleryVariant } from '#gallery/components/shell/gallery-variant.component.tsx';
 
 const SPARK_POINTS = BALANCE_CURVE.map((cents, index) => ({ day: index + 1, cents }));
 

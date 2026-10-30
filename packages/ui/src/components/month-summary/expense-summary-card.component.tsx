@@ -38,9 +38,13 @@ export function ExpenseSummaryCard({
       badge={percent === null ? null : <VariationBadge percent={percent} />}
       value={<Money cents={spentCents} sign="none" />}
       subtext={
-        <>
-          <SignedMoney cents={deltaCents} /> que {previousMonthLabel}
-        </>
+        deltaCents === 0 ? (
+          `igual a ${previousMonthLabel}`
+        ) : (
+          <>
+            <SignedMoney cents={deltaCents} /> que {previousMonthLabel}
+          </>
+        )
       }
       bar={
         <SummaryBar

@@ -30,10 +30,10 @@ import {
   SAMPLE_COUNTERPARTS,
   SAMPLE_EDIT_VALUES,
   SAMPLE_SPLIT_PARTS,
-} from '../../constants/sample-transactions.constant.ts';
-import type { GallerySectionDef } from '../../types/gallery-group.type.ts';
-import { GalleryVariant } from '../shell/gallery-variant.component.tsx';
-import { State } from '../shell/state.component.tsx';
+} from '#gallery/constants/sample-transactions.constant.ts';
+import type { GallerySectionDef } from '#gallery/types/gallery-group.type.ts';
+import { GalleryVariant } from '#gallery/components/shell/gallery-variant.component.tsx';
+import { State } from '#gallery/components/shell/state.component.tsx';
 
 const noop = () => undefined;
 const NATURES: TransactionNature[] = ['expense', 'income', 'transfer', 'out_of_account'];

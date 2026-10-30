@@ -12,10 +12,10 @@ import {
   type RuleRowData,
 } from '@fincheck/ui';
 
-import { RULE_ROWS } from '../../constants/sample-planning.constant.ts';
-import type { GallerySectionDef } from '../../types/gallery-group.type.ts';
-import { GalleryVariant } from '../shell/gallery-variant.component.tsx';
-import { State } from '../shell/state.component.tsx';
+import { RULE_ROWS } from '#gallery/constants/sample-planning.constant.ts';
+import type { GallerySectionDef } from '#gallery/types/gallery-group.type.ts';
+import { GalleryVariant } from '#gallery/components/shell/gallery-variant.component.tsx';
+import { State } from '#gallery/components/shell/state.component.tsx';
 
 const noop = () => undefined;
 const KINDS: RuleTokenKind[] = ['option', 'value', 'category', 'empty'];

@@ -79,7 +79,10 @@ export function MonthSpendChart({
   height = 240,
 }: MonthSpendChartProps) {
   const hidden = useMoneyHidden();
-  const rows = buildMonthSpendRows({ current, previous, today, daysInMonth });
+  const isEmpty = current.length === 0;
+  const builtRows = buildMonthSpendRows({ current, previous, today, daysInMonth });
+  // Nothing spent yet: no current line (a flat zero would read as a stray dotted mark).
+  const rows = isEmpty ? builtRows.map((row) => ({ ...row, current: null })) : builtRows;
   const axis = niceYAxis(maxOfRows(rows));
   const todayValue = rows.find((row) => row.day === today)?.current ?? null;
 
@@ -93,14 +96,19 @@ export function MonthSpendChart({
         </div>
       </div>
 
-      <div aria-hidden="true" className="font-body">
+      <div aria-hidden="true" className="relative font-body">
+        {isEmpty ? (
+          <p className="pointer-events-none absolute top-s16 left-s16 z-(--z-raised) text-label text-fg-secondary">
+            Sem gasto em {currentLabel} ainda
+          </p>
+        ) : null}
         <ComposedChart
           responsive
           width="100%"
           height={height}
           data={rows}
           accessibilityLayer={false}
-          margin={{ top: 8, right: 0, bottom: 0, left: 0 }}
+          margin={{ top: 8, right: 0, bottom: 0, left: 12 }}
         >
           <defs>
             <linearGradient id={GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">
@@ -146,12 +154,14 @@ export function MonthSpendChart({
             activeDot={{ r: 4, fill: CURRENT_STROKE, stroke: SURFACE, strokeWidth: 2 }}
             isAnimationActive={false}
           />
-          <ReferenceLine
-            x={today}
-            stroke="var(--color-text-secondary)"
-            strokeDasharray="2 3"
-            strokeWidth={1}
-          />
+          {isEmpty ? null : (
+            <ReferenceLine
+              x={today}
+              stroke="var(--color-text-secondary)"
+              strokeDasharray="2 3"
+              strokeWidth={1}
+            />
+          )}
           {todayValue === null ? null : (
             <ReferenceDot
               x={today}

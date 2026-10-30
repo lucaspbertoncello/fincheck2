@@ -47,7 +47,9 @@ export function TransactionRow({
   className,
 }: TransactionRowProps) {
   const { id, name, ignored } = transaction;
-  const meta = [transaction.categoryName, transaction.accountLabel].filter(Boolean);
+  const categoryLabel =
+    transaction.categoryName || (transaction.uncategorized ? 'Sem categoria' : '');
+  const meta = [categoryLabel, transaction.accountLabel].filter(Boolean);
 
   return (
     <li

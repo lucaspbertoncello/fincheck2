@@ -70,6 +70,14 @@ describe('RecurrenceRow', () => {
     expect(html).toContain('width:50%');
   });
 
+  it('moves the partial amount under the state on the phone, so the name keeps its width', () => {
+    const html = renderToStaticMarkup(
+      row({ flow: 'income', status: 'partial', amountCents: 42500, totalCents: 85000 }),
+    );
+    expect(html).toContain('row-start-3');
+    expect(html).toContain('lg:w-48');
+  });
+
   it('marks late, different and paid-unlinked states', () => {
     expect(renderToStaticMarkup(row({ status: 'late' }))).toContain('Atrasado');
     expect(renderToStaticMarkup(row({ status: 'different' }))).toContain('Valor diferente');

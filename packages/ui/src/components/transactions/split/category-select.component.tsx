@@ -40,7 +40,7 @@ export function CategorySelect({
     >
       <Label className={FIELD_LABEL_CLASS}>{label}</Label>
       <AriaButton className="focus-ring flex min-h-ctl-field w-full cursor-pointer items-center justify-between gap-s8 rounded-input border border-line bg-field px-s16 text-left text-body text-fg-primary data-[pressed]:bg-subtle">
-        <SelectValue className="min-w-0 flex-1 truncate data-[placeholder]:text-fg-tertiary" />
+        <SelectValue className="flex min-w-0 flex-1 items-center gap-s8 data-[placeholder]:text-fg-tertiary" />
         <Icon name="chevron-down" size="sm" className="text-fg-secondary" />
       </AriaButton>
       <Popover className="popover-enter w-(--trigger-width) rounded-panel border border-line bg-menu shadow-(--shadow-menu) backdrop-blur-(--blur-popover)">
@@ -53,7 +53,7 @@ export function CategorySelect({
               className="flex min-h-ctl-touch cursor-pointer items-center gap-s12 rounded-input px-s12 text-list text-fg-primary outline-none data-[focused]:bg-subtle data-[hovered]:bg-subtle data-[selected]:text-brand"
             >
               <Icon name={category.icon} size="md" className="text-fg-secondary" />
-              {category.name}
+              <span className="min-w-0 truncate">{category.name}</span>
             </ListBoxItem>
           ))}
         </ListBox>

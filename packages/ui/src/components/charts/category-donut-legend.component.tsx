@@ -17,7 +17,7 @@ export function CategoryDonutLegend({
   onActiveChange,
 }: CategoryDonutLegendProps) {
   return (
-    <ul className="flex min-w-0 flex-1 flex-col">
+    <ul className="flex min-w-72 max-w-full flex-1 basis-72 flex-col">
       {slices.map((slice) => (
         <li
           key={slice.id}

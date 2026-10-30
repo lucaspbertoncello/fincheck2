@@ -105,13 +105,30 @@ export function DayStrip<TItem>({
   const ownRef = useRef<HTMLDivElement>(null);
   const listRef = scrollerRef ?? ownRef;
 
-  // "Opens on today": today lands as the third day, with the two before it as context.
+  // Keeps the chosen day (today when the choice is not among the days) in view: on mount and
+  // whenever the choice changes. A day that is already fully visible does not move the strip.
+  const firstRun = useRef(true);
   useEffect(() => {
-    const list = listRef.current;
-    const todayItem = list?.querySelector<HTMLElement>(`[data-date="${today}"]`);
-    if (variant !== 'occurrences' || !list || !todayItem) return;
-    list.scrollLeft = todayItem.offsetLeft - list.offsetLeft - 2 * (todayItem.offsetWidth + 8);
-  }, [variant, today]);
+    const instant = firstRun.current;
+    firstRun.current = false;
+    // One frame later: React Aria builds the items after the first render.
+    const frame = requestAnimationFrame(() => {
+      const list = listRef.current;
+      const target =
+        list?.querySelector<HTMLElement>(`[data-date="${selectedDate}"]`) ??
+        list?.querySelector<HTMLElement>(`[data-date="${today}"]`);
+      if (!list || !target) return;
+      const listBox = list.getBoundingClientRect();
+      const box = target.getBoundingClientRect();
+      if (box.left >= listBox.left && box.right <= listBox.right) return;
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      list.scrollTo({
+        left: list.scrollLeft + box.left - listBox.left - (list.clientWidth - box.width) / 2,
+        behavior: instant || reduced ? 'auto' : 'smooth',
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [selectedDate, today, listRef]);
 
   const onSelectionChange = (keys: Selection) => {
     const [first] = keys === 'all' ? [] : keys;

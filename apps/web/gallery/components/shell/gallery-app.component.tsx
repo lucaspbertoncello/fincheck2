@@ -1,8 +1,8 @@
 import { Button, MoneyVisibilityContext, ToastProvider } from '@fincheck/ui';
 import { useEffect, useState } from 'react';
 
-import { GALLERY_GROUPS } from '../../constants/gallery-groups.constant.ts';
-import { GallerySection } from './gallery-section.component.tsx';
+import { GALLERY_GROUPS } from '#gallery/constants/gallery-groups.constant.ts';
+import { GallerySection } from '#gallery/components/shell/gallery-section.component.tsx';
 
 type Theme = 'light' | 'dark';
 const THEME_KEY = 'fincheck:gallery-theme';

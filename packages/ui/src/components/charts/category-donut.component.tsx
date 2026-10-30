@@ -83,7 +83,7 @@ export function CategoryDonut({
         </div>
       </div>
 
-      <div className="flex w-full min-w-0 flex-1 flex-col gap-s16 lg:flex-row lg:items-start lg:gap-s32">
+      <div className="flex w-full min-w-0 flex-1 flex-wrap items-start gap-x-s32 gap-y-s16">
         <CategoryDonutLegend slices={painted} activeId={activeId} onActiveChange={setActiveId} />
         {aside}
       </div>

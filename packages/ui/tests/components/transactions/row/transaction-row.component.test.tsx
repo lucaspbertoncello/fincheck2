@@ -116,6 +116,12 @@ describe('TransactionRow', () => {
     expect(row({ uncategorized: true, categoryName: undefined })).toContain('border-dashed');
   });
 
+  it('writes "Sem categoria" in the metadata when there is no category name', () => {
+    const html = row({ uncategorized: true, categoryName: undefined });
+    expect(html).toContain('Sem categoria');
+    expect(row({ categoryName: 'Delivery' })).not.toContain('Sem categoria');
+  });
+
   it('hides the amount, the sign and the debt value when the eye is on', () => {
     const html = renderToStaticMarkup(
       <MoneyVisibilityContext value>

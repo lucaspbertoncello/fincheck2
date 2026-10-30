@@ -86,10 +86,16 @@ export function RecurrenceRow({
         <RecurrenceStatusChip status={status} />
         {statusNote ? <span className="text-meta text-fg-secondary">{statusNote}</span> : null}
       </div>
-      <div className="flex min-w-0 flex-col items-end gap-s4 lg:w-36">
+      <div
+        className={cx(
+          'flex min-w-0 gap-s4 lg:col-auto lg:row-auto lg:w-48 lg:flex-col lg:items-end',
+          // Phone, partial: the "425,00 de 850,00" block drops under the state so the name keeps its width.
+          partial ? 'col-start-2 col-end-5 row-start-3 items-center gap-s12' : 'flex-col items-end',
+        )}
+      >
         {partial ? (
           <>
-            <span className="inline-flex items-baseline gap-s4 text-money-row">
+            <span className="inline-flex items-baseline gap-s4 text-money-row whitespace-nowrap">
               <Money cents={amountCents} sign={sign} signColumn weight="plain" tone={tone} />
               <span className="text-meta text-fg-secondary">de</span>
               <Money cents={totalCents} sign="none" weight="plain" tone="faded" />
@@ -115,6 +121,7 @@ export function RecurrenceRow({
         label={`Ações de ${name}`}
         items={buildRecurrenceMenu(flow, status)}
         onAction={(key) => onAction(key as RecurrenceAction)}
+        className="col-start-4 row-start-1 lg:col-auto lg:row-auto"
       />
       {inlineActions?.length ? (
         <div className="col-span-full flex flex-wrap items-center gap-s8 lg:col-start-2">

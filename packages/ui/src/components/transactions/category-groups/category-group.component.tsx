@@ -79,7 +79,7 @@ export function CategoryGroup({
           <p className="text-meta text-fg-secondary lg:text-label">{detail}</p>
           <span
             aria-hidden="true"
-            className="mt-s4 block h-1 w-full max-w-90 overflow-hidden rounded-capsule bg-(--color-chart-track)"
+            className="mt-s4 block h-1 w-full max-w-90 overflow-hidden rounded-capsule bg-(--color-chart-bar)"
           >
             <span
               data-share={group.sharePercent}

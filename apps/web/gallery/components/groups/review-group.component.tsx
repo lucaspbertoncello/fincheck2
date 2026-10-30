@@ -5,9 +5,9 @@ import {
   REVIEW_QUEUE,
   REVIEW_SUGGESTIONS,
   REVIEW_TRANSACTION,
-} from '../../constants/sample-planning.constant.ts';
-import type { GallerySectionDef } from '../../types/gallery-group.type.ts';
-import { GalleryVariant } from '../shell/gallery-variant.component.tsx';
+} from '#gallery/constants/sample-planning.constant.ts';
+import type { GallerySectionDef } from '#gallery/types/gallery-group.type.ts';
+import { GalleryVariant } from '#gallery/components/shell/gallery-variant.component.tsx';
 
 const noop = () => undefined;
 

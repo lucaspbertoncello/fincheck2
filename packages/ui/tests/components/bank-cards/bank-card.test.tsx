@@ -19,6 +19,14 @@ describe('BankCard', () => {
     }
   });
 
+  it('paints the bank mark in the color of the theme, so a dark card does not eat it', () => {
+    const html = renderToStaticMarkup(
+      <BankCard theme="c6" nickname="Carbon" last4="2048" dueLabel="Vence dia 25" />,
+    );
+    expect(html).toContain('fill="currentColor"');
+    expect(html).toContain('color:#F2F2F2');
+  });
+
   it('names the network and the bank for screen readers', () => {
     const html = renderToStaticMarkup(
       <BankCard theme="nubank" nickname="Roxinho" last4="4821" dueLabel="Vence dia 06" />,

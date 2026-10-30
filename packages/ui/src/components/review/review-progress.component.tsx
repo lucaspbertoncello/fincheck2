@@ -23,7 +23,7 @@ export function ReviewProgress({ done, total }: ReviewProgressProps) {
         aria-valuemax={total}
         aria-valuenow={done}
         aria-valuetext={`${done} de ${total} revisadas`}
-        className="h-2 w-full overflow-hidden rounded-capsule bg-(--color-chart-track)"
+        className="h-2 w-full overflow-hidden rounded-capsule bg-(--color-chart-bar)"
       >
         <div className="h-full rounded-capsule bg-brand" style={{ width: `${percent}%` }} />
       </div>
