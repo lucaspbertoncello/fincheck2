@@ -1,5 +1,4 @@
 import { MotionConfig } from 'motion/react';
-import { useId } from 'react';
 import { Link } from 'react-aria-components';
 
 import { SegmentedIndicator } from '#/components/forms/segmented-indicator.component.tsx';
@@ -26,11 +25,16 @@ type SegmentedNavProps = {
 
 /**
  * Segmented control made of links (Recorrências | A pagar e receber, Categorias | Regras).
- * The white indicator slides between items (220 ms); it is a layout animation of the indicator
- * only, so it never fights with the page transition.
+ * The white indicator slides between items (220 ms). Each sub-screen mounts its own copy of this
+ * control, so a Motion layout animation has nothing to start from when the page changes: the
+ * indicator is also its own view-transition group (`segment-ind`), which slides it from the old
+ * item to the new one with the page transition (motion.md 1.1). The Motion `layoutId` (stable per
+ * group, from the label) animates when the same copy stays mounted, as in the gallery.
  */
 export function SegmentedNav({ items, activeKey, label, className }: SegmentedNavProps) {
-  const indicatorId = useId();
+  // Stable per group, not per instance: each sub-screen mounts its own SegmentedNav, and the
+  // indicator only slides between two screens if both instances share the same layoutId.
+  const indicatorId = `segmented-nav-${label}`;
 
   return (
     <MotionConfig reducedMotion="user">
@@ -47,7 +51,14 @@ export function SegmentedNav({ items, activeKey, label, className }: SegmentedNa
                 active ? SEGMENTED_ITEM_ACTIVE_CLASS : SEGMENTED_ITEM_INACTIVE_CLASS,
               )}
             >
-              {active ? <SegmentedIndicator layoutId={indicatorId} /> : null}
+              {active ? (
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-0 [view-transition-name:segment-ind]"
+                >
+                  <SegmentedIndicator layoutId={indicatorId} />
+                </span>
+              ) : null}
               <span className="relative">{item.label}</span>
             </Link>
           );

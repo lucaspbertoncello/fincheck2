@@ -57,8 +57,10 @@ describe('buildFreeBalanceData', () => {
     const hidden = build(freeBalance, true).lines.find((line) => line.key === 'receivable');
 
     expect(visible?.subtitle).toMatch(/R\$ \d/);
-    expect(hidden?.subtitle).toContain('R$ ••••');
+    // The digits become dots and the shape stays, so the line keeps its size.
+    expect(hidden?.subtitle).toMatch(/^R\$ •+,•• /);
     expect(hidden?.subtitle).not.toMatch(/R\$ \d/);
+    expect(hidden?.subtitle?.length).toBe(visible?.subtitle?.length);
   });
 
   it('says the day the payable line goes until', () => {

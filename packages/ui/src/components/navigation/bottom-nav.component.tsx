@@ -11,7 +11,10 @@ type BottomNavProps = {
 
 /**
  * Mobile bar: five equal items (20% each, 4 px side padding), icon over a 12 px / 500 label,
- * glass with blur and a line on top (components.md 1.2; ui adjustment 2).
+ * glass with blur and a line on top (components.md 1.2; ui adjustment 2). A 2 px accent line sits
+ * on that top line over the active item and slides to the next one with the page transition (it
+ * carries the `tab-indicator` view-transition name, like the top tabs; only one of the two bars
+ * is ever displayed).
  */
 export function BottomNav({ items, activeKey, label }: BottomNavProps) {
   return (
@@ -26,7 +29,7 @@ export function BottomNav({ items, activeKey, label }: BottomNavProps) {
             key={item.key}
             href={item.href}
             aria-current={active ? 'page' : undefined}
-            className={`flex min-h-bottom-nav min-w-0 cursor-pointer flex-col items-center justify-center gap-s4 px-s4 text-caption font-emphasis whitespace-nowrap no-underline outline-none ${
+            className={`relative flex min-h-bottom-nav min-w-0 cursor-pointer flex-col items-center justify-center gap-s4 px-s4 text-caption font-emphasis whitespace-nowrap no-underline outline-none ${
               active ? 'text-fg-primary' : 'text-fg-secondary'
             }`}
           >
@@ -36,6 +39,12 @@ export function BottomNav({ items, activeKey, label }: BottomNavProps) {
               className={active ? 'text-brand' : 'text-fg-secondary'}
             />
             {item.shortLabel ?? item.label}
+            {active ? (
+              <span
+                aria-hidden="true"
+                className="tab-indicator absolute inset-x-s12 -top-px h-0.5 rounded-capsule bg-brand"
+              />
+            ) : null}
           </Link>
         );
       })}

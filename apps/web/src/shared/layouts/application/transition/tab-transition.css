@@ -1,4 +1,5 @@
-/* Tab change: glass plates (motion.md 1). Only the right container animates; the top bar and the
+/* Tab change: glass plates (motion.md 1). The same plates run between the two sub-tabs of a tab,
+   with the segmented indicator (`segment-ind`) sliding instead of the tab one. Only the right container animates; the top bar and the
    summary panel stay still as a static cut-out of `root`. Chrome and Edge 125+; elsewhere the
    change happens without animation. Only transform and opacity move. */
 
@@ -15,7 +16,8 @@
   animation: none;
 }
 
-::view-transition-group(tab-ind) {
+::view-transition-group(tab-ind),
+::view-transition-group(segment-ind) {
   animation-duration: var(--duration-slide);
   animation-timing-function: var(--ease-standard);
 }
@@ -67,11 +69,13 @@ html:active-view-transition-type(reduce)::view-transition-new(content) {
   animation: 100ms linear both tab-fade-in;
 }
 
-html:active-view-transition-type(reduce)::view-transition-group(tab-ind) {
+html:active-view-transition-type(reduce)::view-transition-group(tab-ind),
+html:active-view-transition-type(reduce)::view-transition-group(segment-ind) {
   animation: none;
 }
 
-html:active-view-transition-type(reduce)::view-transition-old(tab-ind) {
+html:active-view-transition-type(reduce)::view-transition-old(tab-ind),
+html:active-view-transition-type(reduce)::view-transition-old(segment-ind) {
   animation: none;
   opacity: 0;
 }

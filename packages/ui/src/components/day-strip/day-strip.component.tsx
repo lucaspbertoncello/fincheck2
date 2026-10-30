@@ -9,6 +9,7 @@ import {
 import { DayMarkerDot, describeMarker } from '#/components/day-strip/day-marker.component.tsx';
 import type { DayStripDay, DayStripVariant } from '#/components/day-strip/day-strip.type.ts';
 import { formatDayTotal } from '#/components/day-strip/format-day-total.util.ts';
+import { MaskedNumber } from '#/components/money/masked-number.component.tsx';
 import { useMoneyHidden } from '#/components/money/money-visibility.context.ts';
 import { cx } from '#/utils/class-names.util.ts';
 
@@ -83,7 +84,11 @@ function DayValue<TItem>({ day, variant, hidden }: DayValueProps<TItem>) {
         day.totalCents < 0 ? 'text-loss' : day.totalCents > 0 ? 'text-gain' : 'text-fg-secondary',
       )}
     >
-      {hidden ? '••••' : formatDayTotal(day.totalCents)}
+      {hidden ? (
+        <MaskedNumber shape={formatDayTotal(day.totalCents).replace('−', '+')} />
+      ) : (
+        formatDayTotal(day.totalCents)
+      )}
     </span>
   );
 }

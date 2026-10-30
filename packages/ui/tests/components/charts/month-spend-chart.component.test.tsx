@@ -157,7 +157,8 @@ describe('MonthSpendTooltipCard', () => {
     const html = renderToStaticMarkup(
       <MonthSpendTooltipCard row={row} currentLabel="Outubro" previousLabel="Setembro" hidden />,
     );
-    expect(html).toContain('R$ ••••');
+    // The digits become dots and the shape stays, so the tooltip keeps its size.
+    expect(html).toContain('R$ •.•••,••');
     expect(html).not.toContain('1.500,00');
   });
 

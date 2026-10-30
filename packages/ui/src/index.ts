@@ -12,6 +12,8 @@ export {
 } from '#/components/icons/index.ts';
 export {
   HideValuesButton,
+  MaskedNumber,
+  maskMoneyText,
   Money,
   MoneyVisibilityContext,
   useMoneyHidden,

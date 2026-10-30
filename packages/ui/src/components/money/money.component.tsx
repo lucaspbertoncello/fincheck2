@@ -1,4 +1,5 @@
 import { formatMoneyParts } from '#/components/money/format-money-parts.util.ts';
+import { MaskedNumber } from '#/components/money/masked-number.component.tsx';
 import { useMoneyHidden } from '#/components/money/money-visibility.context.ts';
 import { cx } from '#/utils/class-names.util.ts';
 
@@ -34,8 +35,9 @@ type MoneyProps = {
 
 /**
  * The only way to write money: "R$" smaller and secondary, tabular digits, one sign column.
- * With the eye on, the value becomes "R$ ••••", the sign goes away and screen readers hear
- * "valor oculto" (BR-DSH-013).
+ * With the eye on, the digits become dots (`MaskedNumber`), the sign turns invisible and screen
+ * readers hear "valor oculto" (BR-DSH-013). The box keeps the exact width of the real value, so
+ * nothing around it changes size or moves when the eye toggles.
  */
 export function Money({
   cents,
@@ -49,6 +51,7 @@ export function Money({
   className,
 }: MoneyProps) {
   const hidden = useMoneyHidden();
+  const shape = formatMoneyParts(cents, showCents);
   const signChar =
     sign === 'plus' ? '+' : sign === 'minus' ? '−' : sign === 'auto' && cents < 0 ? '−' : '';
 
@@ -61,12 +64,12 @@ export function Money({
         className,
       )}
     >
-      {signColumn || (signChar && !hidden) ? (
+      {signColumn || signChar ? (
         <span
           aria-hidden={hidden || !signChar || undefined}
-          className={cx('text-end', signColumn && 'w-sign-col')}
+          className={cx('text-end', signColumn && 'w-sign-col', hidden && 'invisible')}
         >
-          {hidden ? '' : signChar}
+          {hidden ? (signChar ? '+' : '') : signChar}
         </span>
       ) : null}
       <span
@@ -78,12 +81,7 @@ export function Money({
       >
         R$
       </span>
-      <span
-        aria-hidden={hidden || undefined}
-        className={cx(hidden && smallDots && 'money-dots-small')}
-      >
-        {hidden ? '••••' : formatMoneyParts(cents, showCents)}
-      </span>
+      {hidden ? <MaskedNumber shape={shape} smallDots={smallDots} /> : <span>{shape}</span>}
       {hidden ? <span className="sr-only">valor oculto</span> : null}
     </span>
   );

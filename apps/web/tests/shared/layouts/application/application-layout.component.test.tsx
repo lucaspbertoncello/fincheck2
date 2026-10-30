@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { hideValuesStore } from '#/shared/stores/hide-values.store.ts';
@@ -170,6 +170,39 @@ describe('ApplicationLayout', () => {
     expect(window.location.search).toContain('month=2026-10');
     expect(await screen.findByRole('dialog', { name: 'Nova transação' })).toBeInTheDocument();
   });
+
+  it.each([
+    ['/transactions', 'Nova transação', 'new=transaction'],
+    ['/transactions/review', 'Nova transação', 'new=transaction'],
+    ['/recurrences', 'Nova recorrência', 'new=recurrence'],
+    ['/accounts', 'Conectar conta', 'new=account'],
+    ['/categories', 'Nova categoria', 'new=category'],
+    ['/categories/rules', 'Nova regra', 'new=rule'],
+  ])('the "+" of %s opens "%s" directly, with the month kept', async (url, label, param) => {
+    renderApp(`${url}?month=2026-10`);
+    await screen.findByRole('heading', { level: 1 });
+    // The top bar is the first banner; some screens also have their own button of the same name.
+    fireEvent.click(within(screen.getAllByRole('banner')[0]!).getByRole('button', { name: label }));
+
+    await waitFor(() => expect(window.location.search).toContain(param));
+    expect(window.location.search).toContain('month=2026-10');
+    expect(await screen.findByRole('dialog', { name: label })).toBeInTheDocument();
+  });
+
+  it.each(['/', '/recurrences/bills', '/settings'])(
+    'the "+" of %s opens the menu of everything that can be created',
+    async (url) => {
+      renderApp(url);
+      const plus = await screen.findByRole('button', {
+        name: /^(Criar|Nova conta a pagar ou receber)$/,
+      });
+      plus.focus();
+      fireEvent.keyDown(plus, { key: 'Enter' });
+      fireEvent.keyUp(plus, { key: 'Enter' });
+
+      expect(await screen.findAllByRole('menuitem')).toHaveLength(8);
+    },
+  );
 
   it('keeps the screen parameters that are not the month', async () => {
     renderApp('/transactions?month=2026-10&view=category');
