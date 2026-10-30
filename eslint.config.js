@@ -101,6 +101,7 @@ export default tseslint.config(
       '**/node_modules/**',
       '**/dist/**',
       '**/coverage/**',
+      '.claude/**',
       'apps/web/src/router/route-tree.gen.ts',
       'apps/web/public/**',
     ],

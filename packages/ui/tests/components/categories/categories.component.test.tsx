@@ -86,7 +86,7 @@ describe('CategoryList', () => {
     expect(html.match(/aria-haspopup="true"/g)).toHaveLength(3);
   });
 
-  it('draws the archived rows dashed and dimmed with "Restaurar" and no header', () => {
+  it('draws the archived rows dashed and dimmed with "Desarquivar" and no header', () => {
     const html = renderToStaticMarkup(
       <CategoryList categories={[ARCHIVED]} label="Arquivadas" {...HANDLERS} />,
     );
@@ -94,7 +94,7 @@ describe('CategoryList', () => {
     expect(html).toContain('border-dashed');
     expect(html).toContain('font-plain text-fg-secondary');
     expect(html).toContain('Despesa · 27 transações · usada até maio');
-    expect(html).toContain('Restaurar');
+    expect(html).toContain('Desarquivar');
     expect(html).not.toContain('Último uso');
     expect(html).not.toContain('aria-haspopup');
   });

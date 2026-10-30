@@ -26,7 +26,7 @@ type CategoryListProps = {
 /**
  * Category management list (components.md 15): alphabetical, no values. Active rows carry
  * transactions, rules and last use plus the "…" menu; archived rows are dashed, dimmed, with
- * "Restaurar". The last row is "Nova categoria" in the accent color. Header only on the desktop.
+ * "Desarquivar". The last row is "Nova categoria" in the accent color. Header only on the desktop.
  */
 export function CategoryList({
   categories,

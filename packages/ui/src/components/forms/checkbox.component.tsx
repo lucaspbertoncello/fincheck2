@@ -39,7 +39,7 @@ export function Checkbox({
       <span className="grid size-ctl-touch shrink-0 place-items-center">
         <span
           aria-hidden="true"
-          className="grid size-5 place-items-center rounded-md border-[1.5px] border-fg-tertiary text-fg-on-accent transition-colors duration-(--duration-instant) group-data-[focus-visible]:outline-2 group-data-[focus-visible]:outline-offset-2 group-data-[focus-visible]:outline-brand group-data-[indeterminate]:border-brand group-data-[indeterminate]:bg-brand group-data-[selected]:border-brand group-data-[selected]:bg-brand"
+          className="grid size-5 place-items-center rounded-tiny border border-fg-tertiary text-fg-on-accent transition-colors duration-(--duration-instant) group-data-[focus-visible]:outline-2 group-data-[focus-visible]:outline-offset-2 group-data-[focus-visible]:outline-brand group-data-[indeterminate]:border-brand group-data-[indeterminate]:bg-brand group-data-[selected]:border-brand group-data-[selected]:bg-brand"
         >
           <svg
             viewBox="0 0 24 24"

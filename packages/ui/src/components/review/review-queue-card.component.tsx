@@ -61,7 +61,7 @@ export function ReviewQueueCard({
       <header className="flex items-start gap-s12 lg:gap-s16">
         <CategoryIcon icon={transaction.icon} type={transaction.kind} size="lg" />
         <div className="flex min-w-0 flex-1 flex-col gap-s4">
-          <h2 className="text-(length:--font-size-subsection-title) font-emphasis break-words text-fg-primary">
+          <h2 className="text-subsection font-emphasis break-words text-fg-primary">
             {transaction.name}
           </h2>
           <p className="text-label text-fg-secondary">{transaction.detail}</p>

@@ -4,7 +4,7 @@ import { CATEGORY_ICON_SAMPLES, ICON_NAMES } from '#gallery/constants/gallery-ic
 import type { GallerySectionDef } from '#gallery/types/gallery-group.type.ts';
 import { GalleryVariant } from '#gallery/components/shell/gallery-variant.component.tsx';
 
-const SIZES: IconSize[] = ['xs', 'sm', 'md', 'base', 'xl', 'lg'];
+const SIZES: IconSize[] = ['xs', 'sm', 'md', 'base', 'lg'];
 
 function IconGrid() {
   return (

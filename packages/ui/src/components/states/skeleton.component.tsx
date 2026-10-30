@@ -10,7 +10,7 @@ export function Skeleton({ className }: SkeletonProps) {
   return (
     <span
       aria-hidden="true"
-      className={cx('skeleton-pulse block rounded-capsule bg-(--color-chart-bar)', className)}
+      className={cx('skeleton-pulse block rounded-capsule bg-track', className)}
     />
   );
 }

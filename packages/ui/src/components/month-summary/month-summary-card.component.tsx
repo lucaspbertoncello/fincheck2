@@ -56,7 +56,7 @@ export function MonthSummaryCard({
         </h3>
         {badge}
       </header>
-      <p className="text-money-lg leading-(--line-height-money) text-fg-primary lg:text-money-xl">
+      <p className="text-money-lg leading-(--line-height-money) text-fg-primary lg:text-money-card">
         {value}
       </p>
       <p className="line-clamp-2 flex-1 text-meta text-fg-secondary">{subtext}</p>

@@ -30,7 +30,7 @@ export function GroupHeader({
   return (
     <header className="flex flex-wrap items-baseline justify-between gap-x-s16 gap-y-s4 border-b border-line pb-s12">
       <h3 id={id} className="flex min-w-0 items-baseline gap-s8">
-        <span className="font-title text-(length:--font-size-day-title-mobile) font-heading text-fg-primary lg:text-(length:--font-size-day-title)">
+        <span className="font-title text-day-title-mobile font-heading text-fg-primary lg:text-day-title">
           {title}
         </span>
         {subtitle ? <span className="text-list text-fg-secondary">{subtitle}</span> : null}

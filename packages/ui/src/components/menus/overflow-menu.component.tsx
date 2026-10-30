@@ -39,7 +39,7 @@ export function OverflowMenu({ label, items, onAction, className }: OverflowMenu
           className,
         )}
       >
-        <Icon name="more" size="xl" />
+        <Icon name="more" size="lg" />
       </Button>
       <Popover
         placement="bottom end"

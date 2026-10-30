@@ -3,6 +3,7 @@ export type TabKey = 'overview' | 'transactions' | 'recurrences' | 'accounts' | 
 export type ScreenKey =
   | 'overview'
   | 'transactions'
+  | 'review'
   | 'recurrences'
   | 'bills'
   | 'accounts'

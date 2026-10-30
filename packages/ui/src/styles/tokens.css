@@ -16,6 +16,7 @@
   --color-surface-field: oklch(0.99 0.002 170);   /* #fafcfb */
   --color-surface-nav-mobile: oklch(1 0 0 / 0.8);   /* #ffffffcc */
   --color-surface-segment-indicator: oklch(1 0 0 / 0.72);   /* #ffffffb8 */
+  --color-surface-selection-bar: oklch(1 0 0 / 0.72);   /* #ffffffb8 */
   --color-overlay-scrim: oklch(0.2 0.02 190 / 0.35);   /* #0b191859 */
   --color-border-default: oklch(0.25 0.03 180 / 0.1);   /* #1026221a */
   --color-text-primary: oklch(0.22 0.02 190);   /* #0f1e1d */
@@ -35,6 +36,7 @@
   --color-warn: oklch(0.53 0.12 65);   /* #9a5a00 */
   --color-warn-weak: oklch(0.96 0.04 80);   /* #fff0d4 */
   --color-danger: oklch(0.53 0.19 25);   /* #c2272d */
+  --color-track-default: oklch(0.82 0.035 175);   /* #aeccc3 */
   --color-chart-bar: oklch(0.82 0.035 175);   /* #aeccc3 */
   --color-chart-grid: oklch(0.25 0.03 180 / 0.08);   /* #10262214 */
   --color-chart-ghost: oklch(0.78 0.015 190);   /* #adbbb9 */
@@ -79,6 +81,7 @@
   --font-size-hero-mobile: 40px;
   --font-size-money-xl: 30px;
   --font-size-money-xl-mobile: 32px;
+  --font-size-money-card: 28px;
   --font-size-money-lg: 26px;
   --font-size-money-md: 24px;
   --font-size-money-sm: 20px;
@@ -176,6 +179,7 @@
   --color-surface-field: oklch(0.19 0.01 195);   /* #0f1515 */
   --color-surface-nav-mobile: oklch(0.2 0.012 190 / 0.85);   /* #101817d9 */
   --color-surface-segment-indicator: oklch(1 0 0 / 0.12);   /* #ffffff1f */
+  --color-surface-selection-bar: oklch(0.25 0.015 185 / 0.55);   /* #1a24228c */
   --color-overlay-scrim: oklch(0.2 0.02 190 / 0.35);   /* #0b191859 */
   --color-border-default: oklch(1 0 0 / 0.09);   /* #ffffff17 */
   --color-text-primary: oklch(0.95 0.005 190);   /* #ebf0ef */
@@ -195,6 +199,7 @@
   --color-warn: oklch(0.8 0.12 80);   /* #e6b55d */
   --color-warn-weak: oklch(0.32 0.05 80);   /* #403012 */
   --color-danger: oklch(0.72 0.16 25);   /* #f97770 */
+  --color-track-default: oklch(0.45 0.035 175);   /* #415c54 */
   --color-chart-bar: oklch(0.45 0.035 175);   /* #415c54 */
   --color-chart-grid: oklch(1 0 0 / 0.07);   /* #ffffff12 */
   --color-chart-ghost: oklch(0.5 0.012 190);   /* #5c6665 */

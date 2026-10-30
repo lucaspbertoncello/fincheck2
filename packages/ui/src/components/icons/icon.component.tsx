@@ -6,7 +6,6 @@ const SIZE_CLASS = {
   sm: 'size-icon-sm',
   md: 'size-4.5',
   base: 'size-icon',
-  xl: 'size-5.5',
   lg: 'size-icon-lg',
 } as const;
 
@@ -14,7 +13,7 @@ export type IconSize = keyof typeof SIZE_CLASS;
 
 type IconProps = {
   name: IconName;
-  /** 14 (xs), 16 (sm), 18 (md, buttons and tabs), 20 (base, default), 22 (xl, row menu) or 24 (lg). */
+  /** 14 (xs), 16 (sm), 18 (md, buttons and tabs), 20 (base, default) or 24 (lg, row menu). */
   size?: IconSize;
   className?: string;
 };

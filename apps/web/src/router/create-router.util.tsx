@@ -7,6 +7,7 @@ import { categoriesRoute } from '#/router/routes/categories.route.tsx';
 import { overviewRoute } from '#/router/routes/overview.route.tsx';
 import { recurrencesRoute } from '#/router/routes/recurrences.route.tsx';
 import { rootRoute } from '#/router/routes/root.route.tsx';
+import { reviewRoute } from '#/router/routes/review.route.tsx';
 import { rulesRoute } from '#/router/routes/rules.route.tsx';
 import { settingsRoute } from '#/router/routes/settings.route.tsx';
 import { transactionsRoute } from '#/router/routes/transactions.route.tsx';
@@ -17,6 +18,7 @@ export function createAppRouter(queryClient: QueryClient) {
     routeTree: rootRoute.addChildren([
       overviewRoute,
       transactionsRoute,
+      reviewRoute,
       recurrencesRoute,
       billsRoute,
       accountsRoute,

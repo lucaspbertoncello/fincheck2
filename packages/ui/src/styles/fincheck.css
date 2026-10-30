@@ -31,6 +31,8 @@
   --color-menu: var(--color-surface-menu);
   --color-field: var(--color-surface-field);
   --color-scrim: var(--color-overlay-scrim);
+  --color-selection-bar: var(--color-surface-selection-bar);
+  --color-track: var(--color-track-default);
   --color-line: var(--color-border-default);
   --color-fg-primary: var(--color-text-primary);
   --color-fg-secondary: var(--color-text-secondary);
@@ -100,10 +102,14 @@
 
   --text-hero-mobile: var(--font-size-hero-mobile);
   --text-page-title-mobile: var(--font-size-page-title-mobile);
+  --text-money-card: var(--font-size-money-card);
   --text-money-lg: var(--font-size-money-lg);
   --text-money-md: var(--font-size-money-md);
   --text-money-sm: var(--font-size-money-sm);
   --text-section: var(--font-size-section-title);
+  --text-subsection: var(--font-size-subsection-title);
+  --text-day-title: var(--font-size-day-title);
+  --text-day-title-mobile: var(--font-size-day-title-mobile);
   --text-list: var(--font-size-list);
   --text-caption: var(--font-size-caption);
 }

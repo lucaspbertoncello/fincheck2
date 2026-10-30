@@ -16,7 +16,7 @@ export function PartialBar({ paidCents, totalCents, label, className }: PartialB
 
   return (
     <ProgressBar aria-label={label} value={percent} className={cx('w-24', className)}>
-      <div className="h-1.5 overflow-hidden rounded-capsule bg-(--color-chart-bar)">
+      <div className="h-1.5 overflow-hidden rounded-capsule bg-track">
         <div className="h-full rounded-capsule bg-brand" style={{ width: `${percent}%` }} />
       </div>
     </ProgressBar>

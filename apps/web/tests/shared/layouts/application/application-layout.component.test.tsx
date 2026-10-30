@@ -62,7 +62,7 @@ describe('ApplicationLayout', () => {
     },
   );
 
-  it.each(['/transactions', '/recurrences', '/recurrences/bills'])(
+  it.each(['/transactions', '/transactions/review', '/recurrences', '/recurrences/bills'])(
     'has the month picker on %s',
     async (url) => {
       renderApp(url);

@@ -33,7 +33,7 @@ export function SelectionBar({ count, onAction, onClose, className }: SelectionB
       role="toolbar"
       aria-label="Ações para as transações selecionadas"
       className={cx(
-        'sticky bottom-s16 z-(--z-raised) mx-s16 flex items-center justify-between gap-s8 rounded-panel border border-line bg-glass px-s8 py-s4 shadow-(--shadow-bulk-bar) backdrop-blur-(--blur-selection-bar) backdrop-saturate-150',
+        'sticky bottom-s16 z-(--z-raised) mx-s16 flex items-center justify-between gap-s8 rounded-panel border border-line bg-selection-bar px-s8 py-s4 shadow-(--shadow-bulk-bar) backdrop-blur-(--blur-selection-bar) backdrop-saturate-150',
         'lg:bottom-s24 lg:mx-auto lg:w-fit lg:justify-start lg:gap-s12',
         className,
       )}
@@ -51,7 +51,7 @@ export function SelectionBar({ count, onAction, onClose, className }: SelectionB
             onPress={() => onAction(action.key)}
             className="focus-ring flex min-h-ctl-touch min-w-ctl-touch cursor-pointer items-center justify-center gap-s8 rounded-input px-s12 text-label font-emphasis text-fg-primary transition-colors duration-(--duration-fast) data-[hovered]:bg-subtle data-[pressed]:bg-subtle"
           >
-            <Icon name={action.icon} size="xl" className="text-brand lg:size-4.5" />
+            <Icon name={action.icon} size="lg" className="text-brand lg:size-4.5" />
             <span className="sr-only lg:not-sr-only">{action.label}</span>
           </AriaButton>
         ))}

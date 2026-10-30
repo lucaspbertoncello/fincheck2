@@ -27,7 +27,7 @@ export function MonthPicker({ monthLabel, yearLabel, onPrevious, onNext }: Month
       </Button>
       <span
         aria-live="polite"
-        className="min-w-0 text-center text-body whitespace-nowrap text-fg-primary lg:text-(length:--font-size-subsection-title)"
+        className="min-w-0 text-center text-body whitespace-nowrap text-fg-primary lg:text-subsection"
       >
         <span className="font-title font-bold">{monthLabel}</span>{' '}
         <span className="font-plain text-fg-secondary">{yearLabel}</span>

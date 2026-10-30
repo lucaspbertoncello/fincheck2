@@ -4,7 +4,7 @@ import { cx } from '#/utils/class-names.util.ts';
 const TONE_CLASS: Record<SummaryBarSegment['tone'], string> = {
   brand: 'bg-brand',
   gain: 'bg-gain',
-  muted: 'bg-(--color-chart-bar)',
+  muted: 'bg-(--color-chart-ghost)',
   strong: 'bg-fg-tertiary',
   loss: 'bg-loss',
 };
@@ -21,7 +21,7 @@ export function SummaryBar({ segments, label }: SummaryBarProps) {
     <div
       role="img"
       aria-label={label}
-      className="flex h-s4 w-full overflow-hidden rounded-capsule bg-(--color-chart-grid)"
+      className="flex h-s4 w-full overflow-hidden rounded-capsule bg-track"
     >
       {segments.map((segment, index) => (
         <span

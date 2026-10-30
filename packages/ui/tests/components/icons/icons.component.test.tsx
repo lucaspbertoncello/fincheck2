@@ -21,10 +21,10 @@ describe('icon set', () => {
   });
 
   it('renders any icon hidden from screen readers', () => {
-    const html = renderToStaticMarkup(<Icon name="gym" size="xl" />);
+    const html = renderToStaticMarkup(<Icon name="gym" size="lg" />);
 
     expect(html).toContain('aria-hidden="true"');
-    expect(html).toContain('size-5.5');
+    expect(html).toContain('size-icon-lg');
   });
 });
 

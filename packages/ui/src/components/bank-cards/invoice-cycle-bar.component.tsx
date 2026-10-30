@@ -3,7 +3,7 @@ type InvoiceCycleBarProps = {
   progress: number;
 };
 
-/** Cycle bar of the invoice: 6 px pill, accent over the grid color (components.md 3.4). */
+/** Cycle bar of the invoice: 6 px pill, accent over the track color (components.md 3.4). */
 export function InvoiceCycleBar({ progress }: InvoiceCycleBarProps) {
   const percent = Math.round(Math.min(1, Math.max(0, progress)) * 100);
   return (
@@ -13,7 +13,7 @@ export function InvoiceCycleBar({ progress }: InvoiceCycleBarProps) {
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={percent}
-      className="h-1.5 w-full overflow-hidden rounded-capsule bg-(--color-chart-grid)"
+      className="h-1.5 w-full overflow-hidden rounded-capsule bg-track"
     >
       <div className="h-full rounded-capsule bg-brand" style={{ width: `${percent}%` }} />
     </div>

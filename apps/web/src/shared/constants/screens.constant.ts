@@ -23,6 +23,17 @@ export const SCREENS: Record<ScreenKey, ScreenDefinition> = {
     filtersByMonth: true,
     showsPanel: true,
   },
+  review: {
+    key: 'review',
+    path: '/transactions/review',
+    title: 'Para revisar',
+    tab: 'transactions',
+    plusLabel: 'Nova transação',
+    plusMode: 'direct',
+    plusAction: 'new-transaction',
+    filtersByMonth: true,
+    showsPanel: true,
+  },
   recurrences: {
     key: 'recurrences',
     path: '/recurrences',

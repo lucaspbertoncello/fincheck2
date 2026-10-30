@@ -13,7 +13,7 @@ type TagChipProps = {
 
 /**
  * Tag chip (components.md 15): "# nome", the count of transactions and the "…" menu. 32 px tall
- * on the desktop and 44 on the phone. An archived tag is dimmed and offers "Restaurar" instead of "Arquivar".
+ * on the desktop and 44 on the phone. An archived tag is dimmed and offers "Desarquivar" instead of "Arquivar".
  */
 export function TagChip({ tag, onRename, onArchive, onRestore, className }: TagChipProps) {
   const archived = tag.archived === true;
@@ -38,7 +38,7 @@ export function TagChip({ tag, onRename, onArchive, onRestore, className }: TagC
         items={[
           { key: 'rename', label: 'Renomear', icon: 'edit' },
           archived
-            ? { key: 'restore', label: 'Restaurar', icon: 'history' }
+            ? { key: 'restore', label: 'Desarquivar', icon: 'history' }
             : { key: 'archive', label: 'Arquivar', icon: 'archive' },
         ]}
         onAction={(key) => {

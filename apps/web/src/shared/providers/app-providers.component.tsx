@@ -1,3 +1,4 @@
+import { ToastProvider } from '@fincheck/ui';
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
 
@@ -13,7 +14,9 @@ export function AppProviders({ queryClient, router }: AppProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <MoneyVisibilityProvider>
-        <RouterProvider router={router} />
+        <ToastProvider>
+          <RouterProvider router={router} />
+        </ToastProvider>
       </MoneyVisibilityProvider>
     </QueryClientProvider>
   );

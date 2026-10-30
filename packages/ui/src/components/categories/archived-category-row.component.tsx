@@ -7,7 +7,7 @@ type ArchivedCategoryRowProps = {
   onRestore: (id: string) => void;
 };
 
-/** Row of an archived category: dashed icon, name in 400 and secondary, the note and "Restaurar". */
+/** Row of an archived category: dashed icon, name in 400 and secondary, the note and "Desarquivar". */
 export function ArchivedCategoryRow({ category, onRestore }: ArchivedCategoryRowProps) {
   return (
     <li
@@ -25,7 +25,7 @@ export function ArchivedCategoryRow({ category, onRestore }: ArchivedCategoryRow
       </div>
       <div role="cell">
         <Button variant="secondary" size="sm" onPress={() => onRestore(category.id)}>
-          Restaurar
+          Desarquivar
         </Button>
       </div>
     </li>

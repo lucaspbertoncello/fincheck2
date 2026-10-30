@@ -74,7 +74,7 @@ export function CategoryDonut({
         </div>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-s24 text-center">
           <span className="text-caption text-fg-secondary">{centerLabel}</span>
-          <span className="font-title text-section font-numeric text-fg-primary">
+          <span className="font-title text-subsection font-numeric text-fg-primary">
             {centerTitle}
           </span>
           {centerDetail ? (
