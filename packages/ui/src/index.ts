@@ -106,3 +106,10 @@ export {
   type DayStripVariant,
 } from '#/components/day-strip/index.ts';
 export { Section } from '#/components/sections/index.ts';
+export {
+  AccountSparkline,
+  CategoryDonut,
+  MonthSpendChart,
+  type ChartPoint,
+  type DonutSlice,
+} from '#/components/charts/index.ts';
