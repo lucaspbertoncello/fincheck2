@@ -83,6 +83,7 @@ export function useTransactionSplitting({ model, lookups, transaction, close }: 
       transaction.amountCents > 0 ? 'income' : 'expense',
     ),
     createPartId: () => `new-part-${(nextPartId.current += 1)}`,
+    description: `${transaction.description}: reparta o valor entre duas categorias.`,
     saving: model.splitTransaction.isPending,
     error,
     isSplit: transaction.splits.length > 0,

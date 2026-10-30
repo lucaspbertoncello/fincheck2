@@ -16,6 +16,8 @@ import type {
 } from '#/features/transactions/transaction-creation/installment-create/types/installment-create-form.type.ts';
 import { buildInstallmentPreview } from '#/features/transactions/transaction-creation/installment-create/utils/build-installment-preview.util.ts';
 import { buildInvoiceMonths } from '#/features/transactions/transaction-creation/installment-create/utils/build-invoice-months.util.ts';
+import { buildAccountChoices } from '#/features/transactions/transaction-fields/utils/build-account-choices.util.ts';
+import { rankCategoriesByUse } from '#/features/transactions/transaction-fields/utils/rank-categories-by-use.util.ts';
 import { collectFieldErrors } from '#/features/transactions/transaction-creation/utils/collect-field-errors.util.ts';
 
 const FIELDS: Record<string, InstallmentCreateField> = {
@@ -42,7 +44,8 @@ type Props = {
 
 function initialValues(): InstallmentCreateValues {
   return {
-    totalCents: 0,
+    amountCents: 0,
+    amountMode: 'total',
     description: '',
     categoryId: null,
     countText: '2',
@@ -71,12 +74,19 @@ export function InstallmentCreateViewModel({ onClose }: Props) {
   const invoiceMonths = buildInvoiceMonths(values.purchaseOn);
   const firstInvoiceMonth = values.firstInvoiceMonth ?? invoiceMonths[0]?.id ?? null;
   const count = Number(values.countText);
+  // The amount field holds the whole purchase or one installment; the API takes the total.
+  const totalCents =
+    values.amountMode === 'total'
+      ? values.amountCents
+      : Number.isInteger(count) && count >= 2
+        ? values.amountCents * count
+        : 0;
 
   async function submit() {
     const body = {
       accountId: accountId ?? '',
       description: values.description,
-      totalCents: values.totalCents,
+      totalCents,
       installmentCount: count,
       firstInvoiceMonth: firstInvoiceMonth ?? '',
       purchaseOn: values.purchaseOn,
@@ -85,7 +95,7 @@ export function InstallmentCreateViewModel({ onClose }: Props) {
     const parsed = createInstallmentPlanRequestSchema.safeParse(body);
     if (!parsed.success) {
       setErrors(collectFieldErrors(parsed.error.issues, FIELDS, (field) => MESSAGES[field]));
-      focusFirstInvalid('Compra parcelada');
+      focusFirstInvalid();
       return;
     }
     try {
@@ -109,10 +119,13 @@ export function InstallmentCreateViewModel({ onClose }: Props) {
       onChange={(patch) => setValues((current) => ({ ...current, ...patch }))}
       errors={errors}
       formError={formError}
-      cards={cards.map((card) => ({ id: card.id, name: card.name }))}
-      categories={buildCategoryOptions(model.categories.data?.items ?? [], 'expense')}
+      cards={buildAccountChoices(cards)}
+      categories={rankCategoriesByUse(
+        buildCategoryOptions(model.categories.data?.items ?? [], 'expense'),
+        model.monthTransactions.data?.items ?? [],
+      )}
       invoiceMonths={invoiceMonths}
-      preview={buildInstallmentPreview(values.totalCents, count, firstInvoiceMonth)}
+      preview={buildInstallmentPreview(totalCents, count, firstInvoiceMonth)}
       loading={model.accounts.isPending || model.categories.isPending}
       saving={model.createPlan.isPending}
       onSubmit={() => void submit()}

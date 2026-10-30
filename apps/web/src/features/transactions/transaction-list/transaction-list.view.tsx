@@ -7,14 +7,18 @@ import {
   ReviewStrip,
   RuleSuggestionBanner,
   SelectionBar,
+  SyncErrorBanner,
 } from '@fincheck/ui';
 
 import { BulkPickerModal } from '#/features/transactions/transaction-list/components/bulk-picker-modal.component.tsx';
 import { ByCategory } from '#/features/transactions/transaction-list/components/by-category/by-category.component.tsx';
+import { DayFilterChip } from '#/features/transactions/transaction-list/components/day-filter-chip.component.tsx';
 import { DayList } from '#/features/transactions/transaction-list/components/day-list.component.tsx';
 import { FiltersModal } from '#/features/transactions/transaction-list/components/filters-modal.component.tsx';
 import { ListControls } from '#/features/transactions/transaction-list/components/list-controls.component.tsx';
 import { MonthTotals } from '#/features/transactions/transaction-list/components/month-totals.component.tsx';
+import { TransactionEditModal } from '#/features/transactions/transaction-list/components/transaction-edit-modal.component.tsx';
+import { TransactionSplitModal } from '#/features/transactions/transaction-list/components/transaction-split-modal.component.tsx';
 import { LoadFailed } from '#/features/transactions/transaction-list/components/states/load-failed.component.tsx';
 import type { TransactionListViewProps } from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
 
@@ -30,6 +34,17 @@ export function TransactionListView(props: TransactionListViewProps) {
   return (
     <div className="flex flex-col gap-s24">
       <ListControls controls={controls} />
+
+      {props.syncFailures.map((failure) => (
+        <SyncErrorBanner
+          key={failure.connectionId}
+          institution={failure.institution}
+          detail={failure.detail}
+          retrying={failure.retrying}
+          onRetry={failure.onRetry}
+        />
+      ))}
+      {!isCategoryView && props.dayFilter ? <DayFilterChip filter={props.dayFilter} /> : null}
 
       {props.actionError ? (
         <Banner
@@ -53,6 +68,8 @@ export function TransactionListView(props: TransactionListViewProps) {
         />
       ) : null}
 
+      {props.editor ? <TransactionEditModal editor={props.editor} /> : null}
+      {props.splitter ? <TransactionSplitModal splitter={props.splitter} /> : null}
       <FiltersModal filters={props.filters} />
       <BulkPickerModal bulk={props.bulkPicker} />
       {props.confirm ? (
@@ -122,6 +139,14 @@ function ListContent(props: TransactionListViewProps) {
           secondaryAction={{ label: 'Lançar transação', onPress: props.onNewTransaction }}
         />
       ) : null}
+      {props.emptyReason === 'day' && props.dayFilter ? (
+        <EmptyState
+          icon="calendar"
+          title={`Nenhuma transação no ${props.dayFilter.label.toLowerCase()}`}
+          description="Nesse dia não houve lançamentos neste mês."
+          primaryAction={{ label: 'Mostrar o mês todo', onPress: props.dayFilter.onClear }}
+        />
+      ) : null}
       {props.emptyReason === 'filtered' ? (
         <EmptyState
           icon="search"
@@ -137,8 +162,6 @@ function ListContent(props: TransactionListViewProps) {
             days={days}
             selectionActive={props.selectionActive}
             selectedIds={props.selectedIds}
-            editor={props.editor}
-            splitter={props.splitter}
             handlers={props.rowHandlers}
           />
           {props.hasMore ? (

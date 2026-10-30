@@ -1,3 +1,4 @@
+import { businessDateSchema } from '@fincheck/shared/common/date/date.schema.ts';
 import { idSchema } from '@fincheck/shared/common/id/id.schema.ts';
 import { z } from 'zod';
 
@@ -20,7 +21,9 @@ export const transactionListSearchSchema = z.object({
   // "Ver transações" of a rule: only what that rule categorized.
   ruleId: idSchema.optional().catch(undefined),
   uncategorized: z.boolean().optional().catch(undefined),
-  // The open panel: edit or split of one transaction.
+  // One day of the month (`YYYY-MM-DD`), from the spend map of the profile: only that day's rows show.
+  day: businessDateSchema.optional().catch(undefined),
+  // The open modal: edit or split of one transaction.
   edit: textSchema,
   split: textSchema,
   // Creation modals this screen owns; the "+" and other screens open them through it.

@@ -7,6 +7,8 @@ import { useCreateTag } from '#/domain/categories/tag/hooks/use-create-tag.hook.
 import { useTags } from '#/domain/categories/tag/hooks/use-tags.hook.ts';
 import { useCategoryBreakdown } from '#/domain/dashboard/category-breakdown/hooks/use-category-breakdown.hook.ts';
 import { useMonthSummary } from '#/domain/dashboard/month-summary/hooks/use-month-summary.hook.ts';
+import { useConnections } from '#/domain/sync/connection/hooks/use-connections.hook.ts';
+import { useStartConnectionRun } from '#/domain/sync/run/hooks/use-start-connection-run.hook.ts';
 import { useBulkTransactions } from '#/domain/transactions/transaction-bulk/hooks/use-bulk-transactions.hook.ts';
 import { useRestoreBulkTransactions } from '#/domain/transactions/transaction-bulk/hooks/use-restore-bulk-transactions.hook.ts';
 import { useTransactionSummary } from '#/domain/transactions/transaction-summary/hooks/use-transaction-summary.hook.ts';
@@ -48,6 +50,8 @@ export function useTransactionListModel({ month, search, ruleQuestionIds }: Mode
       { enabled: isCategoryView || Boolean(search.edit) },
     ),
     summary: useTransactionSummary(month),
+    connections: useConnections(),
+    startRun: useStartConnectionRun(),
     breakdown: useCategoryBreakdown(month, { enabled: isCategoryView }),
     monthSummary: useMonthSummary(month, { enabled: isCategoryView }),
     ruleSuggestions: useRuleSuggestions(ruleQuestionIds),

@@ -1,4 +1,4 @@
-import type { CategoryOption } from '@fincheck/ui';
+import type { CategoryOption, ChoiceOption } from '@fincheck/ui';
 
 import type {
   TransactionCreateErrors,
@@ -13,8 +13,9 @@ export type TransactionCreateViewProps = {
   errors: TransactionCreateErrors;
   /** Server error that belongs to no field. */
   formError?: string;
-  accounts: { id: string; name: string }[];
+  accounts: ChoiceOption[];
   methods: { id: string; label: string }[];
+  /** The categories of the chosen type, most used first. */
   categories: CategoryOption[];
   /** The accounts or categories are still loading. */
   loading: boolean;

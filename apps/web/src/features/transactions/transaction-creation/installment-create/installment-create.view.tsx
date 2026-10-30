@@ -1,169 +1,127 @@
 import {
-  Button,
-  CategoryChoices,
-  ChoiceChip,
-  EditDateField,
-  InlineNotice,
-  Modal,
-  Money,
-  MoneyField,
+  AmountField,
+  ChoiceField,
+  DateQuickField,
+  FormModal,
+  FormModalMore,
+  FormModalSplit,
+  SegmentedControl,
   TextField,
 } from '@fincheck/ui';
 
+import { InstallmentCountField } from '#/features/transactions/transaction-creation/installment-create/components/installment-count-field.component.tsx';
+import { InstallmentPreview } from '#/features/transactions/transaction-creation/installment-create/components/installment-preview.component.tsx';
 import type { InstallmentCreateViewProps } from '#/features/transactions/transaction-creation/installment-create/types/installment-create-view.type.ts';
+import { AccountChoiceField } from '#/features/transactions/transaction-fields/components/account-choice-field.component.tsx';
+import { CategoryChipsField } from '#/features/transactions/transaction-fields/components/category-chips-field.component.tsx';
 
-const FORM_ID = 'new-installment-form';
+const AMOUNT_MODES = [
+  { key: 'total', label: 'Valor total' },
+  { key: 'installment', label: 'Valor da parcela' },
+];
 
-type ChoiceRowProps = {
-  label: string;
-  items: { id: string; label: string }[];
-  value: string | null;
-  onChange: (id: string) => void;
-  error?: string;
-};
-
-function ChoiceRow({ label, items, value, onChange, error }: ChoiceRowProps) {
-  return (
-    <div role="group" aria-label={label} className="flex flex-col gap-s8">
-      <span className="text-label text-fg-secondary">{label}</span>
-      <div className="flex flex-wrap gap-s8">
-        {items.map((item) => (
-          <ChoiceChip key={item.id} selected={item.id === value} onChange={() => onChange(item.id)}>
-            {item.label}
-          </ChoiceChip>
-        ))}
-      </div>
-      {error ? (
-        <p role="alert" className="text-meta text-alert">
-          {error}
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
-/** Modal "Compra parcelada": total, description, category, installments, card, first invoice and the preview (RF-INV-004). */
+/**
+ * "Compra parcelada" on the form-modal pattern. The amount is the hero, and a switch above it says
+ * whether the number is the whole purchase or one installment (a store shows either). Count and
+ * card are taps; the preview answers "how will this land?" before saving. Date of purchase, first
+ * invoice and category wait in "Mais opções", with sensible defaults.
+ */
 export function InstallmentCreateView(props: InstallmentCreateViewProps) {
   const { values, errors, preview } = props;
+  const noAmount = values.amountCents <= 0;
+  const firstInvoice = props.invoiceMonths.find((month) => month.id === values.firstInvoiceMonth);
 
   return (
-    <Modal
+    <FormModal
       isOpen={props.isOpen}
       onOpenChange={(isOpen) => {
         if (!isOpen) props.onClose();
       }}
-      isDismissable={!props.saving}
       title="Compra parcelada"
-      subtitle="Lançada à mão no cartão, uma parcela em cada fatura."
-      size="wide"
-      actions={
-        <>
-          <Button variant="secondary" isDisabled={props.saving} onPress={props.onClose}>
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            form={FORM_ID}
-            loading={props.saving}
-            loadingLabel="Salvando..."
-            isDisabled={props.loading}
-          >
-            Lançar compra
-          </Button>
-        </>
-      }
+      description="Lançada à mão no cartão, uma parcela em cada fatura."
+      submitLabel="Lançar compra"
+      submittingLabel="Lançando..."
+      isSubmitting={props.saving}
+      submitDisabled={props.loading || noAmount}
+      submitHint={!props.loading && noAmount ? 'Informe o valor da compra.' : undefined}
+      error={props.formError}
+      onSubmit={props.onSubmit}
     >
-      <form
-        id={FORM_ID}
-        noValidate
-        aria-label="Compra parcelada"
-        onSubmit={(event) => {
-          event.preventDefault();
-          props.onSubmit();
-        }}
-        className="flex flex-col gap-s16"
+      <FormModalSplit
+        aside={
+          <>
+            <div className="flex flex-col gap-s12">
+              <SegmentedControl
+                label="O valor informado é"
+                options={AMOUNT_MODES}
+                value={values.amountMode}
+                onChange={(amountMode) =>
+                  props.onChange({ amountMode: amountMode as typeof values.amountMode })
+                }
+              />
+              <AmountField
+                label={values.amountMode === 'total' ? 'Valor total' : 'Valor da parcela'}
+                cents={values.amountCents}
+                onChange={(amountCents) => props.onChange({ amountCents })}
+                error={errors.total}
+              />
+            </div>
+            <TextField
+              label="Descrição"
+              value={values.description}
+              onChange={(description) => props.onChange({ description })}
+              error={errors.description}
+              placeholder="Ex.: Cadeira ergonômica"
+              autoComplete="off"
+              maxLength={200}
+            />
+          </>
+        }
       >
-        <MoneyField
-          label="Valor total"
-          size="large"
-          cents={values.totalCents}
-          onChange={(totalCents) => props.onChange({ totalCents })}
-          error={errors.total}
-          autoFocus
+        <InstallmentCountField
+          countText={values.countText}
+          onChange={(countText) => props.onChange({ countText })}
+          error={errors.count}
         />
-        <TextField
-          label="Descrição"
-          value={values.description}
-          onChange={(description) => props.onChange({ description })}
-          error={errors.description}
-          autoComplete="off"
-          maxLength={200}
-        />
-        <div className="grid grid-cols-2 gap-s16">
-          <TextField
-            label="Parcelas"
-            value={values.countText}
-            onChange={(countText) => props.onChange({ countText })}
-            error={errors.count}
-            inputMode="numeric"
-            autoComplete="off"
-            maxLength={2}
+        {props.cards.length > 0 ? (
+          <AccountChoiceField
+            label="Cartão"
+            accounts={props.cards}
+            value={values.accountId}
+            onChange={(accountId) => props.onChange({ accountId })}
+            error={errors.account}
           />
-          <EditDateField
-            label="Data da compra"
-            value={values.purchaseOn}
-            onChange={(purchaseOn) => props.onChange({ purchaseOn, firstInvoiceMonth: null })}
-            error={errors.date}
-          />
-        </div>
-        <ChoiceRow
-          label="Cartão"
-          items={props.cards.map((card) => ({ id: card.id, label: card.name }))}
-          value={values.accountId}
-          onChange={(accountId) => props.onChange({ accountId })}
-          error={errors.account}
+        ) : (
+          <p className="text-label text-fg-secondary">
+            Você ainda não tem cartão. Crie um em Contas e cartões para lançar a compra.
+          </p>
+        )}
+      </FormModalSplit>
+      {preview ? <InstallmentPreview preview={preview} /> : null}
+      <FormModalMore
+        summary={firstInvoice ? `fatura de ${firstInvoice.label.toLowerCase()}` : 'data, fatura'}
+        hasError={Boolean(errors.date || errors.firstInvoice)}
+      >
+        <DateQuickField
+          label="Data da compra"
+          value={values.purchaseOn}
+          onChange={(purchaseOn) => props.onChange({ purchaseOn, firstInvoiceMonth: null })}
+          error={errors.date}
         />
-        <ChoiceRow
+        <ChoiceField
           label="Primeira fatura"
-          items={props.invoiceMonths}
+          options={props.invoiceMonths.map((month) => ({ key: month.id, label: month.label }))}
           value={values.firstInvoiceMonth}
           onChange={(firstInvoiceMonth) => props.onChange({ firstInvoiceMonth })}
           error={errors.firstInvoice}
         />
-        <CategoryChoices
-          label="Categoria (opcional)"
+        <CategoryChipsField
+          aside="opcional"
           categories={props.categories}
           value={values.categoryId}
           onChange={(categoryId) => props.onChange({ categoryId })}
         />
-        {preview.rows.length > 0 ? (
-          <section
-            aria-label="Prévia das parcelas"
-            className="flex flex-col gap-s8 rounded-panel bg-subtle p-s16"
-          >
-            <h3 className="text-label font-emphasis text-fg-primary">Prévia das parcelas</h3>
-            <ul className="m-0 flex flex-col gap-s4 p-0">
-              {preview.rows.map((row) => (
-                <li
-                  key={row.number}
-                  className="flex list-none items-baseline justify-between gap-s12 text-label text-fg-secondary"
-                >
-                  <span>
-                    {row.number}/{preview.count} · fatura de {row.monthLabel}
-                  </span>
-                  <Money cents={row.cents} sign="none" weight="plain" className="text-fg-primary" />
-                </li>
-              ))}
-            </ul>
-            {preview.hiddenCount > 0 ? (
-              <p className="text-meta text-fg-secondary">
-                e mais {preview.hiddenCount} {preview.hiddenCount === 1 ? 'parcela' : 'parcelas'}
-              </p>
-            ) : null}
-          </section>
-        ) : null}
-        {props.formError ? <InlineNotice>{props.formError}</InlineNotice> : null}
-      </form>
-    </Modal>
+      </FormModalMore>
+    </FormModal>
   );
 }

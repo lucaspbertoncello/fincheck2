@@ -11,7 +11,12 @@ import { buildUpdateBody } from '#/features/transactions/transaction-list/utils/
 import { describeTransactionError } from '#/features/transactions/transaction-list/utils/describe-transaction-error.util.ts';
 import { focusFirstInvalid } from '#/features/transactions/transaction-list/utils/focus-first-invalid.util.ts';
 
-export const EDIT_FORM_LABEL = 'Editar transação';
+function describeOrigin(transaction: Transaction.Dto, lookups: TransactionLookups): string {
+  const account = lookups.accounts.get(transaction.accountId)?.name ?? 'sua conta';
+  return transaction.origin === 'manual'
+    ? `Lançada à mão em ${account}.`
+    : `Veio de ${account}. O original do banco fica guardado.`;
+}
 
 type EditingArgs = {
   model: TransactionListModel;
@@ -23,7 +28,7 @@ type EditingArgs = {
 };
 
 /**
- * The in-row edit panel of one transaction: the draft values, the validation with the contract's
+ * The edit modal of one transaction: the draft values, the validation with the contract's
  * rules (R6: nature and the other leg of a transfer), the tags by name turned into ids (new names
  * become new tags) and the save. A save that only picks a category goes through the recategorize
  * route, which brings the undo and the rule question.
@@ -50,6 +55,15 @@ export function useTransactionEditing({
   const mine = problem?.id === transaction.id ? problem : undefined;
   const kind = values.nature === 'income' ? 'income' : 'expense';
 
+  // Switching between expense and income drops a category of the other kind.
+  function withValidCategory(next: typeof values): typeof values {
+    if (next.nature === values.nature || !next.categoryId) return next;
+    if (next.nature !== 'expense' && next.nature !== 'income') return next;
+    return lookups.categories.get(next.categoryId)?.kind === next.nature
+      ? next
+      : { ...next, categoryId: null };
+  }
+
   async function resolveTagIds(names: readonly string[]): Promise<string[]> {
     const existing = new Map(
       [...lookups.tags.values()].map((tag) => [tag.name.toLowerCase(), tag]),
@@ -67,7 +81,7 @@ export function useTransactionEditing({
     const errors = validateTransactionEdit(values);
     if (Object.keys(errors).length > 0) {
       setProblem({ id: transaction.id, errors });
-      focusFirstInvalid(EDIT_FORM_LABEL);
+      focusFirstInvalid();
       return;
     }
     try {
@@ -91,14 +105,15 @@ export function useTransactionEditing({
         errors: field ? { [field]: message } : {},
         message: field ? undefined : message,
       });
-      focusFirstInvalid(EDIT_FORM_LABEL);
+      focusFirstInvalid();
     }
   }
 
   return {
     transactionId: transaction.id,
     values,
-    onChange: (next: typeof values) => setDraft({ id: transaction.id, values: next }),
+    onChange: (next: typeof values) =>
+      setDraft({ id: transaction.id, values: withValidCategory(next) }),
     categories: buildCategoryOptions([...lookups.categories.values()], kind),
     counterparts: buildCounterpartOptions(
       transaction,
@@ -106,6 +121,8 @@ export function useTransactionEditing({
       lookups,
     ),
     errors: mine?.errors ?? {},
+    description: describeOrigin(transaction, lookups),
+    direction: transaction.amountCents > 0 ? ('income' as const) : ('expense' as const),
     formError: mine?.message,
     original:
       transaction.isEdited && transaction.bank

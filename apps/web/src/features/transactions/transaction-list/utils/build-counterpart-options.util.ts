@@ -1,5 +1,5 @@
 import type { Transaction } from '@fincheck/shared/transactions/transaction/transaction.type.ts';
-import type { CounterpartOption } from '@fincheck/ui';
+import type { ChoiceOption } from '@fincheck/ui';
 
 import type { TransactionLookups } from '#/features/transactions/transaction-list/types/transaction-lookups.type.ts';
 import { formatShortDate } from '#/features/transactions/transaction-list/utils/format-day-heading.util.ts';
@@ -15,7 +15,7 @@ export function buildCounterpartOptions(
   transaction: Transaction.Dto,
   candidates: readonly Transaction.Dto[],
   lookups: TransactionLookups,
-): CounterpartOption[] {
+): ChoiceOption[] {
   return candidates
     .filter(
       (candidate) =>
@@ -31,7 +31,8 @@ export function buildCounterpartOptions(
     )
     .slice(0, MAX_OPTIONS)
     .map((candidate) => ({
-      id: candidate.id,
-      label: `${candidate.description} (${lookups.accounts.get(candidate.accountId)?.name ?? 'outra conta'}), ${formatShortDate(candidate.occurredOn)}, ${formatMoney(Math.abs(candidate.amountCents))}`,
+      key: candidate.id,
+      label: candidate.description,
+      hint: `${lookups.accounts.get(candidate.accountId)?.name ?? 'Outra conta'} · ${formatShortDate(candidate.occurredOn)} · ${formatMoney(Math.abs(candidate.amountCents))}`,
     }));
 }

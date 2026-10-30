@@ -7,6 +7,8 @@ import { buildCategoryOptions } from '#/features/transactions/transaction-list/u
 import { describeTransactionError } from '#/features/transactions/transaction-list/utils/describe-transaction-error.util.ts';
 import { focusFirstInvalid } from '#/features/transactions/transaction-list/utils/focus-first-invalid.util.ts';
 import { toBusinessDate } from '#/features/transactions/transaction-list/utils/to-business-date.util.ts';
+import { buildAccountChoices } from '#/features/transactions/transaction-fields/utils/build-account-choices.util.ts';
+import { rankCategoriesByUse } from '#/features/transactions/transaction-fields/utils/rank-categories-by-use.util.ts';
 import {
   CARD_METHODS,
   OTHER_METHODS,
@@ -57,7 +59,16 @@ export function TransactionCreateViewModel({ onClose }: Props) {
   const account = accounts.find((item) => item.id === (values.accountId ?? accounts[0]?.id));
   const methodIds: readonly Transaction.Method[] =
     account?.type === 'credit_card' ? CARD_METHODS : OTHER_METHODS;
-  const method = values.method && methodIds.includes(values.method) ? values.method : methodIds[0];
+  // Cash on hand is the likeliest thing to enter by hand, so a wallet starts on "Dinheiro".
+  const defaultMethod = account?.type === 'wallet' ? 'cash' : methodIds[0];
+  const method = values.method && methodIds.includes(values.method) ? values.method : defaultMethod;
+  const categories = rankCategoriesByUse(
+    buildCategoryOptions(
+      model.categories.data?.items ?? [],
+      values.type === 'income' ? 'income' : 'expense',
+    ),
+    model.monthTransactions.data?.items ?? [],
+  );
 
   function change(patch: Partial<TransactionCreateValues>) {
     setValues((current) => ({ ...current, ...patch }));
@@ -82,7 +93,7 @@ export function TransactionCreateViewModel({ onClose }: Props) {
           (field) => TRANSACTION_CREATE_MESSAGES[field],
         ),
       );
-      focusFirstInvalid('Nova transação');
+      focusFirstInvalid();
       return;
     }
     try {
@@ -106,12 +117,9 @@ export function TransactionCreateViewModel({ onClose }: Props) {
       onChange={change}
       errors={errors}
       formError={formError}
-      accounts={accounts.map((item) => ({ id: item.id, name: item.name }))}
+      accounts={buildAccountChoices(accounts)}
       methods={methodIds.map((id) => ({ id, label: TRANSACTION_METHOD_CHOICES[id] }))}
-      categories={buildCategoryOptions(
-        model.categories.data?.items ?? [],
-        values.type === 'income' ? 'income' : 'expense',
-      )}
+      categories={categories}
       loading={model.accounts.isPending || model.categories.isPending}
       saving={model.createTransaction.isPending}
       onSubmit={() => void submit()}

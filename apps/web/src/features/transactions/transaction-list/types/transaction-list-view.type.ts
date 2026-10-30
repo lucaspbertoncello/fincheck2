@@ -1,7 +1,8 @@
 import type {
+  AmountKind,
   CategoryGroupData,
   CategoryOption,
-  CounterpartOption,
+  ChoiceOption,
   OriginalFromBank,
   SelectionAction,
   SplitPart,
@@ -56,8 +57,12 @@ export type TransactionEditorView = {
   values: TransactionEditValues;
   onChange: (values: TransactionEditValues) => void;
   categories: CategoryOption[];
-  counterparts: CounterpartOption[];
+  counterparts: ChoiceOption[];
   errors: TransactionEditErrors;
+  /** One line under the title: where the transaction is from. */
+  description: string;
+  /** The sign of the amount, which a transfer keeps whichever way it goes. */
+  direction: AmountKind;
   formError?: string;
   original?: OriginalFromBank;
   saving: boolean;
@@ -75,6 +80,7 @@ export type TransactionSplitterView = {
   onChange: (parts: SplitPart[]) => void;
   categories: CategoryOption[];
   createPartId: () => string;
+  description: string;
   saving: boolean;
   error?: string;
   isSplit: boolean;
@@ -160,13 +166,29 @@ export type BulkPickerView = {
   expenseCategories: CategoryOption[];
   incomeCategories: CategoryOption[];
   categoryId: string | null;
-  onCategoryChange: (id: string) => void;
+  onCategoryChange: (id: string | null) => void;
   tags: { id: string; name: string }[];
   tagId: string | null;
   onTagChange: (id: string) => void;
   pending: boolean;
   onApply: () => void;
   onClose: () => void;
+};
+
+/** A bank whose last sync failed: the banner over the list and its "Tentar agora". */
+export type SyncFailureView = {
+  connectionId: string;
+  institution: string;
+  detail: string;
+  retrying: boolean;
+  onRetry: () => void;
+};
+
+/** The day the list is narrowed to (`?day=`), with the way back to the whole month. */
+export type DayFilterView = {
+  /** "Dia 12/10". */
+  label: string;
+  onClear: () => void;
 };
 
 export type ConfirmView = {
@@ -200,7 +222,10 @@ export type TransactionListViewProps = {
   ruleQuestion: RuleQuestionView | null;
   /** The list view. */
   days: TransactionDayView[];
-  emptyReason: 'month' | 'filtered' | null;
+  emptyReason: 'month' | 'filtered' | 'day' | null;
+  /** Set while `?day=` narrows the list to one day. */
+  dayFilter: DayFilterView | null;
+  syncFailures: SyncFailureView[];
   onClearFilters: () => void;
   onConnectAccounts: () => void;
   onNewTransaction: () => void;

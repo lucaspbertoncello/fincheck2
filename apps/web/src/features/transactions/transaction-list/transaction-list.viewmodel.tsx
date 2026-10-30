@@ -8,6 +8,7 @@ import { useFiltersView } from '#/features/transactions/transaction-list/hooks/u
 import { useActionError } from '#/features/transactions/transaction-list/hooks/use-action-error.hook.ts';
 import { useBulkActions } from '#/features/transactions/transaction-list/hooks/use-bulk-actions.hook.ts';
 import { useDebouncedSearchText } from '#/features/transactions/transaction-list/hooks/use-debounced-search-text.hook.ts';
+import { useSyncFailures } from '#/features/transactions/transaction-list/hooks/use-sync-failures.hook.ts';
 import { useListWindow } from '#/features/transactions/transaction-list/hooks/use-list-window.hook.ts';
 import { useRowActions } from '#/features/transactions/transaction-list/hooks/use-row-actions.hook.ts';
 import { useRuleQuestion } from '#/features/transactions/transaction-list/hooks/use-rule-question.hook.ts';
@@ -25,6 +26,8 @@ import {
 import { buildRowView } from '#/features/transactions/transaction-list/utils/build-row-view.util.ts';
 import { buildTransactionLookups } from '#/features/transactions/transaction-list/utils/build-transaction-lookups.util.ts';
 import { groupTransactionsByDay } from '#/features/transactions/transaction-list/utils/group-transactions-by-day.util.ts';
+import { rankCategoriesByUse } from '#/features/transactions/transaction-fields/utils/rank-categories-by-use.util.ts';
+import { formatDayChip } from '#/features/transactions/transaction-list/utils/format-day-chip.util.ts';
 import { takeRows } from '#/features/transactions/transaction-list/utils/take-rows.util.ts';
 import { toBusinessDate } from '#/features/transactions/transaction-list/utils/to-business-date.util.ts';
 import { buildHref } from '#/shared/layouts/application/navigation/build-href.util.ts';
@@ -34,7 +37,7 @@ import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
 /**
  * Connects the Transações screen to its data: the URL state (view, type, search, filters, open
  * panel), the month list in pages, the selection mode and every action, and hands the View
- * everything ready. The creation modals ("Nova transação", "Compra parcelada") are a separate
+ * everything ready. The edit, split and bulk modals open over the list. The creation modals ("Nova transação", "Compra parcelada") are a separate
  * feature, opened by `?new=`.
  */
 export function TransactionListViewModel() {
@@ -45,6 +48,7 @@ export function TransactionListViewModel() {
   const [ruleQuestionIds, setRuleQuestionIds] = useState<string[]>([]);
   const model = useTransactionListModel({ month, search, ruleQuestionIds });
   const error = useActionError();
+  const syncFailures = useSyncFailures({ model, reportError: error.report });
   const selection = useTransactionSelection();
   const searchBox = useDebouncedSearchText(search.q ?? '', (text) => update({ q: text || null }));
 
@@ -55,10 +59,12 @@ export function TransactionListViewModel() {
   );
   const items = model.list.data?.items ?? [];
   const today = toBusinessDate(new Date());
-  const days = groupTransactionsByDay(items, today);
+  // `?day=` narrows the month already loaded to one day; the contract has no day filter.
+  const visibleItems = search.day ? items.filter((item) => item.occurredOn === search.day) : items;
+  const days = groupTransactionsByDay(visibleItems, today);
   const paging = useListWindow(
-    items.length,
-    `${month}|${JSON.stringify(buildListQuery(month, search))}`,
+    visibleItems.length,
+    `${month}|${search.day ?? ''}|${JSON.stringify(buildListQuery(month, search))}`,
   );
 
   const rowActions = useRowActions({
@@ -189,7 +195,18 @@ export function TransactionListViewModel() {
       totalCents: day.totalCents,
       rows: day.items.map((item) => buildRowView(item, lookups)),
     })),
-    emptyReason: items.length === 0 ? (hasFilter ? 'filtered' : 'month') : null,
+    emptyReason:
+      items.length === 0
+        ? hasFilter
+          ? 'filtered'
+          : 'month'
+        : visibleItems.length === 0
+          ? 'day'
+          : null,
+    dayFilter: search.day
+      ? { label: `Dia ${formatDayChip(search.day)}`, onClear: () => update({ day: null }) }
+      : null,
+    syncFailures,
     onClearFilters: filters.clear,
     onConnectAccounts: () => go('/accounts'),
     onNewTransaction: () => update({ new: 'transaction' }),
@@ -211,6 +228,8 @@ export function TransactionListViewModel() {
           categories: editing.categories,
           counterparts: editing.counterparts,
           errors: editing.errors,
+          description: editing.description,
+          direction: editing.direction,
           formError: editing.formError,
           original: editing.original,
           saving: editing.saving,
@@ -229,6 +248,7 @@ export function TransactionListViewModel() {
           onChange: splitting.onChange,
           categories: splitting.categories,
           createPartId: splitting.createPartId,
+          description: splitting.description,
           saving: splitting.saving,
           error: splitting.error,
           isSplit: splitting.isSplit,
@@ -253,8 +273,8 @@ export function TransactionListViewModel() {
     bulkPicker: {
       picker: bulk.picker,
       count: selection.selectedIds.size,
-      expenseCategories: bulk.hasExpenses ? bulk.expenseCategories : [],
-      incomeCategories: bulk.hasIncomes ? bulk.incomeCategories : [],
+      expenseCategories: bulk.hasExpenses ? rankCategoriesByUse(bulk.expenseCategories, items) : [],
+      incomeCategories: bulk.hasIncomes ? rankCategoriesByUse(bulk.incomeCategories, items) : [],
       categoryId: bulk.categoryId,
       onCategoryChange: bulk.setCategoryId,
       tags: bulk.tags.map((tag) => ({ id: tag.id, name: tag.name })),

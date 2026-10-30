@@ -1,9 +1,11 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it, vi } from 'vitest';
 
 import { CURRENT_MONTH } from '#mocks/support/dates/clock.constant.ts';
 import { server } from '#mocks/setup/server.util.ts';
+import { db } from '#mocks/state/mock-database.store.ts';
 import { renderApp } from '#tests/support/app/render-app.util.tsx';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
 
@@ -124,16 +126,20 @@ describe('TransactionListPage', () => {
     await waitFor(() => expect(screen.getAllByText('Ignorada')).toHaveLength(before));
   });
 
-  it('edits a transaction in its row', async () => {
+  it('edits a transaction in the modal (the same one as "Nova transação")', async () => {
+    const user = userEvent.setup();
     renderApp(PAGE);
     await openRowMenu('CINEMARK', 'Editar');
 
-    const form = await screen.findByRole('form', { name: 'Editar transação' });
+    const dialog = await screen.findByRole('dialog', { name: 'Editar transação' });
     expect(window.location.search).toContain('edit=');
-    fireEvent.change(within(form).getByRole('textbox', { name: 'Descrição' }), {
-      target: { value: 'Cinema com a turma' },
-    });
-    fireEvent.click(within(form).getByRole('button', { name: 'Salvar' }));
+    // A transaction from the bank cannot be deleted; only a manual one has "Excluir".
+    expect(within(dialog).queryByRole('button', { name: 'Excluir' })).not.toBeInTheDocument();
+    expect(within(dialog).getByText(/O original do banco fica guardado/)).toBeInTheDocument();
+    const description = within(dialog).getByRole('textbox', { name: 'Descrição' });
+    await user.clear(description);
+    await user.type(description, 'Cinema com a turma');
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar' }));
 
     expect(
       (await screen.findAllByText('Cinema com a turma', undefined, LONG_WAIT)).length,
@@ -142,50 +148,79 @@ describe('TransactionListPage', () => {
   });
 
   it('refuses an edit with an empty description and focuses the field', async () => {
+    const user = userEvent.setup();
     renderApp(PAGE);
     await openRowMenu('CINEMARK', 'Editar');
 
-    const form = await screen.findByRole('form', { name: 'Editar transação' });
-    const description = within(form).getByRole('textbox', { name: 'Descrição' });
-    fireEvent.change(description, { target: { value: '' } });
-    fireEvent.click(within(form).getByRole('button', { name: 'Salvar' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Editar transação' });
+    const description = within(dialog).getByRole('textbox', { name: 'Descrição' });
+    await user.clear(description);
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar' }));
 
-    expect(await within(form).findByText('Escreva uma descrição.')).toBeInTheDocument();
+    expect(await within(dialog).findByText('Escreva uma descrição.')).toBeInTheDocument();
     await waitFor(() => expect(description).toHaveFocus());
   });
 
-  it('splits a transaction in two parts', async () => {
+  it('turns a transaction into a transfer and asks for its other leg', async () => {
+    const user = userEvent.setup();
     renderApp(PAGE);
+    await openRowMenu('CINEMARK', 'Editar');
+
+    const dialog = await screen.findByRole('dialog', { name: 'Editar transação' });
+    await user.click(within(dialog).getByRole('radio', { name: 'Transferência' }));
+
+    // A transfer has no category; it has the other leg (here nothing matches the value).
+    expect(within(dialog).queryByRole('button', { name: 'Mercado' })).not.toBeInTheDocument();
+    expect(within(dialog).getByText('Outra perna da transferência')).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar' }));
+    expect(
+      await within(dialog).findByText('Escolha a outra perna da transferência.'),
+    ).toBeVisible();
+  });
+
+  it('splits a transaction in two parts', async () => {
+    const user = userEvent.setup();
+    renderApp(PAGE);
+    // The seed already has one split transaction; the new one makes two.
+    const before = (await screen.findAllByText('Dividida em 2', undefined, LONG_WAIT)).length;
     await openRowMenu('PIX MERCADINHO SAO JOSE', 'Dividir');
 
-    const form = await screen.findByRole('form', { name: 'Dividir transação' });
-    fireEvent.click(within(form).getByRole('button', { name: 'Dividir' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Dividir transação' });
+    expect(within(dialog).getByText('Soma confere')).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'Dividir' }));
 
-    expect(await screen.findByText('Dividida em 2', undefined, LONG_WAIT)).toBeInTheDocument();
+    await waitFor(() => expect(screen.getAllByText('Dividida em 2')).toHaveLength(before + 1));
+    await waitFor(() => expect(window.location.search).not.toContain('split='));
   });
 
   it('recategorizes in bulk from the selection mode and undoes it', async () => {
+    const user = userEvent.setup();
     renderApp(PAGE);
     await screen.findByText('CINEMARK', undefined, LONG_WAIT);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Selecionar' }));
-    fireEvent.click(
+    await user.click(screen.getByRole('button', { name: 'Selecionar' }));
+    await user.click(
       (await screen.findAllByRole('checkbox', { name: 'Selecionar UBER *TRIP' }))[0]!,
     );
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Selecionar COMPRA DEBITO ELETROPECAS' }));
+    await user.click(
+      screen.getByRole('checkbox', { name: 'Selecionar COMPRA DEBITO ELETROPECAS' }),
+    );
     expect(screen.getByRole('button', { name: 'Concluir · 2' })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Categorizar' }));
+    await user.click(screen.getByRole('button', { name: 'Categorizar' }));
     const dialog = await screen.findByRole('dialog', { name: 'Categorizar' });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Transporte' }));
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Aplicar' }));
+    // "Aplicar" waits for a category and says so.
+    expect(within(dialog).getByRole('button', { name: 'Aplicar' })).toBeDisabled();
+    expect(within(dialog).getByText('Escolha uma categoria.')).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'Transporte' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Aplicar' }));
 
     expect(
       await screen.findByText(/2 transações foram para Transporte/, undefined, LONG_WAIT),
     ).toBeInTheDocument();
     // The selection mode ends and "Desfazer" puts the previous state back.
     expect(screen.getByRole('button', { name: 'Selecionar' })).toBeInTheDocument();
-    fireEvent.click(screen.getByText('Desfazer'));
+    await user.click(screen.getByText('Desfazer'));
     await waitFor(() =>
       expect(screen.getAllByText('Para revisar').length).toBeGreaterThanOrEqual(2),
     );
@@ -205,24 +240,26 @@ describe('TransactionListPage', () => {
   });
 
   it('creates a transaction by the ?new=transaction modal, then deletes it after confirming', async () => {
+    const user = userEvent.setup();
     renderApp(`${PAGE}&new=transaction`);
 
     const dialog = await screen.findByRole('dialog', { name: 'Nova transação' }, LONG_WAIT);
-    await waitFor(() =>
-      expect(within(dialog).getByRole('button', { name: 'Salvar' })).toBeEnabled(),
-    );
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Salvar' }));
-    // The same rules as the request: the errors show under the fields.
-    expect(
-      await within(dialog).findByText('O valor precisa ser maior que zero.'),
-    ).toBeInTheDocument();
-    expect(within(dialog).getByText('Escreva uma descrição.')).toBeInTheDocument();
+    // The amount is where the focus starts, and "Adicionar" waits for it, saying why.
+    const amount = within(dialog).getByRole('textbox', { name: 'Valor' });
+    await waitFor(() => expect(amount).toHaveFocus());
+    expect(within(dialog).getByRole('button', { name: 'Adicionar' })).toBeDisabled();
+    expect(within(dialog).getByText('Informe o valor para adicionar.')).toBeInTheDocument();
 
-    fireEvent.change(within(dialog).getAllByRole('textbox')[0]!, { target: { value: '1234' } });
-    fireEvent.change(within(dialog).getByRole('textbox', { name: 'Descrição' }), {
-      target: { value: 'Padaria da esquina' },
-    });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Salvar' }));
+    await user.type(amount, '1234');
+    expect(within(dialog).getByRole('button', { name: 'Adicionar' })).toBeEnabled();
+    // The description is required: the error shows under it and the focus goes there.
+    await user.click(within(dialog).getByRole('button', { name: 'Adicionar' }));
+    const description = within(dialog).getByRole('textbox', { name: 'Descrição' });
+    expect(await within(dialog).findByText('Escreva uma descrição.')).toBeInTheDocument();
+    await waitFor(() => expect(description).toHaveFocus());
+
+    // Enter saves.
+    await user.type(description, 'Padaria da esquina{Enter}');
 
     expect(
       await screen.findByText('Padaria da esquina lançada.', undefined, LONG_WAIT),
@@ -231,34 +268,155 @@ describe('TransactionListPage', () => {
     expect(await screen.findByText('Padaria da esquina')).toBeInTheDocument();
 
     await openRowMenu('Padaria da esquina', 'Editar');
-    fireEvent.click(await screen.findByRole('button', { name: 'Excluir transação' }));
+    const edit = await screen.findByRole('dialog', { name: 'Editar transação' });
+    await user.click(within(edit).getByRole('button', { name: 'Excluir' }));
     const confirm = await screen.findByRole('alertdialog', { name: 'Excluir esta transação?' });
-    fireEvent.click(within(confirm).getByRole('button', { name: 'Excluir' }));
+    await user.click(within(confirm).getByRole('button', { name: 'Excluir' }));
 
     await waitFor(() => expect(screen.queryByText('Padaria da esquina')).not.toBeInTheDocument());
   });
 
+  it('picks the category, date and account of a new transaction with one tap each', async () => {
+    const user = userEvent.setup();
+    renderApp(`${PAGE}&new=transaction`);
+
+    const dialog = await screen.findByRole('dialog', { name: 'Nova transação' }, LONG_WAIT);
+    // The type switch changes the categories offered (the income ones have their own).
+    expect(await within(dialog).findByRole('button', { name: /Outras/ })).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('radio', { name: 'Receita' }));
+    expect(within(dialog).queryByRole('button', { name: 'Mercado' })).not.toBeInTheDocument();
+    await user.click(within(dialog).getByRole('radio', { name: 'Despesa' }));
+
+    const market = await within(dialog).findByRole('button', { name: 'Mercado' });
+    await user.click(market);
+    expect(market).toHaveAttribute('aria-pressed', 'true');
+    await user.click(market);
+    expect(market).toHaveAttribute('aria-pressed', 'false');
+
+    // The rest of the categories sit behind "Outras…", a search that picks one.
+    await user.click(within(dialog).getByRole('button', { name: /Outras/ }));
+    const search = await screen.findByRole('combobox', { name: 'Buscar outra categoria' });
+    await user.type(search, 'Pets');
+    await user.click(await screen.findByRole('option', { name: 'Pets' }));
+    expect(await within(dialog).findByRole('button', { name: 'Pets' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+
+    await user.click(within(dialog).getByRole('button', { name: 'Ontem' }));
+    expect(within(dialog).getByRole('button', { name: 'Ontem' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(within(dialog).getByRole('radio', { name: 'Carteira' })).toBeInTheDocument();
+  });
+
   it('creates an installment purchase by the ?new=installment modal, with the preview', async () => {
+    const user = userEvent.setup();
     renderApp(`${PAGE}&new=installment`);
 
     const dialog = await screen.findByRole('dialog', { name: 'Compra parcelada' }, LONG_WAIT);
-    fireEvent.change(within(dialog).getAllByRole('textbox')[0]!, { target: { value: '120000' } });
-    fireEvent.change(within(dialog).getByRole('textbox', { name: 'Descrição' }), {
-      target: { value: 'Cadeira ergonômica' },
-    });
-    fireEvent.change(within(dialog).getByRole('textbox', { name: 'Parcelas' }), {
-      target: { value: '6' },
-    });
+    expect(within(dialog).getByRole('button', { name: 'Lançar compra' })).toBeDisabled();
+    await user.type(within(dialog).getByRole('textbox', { name: 'Valor total' }), '120000');
+    await user.type(
+      within(dialog).getByRole('textbox', { name: 'Descrição' }),
+      'Cadeira ergonômica',
+    );
+    await user.click(within(dialog).getByRole('button', { name: '6 parcelas' }));
 
     const preview = await within(dialog).findByRole('region', { name: 'Prévia das parcelas' });
+    expect(within(preview).getByText('6×')).toBeInTheDocument();
+    expect(preview).toHaveTextContent(/200,00/);
+    await user.click(within(preview).getByRole('button', { name: 'Ver parcelas' }));
     expect(within(preview).getByText(/1\/6/)).toBeInTheDocument();
-    expect(within(preview).getByText(/e mais 2 parcelas/)).toBeInTheDocument();
+    expect(within(preview).getByText(/6\/6/)).toBeInTheDocument();
 
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Lançar compra' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Lançar compra' }));
 
     expect(
       await screen.findByText(/Cadeira ergonômica lançada em 6 parcelas/, undefined, LONG_WAIT),
     ).toBeInTheDocument();
     await waitFor(() => expect(window.location.search).not.toContain('new='));
+  });
+
+  it('takes the installment value instead of the total when asked, and any other count', async () => {
+    const user = userEvent.setup();
+    renderApp(`${PAGE}&new=installment`);
+
+    const dialog = await screen.findByRole('dialog', { name: 'Compra parcelada' }, LONG_WAIT);
+    await user.click(within(dialog).getByRole('radio', { name: 'Valor da parcela' }));
+    await user.type(within(dialog).getByRole('textbox', { name: 'Valor da parcela' }), '8990');
+    await user.click(within(dialog).getByRole('button', { name: 'Outro' }));
+    await user.type(within(dialog).getByRole('textbox', { name: 'Número de parcelas' }), '10');
+
+    // 10 x 89,90: the total is 899,00 and the headline says it.
+    const preview = await within(dialog).findByRole('region', { name: 'Prévia das parcelas' });
+    expect(within(preview).getByText('10×')).toBeInTheDocument();
+    expect(preview).toHaveTextContent(/89,90/);
+    expect(preview).toHaveTextContent(/899,00/);
+  });
+
+  it('narrows the list to one day with ?day= and clears it from the chip', async () => {
+    const user = userEvent.setup();
+    const cinemark = db.transactions.find(
+      (item) => item.description === 'CINEMARK' && item.occurredOn.startsWith(CURRENT_MONTH),
+    );
+    const other = db.transactions.find(
+      (item) =>
+        item.occurredOn.startsWith(CURRENT_MONTH) &&
+        item.occurredOn !== cinemark?.occurredOn &&
+        item.description === 'IFOOD *RESTAURANTE',
+    );
+    if (!cinemark || !other) throw new Error('The seed lost CINEMARK or IFOOD in this month');
+    const [, month = '', day = ''] = cinemark.occurredOn.split('-');
+    renderApp(`${PAGE}&day=${cinemark.occurredOn}`);
+
+    expect(await screen.findByText('CINEMARK', undefined, LONG_WAIT)).toBeInTheDocument();
+    expect(screen.queryByText('IFOOD *RESTAURANTE')).not.toBeInTheDocument();
+    const chip = screen.getByRole('button', { name: new RegExp(`Dia ${day}/${month}`) });
+
+    await user.click(chip);
+    await waitFor(() => expect(window.location.search).not.toContain('day='));
+    expect(await screen.findByText('IFOOD *RESTAURANTE', undefined, LONG_WAIT)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Dia \d\d\/\d\d/ })).not.toBeInTheDocument();
+  });
+
+  it('says so when the chosen day has no transactions and offers the whole month', async () => {
+    const user = userEvent.setup();
+    const used = new Set(db.transactions.map((item) => item.occurredOn));
+    const emptyDay = Array.from(
+      { length: 27 },
+      (_, index) => `${CURRENT_MONTH}-${String(index + 1).padStart(2, '0')}`,
+    ).find((day) => !used.has(day));
+    if (!emptyDay) throw new Error('Every day of the month has a transaction in the seed');
+    renderApp(`${PAGE}&day=${emptyDay}`);
+
+    expect(
+      await screen.findByRole('heading', { name: /Nenhuma transação no dia/ }, LONG_WAIT),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Mostrar o mês todo' }));
+    await waitFor(() => expect(window.location.search).not.toContain('day='));
+    expect(await screen.findByText('CINEMARK', undefined, LONG_WAIT)).toBeInTheDocument();
+  });
+
+  it('shows "Não deu para sincronizar" after a failed sync and fetches again on "Tentar agora"', async () => {
+    const user = userEvent.setup();
+    const bradesco = db.connections.find((item) => item.institutionName === 'Bradesco');
+    if (!bradesco) throw new Error('The seed has no Bradesco connection');
+    bradesco.status = 'error';
+    bradesco.errorCode = 'LOGIN_ERROR';
+    renderApp(PAGE);
+
+    expect(
+      await screen.findByText('Não deu para sincronizar o Bradesco', undefined, LONG_WAIT),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Tentar agora' }));
+    await waitFor(() => expect(db.runs.some((item) => item.run.trigger === 'retry')).toBe(true));
+  });
+
+  it('shows no sync banner when every connection is fine', async () => {
+    renderApp(PAGE);
+    await screen.findByText('CINEMARK', undefined, LONG_WAIT);
+    expect(screen.queryByText(/Não deu para sincronizar/)).not.toBeInTheDocument();
   });
 });
