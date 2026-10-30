@@ -5,6 +5,7 @@ import type { RuleFormErrors } from '#/features/rules/rule-form/types/rule-form.
 
 type RuleFormValues = {
   description: string;
+  accountId?: string | null;
   categoryId: string | null;
   tagIds: readonly string[];
 };
@@ -16,6 +17,7 @@ type RuleFormResult =
 export function validateRuleForm(values: RuleFormValues): RuleFormResult {
   const parsed = createRuleRequestSchema.safeParse({
     descriptionContains: values.description,
+    accountId: values.accountId ?? undefined,
     categoryId: values.categoryId ?? undefined,
     tagIds: values.tagIds.length > 0 ? [...values.tagIds] : undefined,
   });

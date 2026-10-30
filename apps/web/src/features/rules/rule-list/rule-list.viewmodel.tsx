@@ -121,6 +121,10 @@ export function useRuleListViewModel() {
       target: ruleTarget,
       onClose: () => update({ new: undefined, edit: undefined }),
       onSaved: outcome.announce,
+      onDelete: (rule: Rule.Dto) => {
+        update({ new: undefined, edit: undefined });
+        remove(rule);
+      },
     },
   };
 }

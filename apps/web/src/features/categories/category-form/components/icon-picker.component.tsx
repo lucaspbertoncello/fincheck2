@@ -11,7 +11,11 @@ type IconPickerProps = {
   onChange: (icon: Category.Icon) => void;
 };
 
-/** The icons a category may use, one selected (radio group: arrows move, the focus ring shows). */
+/**
+ * The icons a category may use as a grid, one selected (radio group: arrows move, the focus ring
+ * shows). Six per row so the whole set is seen at once; the chosen one gets the accent fill and
+ * border, and nothing changes size or weight.
+ */
 export function IconPicker({ value, onChange }: IconPickerProps) {
   return (
     <RadioGroup
@@ -20,14 +24,14 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
       orientation="horizontal"
       className="flex flex-col gap-s8"
     >
-      <Label className="text-label text-fg-secondary">Ícone</Label>
-      <div className="flex flex-wrap gap-s8">
+      <Label className="sr-only">Ícone</Label>
+      <div className="grid grid-cols-6 gap-s8">
         {CATEGORY_ICONS.map((icon) => (
           <Radio
             key={icon}
             value={icon}
             aria-label={CATEGORY_ICON_LABELS[icon]}
-            className="focus-ring grid size-ctl-touch cursor-pointer place-items-center rounded-capsule border border-line text-fg-secondary transition-colors duration-(--duration-fast) data-[hovered]:bg-subtle data-[selected]:border-brand data-[selected]:bg-brand-weak data-[selected]:text-brand"
+            className="focus-ring grid aspect-square min-h-ctl-touch cursor-pointer place-items-center rounded-capsule border border-line text-fg-secondary transition-[transform,background-color,color,border-color] duration-(--duration-fast) ease-(--ease-standard) data-[hovered]:bg-subtle data-[pressed]:scale-96 data-[selected]:border-brand data-[selected]:bg-brand-weak data-[selected]:text-brand"
           >
             <Icon name={mapCategoryIcon(icon)} size="base" />
           </Radio>

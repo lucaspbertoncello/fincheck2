@@ -130,8 +130,13 @@ export function CategoryListView({
         </>
       ) : null}
 
-      <CategoryForm target={categoryForm.target} onClose={categoryForm.onClose} />
-      <TagForm target={tagForm.target} onClose={tagForm.onClose} />
+      <CategoryForm
+        target={categoryForm.target}
+        onClose={categoryForm.onClose}
+        onArchive={categoryForm.onArchive}
+        onRestore={categoryForm.onRestore}
+      />
+      <TagForm target={tagForm.target} onClose={tagForm.onClose} onArchive={tagForm.onArchive} />
       {archiveDialog ? (
         <ConfirmDialog
           isOpen

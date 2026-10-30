@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 
@@ -202,10 +203,11 @@ describe('RuleListPage', () => {
 
   describe('rule modal', () => {
     it('validates before sending: text and action, with the focus on the first problem', async () => {
+      const user = userEvent.setup();
       renderApp('/categories/rules?new=rule');
       const dialog = await screen.findByRole('dialog', { name: 'Nova regra' });
 
-      fireEvent.click(within(dialog).getByRole('button', { name: 'Criar regra' }));
+      await user.click(within(dialog).getByRole('button', { name: 'Criar regra' }));
 
       expect(
         await within(dialog).findByText('Escreva um trecho da descrição, com pelo menos 2 letras.'),
@@ -214,60 +216,46 @@ describe('RuleListPage', () => {
         within(dialog).getByText('Escolha uma categoria ou ao menos uma tag.'),
       ).toBeInTheDocument();
       await waitFor(() =>
-        expect(
-          within(dialog).getByText('Escreva um trecho da descrição, com pelo menos 2 letras.'),
-        ).toHaveFocus(),
+        expect(within(dialog).getByRole('textbox', { name: 'Trecho da descrição' })).toHaveFocus(),
       );
     });
 
-    it('closes the text picker on Enter without submitting the rule behind it', async () => {
+    it('starts with the focus on the sentence text and says what to type', async () => {
       renderApp('/categories/rules?new=rule');
       const dialog = await screen.findByRole('dialog', { name: 'Nova regra' });
-
-      fireEvent.click(within(dialog).getByRole('button', { name: 'Trecho da descrição' }));
-      const field = await screen.findByRole('textbox', { name: 'Trecho da descrição' });
-      fireEvent.change(field, { target: { value: 'ifood' } });
-      fireEvent.submit(field.closest('form') as HTMLFormElement);
 
       await waitFor(() =>
-        expect(
-          screen.queryByRole('textbox', { name: 'Trecho da descrição' }),
-        ).not.toBeInTheDocument(),
+        expect(within(dialog).getByRole('textbox', { name: 'Trecho da descrição' })).toHaveFocus(),
       );
-      expect(
-        within(dialog).queryByText('Escolha uma categoria ou ao menos uma tag.'),
-      ).not.toBeInTheDocument();
-      expect(within(dialog).getByRole('button', { name: 'Trecho da descrição' })).toHaveTextContent(
-        'IFOOD',
-      );
-    });
-
-    it('builds the sentence with the pickers, previews the history and creates the rule', async () => {
-      renderApp('/categories/rules?new=rule');
-      const dialog = await screen.findByRole('dialog', { name: 'Nova regra' });
       expect(
         within(dialog).getByText(
           'Escreva um trecho da descrição para ver o que a regra pega no histórico.',
         ),
       ).toBeInTheDocument();
+    });
 
-      fireEvent.click(within(dialog).getByRole('button', { name: 'Trecho da descrição' }));
-      fireEvent.change(await screen.findByRole('textbox', { name: 'Trecho da descrição' }), {
-        target: { value: 'ifood' },
-      });
-      fireEvent.click(screen.getByRole('button', { name: 'Pronto' }));
+    it('builds the sentence in place, previews the history and creates the rule', async () => {
+      const user = userEvent.setup();
+      renderApp('/categories/rules?new=rule');
+      const dialog = await screen.findByRole('dialog', { name: 'Nova regra' });
 
-      fireEvent.click(await within(dialog).findByRole('button', { name: 'Categoria da regra' }));
-      fireEvent.click(await screen.findByRole('button', { name: 'Delivery' }));
+      await user.type(
+        within(dialog).getByRole('textbox', { name: 'Trecho da descrição' }),
+        'ifood',
+      );
+      await user.click(within(dialog).getByRole('button', { name: 'Categoria da regra' }));
+      await user.click(await screen.findByRole('button', { name: 'Delivery' }));
 
       expect(
         await within(dialog).findByText(/Bate com \d+ transações do histórico/, undefined, {
           timeout: 3000,
         }),
       ).toBeInTheDocument();
-      expect(within(dialog).getByText('IFOOD')).toBeInTheDocument();
+      expect(within(dialog).getByRole('textbox', { name: 'Trecho da descrição' })).toHaveValue(
+        'ifood',
+      );
 
-      fireEvent.click(within(dialog).getByRole('button', { name: 'Criar regra' }));
+      await user.click(within(dialog).getByRole('button', { name: 'Criar regra' }));
 
       expect(
         await screen.findByText('Regra criada. Vale para as próximas transações.'),
@@ -277,7 +265,56 @@ describe('RuleListPage', () => {
       expect(await screen.findAllByText('IFOOD', { selector: 'strong' })).toHaveLength(2);
     });
 
+    it('creates the rule on Enter from the text, without opening any picker', async () => {
+      const user = userEvent.setup();
+      renderApp('/categories/rules?new=rule');
+      const dialog = await screen.findByRole('dialog', { name: 'Nova regra' });
+
+      await user.type(within(dialog).getByRole('textbox', { name: 'Trecho da descrição' }), 'x');
+      await user.keyboard('{Enter}');
+
+      expect(
+        await within(dialog).findByText('Escolha uma categoria ou ao menos uma tag.'),
+      ).toBeInTheDocument();
+    });
+
+    it('limits the rule to one account from the sentence and sends it', async () => {
+      const user = userEvent.setup();
+      renderApp('/categories/rules?new=rule');
+      const dialog = await screen.findByRole('dialog', { name: 'Nova regra' });
+
+      expect(within(dialog).getByRole('button', { name: 'Conta da regra' })).toHaveTextContent(
+        'qualquer conta',
+      );
+      await user.type(
+        within(dialog).getByRole('textbox', { name: 'Trecho da descrição' }),
+        'ifood',
+      );
+      await user.click(within(dialog).getByRole('button', { name: 'Conta da regra' }));
+      const accounts = await screen.findByRole('group', { name: 'Contas' });
+      const [firstAccount] = within(accounts)
+        .getAllByRole('button')
+        .filter((button) => button.textContent !== 'Qualquer conta');
+      const accountName = firstAccount?.textContent ?? '';
+      await user.click(firstAccount as HTMLElement);
+      expect(within(dialog).getByRole('button', { name: 'Conta da regra' })).toHaveTextContent(
+        accountName,
+      );
+
+      await user.click(within(dialog).getByRole('button', { name: 'Categoria da regra' }));
+      await user.click(await screen.findByRole('button', { name: 'Delivery' }));
+      await user.click(within(dialog).getByRole('button', { name: 'Criar regra' }));
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      const { json } = await callApi('GET', '/rules');
+      const created = (
+        json as { items: { descriptionContains: string; accountId: string | null }[] }
+      ).items.find((rule) => rule.descriptionContains === 'IFOOD' && rule.accountId !== null);
+      expect(created).toBeDefined();
+    });
+
     it('shows the server message when the rule already exists', async () => {
+      const user = userEvent.setup();
       server.use(
         http.post('/api/rules', () =>
           HttpResponse.json({ code: 'RULE_DUPLICATE', message: 'dup' }, { status: 409 }),
@@ -286,14 +323,13 @@ describe('RuleListPage', () => {
       renderApp('/categories/rules?new=rule');
       const dialog = await screen.findByRole('dialog', { name: 'Nova regra' });
 
-      fireEvent.click(within(dialog).getByRole('button', { name: 'Trecho da descrição' }));
-      fireEvent.change(await screen.findByRole('textbox', { name: 'Trecho da descrição' }), {
-        target: { value: 'padaria' },
-      });
-      fireEvent.click(screen.getByRole('button', { name: 'Pronto' }));
-      fireEvent.click(await within(dialog).findByRole('button', { name: 'Categoria da regra' }));
-      fireEvent.click(await screen.findByRole('button', { name: 'Restaurantes' }));
-      fireEvent.click(within(dialog).getByRole('button', { name: 'Criar regra' }));
+      await user.type(
+        within(dialog).getByRole('textbox', { name: 'Trecho da descrição' }),
+        'padaria',
+      );
+      await user.click(within(dialog).getByRole('button', { name: 'Categoria da regra' }));
+      await user.click(await screen.findByRole('button', { name: 'Restaurantes' }));
+      await user.click(within(dialog).getByRole('button', { name: 'Criar regra' }));
 
       expect(
         await within(dialog).findByText('Já existe uma regra com essa condição.'),
@@ -302,26 +338,56 @@ describe('RuleListPage', () => {
     });
 
     it('edits a rule from the menu, starting from what it has, and sends only what changed', async () => {
+      const user = userEvent.setup();
       await openRules();
 
-      fireEvent.click(within(rowOf('POSTO')).getByRole('button', { name: 'Ações da regra' }));
-      fireEvent.click(await screen.findByRole('menuitem', { name: 'Editar' }));
+      await user.click(within(rowOf('POSTO')).getByRole('button', { name: 'Ações da regra' }));
+      await user.click(await screen.findByRole('menuitem', { name: 'Editar' }));
 
       const dialog = await screen.findByRole('dialog', { name: 'Editar regra' });
-      expect(within(dialog).getByText('POSTO')).toBeInTheDocument();
+      expect(within(dialog).getByRole('textbox', { name: 'Trecho da descrição' })).toHaveValue(
+        'POSTO',
+      );
       expect(within(dialog).getByRole('button', { name: 'Categoria da regra' })).toHaveTextContent(
         'Transporte',
       );
 
-      fireEvent.click(within(dialog).getByRole('button', { name: 'Tags da regra' }));
-      fireEvent.click(await screen.findByRole('button', { name: 'trabalho' }));
-      fireEvent.click(screen.getByRole('button', { name: 'Pronto' }));
-      fireEvent.click(within(dialog).getByRole('button', { name: 'Salvar regra' }));
+      await user.click(within(dialog).getByRole('button', { name: 'Tags da regra' }));
+      await user.click(await screen.findByRole('button', { name: 'trabalho' }));
+      await user.click(screen.getByRole('button', { name: 'Pronto' }));
+      await user.click(within(dialog).getByRole('button', { name: 'Salvar regra' }));
 
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
       await waitFor(() =>
         expect(rowOf('POSTO')).toHaveTextContent('vai para Transporte com a tag trabalho'),
       );
+    });
+
+    it('deletes from the editor with "Excluir" and brings the rule back with "Desfazer"', async () => {
+      const user = userEvent.setup();
+      await openRules();
+
+      await user.click(within(rowOf('POSTO')).getByRole('button', { name: 'Ações da regra' }));
+      await user.click(await screen.findByRole('menuitem', { name: 'Editar' }));
+      const dialog = await screen.findByRole('dialog', { name: 'Editar regra' });
+      await user.click(within(dialog).getByRole('button', { name: 'Excluir' }));
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(screen.queryByText('POSTO', { selector: 'strong' })).not.toBeInTheDocument();
+      expect(await screen.findByText('Regra excluída.')).toBeInTheDocument();
+
+      await user.click(await screen.findByText('Desfazer'));
+
+      expect(await screen.findByText('POSTO', { selector: 'strong' })).toBeInTheDocument();
+      const { json } = await callApi('GET', '/rules');
+      expect((json as { items: unknown[] }).items).toHaveLength(3);
+    });
+
+    it('offers no "Excluir" while creating', async () => {
+      renderApp('/categories/rules?new=rule');
+      const dialog = await screen.findByRole('dialog', { name: 'Nova regra' });
+
+      expect(within(dialog).queryByRole('button', { name: 'Excluir' })).not.toBeInTheDocument();
     });
 
     it('opens the editor of a rule straight from the URL', async () => {

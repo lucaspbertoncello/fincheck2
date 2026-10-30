@@ -25,6 +25,11 @@ export type CategoryGroup = {
   options: CategoryOption[];
 };
 
+export type AccountOption = {
+  id: string;
+  name: string;
+};
+
 export type TagOption = {
   id: string;
   name: string;

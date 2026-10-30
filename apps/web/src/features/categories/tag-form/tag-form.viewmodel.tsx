@@ -9,10 +9,12 @@ import { hasApiErrorCode } from '#/shared/api/api.error.ts';
 type Options = {
   target: TagFormTarget;
   onClose: () => void;
+  /** Rename of an active tag: asks the screen to archive it (the screen shows the undo toast). */
+  onArchive?: (id: string) => void;
 };
 
 /** State and submit of the tag modal. Mounted per target, so it starts fresh. */
-export function useTagFormViewModel({ target, onClose }: Options) {
+export function useTagFormViewModel({ target, onClose, onArchive }: Options) {
   const model = useTagFormModel();
   const renaming = target.mode === 'rename' ? target.tag : null;
 
@@ -59,8 +61,20 @@ export function useTagFormViewModel({ target, onClose }: Options) {
     name,
     onNameChange: setName,
     error,
+    usage: renaming
+      ? renaming.transactionCount === 0
+        ? 'Nenhuma transação usa essa tag.'
+        : `Em ${renaming.transactionCount} ${renaming.transactionCount === 1 ? 'transação' : 'transações'}.`
+      : null,
     submitError,
     isSaving: model.isSaving,
+    onArchive:
+      renaming && renaming.archivedAt === null && onArchive
+        ? () => {
+            onArchive(renaming.id);
+            onClose();
+          }
+        : null,
     onSubmit: () => void submit(),
     onClose,
   };

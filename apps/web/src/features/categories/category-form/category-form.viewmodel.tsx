@@ -9,14 +9,20 @@ import type {
 } from '#/features/categories/category-form/types/category-form.type.ts';
 import { validateCategoryForm } from '#/features/categories/category-form/utils/validate-category-form.util.ts';
 import { useFocusFirstInvalid } from '#/features/categories/hooks/use-focus-first-invalid.hook.ts';
+import { describeArchivedCategory } from '#/features/categories/utils/describe-archived-category.util.ts';
+import { describeCategoryUsage } from '#/features/categories/utils/describe-category-usage.util.ts';
 
 type Options = {
   target: CategoryFormTarget;
   onClose: () => void;
+  /** Edit of an active category: closes this modal and asks for the archive confirmation. */
+  onArchive?: (id: string) => void;
+  /** Edit of an archived category: brings it back to the pickers. */
+  onRestore?: (id: string) => void;
 };
 
 /** State and submit of the category modal. The modal is mounted per target, so it starts fresh. */
-export function useCategoryFormViewModel({ target, onClose }: Options) {
+export function useCategoryFormViewModel({ target, onClose, onArchive, onRestore }: Options) {
   const model = useCategoryFormModel();
   const editing = target.mode === 'edit' ? target.category : null;
 
@@ -78,7 +84,20 @@ export function useCategoryFormViewModel({ target, onClose }: Options) {
     onIconChange: setIcon,
     errors,
     submitError,
+    usage: editing ? describeCategoryUsage(editing) : null,
     isSaving: model.isSaving,
+    onArchive:
+      editing && editing.archivedAt === null && onArchive ? () => onArchive(editing.id) : null,
+    restore:
+      editing && editing.archivedAt !== null && onRestore
+        ? {
+            note: `Arquivada. ${describeArchivedCategory(editing)}`,
+            onRestore: () => {
+              onRestore(editing.id);
+              onClose();
+            },
+          }
+        : null,
     onSubmit: () => void submit(),
     onClose,
   };

@@ -1,3 +1,4 @@
+import type { Rule } from '@fincheck/shared/categories/rule/rule.type.ts';
 import { useState } from 'react';
 
 import { useFocusFirstInvalid } from '#/features/categories/hooks/use-focus-first-invalid.hook.ts';
@@ -5,6 +6,7 @@ import type { RulePreviewStatus } from '#/features/rules/rule-form/components/ru
 import { useDebouncedValue } from '#/features/rules/hooks/use-debounced-value.hook.ts';
 import { useRuleFormModel } from '#/features/rules/rule-form/rule-form.model.ts';
 import type {
+  AccountOption,
   RuleFormErrors,
   RuleFormOutcome,
   RuleFormTarget,
@@ -25,16 +27,19 @@ type Options = {
   target: RuleFormTarget;
   onClose: () => void;
   onSaved: (outcome: RuleFormOutcome) => void;
+  /** Edit only: the screen deletes the rule with its undo toast. */
+  onDelete?: (rule: Rule.Dto) => void;
 };
 
 /**
  * State and submit of the rule modal: the sentence (text, category, tags), the live preview, the
  * "apply to the history" option with its confirmation, and the save. Mounted per target.
  */
-export function useRuleFormViewModel({ target, onClose, onSaved }: Options) {
+export function useRuleFormViewModel({ target, onClose, onSaved, onDelete }: Options) {
   const editing = target.mode === 'edit' ? target.rule : null;
 
   const [description, setDescription] = useState(editing?.descriptionContains ?? '');
+  const [accountId, setAccountId] = useState<string | null>(editing?.accountId ?? null);
   const [categoryId, setCategoryId] = useState<string | null>(editing?.categoryId ?? null);
   const [tagIds, setTagIds] = useState<string[]>(editing?.tagIds ?? []);
   const [applyToHistory, setApplyToHistory] = useState(false);
@@ -46,7 +51,7 @@ export function useRuleFormViewModel({ target, onClose, onSaved }: Options) {
 
   const debouncedDescription = useDebouncedValue(description, PREVIEW_DELAY_MS);
   const previewBody = buildPreviewBody(
-    { description: debouncedDescription, categoryId, tagIds },
+    { description: debouncedDescription, accountId, categoryId, tagIds },
     editing,
   );
   const model = useRuleFormModel(previewBody);
@@ -59,6 +64,9 @@ export function useRuleFormViewModel({ target, onClose, onSaved }: Options) {
   const tagOptions: TagOption[] = (model.tags.data?.items ?? [])
     .filter((tag) => tag.archivedAt === null || tagIds.includes(tag.id))
     .map((tag) => ({ id: tag.id, name: tag.name }));
+  const accountOptions: AccountOption[] = (model.accounts.data?.items ?? [])
+    .filter((account) => account.archivedAt === null || account.id === accountId)
+    .map((account) => ({ id: account.id, name: account.name }));
   const categoryName = allCategories.find((item) => item.id === categoryId)?.name ?? null;
   const nameOf = (id: string | null) =>
     allCategories.find((item) => item.id === id)?.name ?? 'Sem categoria';
@@ -76,7 +84,7 @@ export function useRuleFormViewModel({ target, onClose, onSaved }: Options) {
       let outcome: RuleFormOutcome | null;
 
       if (editing) {
-        const body = buildRuleUpdateBody(editing, { description, categoryId, tagIds });
+        const body = buildRuleUpdateBody(editing, { description, accountId, categoryId, tagIds });
         const changed = Object.keys(body).length > 0;
         const rule = changed ? await model.update.mutateAsync({ id: editing.id, body }) : editing;
         const applied = applyToHistory ? await model.apply.mutateAsync(rule.id) : null;
@@ -84,6 +92,7 @@ export function useRuleFormViewModel({ target, onClose, onSaved }: Options) {
       } else {
         const result = await model.create.mutateAsync({
           descriptionContains: description,
+          ...(accountId ? { accountId } : {}),
           ...(categoryId ? { categoryId } : {}),
           ...(tagIds.length > 0 ? { tagIds } : {}),
           ...(applyToHistory ? { applyToHistory: true } : {}),
@@ -100,7 +109,7 @@ export function useRuleFormViewModel({ target, onClose, onSaved }: Options) {
   }
 
   function submit() {
-    const result = validateRuleForm({ description, categoryId, tagIds });
+    const result = validateRuleForm({ description, accountId, categoryId, tagIds });
     if (!result.ok) {
       setErrors(result.errors);
       setFocusToken((token) => token + 1);
@@ -130,11 +139,14 @@ export function useRuleFormViewModel({ target, onClose, onSaved }: Options) {
     title: editing ? 'Editar regra' : 'Nova regra',
     subtitle: editing
       ? 'Editar não muda as transações que já passaram pela regra.'
-      : 'Sempre que a descrição bater, a transação ganha a categoria e as tags.',
+      : 'Quando a descrição bater, a transação ganha a categoria e as tags.',
     submitLabel: editing ? 'Salvar regra' : 'Criar regra',
 
     description,
     onDescriptionChange: setDescription,
+    accountId,
+    accounts: accountOptions,
+    onAccountChange: setAccountId,
     categoryId,
     categoryGroups,
     onCategoryChange: setCategoryId,
@@ -174,6 +186,7 @@ export function useRuleFormViewModel({ target, onClose, onSaved }: Options) {
       onCancel: () => setIsConfirming(false),
     },
 
+    onDelete: editing && onDelete ? () => onDelete(editing) : null,
     onSubmit: submit,
     onClose,
   };

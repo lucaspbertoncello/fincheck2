@@ -1,9 +1,11 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 
 import { server } from '#mocks/setup/server.util.ts';
 import { renderApp } from '#tests/support/app/render-app.util.tsx';
+import { callApi } from '#tests/support/mocks/call-api.util.ts';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
 
 resetDatabaseBeforeEach();
@@ -140,6 +142,79 @@ describe('CategoryListPage', () => {
     expect(window.location.search).not.toContain('new=');
   });
 
+  it('shows the category as it will look in a transaction row and follows what is typed', async () => {
+    const user = userEvent.setup();
+    renderApp('/categories?new=category');
+    const dialog = await screen.findByRole('dialog', { name: 'Nova categoria' });
+
+    expect(
+      within(dialog).getByRole('img', { name: 'Prévia: categoria sem nome, Despesa' }),
+    ).toBeInTheDocument();
+
+    await user.type(within(dialog).getByRole('textbox', { name: 'Nome' }), 'Barbearia');
+    await user.click(within(dialog).getByRole('radio', { name: 'Receita' }));
+
+    expect(
+      within(dialog).getByRole('img', { name: 'Prévia: Barbearia, Receita' }),
+    ).toBeInTheDocument();
+  });
+
+  it('starts with the focus on the name and picks the icon from the grid with the keyboard', async () => {
+    const user = userEvent.setup();
+    renderApp('/categories?new=category');
+    const dialog = await screen.findByRole('dialog', { name: 'Nova categoria' });
+
+    await waitFor(() =>
+      expect(within(dialog).getByRole('textbox', { name: 'Nome' })).toHaveFocus(),
+    );
+    expect(within(dialog).getAllByRole('radio', { name: /^(?!Despesa|Receita)/ }).length).toBe(27);
+
+    await user.click(within(dialog).getByRole('radio', { name: 'Academia' }));
+    expect(within(dialog).getByRole('radio', { name: 'Academia' })).toBeChecked();
+
+    await user.type(within(dialog).getByRole('textbox', { name: 'Nome' }), 'Pilates');
+    await user.keyboard('{Enter}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(await screen.findByText('Pilates')).toBeInTheDocument();
+  });
+
+  it('archives from the editor with the impact in the confirmation, then undoes it', async () => {
+    const user = userEvent.setup();
+    const table = await openCategories();
+
+    await user.click(within(table).getByRole('button', { name: 'Ações de Delivery' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Editar' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Editar categoria' });
+    expect(within(dialog).getByText(/^Usada em /)).toBeInTheDocument();
+
+    await user.click(within(dialog).getByRole('button', { name: 'Arquivar' }));
+
+    const confirm = await screen.findByRole('alertdialog').catch(() => screen.findByRole('dialog'));
+    expect(within(confirm).getByText('Arquivar Delivery?')).toBeInTheDocument();
+    expect(
+      within(confirm).getByText(/continuam nela e seguem somando no histórico/),
+    ).toBeInTheDocument();
+    await user.click(within(confirm).getByRole('button', { name: 'Arquivar' }));
+
+    expect(await screen.findByText(/Delivery arquivada/)).toBeInTheDocument();
+    await user.click(await screen.findByText('Desfazer'));
+    expect(await within(table).findByText('Delivery')).toBeInTheDocument();
+  });
+
+  it('brings an archived category back from its editor with "Desarquivar"', async () => {
+    const user = userEvent.setup();
+    const { json } = await callApi('GET', '/categories?status=archived');
+    const archived = (json as { items: { id: string; name: string }[] }).items[0];
+    renderApp(`/categories?filter=archived&edit=${archived?.id}`);
+
+    const dialog = await screen.findByRole('dialog', { name: 'Editar categoria' });
+    expect(within(dialog).queryByRole('button', { name: 'Arquivar' })).not.toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'Desarquivar' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(await screen.findByText(new RegExp(`${archived?.name} voltou`))).toBeInTheDocument();
+  });
+
   it('creates an income category when the Receitas tab is the one open', async () => {
     renderApp('/categories?filter=income&new=category');
 
@@ -173,6 +248,23 @@ describe('CategoryListPage', () => {
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(await within(table).findByText('Diversão')).toBeInTheDocument();
+  });
+
+  it('archives a tag from its rename modal, with the undo toast', async () => {
+    const user = userEvent.setup();
+    await openCategories();
+    const tags = screen.getByRole('list', { name: 'Tags' });
+
+    await user.click(within(tags).getByRole('button', { name: 'Ações da tag delivery' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Renomear' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Renomear tag' });
+    expect(within(dialog).getByRole('textbox', { name: 'Nome da tag' })).toHaveValue('delivery');
+    await user.click(within(dialog).getByRole('button', { name: 'Arquivar' }));
+
+    expect(
+      await screen.findByText('Tag delivery arquivada. Sai da escolha de tag.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('creates, renames and archives a tag, with undo for the archive', async () => {

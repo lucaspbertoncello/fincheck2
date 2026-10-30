@@ -1,4 +1,4 @@
-import { Button, Modal, TextField } from '@fincheck/ui';
+import { FormModal, FormModalGroup, Icon, TextField } from '@fincheck/ui';
 import type { RefObject } from 'react';
 
 type TagFormViewProps = {
@@ -9,15 +9,17 @@ type TagFormViewProps = {
   name: string;
   onNameChange: (name: string) => void;
   error: string | undefined;
+  /** Rename only: how many transactions carry the tag. */
+  usage: string | null;
   submitError: string | null;
   isSaving: boolean;
+  /** Rename of an active tag: "Arquivar" at the left of the footer. */
+  onArchive: (() => void) | null;
   onSubmit: () => void;
   onClose: () => void;
 };
 
-const FORM_ID = 'tag-form';
-
-/** The "Nova tag" / "Renomear tag" modal: just the name. */
+/** The "Nova tag" / "Renomear tag" modal in the form pattern: the name, with the tag as it reads. */
 export function TagFormView({
   formRef,
   title,
@@ -26,38 +28,32 @@ export function TagFormView({
   name,
   onNameChange,
   error,
+  usage,
   submitError,
   isSaving,
+  onArchive,
   onSubmit,
   onClose,
 }: TagFormViewProps) {
+  const trimmed = name.trim();
+
   return (
-    <Modal
+    <FormModal
       isOpen
+      size="default"
       onOpenChange={(open) => !open && onClose()}
-      isDismissable={!isSaving}
       title={title}
-      subtitle={subtitle}
-      actions={
-        <>
-          <Button variant="secondary" isDisabled={isSaving} onPress={onClose}>
-            Cancelar
-          </Button>
-          <Button type="submit" form={FORM_ID} loading={isSaving}>
-            {submitLabel}
-          </Button>
-        </>
+      description={subtitle}
+      submitLabel={submitLabel}
+      onSubmit={onSubmit}
+      isSubmitting={isSaving}
+      error={submitError ?? undefined}
+      destructive={
+        onArchive ? { label: 'Arquivar', icon: 'archive', onPress: onArchive } : undefined
       }
     >
-      <form
-        id={FORM_ID}
-        noValidate
-        onSubmit={(event) => {
-          event.preventDefault();
-          onSubmit();
-        }}
-      >
-        <div ref={formRef} className="flex flex-col gap-s16">
+      <div ref={formRef}>
+        <FormModalGroup label="Tag">
           <TextField
             label="Nome da tag"
             value={name}
@@ -65,15 +61,26 @@ export function TagFormView({
             error={error}
             maxLength={30}
             autoComplete="off"
-            autoFocus
           />
-          {submitError ? (
-            <p role="alert" className="text-meta text-alert">
-              {submitError}
-            </p>
-          ) : null}
-        </div>
-      </form>
-    </Modal>
+          <div className="flex items-center gap-s12 rounded-input bg-subtle p-s12">
+            <span className="grid size-8 shrink-0 place-items-center rounded-capsule bg-brand-weak text-brand">
+              <Icon name="hash" size="sm" />
+            </span>
+            <div className="flex min-w-0 flex-col">
+              <span
+                className={
+                  trimmed
+                    ? 'truncate text-body font-emphasis text-fg-primary'
+                    : 'truncate text-body text-fg-tertiary'
+                }
+              >
+                {trimmed || 'nome-da-tag'}
+              </span>
+              {usage ? <span className="text-meta text-fg-secondary">{usage}</span> : null}
+            </div>
+          </div>
+        </FormModalGroup>
+      </div>
+    </FormModal>
   );
 }

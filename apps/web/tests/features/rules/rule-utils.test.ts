@@ -234,18 +234,23 @@ describe('validateRuleForm', () => {
 
 describe('buildPreviewBody', () => {
   it('waits for 2 characters after normalizing', () => {
-    expect(buildPreviewBody({ description: ' a ', categoryId: null, tagIds: [] }, null)).toBeNull();
+    expect(
+      buildPreviewBody({ description: ' a ', accountId: null, categoryId: null, tagIds: [] }, null),
+    ).toBeNull();
   });
 
   it('sends the text with the category and tags', () => {
     expect(
-      buildPreviewBody({ description: 'ifood', categoryId: 'c1', tagIds: ['t1'] }, null),
+      buildPreviewBody(
+        { description: 'ifood', accountId: null, categoryId: 'c1', tagIds: ['t1'] },
+        null,
+      ),
     ).toEqual({ descriptionContains: 'ifood', categoryId: 'c1', tagIds: ['t1'] });
   });
 
   it('carries the conditions the modal does not show when editing', () => {
     const body = buildPreviewBody(
-      { description: 'farmacia', categoryId: null, tagIds: [] },
+      { description: 'farmacia', accountId: 'a1', categoryId: null, tagIds: [] },
       rule({ kind: 'expense', accountId: 'a1', amountMaxCents: 3000 }),
     );
 
@@ -262,6 +267,7 @@ describe('buildRuleUpdateBody', () => {
   it('sends nothing when nothing changed, in whatever order the tags are', () => {
     const body = buildRuleUpdateBody(rule({ tagIds: ['t1', 't2'] }), {
       description: 'ifood',
+      accountId: null,
       categoryId: 'cat-delivery',
       tagIds: ['t2', 't1'],
     });
@@ -272,12 +278,14 @@ describe('buildRuleUpdateBody', () => {
   it('sends only the fields that changed, and null to take the category off', () => {
     const body = buildRuleUpdateBody(rule(), {
       description: 'ifood *loja',
+      accountId: 'a1',
       categoryId: null,
       tagIds: ['t1', 't2'],
     });
 
     expect(body).toEqual({
       descriptionContains: 'IFOOD *LOJA',
+      accountId: 'a1',
       categoryId: null,
       tagIds: ['t1', 't2'],
     });

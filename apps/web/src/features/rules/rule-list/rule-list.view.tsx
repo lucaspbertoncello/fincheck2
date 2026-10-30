@@ -73,7 +73,12 @@ export function RuleListView({
         </div>
       </div>
 
-      <RuleForm target={ruleForm.target} onClose={ruleForm.onClose} onSaved={ruleForm.onSaved} />
+      <RuleForm
+        target={ruleForm.target}
+        onClose={ruleForm.onClose}
+        onSaved={ruleForm.onSaved}
+        onDelete={ruleForm.onDelete}
+      />
     </div>
   );
 }

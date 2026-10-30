@@ -133,6 +133,15 @@ export function useCategoryListViewModel() {
     if (tag) run(tag);
   }
 
+  function onRequestArchive(id: string) {
+    setArchiveError(null);
+    setArchiveTargetId(id);
+  }
+
+  function onArchiveTag(id: string) {
+    withTag(id, (tag) => moveTag(id, tag.name, 'archive'));
+  }
+
   return {
     isLoading: model.categories.isPending || model.tags.isPending,
     isError: model.categories.isError || model.tags.isError,
@@ -159,10 +168,7 @@ export function useCategoryListViewModel() {
     canCreate: filter !== 'archived',
     onCreateCategory: () => update({ new: 'category', edit: undefined }),
     onEditCategory: (id: string) => update({ edit: id, new: undefined }),
-    onRequestArchive: (id: string) => {
-      setArchiveError(null);
-      setArchiveTargetId(id);
-    },
+    onRequestArchive,
     onRestoreCategory: restoreCategory,
 
     tags: visibleTags.map(toTagItem),
@@ -172,14 +178,24 @@ export function useCategoryListViewModel() {
     onToggleArchivedTags: () => setShowArchivedTags((shown) => !shown),
     onCreateTag: () => setTagTarget({ mode: 'create' }),
     onRenameTag: (id: string) => withTag(id, (tag) => setTagTarget({ mode: 'rename', tag })),
-    onArchiveTag: (id: string) => withTag(id, (tag) => moveTag(id, tag.name, 'archive')),
+    onArchiveTag,
     onRestoreTag: (id: string) => withTag(id, (tag) => moveTag(id, tag.name, 'restore')),
 
     categoryForm: {
       target: categoryTarget,
       onClose: () => update({ new: undefined, edit: undefined }),
+      // The modal gives way to the confirmation, which carries the impact of the archive.
+      onArchive: (id: string) => {
+        update({ new: undefined, edit: undefined });
+        onRequestArchive(id);
+      },
+      onRestore: restoreCategory,
     },
-    tagForm: { target: tagTarget, onClose: () => setTagTarget(null) },
+    tagForm: {
+      target: tagTarget,
+      onClose: () => setTagTarget(null),
+      onArchive: (id: string) => onArchiveTag(id),
+    },
     archiveDialog: archiveTarget
       ? {
           title: `Arquivar ${archiveTarget.name}?`,

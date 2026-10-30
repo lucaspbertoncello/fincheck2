@@ -1,7 +1,15 @@
-import { Button, Modal, SegmentedControl, TextField } from '@fincheck/ui';
+import {
+  Button,
+  ChoiceField,
+  FormModal,
+  FormModalGroup,
+  FormModalSplit,
+  TextField,
+} from '@fincheck/ui';
 import type { Category } from '@fincheck/shared/categories/category/category.type.ts';
 import type { RefObject } from 'react';
 
+import { CategoryPreview } from '#/features/categories/category-form/components/category-preview.component.tsx';
 import { IconPicker } from '#/features/categories/category-form/components/icon-picker.component.tsx';
 import type { CategoryFormErrors } from '#/features/categories/category-form/types/category-form.type.ts';
 
@@ -17,16 +25,28 @@ type CategoryFormViewProps = {
   onNameChange: (name: string) => void;
   icon: Category.Icon;
   onIconChange: (icon: Category.Icon) => void;
+  usage: string | null;
   errors: CategoryFormErrors;
   submitError: string | null;
   isSaving: boolean;
+  /** Edit of an active category: "Arquivar" at the left of the footer. */
+  onArchive: (() => void) | null;
+  /** Edit of an archived category: the note and "Desarquivar" in the body. */
+  restore: { note: string; onRestore: () => void } | null;
   onSubmit: () => void;
   onClose: () => void;
 };
 
-const FORM_ID = 'category-form';
+const KIND_OPTIONS = [
+  { key: 'expense', label: 'Despesa' },
+  { key: 'income', label: 'Receita' },
+] as const;
 
-/** The "Nova categoria" / "Editar categoria" modal: type (only when creating), name and icon. */
+/**
+ * The "Nova categoria" / "Editar categoria" modal in the form pattern: left the type, the name and
+ * the live preview of the category in a transaction row; right the icon grid. Archiving sits at the
+ * left of the footer with its impact in the confirmation; an archived category offers "Desarquivar".
+ */
 export function CategoryFormView({
   formRef,
   title,
@@ -39,67 +59,73 @@ export function CategoryFormView({
   onNameChange,
   icon,
   onIconChange,
+  usage,
   errors,
   submitError,
   isSaving,
+  onArchive,
+  restore,
   onSubmit,
   onClose,
 }: CategoryFormViewProps) {
   return (
-    <Modal
+    <FormModal
       isOpen
       onOpenChange={(open) => !open && onClose()}
-      isDismissable={!isSaving}
       title={title}
-      subtitle={subtitle}
-      actions={
-        <>
-          <Button variant="secondary" isDisabled={isSaving} onPress={onClose}>
-            Cancelar
-          </Button>
-          <Button type="submit" form={FORM_ID} loading={isSaving}>
-            {submitLabel}
-          </Button>
-        </>
+      description={subtitle}
+      submitLabel={submitLabel}
+      onSubmit={onSubmit}
+      isSubmitting={isSaving}
+      error={submitError ?? undefined}
+      destructive={
+        onArchive ? { label: 'Arquivar', icon: 'archive', onPress: onArchive } : undefined
       }
+      initialFocus='input[type="text"]'
     >
-      <form
-        id={FORM_ID}
-        noValidate
-        onSubmit={(event) => {
-          event.preventDefault();
-          onSubmit();
-        }}
-      >
-        <div ref={formRef} className="flex flex-col gap-s16">
-          {canPickKind ? (
-            <SegmentedControl
-              label="Tipo da categoria"
-              value={kind}
-              onChange={(key) => onKindChange(key as Category.Kind)}
-              options={[
-                { key: 'expense', label: 'Despesa' },
-                { key: 'income', label: 'Receita' },
-              ]}
-            />
-          ) : null}
-          <TextField
-            label="Nome"
-            value={name}
-            onChange={onNameChange}
-            error={errors.name}
-            maxLength={40}
-            autoComplete="off"
-            autoFocus
-          />
-          <IconPicker value={icon} onChange={onIconChange} />
-          {submitError ? (
-            <p role="alert" className="text-meta text-alert">
-              {submitError}
-            </p>
-          ) : null}
-        </div>
-      </form>
-    </Modal>
+      <div ref={formRef}>
+        <FormModalSplit
+          aside={
+            <>
+              <FormModalGroup label="Categoria">
+                {canPickKind ? (
+                  <ChoiceField
+                    label="Tipo"
+                    variant="segmented"
+                    value={kind}
+                    onChange={(key) => onKindChange(key as Category.Kind)}
+                    options={KIND_OPTIONS}
+                  />
+                ) : null}
+                <TextField
+                  label="Nome"
+                  value={name}
+                  onChange={onNameChange}
+                  error={errors.name}
+                  maxLength={40}
+                  autoComplete="off"
+                />
+              </FormModalGroup>
+              <FormModalGroup label="Como aparece">
+                <CategoryPreview name={name} icon={icon} kind={kind} />
+                {usage ? <p className="text-meta text-fg-secondary">{usage}</p> : null}
+                {restore ? (
+                  <div className="flex flex-col items-start gap-s8 rounded-input border border-line p-s12">
+                    <p className="text-label text-fg-secondary">{restore.note}</p>
+                    <Button variant="secondary" size="sm" onPress={restore.onRestore}>
+                      Desarquivar
+                    </Button>
+                  </div>
+                ) : null}
+              </FormModalGroup>
+            </>
+          }
+        >
+          <FormModalGroup label="Ícone">
+            <IconPicker value={icon} onChange={onIconChange} />
+          </FormModalGroup>
+        </FormModalSplit>
+      </div>
+    </FormModal>
   );
 }

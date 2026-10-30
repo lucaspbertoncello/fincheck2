@@ -6,21 +6,22 @@ type TagFormProps = {
   /** What to open; null keeps it closed. */
   target: TagFormTarget | null;
   onClose: () => void;
+  onArchive?: (id: string) => void;
 };
 
-function OpenTagForm({ target, onClose }: { target: TagFormTarget; onClose: () => void }) {
-  return <TagFormView {...useTagFormViewModel({ target, onClose })} />;
+function OpenTagForm(props: TagFormProps & { target: TagFormTarget }) {
+  return <TagFormView {...useTagFormViewModel(props)} />;
 }
 
 /** The tag modal, mounted fresh for each target. */
-export function TagForm({ target, onClose }: TagFormProps) {
+export function TagForm({ target, ...handlers }: TagFormProps) {
   if (!target) return null;
 
   return (
     <OpenTagForm
       key={target.mode === 'rename' ? target.tag.id : 'new'}
       target={target}
-      onClose={onClose}
+      {...handlers}
     />
   );
 }

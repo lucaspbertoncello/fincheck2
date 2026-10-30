@@ -1,15 +1,13 @@
 import { normalizeText } from '@fincheck/shared/common/text/normalize-text.util.ts';
-import {
-  Button,
-  CategoryChoices,
-  ChoiceChip,
-  RuleSentenceText,
-  RuleToken,
-  TextField,
-} from '@fincheck/ui';
+import { Button, CategoryChoices, ChoiceChip, RuleSentenceText, RuleToken } from '@fincheck/ui';
 
+import { SentenceInput } from '#/features/rules/rule-form/components/sentence-input.component.tsx';
 import { TokenPopover } from '#/features/rules/rule-form/components/token-popover.component.tsx';
-import type { CategoryGroup, TagOption } from '#/features/rules/rule-form/types/rule-form.type.ts';
+import type {
+  AccountOption,
+  CategoryGroup,
+  TagOption,
+} from '#/features/rules/rule-form/types/rule-form.type.ts';
 
 const noop = () => undefined;
 
@@ -18,6 +16,10 @@ type RuleSentenceProps = {
   /** Without it the text is fixed (a suggestion keeps its pattern). */
   onDescriptionChange?: (value: string) => void;
   descriptionInvalid?: boolean;
+  /** Without `onAccountChange` the account blank is left out of the sentence. */
+  accountId?: string | null;
+  accounts?: AccountOption[];
+  onAccountChange?: (accountId: string | null) => void;
   categoryId: string | null;
   categoryGroups: CategoryGroup[];
   /** Without it the category is fixed. `null` takes the category off. */
@@ -28,13 +30,16 @@ type RuleSentenceProps = {
 };
 
 /**
- * "Sempre que a descrição contém [UBER *TRIP], categorizar como [Transporte] e adicionar a tag
- * [+ tag]": the blanks are tokens; each one that can change opens a small picker.
+ * "Quando a descrição contém [MERCADO] em [qualquer conta], categorizar como [Mercado] e adicionar
+ * a tag [+ tag]": the text is typed in place; the other blanks are tokens that open a small picker.
  */
 export function RuleSentence({
   description,
   onDescriptionChange,
   descriptionInvalid = false,
+  accountId = null,
+  accounts = [],
+  onAccountChange,
   categoryId,
   categoryGroups,
   onCategoryChange,
@@ -46,60 +51,73 @@ export function RuleSentence({
   const category = categoryGroups
     .flatMap((group) => group.options)
     .find((option) => option.id === categoryId);
+  const account = accounts.find((option) => option.id === accountId);
   const selectedTags = tags.filter((tag) => tagIds.includes(tag.id));
   const tagLabel = selectedTags.map((tag) => tag.name).join(', ');
 
   return (
     <div className="flex flex-wrap items-center gap-x-s8 gap-y-s12">
-      <RuleSentenceText>Sempre que</RuleSentenceText>
+      <RuleSentenceText>Quando</RuleSentenceText>
       <RuleToken kind="option">a descrição contém</RuleToken>
 
       {onDescriptionChange ? (
-        <TokenPopover
+        <SentenceInput
           label="Trecho da descrição"
-          trigger={
-            <RuleToken
-              kind={pattern ? 'value' : 'empty'}
-              icon={pattern ? undefined : 'plus-circle'}
-              trailing={pattern ? 'edit' : undefined}
-              ariaLabel="Trecho da descrição"
-              onPress={noop}
-              className={descriptionInvalid ? 'border-alert!' : undefined}
-            >
-              {pattern || 'trecho'}
-            </RuleToken>
-          }
-        >
-          {(close) => (
-            <form
-              noValidate
-              className="flex flex-col gap-s12"
-              onSubmit={(event) => {
-                event.preventDefault();
-                // The popover is a portal inside the modal's React tree: without this the Enter
-                // would also submit the rule form around it.
-                event.stopPropagation();
-                close();
-              }}
-            >
-              <TextField
-                label="Trecho da descrição"
-                value={description}
-                onChange={onDescriptionChange}
-                description="Maiúsculas e acentos não importam."
-                maxLength={100}
-                autoComplete="off"
-                autoFocus
-              />
-              <Button type="submit" size="sm">
-                Pronto
-              </Button>
-            </form>
-          )}
-        </TokenPopover>
+          value={description}
+          onChange={onDescriptionChange}
+          invalid={descriptionInvalid}
+          placeholder="ex.: mercado"
+          maxLength={100}
+        />
       ) : (
         <RuleToken kind="value">{pattern}</RuleToken>
       )}
+
+      {onAccountChange ? (
+        <>
+          <RuleSentenceText>em</RuleSentenceText>
+          <TokenPopover
+            label="Conta da regra"
+            trigger={
+              <RuleToken
+                kind={account ? 'value' : 'option'}
+                icon="wallet"
+                trailing="dropdown"
+                ariaLabel="Conta da regra"
+                onPress={noop}
+              >
+                {account?.name ?? 'qualquer conta'}
+              </RuleToken>
+            }
+          >
+            {(close) => (
+              <div role="group" aria-label="Contas" className="flex flex-wrap gap-s8">
+                <ChoiceChip
+                  selected={accountId === null}
+                  onChange={() => {
+                    onAccountChange(null);
+                    close();
+                  }}
+                >
+                  Qualquer conta
+                </ChoiceChip>
+                {accounts.map((option) => (
+                  <ChoiceChip
+                    key={option.id}
+                    selected={option.id === accountId}
+                    onChange={() => {
+                      onAccountChange(option.id);
+                      close();
+                    }}
+                  >
+                    {option.name}
+                  </ChoiceChip>
+                ))}
+              </div>
+            )}
+          </TokenPopover>
+        </>
+      ) : null}
 
       <RuleSentenceText>, categorizar como</RuleSentenceText>
       {onCategoryChange ? (
