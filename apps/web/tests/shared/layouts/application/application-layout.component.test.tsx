@@ -124,11 +124,9 @@ describe('ApplicationLayout', () => {
 
   it('switches the theme on Configurações', async () => {
     renderApp('/settings');
-    fireEvent.click(await screen.findByRole('button', { name: /Tema (claro|escuro)/ }));
+    fireEvent.click(await screen.findByRole('radio', { name: 'Escuro' }));
 
-    expect(['light', 'dark']).toContain(document.documentElement.getAttribute('data-theme'));
-    expect(window.localStorage.getItem('fincheck:theme')).toBe(
-      document.documentElement.getAttribute('data-theme'),
-    );
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+    expect(window.localStorage.getItem('fincheck:theme')).toBe('dark');
   });
 });
