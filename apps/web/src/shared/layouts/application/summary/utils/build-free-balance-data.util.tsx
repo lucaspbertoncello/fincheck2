@@ -37,17 +37,14 @@ const INVOICE_STATUS_LABEL: Partial<Record<Invoice.Status, string>> = {
   overdue: 'Vencida',
 };
 
-// R1: an item whose payment was detected but not linked yet carries the note and already left the
+// R1: an item whose payment was detected but not linked yet carries the seal and already left the
 // total (`remainingCents` is net of the presumed payment).
-function itemLabel(item: Agenda.Item): string {
-  return item.presumedPaidCents > 0 ? `${item.title} · ${PRESUMED_NOTE}` : item.title;
-}
-
 function toItems(items: readonly Agenda.Item[]): FreeBalanceItem[] {
   return items.map((item) => ({
     id: item.key,
-    label: itemLabel(item),
+    label: item.title,
     cents: item.remainingCents,
+    badge: item.presumedPaidCents > 0 ? PRESUMED_NOTE : undefined,
   }));
 }
 
@@ -185,6 +182,7 @@ export function buildFreeBalanceData(input: BuildFreeBalanceInput): FreeBalanceD
     windowDays: freeBalance.daysRemaining,
     elapsedDays: 0,
     staleNote: buildStaleNote(input),
+    partialNote: buildPartialNotice(input.freeBalance, input.accounts),
     lines: buildLines(input),
     review:
       freeBalance.review.count > 0

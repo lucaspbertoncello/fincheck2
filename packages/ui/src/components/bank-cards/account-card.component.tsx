@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { BalanceCurve } from '#/components/bank-cards/balance-curve.component.tsx';
 import { BankAvatar } from '#/components/bank-cards/bank-avatar.component.tsx';
 import type { BankThemeKey } from '#/components/bank-cards/bank-theme.type.ts';
@@ -15,20 +17,30 @@ type AccountCardProps = {
   subtitle: string;
   /** "Pluggy" or "Manual". */
   badge: string;
-  balanceCents: number;
+  /** Null until the bank reports a balance: the card shows `emptyBalanceLabel`. */
+  balanceCents: number | null;
+  /** Shown in place of the balance while it is null. */
+  emptyBalanceLabel?: string;
   /** Balance at the end of each day of the month, in cents. */
   curve: readonly number[];
   /** Text alternative of the curve. */
   curveLabel: string;
-  /** "failed" paints the sync line as a warning and makes the action the primary one. */
-  status: 'ok' | 'failed';
+  /**
+   * "failed" paints the sync line as a warning and makes the action the primary one; "stale" paints
+   * it as a warning only; "manual" is a balance typed by hand (edit icon).
+   */
+  status: 'ok' | 'failed' | 'stale' | 'manual';
   /** "Sincronizado há 12 min", "Saldo manual" or "Falhou ontem às 18:40; o consentimento expira em 31/10". */
   statusLabel: string;
   /** Second line of a failure ("Sem transações novas do Bradesco até renovar."). */
   failureNote?: string;
-  /** "Ajustar saldo", "Atualizar saldo" or "Renovar". */
-  actionLabel: string;
-  onAction: () => void;
+  /** Replaces the sync line and the failure note (a link to the way out, for instance). */
+  statusSlot?: ReactNode;
+  /** "Ajustar saldo", "Atualizar saldo" or "Renovar"; no action without it. */
+  actionLabel?: string;
+  onAction?: () => void;
+  /** Slot of the "…" menu (archive, delete), at the end of the header. */
+  menu?: ReactNode;
   className?: string;
 };
 
@@ -39,16 +51,20 @@ export function AccountCard({
   subtitle,
   badge,
   balanceCents,
+  emptyBalanceLabel = 'Aguardando o saldo do banco',
   curve,
   curveLabel,
   status,
   statusLabel,
   failureNote,
+  statusSlot,
   actionLabel,
   onAction,
+  menu,
   className,
 }: AccountCardProps) {
   const failed = status === 'failed';
+  const warning = failed || status === 'stale';
 
   return (
     <article aria-label={name} className={cx('glass flex flex-col gap-s12 p-s16', className)}>
@@ -59,10 +75,15 @@ export function AccountCard({
           <p className="truncate text-meta text-fg-secondary">{subtitle}</p>
         </div>
         <CardTag tone={theme === 'wallet' ? 'neutral' : 'accent'}>{badge}</CardTag>
+        {menu}
       </header>
 
       <p className="text-money-xl text-fg-primary max-lg:text-(length:--font-size-money-xl-mobile)">
-        <Money cents={balanceCents} sign="auto" />
+        {balanceCents === null ? (
+          <span className="text-body text-fg-secondary">{emptyBalanceLabel}</span>
+        ) : (
+          <Money cents={balanceCents} sign="auto" />
+        )}
       </p>
 
       <BalanceCurve values={curve} label={curveLabel} />
@@ -74,22 +95,32 @@ export function AccountCard({
         )}
       >
         <div className="flex min-w-0 flex-1 flex-col gap-s4">
-          <p
-            className={cx(
-              'flex items-start gap-s8 text-meta',
-              failed ? 'text-caution' : 'items-center text-fg-secondary',
-            )}
-          >
-            <Icon name={failed ? 'warning' : 'sync'} size="xs" className="mt-px" />
-            <span className="min-w-0">{statusLabel}</span>
-          </p>
-          {failed && failureNote ? (
-            <p className="text-meta text-fg-secondary">{failureNote}</p>
-          ) : null}
+          {statusSlot ?? (
+            <>
+              <p
+                className={cx(
+                  'flex items-start gap-s8 text-meta',
+                  warning ? 'text-caution' : 'items-center text-fg-secondary',
+                )}
+              >
+                <Icon
+                  name={warning ? 'warning' : status === 'manual' ? 'edit' : 'sync'}
+                  size="xs"
+                  className="mt-px"
+                />
+                <span className="min-w-0">{statusLabel}</span>
+              </p>
+              {failed && failureNote ? (
+                <p className="text-meta text-fg-secondary">{failureNote}</p>
+              ) : null}
+            </>
+          )}
         </div>
-        <CardAction variant={failed ? 'solid' : 'link'} onPress={onAction}>
-          {actionLabel}
-        </CardAction>
+        {actionLabel && onAction ? (
+          <CardAction variant={failed ? 'solid' : 'link'} onPress={onAction}>
+            {actionLabel}
+          </CardAction>
+        ) : null}
       </footer>
     </article>
   );

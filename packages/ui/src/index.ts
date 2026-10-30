@@ -36,6 +36,7 @@ export {
   ConnectionErrorNotice,
   ContentSkeleton,
   EmptyState,
+  ErrorState,
   Skeleton,
   SyncErrorBanner,
   type ContentSkeletonVariant,

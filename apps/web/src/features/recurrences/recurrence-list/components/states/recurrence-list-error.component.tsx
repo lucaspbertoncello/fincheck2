@@ -1,13 +1,12 @@
-import { EmptyState } from '@fincheck/ui';
+import { ErrorState } from '@fincheck/ui';
 
 /** The month could not be loaded: says so and offers "Tentar de novo". */
 export function RecurrenceListError({ onRetry }: { onRetry: () => void }) {
   return (
-    <EmptyState
-      icon="danger"
+    <ErrorState
       title="Não deu para carregar as recorrências"
       description="Confira se a API está no ar e tente de novo."
-      primaryAction={{ label: 'Tentar de novo', icon: 'sync', onPress: onRetry }}
+      onRetry={onRetry}
     />
   );
 }

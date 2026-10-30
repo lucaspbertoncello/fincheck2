@@ -1,6 +1,7 @@
 import { updateBackupSettingsRequestSchema } from '@fincheck/shared/backup/backup-settings/backup-settings.schema.ts';
 import { useEffect, useState } from 'react';
 
+import { waitForHealthy } from '#/domain/health/health/services/wait-for-healthy.service.ts';
 import { useBackupModel } from '#/features/settings/settings/backup/backup.model.ts';
 import { BackupView } from '#/features/settings/settings/backup/backup.view.tsx';
 import type { BackupFileItem } from '#/features/settings/settings/backup/types/backup-file-item.type.ts';
@@ -10,6 +11,7 @@ import { formatBackupMoment } from '#/features/settings/settings/backup/utils/fo
 import { formatFileSize } from '#/features/settings/settings/backup/utils/format-file-size.util.ts';
 import { focusFirstInvalid } from '#/features/settings/settings/utils/focus-first-invalid.util.ts';
 import { getActionErrorMessage } from '#/features/settings/settings/utils/get-action-error-message.util.ts';
+import { reloadApp } from '#/shared/utils/reload-app.util.ts';
 
 type RestoreStep = 'closed' | 'choose' | 'confirm';
 
@@ -91,6 +93,10 @@ export function BackupViewModel() {
         onSuccess: (answer) => {
           setSafetyCopy(answer.safetyCopyFileName);
           closeRestore();
+          // The API reopens by itself: wait for /health, then reload to read the restored data.
+          void waitForHealthy().then((isBack) => {
+            if (isBack) reloadApp();
+          });
         },
         onError: (error) => {
           setRestoreError(getActionErrorMessage(error, 'Não deu para restaurar esse backup.'));

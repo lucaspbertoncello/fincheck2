@@ -1,4 +1,4 @@
-import { Button, ContentSkeleton, EmptyState, Money, Section } from '@fincheck/ui';
+import { Button, ContentSkeleton, EmptyState, ErrorState, Money, Section } from '@fincheck/ui';
 
 export type FutureInvoiceItem = {
   month: string;
@@ -40,11 +40,10 @@ export function FutureInvoicesView({
     >
       {state === 'loading' ? <ContentSkeleton variant="cards" /> : null}
       {state === 'error' ? (
-        <EmptyState
-          icon="warning"
-          headingLevel={3}
+        <ErrorState
           title="Não deu para carregar as faturas futuras"
-          primaryAction={{ label: 'Tentar de novo', onPress: onRetry, icon: 'sync' }}
+          onRetry={onRetry}
+          headingLevel={3}
         />
       ) : null}
       {state === 'ready' && items.length === 0 ? (

@@ -9,7 +9,7 @@ import type {
 import { buildAccountMenuItems } from '#/features/accounts/account-list/utils/build-account-menu-items.util.ts';
 import { resolveAccountTheme } from '#/features/accounts/account-list/utils/resolve-account-theme.util.ts';
 import { buildInvoiceDueLine } from '#/features/invoices/invoice-summary/utils/build-invoice-due-line.util.ts';
-import { getCycleProgress } from '#/features/invoices/invoice-summary/utils/get-cycle-progress.util.ts';
+import { getCycleProgress } from '#/domain/invoices/invoice/rules/get-cycle-progress.rule.ts';
 import { mapInvoiceStatus } from '#/features/invoices/invoice-summary/utils/map-invoice-status.util.ts';
 
 const MAX_INSTALLMENTS = 3;
@@ -27,7 +27,7 @@ function buildInvoiceBlock(invoice: Invoice.Dto, today: string): InvoiceBlockDat
   const cycleProgress =
     status === 'open'
       ? getCycleProgress(invoice.closesOn, today)
-      : status === 'closed'
+      : status === 'closed' || status === 'partial' || status === 'overdue'
         ? 1
         : undefined;
 

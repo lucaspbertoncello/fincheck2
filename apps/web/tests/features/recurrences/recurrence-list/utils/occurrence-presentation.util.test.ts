@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import { buildOccurrenceStatusNote } from '#/features/recurrences/recurrence-list/utils/build-occurrence-status-note.util.ts';
 import { describeDateRule } from '#/features/recurrences/recurrence-list/utils/describe-date-rule.util.ts';
-import { getOccurrenceAmount } from '#/features/recurrences/recurrence-list/utils/get-occurrence-amount.util.ts';
-import { getOccurrenceInlineActions } from '#/features/recurrences/recurrence-list/utils/get-occurrence-inline-actions.util.ts';
-import { getOccurrenceRowStatus } from '#/features/recurrences/recurrence-list/utils/get-occurrence-row-status.util.ts';
+import { getOccurrenceAmount } from '#/domain/recurrences/occurrence/rules/get-occurrence-amount.rule.ts';
+import { getOccurrenceInlineActions } from '#/domain/recurrences/occurrence/rules/get-occurrence-inline-actions.rule.ts';
+import { getOccurrenceRowStatus } from '#/domain/recurrences/occurrence/rules/get-occurrence-row-status.rule.ts';
 import { createTestOccurrence } from '#tests/support/recurrences/occurrence/create-test-occurrence.util.ts';
 
 const payment = {

@@ -3,7 +3,7 @@ import type { ManagedCategory } from '@fincheck/ui';
 
 import { describeArchivedCategory } from '#/features/categories/utils/describe-archived-category.util.ts';
 import { formatLastUsed } from '#/features/categories/utils/format-last-used.util.ts';
-import { toUiIcon } from '#/features/categories/utils/to-ui-icon.util.ts';
+import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 
 /** A category of the contract as a row of the management list. */
 export function toManagedCategory(category: Category.Dto, today: string): ManagedCategory {
@@ -12,7 +12,7 @@ export function toManagedCategory(category: Category.Dto, today: string): Manage
   return {
     id: category.id,
     name: category.name,
-    icon: toUiIcon(category.icon),
+    icon: mapCategoryIcon(category.icon),
     transactionCount: category.transactionCount,
     ruleCount: category.ruleCount,
     lastUsedLabel: formatLastUsed(category.lastUsedOn, today),

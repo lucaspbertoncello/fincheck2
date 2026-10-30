@@ -2,6 +2,8 @@ import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { hideValuesStore } from '#/shared/stores/hide-values.store.ts';
+import { setTheme } from '#/shared/stores/theme.store.ts';
+import { stubMatchMedia } from '#tests/support/viewport/stub-match-media.util.ts';
 import { renderApp } from '#tests/support/app/render-app.util.tsx';
 
 afterEach(() => {
@@ -128,5 +130,76 @@ describe('ApplicationLayout', () => {
 
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
     expect(window.localStorage.getItem('fincheck:theme')).toBe('dark');
+  });
+
+  it('follows the OS theme from the start of the app when the preference is "Sistema"', async () => {
+    const media = stubMatchMedia();
+    try {
+      renderApp('/');
+      await screen.findByRole('heading', { level: 1, name: 'Visão geral' });
+
+      media.setSystemDark(true);
+
+      expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+    } finally {
+      setTheme('light'); // stops following the system theme
+      media.restore();
+    }
+  });
+
+  it('opens the creation modal of the screen from the "+" menu, keeping the month', async () => {
+    renderApp('/?month=2026-10');
+    const plus = await screen.findByRole('button', { name: 'Criar' });
+    plus.focus();
+    fireEvent.keyDown(plus, { key: 'Enter' });
+    fireEvent.keyUp(plus, { key: 'Enter' });
+
+    fireEvent.click(await screen.findByRole('menuitem', { name: /Nova recorrência/ }));
+
+    await waitFor(() => expect(window.location.pathname).toBe('/recurrences'));
+    expect(window.location.search).toContain('new=recurrence');
+    expect(window.location.search).toContain('month=2026-10');
+    expect(await screen.findByRole('dialog', { name: 'Nova recorrência' })).toBeInTheDocument();
+  });
+
+  it('opens "Nova transação" from the direct "+" of Transações', async () => {
+    renderApp('/transactions?month=2026-10');
+    fireEvent.click(await screen.findByRole('button', { name: 'Nova transação' }));
+
+    await waitFor(() => expect(window.location.search).toContain('new=transaction'));
+    expect(window.location.search).toContain('month=2026-10');
+    expect(await screen.findByRole('dialog', { name: 'Nova transação' })).toBeInTheDocument();
+  });
+
+  it('keeps the screen parameters that are not the month', async () => {
+    renderApp('/transactions?month=2026-10&view=category');
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Transações' }),
+    ).toBeInTheDocument();
+    expect(window.location.search).toContain('view=category');
+  });
+
+  it.each([
+    ['Nova transação', '/transactions', 'new=transaction'],
+    ['Compra parcelada', '/transactions', 'new=installment'],
+    ['Nova conta a pagar ou receber', '/recurrences/bills', 'new=bill'],
+    ['Dívida com amigo', '/recurrences/bills', 'new=debt'],
+    ['Nova recorrência', '/recurrences', 'new=recurrence'],
+    ['Conectar conta', '/accounts', 'new=account'],
+    ['Nova categoria', '/categories', 'new=category'],
+    ['Nova regra', '/categories/rules', 'new=rule'],
+  ])('sends "%s" to %s with %s', async (label, pathname, param) => {
+    renderApp('/?month=2026-10');
+    const plus = await screen.findByRole('button', { name: 'Criar' });
+    plus.focus();
+    fireEvent.keyDown(plus, { key: 'Enter' });
+    fireEvent.keyUp(plus, { key: 'Enter' });
+
+    fireEvent.click(await screen.findByRole('menuitem', { name: new RegExp(label) }));
+
+    await waitFor(() => expect(window.location.pathname).toBe(pathname));
+    expect(window.location.search).toContain(param);
+    expect(window.location.search).toContain('month=2026-10');
   });
 });

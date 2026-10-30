@@ -1,7 +1,7 @@
 import {
   Banner,
   Button,
-  EmptyState,
+  ErrorState,
   FineNote,
   Modal,
   MoneyField,
@@ -86,12 +86,7 @@ export function CorrectInvoiceView({
     >
       {state === 'loading' ? <Skeleton className="h-ctl-touch w-full" /> : null}
       {state === 'error' ? (
-        <EmptyState
-          icon="warning"
-          headingLevel={3}
-          title="Não deu para carregar a fatura"
-          primaryAction={{ label: 'Tentar de novo', onPress: onRetry, icon: 'sync' }}
-        />
+        <ErrorState title="Não deu para carregar a fatura" onRetry={onRetry} headingLevel={3} />
       ) : null}
       {state === 'ready' ? (
         <form

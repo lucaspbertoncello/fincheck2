@@ -7,7 +7,7 @@ import type {
 } from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
 import { buildTransactionRow } from '#/features/transactions/transaction-list/utils/build-transaction-row.util.ts';
 import { formatShortDate } from '#/features/transactions/transaction-list/utils/format-day-heading.util.ts';
-import { mapCategoryIcon } from '#/features/transactions/transaction-list/utils/map-category-icon.util.ts';
+import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 
 function describeBankChange(change: Transaction.BankChangeDto['changes'][number]): string {
   if (change.field === 'description') {

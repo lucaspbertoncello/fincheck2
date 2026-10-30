@@ -4,7 +4,7 @@ import {
   Chip,
   ContentSkeleton,
   EditDateField,
-  EmptyState,
+  ErrorState,
   Modal,
   Money,
   MoneyField,
@@ -100,12 +100,7 @@ export function InvoiceDetailView({
     >
       {state === 'loading' ? <ContentSkeleton variant="list" /> : null}
       {state === 'error' ? (
-        <EmptyState
-          icon="warning"
-          headingLevel={3}
-          title="Não deu para carregar a fatura"
-          primaryAction={{ label: 'Tentar de novo', onPress: onRetry, icon: 'sync' }}
-        />
+        <ErrorState title="Não deu para carregar a fatura" onRetry={onRetry} headingLevel={3} />
       ) : null}
       {state === 'ready' && data ? (
         <>

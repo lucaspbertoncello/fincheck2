@@ -1,7 +1,7 @@
 import type { CategoryOption } from '@fincheck/ui';
 
 import { useCategories } from '#/domain/categories/category/hooks/use-categories.hook.ts';
-import { resolveCategoryIcon } from '#/features/bills/utils/resolve-category-icon.util.ts';
+import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 
 /** The id of the "Sem categoria" choice: a form value, never sent to the API. */
 export const NO_CATEGORY_ID = 'none';
@@ -15,7 +15,7 @@ export function useCategoryOptions(kind: 'expense' | 'income'): CategoryOption[]
     ...(data?.items ?? []).map((category) => ({
       id: category.id,
       name: category.name,
-      icon: resolveCategoryIcon(category.icon),
+      icon: mapCategoryIcon(category.icon),
     })),
   ];
 }

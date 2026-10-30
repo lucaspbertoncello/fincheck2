@@ -53,7 +53,14 @@ export function BalanceComposition({ lines }: BalanceCompositionProps) {
                   key={item.id}
                   className="flex items-baseline justify-between gap-s12 text-label text-fg-secondary"
                 >
-                  <span className="min-w-0 truncate">{item.label}</span>
+                  <span className="flex min-w-0 items-baseline gap-s8">
+                    <span className="min-w-0 truncate">{item.label}</span>
+                    {item.badge ? (
+                      <span className="shrink-0 rounded-capsule bg-subtle px-s8 text-meta text-fg-secondary">
+                        {item.badge}
+                      </span>
+                    ) : null}
+                  </span>
                   <Money cents={item.cents} sign="none" weight="plain" />
                 </li>
               ))}

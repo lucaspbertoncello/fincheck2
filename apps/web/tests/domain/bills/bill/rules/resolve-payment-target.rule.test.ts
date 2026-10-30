@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolvePaymentTarget } from '#/features/bills/bill-list/utils/resolve-payment-target.util.ts';
+import { resolvePaymentTarget } from '#/domain/bills/bill/rules/resolve-payment-target.rule.ts';
 
 const empty = {
   billId: null,

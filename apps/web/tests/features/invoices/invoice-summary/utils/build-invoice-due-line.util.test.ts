@@ -57,12 +57,12 @@ describe('buildInvoiceDueLine', () => {
 });
 
 describe('mapInvoiceStatus', () => {
-  it('folds the six statuses into the three looks of the card', () => {
+  it('maps the six statuses into the looks of the card', () => {
     expect(mapInvoiceStatus('open')).toBe('open');
     expect(mapInvoiceStatus('projected')).toBe('open');
     expect(mapInvoiceStatus('closed')).toBe('closed');
-    expect(mapInvoiceStatus('partial')).toBe('closed');
-    expect(mapInvoiceStatus('overdue')).toBe('closed');
+    expect(mapInvoiceStatus('partial')).toBe('partial');
+    expect(mapInvoiceStatus('overdue')).toBe('overdue');
     expect(mapInvoiceStatus('paid')).toBe('paid');
   });
 });

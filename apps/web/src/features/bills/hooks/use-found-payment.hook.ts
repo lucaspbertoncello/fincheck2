@@ -9,7 +9,7 @@ import { useCreateInvoicePayment } from '#/domain/invoices/invoice-payment/hooks
 import { useDeleteInvoicePayment } from '#/domain/invoices/invoice-payment/hooks/use-delete-invoice-payment.hook.ts';
 import { useDismissInvoicePaymentSuggestion } from '#/domain/invoices/invoice-payment/hooks/use-dismiss-invoice-payment-suggestion.hook.ts';
 import { useRestoreInvoicePaymentSuggestion } from '#/domain/invoices/invoice-payment/hooks/use-restore-invoice-payment-suggestion.hook.ts';
-import { resolvePaymentTarget } from '#/features/bills/bill-list/utils/resolve-payment-target.util.ts';
+import { resolvePaymentTarget } from '#/domain/bills/bill/rules/resolve-payment-target.rule.ts';
 
 /** The transaction the API found for an item: the invoice's "Pagamento encontrado" or the presumed one of a bill. */
 export function findPaymentTransactionId(item: Agenda.Item): string | null {

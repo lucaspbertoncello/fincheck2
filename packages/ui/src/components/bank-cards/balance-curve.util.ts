@@ -22,8 +22,15 @@ export function buildBalanceCurve(values: readonly number[]): BalanceCurve | nul
     const y = PAD + (1 - (value - min) / span) * (HEIGHT - PAD * 2);
     return { x, y };
   });
+  // Smooth line: each segment is a cubic curve whose handles sit at the middle of its width, so
+  // the curve stays flat at every point and never overshoots the balances.
   const line = points
-    .map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
+    .map((p, i) => {
+      const previous = points[i - 1];
+      if (!previous) return `M${p.x.toFixed(2)} ${p.y.toFixed(2)}`;
+      const middle = (previous.x + p.x) / 2;
+      return `C${middle.toFixed(2)} ${previous.y.toFixed(2)} ${middle.toFixed(2)} ${p.y.toFixed(2)} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`;
+    })
     .join(' ');
   const last = points[points.length - 1];
   return {

@@ -91,7 +91,9 @@ describe('AddAccountCard', () => {
 
 describe('buildBalanceCurve', () => {
   it('maps the lowest value to the base and the highest to the top, and handles a flat month', () => {
-    expect(buildBalanceCurve([0, 100])?.line).toBe('M0.00 44.00 L100.00 4.00');
+    expect(buildBalanceCurve([0, 100])?.line).toBe(
+      'M0.00 44.00 C50.00 44.00 50.00 4.00 100.00 4.00',
+    );
     expect(buildBalanceCurve([5, 5, 5])?.line).toContain('M0.00 44.00');
     expect(buildBalanceCurve([])).toBeNull();
   });

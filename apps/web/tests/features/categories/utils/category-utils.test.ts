@@ -9,7 +9,6 @@ import {
 import { formatLastUsed } from '#/features/categories/utils/format-last-used.util.ts';
 import { getBusinessToday } from '#/features/categories/utils/get-business-today.util.ts';
 import { toManagedCategory } from '#/features/categories/utils/to-managed-category.util.ts';
-import { toUiIcon } from '#/features/categories/utils/to-ui-icon.util.ts';
 
 function category(overrides: Partial<Category.Dto>): Category.Dto {
   return {
@@ -113,15 +112,6 @@ describe('toManagedCategory', () => {
 
     expect(row.archived).toBe(true);
     expect(row.archivedNote).toContain('Despesa');
-  });
-});
-
-describe('toUiIcon', () => {
-  it('renames the three icons whose names differ and keeps the rest', () => {
-    expect(toUiIcon('deliv')).toBe('delivery');
-    expect(toUiIcon('subs')).toBe('subscription');
-    expect(toUiIcon('handmoney')).toBe('hand-money');
-    expect(toUiIcon('cart')).toBe('cart');
   });
 });
 

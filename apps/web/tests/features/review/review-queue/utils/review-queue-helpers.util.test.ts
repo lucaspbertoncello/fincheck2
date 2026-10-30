@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { buildAmbiguity } from '#/features/review/review-queue/utils/build-ambiguity.util.ts';
 import { buildTransactionDetail } from '#/features/review/review-queue/utils/build-transaction-detail.util.ts';
-import { countRuleCatches } from '#/features/review/review-queue/utils/count-rule-catches.util.ts';
+import { countRuleCatches } from '#/domain/transactions/review-queue/rules/count-rule-catches.rule.ts';
 
 function itemWith(
   amountCents: number,

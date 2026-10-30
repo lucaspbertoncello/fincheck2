@@ -1,7 +1,7 @@
 import type { Category } from '@fincheck/shared/categories/category/category.type.ts';
 import type { CategoryOption } from '@fincheck/ui';
 
-import { mapCategoryIcon } from '#/features/transactions/transaction-list/utils/map-category-icon.util.ts';
+import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 
 /** Active categories of one kind as the options the edit, split and bulk pickers show. */
 export function buildCategoryOptions(

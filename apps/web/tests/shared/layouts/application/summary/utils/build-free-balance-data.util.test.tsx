@@ -46,7 +46,8 @@ describe('buildFreeBalanceData', () => {
 
     const payable = build(freeBalance).lines.find((line) => line.key === 'payable');
 
-    expect(payable?.items[0]?.label).toBe(`${item!.title} · pago, falta vincular`);
+    expect(payable?.items[0]?.label).toBe(item!.title);
+    expect(payable?.items[0]?.badge).toBe('pago, falta vincular');
     expect(payable?.items[0]?.cents).toBe(item!.remainingCents);
   });
 
@@ -101,6 +102,23 @@ describe('buildFreeBalanceData', () => {
     expect(build(freeBalance).staleNote).toBe(
       'dado do Bradesco de ontem · conexão do Nubank com erro',
     );
+  });
+});
+
+describe('buildFreeBalanceData, partial Livre (R2)', () => {
+  it('carries the partial notice for the panel', () => {
+    const freeBalance = { ...base(), isPartial: true, accountsWithoutBalance: ['a1'] };
+
+    const data = buildFreeBalanceData({
+      freeBalance,
+      accounts: [{ id: 'a1', name: 'Nubank' }] as never,
+      openInvoices: [],
+      reviewHref: '/transactions/review',
+      isHidden: false,
+      now: NOW,
+    });
+
+    expect(data.partialNote).toBe('Livre parcial: falta o saldo do Nubank');
   });
 });
 

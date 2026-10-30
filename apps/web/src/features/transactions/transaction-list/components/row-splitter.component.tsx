@@ -16,6 +16,7 @@ export function RowSplitter({ splitter }: RowSplitterProps) {
         onChange={splitter.onChange}
         categories={splitter.categories}
         createPartId={splitter.createPartId}
+        maxParts={2}
         onConfirm={splitter.onConfirm}
         onCancel={splitter.onCancel}
         saving={splitter.saving}

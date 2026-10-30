@@ -67,14 +67,6 @@ export type CategoriesData = {
 
 export type OverviewModel = {
   month: string;
-  monthLabel: string;
-  yearLabel: string;
-  dateIcon: 'sunrise' | 'sun' | 'sunset' | 'moon';
-  dateText: string;
-  onPreviousMonth: () => void;
-  onNextMonth: () => void;
-  /** The summary panel sits between the header and the content on the phone only. */
-  showsPanelInline: boolean;
   isDesktop: boolean;
   remaining: { isVisible: boolean; data: RemainingLineData | undefined };
   alerts: OverviewAlert[];

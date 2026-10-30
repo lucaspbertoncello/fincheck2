@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getHistoryProgress } from '#/features/accounts/account-list/utils/get-history-progress.util.ts';
+import { getHistoryProgress } from '#/domain/accounts/account/rules/get-history-progress.rule.ts';
 
 describe('getHistoryProgress', () => {
   it('counts the months between the oldest transaction and today', () => {

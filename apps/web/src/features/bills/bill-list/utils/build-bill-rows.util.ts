@@ -3,7 +3,7 @@ import type { BillBadge, IconName } from '@fincheck/ui';
 
 import type { BillRowModel } from '#/features/bills/bill-list/bill-list.model.ts';
 import { describeDueDate } from '#/features/bills/bill-list/utils/describe-due-date.util.ts';
-import { resolveRowStatus } from '#/features/bills/bill-list/utils/resolve-row-status.util.ts';
+import { resolveRowStatus } from '#/domain/bills/bill/rules/resolve-row-status.rule.ts';
 
 type RowContext = {
   today: string;

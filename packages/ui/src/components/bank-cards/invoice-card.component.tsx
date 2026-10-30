@@ -13,6 +13,8 @@ import { cx } from '#/utils/class-names.util.ts';
 const STATUS = {
   open: { label: 'Fatura aberta', tone: 'accent' },
   closed: { label: 'Fatura fechada', tone: 'neutral' },
+  partial: { label: 'Fatura parcial', tone: 'warn' },
+  overdue: { label: 'Fatura vencida', tone: 'warn' },
   paid: { label: 'Fatura paga', tone: 'income' },
 } as const;
 

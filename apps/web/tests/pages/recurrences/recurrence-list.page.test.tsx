@@ -51,9 +51,8 @@ describe('RecurrenceListPage', () => {
     const expenses = within(screen.getByRole('region', { name: 'Despesas fixas' }));
     expect(await expenses.findByText('Diarista')).toBeInTheDocument();
 
-    // The toast action is a React Aria "close" button: its accessible name is overridden, so it
-    // is found by its text.
-    fireEvent.click(screen.getByText('Desfazer'));
+    // The toast action is named by what it does ("Desfazer"), not by the close slot's "Close".
+    fireEvent.click(screen.getByRole('button', { name: 'Desfazer' }));
 
     await waitFor(() =>
       expect(

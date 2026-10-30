@@ -1,6 +1,5 @@
 import { FineNote, SettingsNav, type SettingsNavItem } from '@fincheck/ui';
 import type { ReactNode } from 'react';
-import { RouterProvider } from 'react-aria-components';
 
 import { ScreenHeader } from '#/shared/components/page/screen-header.component.tsx';
 import { SCREENS } from '#/shared/constants/screens.constant.ts';
@@ -9,8 +8,6 @@ type SettingsViewProps = {
   isDesktop: boolean;
   navItems: SettingsNavItem[];
   activeKey: string;
-  /** Receives the `href` of a side menu link (a hash). */
-  onNavigate: (href: string) => void;
   /** Each section sits in an element with this prefix plus its key as id. */
   sectionIdPrefix: string;
   connections: ReactNode;
@@ -38,7 +35,6 @@ export function SettingsView({
   isDesktop,
   navItems,
   activeKey,
-  onNavigate,
   sectionIdPrefix,
   connections,
   backup,
@@ -48,9 +44,7 @@ export function SettingsView({
     <div className="grid gap-s24 lg:grid-cols-[var(--spacing-panel)_minmax(0,1fr)] lg:items-start">
       {isDesktop ? (
         <aside className="glass sticky top-s16 flex flex-col gap-s24 p-s24">
-          <RouterProvider navigate={onNavigate}>
-            <SettingsNav items={navItems} activeKey={activeKey} label="Seções de Configurações" />
-          </RouterProvider>
+          <SettingsNav items={navItems} activeKey={activeKey} label="Seções de Configurações" />
           <Notes />
         </aside>
       ) : null}

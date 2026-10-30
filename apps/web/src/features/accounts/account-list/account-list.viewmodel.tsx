@@ -13,8 +13,8 @@ import { buildAccountTile } from '#/features/accounts/account-list/utils/build-a
 import { buildCardBlock } from '#/features/accounts/account-list/utils/build-card-block.util.ts';
 import { describeConnectionError } from '#/features/accounts/account-list/utils/describe-connection-error.util.ts';
 import { formatSyncAge } from '#/features/accounts/account-list/utils/format-sync-age.util.ts';
-import { getHistoryProgress } from '#/features/accounts/account-list/utils/get-history-progress.util.ts';
-import { sumTotalBalance } from '#/features/accounts/account-list/utils/sum-total-balance.util.ts';
+import { getHistoryProgress } from '#/domain/accounts/account/rules/get-history-progress.rule.ts';
+import { sumTotalBalance } from '#/domain/accounts/account/rules/sum-total-balance.rule.ts';
 import { FutureInvoicesViewModel } from '#/features/invoices/future-invoices/future-invoices.viewmodel.tsx';
 import { getTodayBusinessDate } from '#/features/invoices/invoice-summary/utils/get-today-business-date.util.ts';
 

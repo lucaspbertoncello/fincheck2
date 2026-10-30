@@ -2,6 +2,7 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { reloadApp } from '#/shared/utils/reload-app.util.ts';
 import { setTheme } from '#/shared/stores/theme.store.ts';
 import { server } from '#mocks/setup/server.util.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
@@ -9,6 +10,8 @@ import { createUser } from '#tests/support/interaction/create-user.util.ts';
 import { renderApp } from '#tests/support/app/render-app.util.tsx';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
 import { stubMatchMedia } from '#tests/support/viewport/stub-match-media.util.ts';
+
+vi.mock('#/shared/utils/reload-app.util.ts', () => ({ reloadApp: vi.fn() }));
 
 resetDatabaseBeforeEach();
 
@@ -370,7 +373,9 @@ describe('SettingsPage', () => {
       expect(
         await screen.findByText(/A cópia de segurança ficou em fincheck-/),
       ).toBeInTheDocument();
-    });
+      // It waits for /health and then reloads the page.
+      await waitFor(() => expect(reloadApp).toHaveBeenCalledTimes(1), { timeout: 4000 });
+    }, 10_000);
 
     it('shows the error and keeps the dialog when the restore fails', async () => {
       server.use(

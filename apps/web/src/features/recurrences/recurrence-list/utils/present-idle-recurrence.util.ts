@@ -3,7 +3,7 @@ import type { Recurrence } from '@fincheck/shared/recurrences/recurrence/recurre
 import type { IdleRecurrenceData } from '#/features/recurrences/recurrence-list/types/recurrence-list.type.ts';
 import type { RowContext } from '#/features/recurrences/recurrence-list/types/row-context.type.ts';
 import { describeDateRule } from '#/features/recurrences/recurrence-list/utils/describe-date-rule.util.ts';
-import { mapCategoryIcon } from '#/features/recurrences/recurrence-list/utils/map-category-icon.util.ts';
+import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 
 function formatStartsMonth(month: string): string {
   const [year = '', monthNumber = ''] = month.split('-');
@@ -23,7 +23,7 @@ export function presentIdleRecurrence(
   return {
     recurrenceId: recurrence.id,
     name: recurrence.name,
-    icon: mapCategoryIcon(categoryIcon),
+    icon: mapCategoryIcon(categoryIcon, 'repeat'),
     flow: recurrence.kind,
     rule: describeDateRule(recurrence.dateRule, recurrence.maxPayments),
     note: paused ? 'Pausada' : `Começa em ${formatStartsMonth(recurrence.startsMonth)}`,

@@ -20,16 +20,13 @@ import { toSectionState } from '#/features/overview/overview/utils/to-section-st
 import { useIsDesktop } from '#/shared/hooks/use-is-desktop.hook.ts';
 import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
 import { buildHref } from '#/shared/layouts/application/navigation/build-href.util.ts';
-import { formatPageDate } from '#/shared/utils/format-page-date.util.ts';
-import { getTimeOfDayIcon } from '#/shared/utils/get-time-of-day-icon.util.ts';
 
 /** Where "Ver todas" lands: Transações in its "Por categoria" view (the `view` param belongs to that screen). */
 const BY_CATEGORY_PATH = '/transactions?view=category';
 
 function useOverviewModel(): OverviewModel {
-  const now = new Date();
   const isDesktop = useIsDesktop();
-  const { month, monthLabel, yearLabel, goToPrevious, goToNext } = useSelectedMonth();
+  const { month } = useSelectedMonth();
   const [chosen, setChosen] = useState<{ month: string; date: string } | null>(null);
 
   const monthSummary = useMonthSummary(month);
@@ -45,13 +42,6 @@ function useOverviewModel(): OverviewModel {
 
   return {
     month,
-    monthLabel,
-    yearLabel,
-    dateIcon: getTimeOfDayIcon(now),
-    dateText: formatPageDate(now),
-    onPreviousMonth: goToPrevious,
-    onNextMonth: goToNext,
-    showsPanelInline: !isDesktop,
     isDesktop,
     remaining: {
       // Loading keeps the line's skeleton; a loaded month without `remaining` has no line.
@@ -87,7 +77,7 @@ function useOverviewModel(): OverviewModel {
               data: buildCategories(month, breakdown.data, categories.data.items),
             },
     billsHref: buildHref('/recurrences/bills', month),
-    allCategoriesHref: `${BY_CATEGORY_PATH}&month=${month}`,
+    allCategoriesHref: buildHref(BY_CATEGORY_PATH, month),
   };
 }
 

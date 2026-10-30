@@ -1,35 +1,28 @@
 import { CategoriesSection } from '#/features/overview/overview/components/categories-section.component.tsx';
 import { DayStripBlock } from '#/features/overview/overview/components/day-strip-block.component.tsx';
-import { OverviewHeader } from '#/features/overview/overview/components/overview-header.component.tsx';
+import { OverviewHeaderExtra } from '#/features/overview/overview/components/overview-header-extra.component.tsx';
 import { SectionError } from '#/features/overview/overview/components/states/section-error.component.tsx';
 import { SectionSkeleton } from '#/features/overview/overview/components/states/section-skeleton.component.tsx';
 import { SpendSection } from '#/features/overview/overview/components/spend-section.component.tsx';
 import { SummaryCardsSection } from '#/features/overview/overview/components/summary-cards-section.component.tsx';
 import type { OverviewModel } from '#/features/overview/overview/overview.model.ts';
-import { ApplicationSummaryPanel } from '#/shared/layouts/application/summary/application-summary-panel.component.tsx';
+import { ScreenFrame } from '#/shared/components/page/screen-frame.component.tsx';
+import { SCREENS } from '#/shared/constants/screens.constant.ts';
 
 /**
  * Visão geral. Desktop order: summary cards, "Até o fim do mês", "Gasto do mês", "Por categoria".
- * On the phone the strip comes before the cards (`order`), as in the capture. Each block loads,
+ * The header and, on the phone, the panel come from the `ScreenFrame`. On the phone the strip
+ * comes before the cards (`order`), as in the capture. Each block loads,
  * fails and retries on its own.
  */
 export function OverviewView(model: OverviewModel) {
   const { summary, strip, spend, categories } = model;
 
   return (
-    <div className="flex flex-col gap-s16 lg:gap-s24">
-      <OverviewHeader
-        monthLabel={model.monthLabel}
-        yearLabel={model.yearLabel}
-        dateIcon={model.dateIcon}
-        dateText={model.dateText}
-        onPreviousMonth={model.onPreviousMonth}
-        onNextMonth={model.onNextMonth}
-        remaining={model.remaining}
-        alerts={model.alerts}
-      />
-      {model.showsPanelInline ? <ApplicationSummaryPanel variant="full" /> : null}
-
+    <ScreenFrame
+      screen={SCREENS.overview}
+      extra={<OverviewHeaderExtra remaining={model.remaining} alerts={model.alerts} />}
+    >
       <div className="flex flex-col gap-s24">
         <div className="order-2 lg:order-1">
           {summary.status === 'loading' ? (
@@ -80,6 +73,6 @@ export function OverviewView(model: OverviewModel) {
           )}
         </div>
       </div>
-    </div>
+    </ScreenFrame>
   );
 }

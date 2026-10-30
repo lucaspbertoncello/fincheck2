@@ -1,9 +1,10 @@
 import { Chip, type ChipTone } from '#/components/chips/chip.component.tsx';
 
-const CHIP_TONE: Record<'accent' | 'neutral' | 'income', ChipTone> = {
+const CHIP_TONE: Record<'accent' | 'neutral' | 'income' | 'warn', ChipTone> = {
   accent: 'accent',
   neutral: 'neutral',
   income: 'ok',
+  warn: 'warn',
 };
 
 type CardTagProps = {

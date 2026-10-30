@@ -39,8 +39,8 @@ export const monthSummaryMock = [
         period.previousUntilOn,
       );
 
-      // Expected income: the expected amount of every income occurrence of the month (received,
-      // partial and pending); skipped ones stay out.
+      // Expected income (PM rule): the sum of the expected amount of every income occurrence of the
+      // month (received, partial and pending); dismissed (skipped) ones stay out.
       const occurrences = listMonthOccurrences(db, query.month).filter(
         (item) => item.kind === 'income' && item.status !== 'skipped' && !item.carriedOver,
       );
@@ -98,7 +98,7 @@ export const monthSummaryMock = [
           : null,
         income: {
           receivedCents: received,
-          expectedCents: Math.max(expected, received),
+          expectedCents: expected,
           receivedPct: expected > 0 ? roundOne((received / expected) * 100) : null,
         },
         expenses: {

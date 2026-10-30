@@ -34,7 +34,14 @@ const ICON_BY_CATEGORY_ICON: Record<CategoryIconName, IconName> = {
   tag: 'tag',
 };
 
-/** Icon of the design system for the icon name a category carries in the contract. */
-export function mapCategoryIcon(icon: string | undefined): IconName {
-  return ICON_BY_CATEGORY_ICON[icon as CategoryIconName] ?? 'tag';
+/**
+ * Icon of the design system for the icon key a category carries in the contract (the one map of
+ * the app). `fallback` when the key is empty or unknown.
+ */
+export function mapCategoryIcon(
+  icon: string | null | undefined,
+  fallback: IconName = 'tag',
+): IconName {
+  if (!icon) return fallback;
+  return ICON_BY_CATEGORY_ICON[icon as CategoryIconName] ?? fallback;
 }

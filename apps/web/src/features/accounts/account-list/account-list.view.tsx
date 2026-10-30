@@ -3,6 +3,7 @@ import {
   Banner,
   ContentSkeleton,
   EmptyState,
+  ErrorState,
   Money,
   Section,
   SyncErrorBanner,
@@ -68,11 +69,10 @@ export function AccountListView({
 
   if (state === 'error') {
     return (
-      <EmptyState
-        icon="warning"
+      <ErrorState
         title="Não deu para carregar as contas"
         description="Confira se a API está no ar e tente de novo."
-        primaryAction={{ label: 'Tentar de novo', onPress: onRetry, icon: 'sync' }}
+        onRetry={onRetry}
       />
     );
   }

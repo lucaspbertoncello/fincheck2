@@ -10,7 +10,7 @@ import type { SplitPart } from '#/components/transactions/split/split-part.type.
 import { SplitSumIndicator } from '#/components/transactions/split/split-sum-indicator.component.tsx';
 import { cx } from '#/utils/class-names.util.ts';
 
-const MAX_PARTS = 6;
+const DEFAULT_MAX_PARTS = 6;
 
 type SplitEditorProps = {
   /** Total of the transaction in cents, positive. */
@@ -20,6 +20,8 @@ type SplitEditorProps = {
   categories: readonly CategoryOption[];
   /** Makes the id of a part added by the "Adicionar parte" button. */
   createPartId: () => string;
+  /** Most parts a split may have (6 by default; the API contract takes exactly 2). */
+  maxParts?: number;
   onConfirm: () => void;
   onCancel: () => void;
   saving?: boolean;
@@ -40,6 +42,7 @@ export function SplitEditor({
   onChange,
   categories,
   createPartId,
+  maxParts = DEFAULT_MAX_PARTS,
   onConfirm,
   onCancel,
   saving = false,
@@ -123,7 +126,7 @@ export function SplitEditor({
           variant="tertiary"
           size="sm"
           icon="plus-circle"
-          isDisabled={parts.length >= MAX_PARTS}
+          isDisabled={parts.length >= maxParts}
           onPress={() =>
             evenSplit([...parts, { id: createPartId(), categoryId: null, amountCents: 0 }])
           }

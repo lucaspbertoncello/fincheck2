@@ -3,7 +3,7 @@ import type { TransactionRowData } from '@fincheck/ui';
 
 import { TRANSACTION_METHOD_LABELS } from '#/features/transactions/transaction-list/constants/transaction-method-labels.constant.ts';
 import type { TransactionLookups } from '#/features/transactions/transaction-list/types/transaction-lookups.type.ts';
-import { mapCategoryIcon } from '#/features/transactions/transaction-list/utils/map-category-icon.util.ts';
+import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 
 /** True when the nature counts in the month (only expense and income do; BR-TRX-006). */
 export function isCountingNature(nature: Transaction.Dto['nature']): boolean {

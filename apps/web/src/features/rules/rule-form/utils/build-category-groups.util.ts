@@ -1,11 +1,11 @@
 import type { Category } from '@fincheck/shared/categories/category/category.type.ts';
 import type { CategoryOption } from '@fincheck/ui';
 
-import { toUiIcon } from '#/features/categories/utils/to-ui-icon.util.ts';
+import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 import type { CategoryGroup } from '#/features/rules/rule-form/types/rule-form.type.ts';
 
 function toOption(category: Category.Dto): CategoryOption {
-  return { id: category.id, name: category.name, icon: toUiIcon(category.icon) };
+  return { id: category.id, name: category.name, icon: mapCategoryIcon(category.icon) };
 }
 
 type Options = {

@@ -77,17 +77,19 @@ export function ReviewQueueView({
 
   return (
     <div className="flex flex-col gap-s24">
-      <div className="flex flex-col gap-s8">
+      <div className="flex items-center gap-s16">
         <Button
           variant="tertiary"
           size="sm"
           icon="chevron-left"
           onPress={onBackToTransactions}
-          className="self-start"
+          className="shrink-0"
         >
           Transações
         </Button>
-        <ReviewProgress done={progress.done} total={progress.total} />
+        <div className="min-w-0 flex-1">
+          <ReviewProgress done={progress.done} total={progress.total} />
+        </div>
       </div>
 
       {status === 'empty' ? (
@@ -100,16 +102,11 @@ export function ReviewQueueView({
       ) : null}
 
       {ruleSuggestion ? (
-        <div className="flex flex-col items-end gap-s8">
-          <RuleSuggestionBanner
-            message={ruleSuggestion.message}
-            onCreate={ruleSuggestion.onCreate}
-            className="w-full"
-          />
-          <Button variant="tertiary" size="sm" onPress={ruleSuggestion.onDismiss}>
-            Agora não
-          </Button>
-        </div>
+        <RuleSuggestionBanner
+          message={ruleSuggestion.message}
+          onCreate={ruleSuggestion.onCreate}
+          onDismiss={ruleSuggestion.onDismiss}
+        />
       ) : null}
 
       {card ? <ReviewQueueCard {...card} /> : null}

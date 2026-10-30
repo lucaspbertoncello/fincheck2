@@ -3,7 +3,7 @@ import type { Occurrence } from '@fincheck/shared/recurrences/occurrence/occurre
 import { daysBetween } from '#/features/recurrences/recurrence-list/utils/days-between.util.ts';
 import { formatMoneyNote } from '#/features/recurrences/recurrence-list/utils/format-money-note.util.ts';
 import { formatShortDate } from '#/features/recurrences/recurrence-list/utils/format-short-date.util.ts';
-import { getOccurrenceRowStatus } from '#/features/recurrences/recurrence-list/utils/get-occurrence-row-status.util.ts';
+import { getOccurrenceRowStatus } from '#/domain/recurrences/occurrence/rules/get-occurrence-row-status.rule.ts';
 
 type NoteContext = { today: string; hidden: boolean };
 

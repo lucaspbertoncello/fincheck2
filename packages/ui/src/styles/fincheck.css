@@ -180,6 +180,12 @@
   }
 }
 
+/* Thin scrollbar in the tone of the borders: for the scroll area inside a modal. */
+@utility scrollbar-subtle {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-default) transparent;
+}
+
 /* The sliding indicator of the active top tab is its own view-transition group (motion.md 1). */
 @utility tab-indicator {
   view-transition-name: tab-ind;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveRowStatus } from '#/features/bills/bill-list/utils/resolve-row-status.util.ts';
+import { resolveRowStatus } from '#/domain/bills/bill/rules/resolve-row-status.rule.ts';
 
 const open = {
   state: 'upcoming',

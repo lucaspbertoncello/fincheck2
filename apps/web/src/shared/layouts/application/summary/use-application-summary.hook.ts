@@ -6,15 +6,12 @@ import { useOpenInvoices } from '#/domain/invoices/invoice/hooks/use-open-invoic
 import { useHideValues } from '#/shared/hooks/use-hide-values.hook.ts';
 import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
 import { buildHref } from '#/shared/layouts/application/navigation/build-href.util.ts';
-import {
-  buildFreeBalanceData,
-  buildPartialNotice,
-} from '#/shared/layouts/application/summary/utils/build-free-balance-data.util.tsx';
+import { buildFreeBalanceData } from '#/shared/layouts/application/summary/utils/build-free-balance-data.util.tsx';
 
 type ApplicationSummary =
   | { status: 'loading' }
   | { status: 'error'; retry: () => void }
-  | { status: 'ready'; data: FreeBalanceData; partialNotice: string | undefined };
+  | { status: 'ready'; data: FreeBalanceData };
 
 /**
  * Data of the Livre panel: `GET /dashboard/free-balance`, plus the accounts (bank marks and sync
@@ -39,7 +36,6 @@ export function useApplicationSummary(): ApplicationSummary {
   const accountItems = accounts.data?.items ?? [];
   return {
     status: 'ready',
-    partialNotice: buildPartialNotice(freeBalance.data, accountItems),
     data: buildFreeBalanceData({
       freeBalance: freeBalance.data,
       accounts: accountItems,

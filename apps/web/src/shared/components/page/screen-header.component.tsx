@@ -1,4 +1,5 @@
-import { DateLine, MonthPicker, PageHeader, RemainingLine } from '@fincheck/ui';
+import { DateLine, MonthPicker, PageHeader } from '@fincheck/ui';
+import type { ReactNode } from 'react';
 
 import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
 import type { ScreenDefinition } from '#/shared/types/screen.type.ts';
@@ -7,13 +8,15 @@ import { getTimeOfDayIcon } from '#/shared/utils/get-time-of-day-icon.util.ts';
 
 type ScreenHeaderProps = {
   screen: ScreenDefinition;
+  /** Content of the line under the date (the Visão geral puts "Faltam N dias" and its alerts here). */
+  extra?: ReactNode;
 };
 
 /**
- * Header of a page: title with the card dot, the date line and, where the month filters, the
- * month picker. The Visão geral also has the "Faltam N dias" line, which has no data yet.
+ * Header of a page: title with the card dot, the date line, an optional `extra` line and, where
+ * the month filters, the month picker.
  */
-export function ScreenHeader({ screen }: ScreenHeaderProps) {
+export function ScreenHeader({ screen, extra }: ScreenHeaderProps) {
   const now = new Date();
   const month = useSelectedMonth();
 
@@ -21,7 +24,7 @@ export function ScreenHeader({ screen }: ScreenHeaderProps) {
     <PageHeader
       title={screen.title}
       date={<DateLine icon={getTimeOfDayIcon(now)} text={formatPageDate(now)} />}
-      extra={screen.key === 'overview' ? <RemainingLine /> : undefined}
+      extra={extra}
       actions={
         screen.filtersByMonth ? (
           <MonthPicker

@@ -16,9 +16,9 @@ import {
 } from '#/features/review/review-queue/review-queue.view.tsx';
 import { buildAmbiguity } from '#/features/review/review-queue/utils/build-ambiguity.util.ts';
 import { buildTransactionDetail } from '#/features/review/review-queue/utils/build-transaction-detail.util.ts';
-import { countRuleCatches } from '#/features/review/review-queue/utils/count-rule-catches.util.ts';
-import { orderQueue } from '#/features/review/review-queue/utils/order-queue.util.ts';
-import { toUiIcon } from '#/features/review/review-queue/utils/to-ui-icon.util.ts';
+import { countRuleCatches } from '#/domain/transactions/review-queue/rules/count-rule-catches.rule.ts';
+import { orderQueue } from '#/domain/transactions/review-queue/rules/order-queue.rule.ts';
+import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 import { hasApiErrorCode, isApiError } from '#/shared/api/api.error.ts';
 import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
 
@@ -98,7 +98,7 @@ function ReviewVisit({ month }: { month: string }) {
   function choiceFor(categoryId: string): ReviewChoice | null {
     const category = categoryById.get(categoryId);
     return category
-      ? { id: category.id, label: category.name, icon: toUiIcon(category.icon) }
+      ? { id: category.id, label: category.name, icon: mapCategoryIcon(category.icon) }
       : null;
   }
 
@@ -114,7 +114,11 @@ function ReviewVisit({ month }: { month: string }) {
 
   const pickerCategories: CategoryOption[] = categories
     .filter((category) => category.kind === kind)
-    .map((category) => ({ id: category.id, name: category.name, icon: toUiIcon(category.icon) }));
+    .map((category) => ({
+      id: category.id,
+      name: category.name,
+      icon: mapCategoryIcon(category.icon),
+    }));
 
   // Progress: what was saved in this visit against what is left. The server may still list a
   // transaction saved a moment ago, so those do not count as left.
@@ -333,6 +337,8 @@ function ReviewVisit({ month }: { month: string }) {
           canGoBack: (cursor ?? reviewed.length) > 0,
           onBack: goBack,
           onSkip: skip,
+          // With only this one left there is nothing to skip to.
+          canSkip: remaining > 1,
           onSave: () => void save(),
           saving,
         }
@@ -348,7 +354,7 @@ function ReviewVisit({ month }: { month: string }) {
 
   function queueIcon(suggestedCategoryId: string | undefined): IconName {
     const category = suggestedCategoryId ? categoryById.get(suggestedCategoryId) : undefined;
-    return category ? toUiIcon(category.icon) : 'tag';
+    return category ? mapCategoryIcon(category.icon) : 'tag';
   }
 
   return (

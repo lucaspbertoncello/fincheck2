@@ -22,4 +22,16 @@ export const ruleSuggestionQueries = {
           signal,
         }),
     }),
+  // Every suggestion, with no transaction ids (`GET /rule-suggestions` allows that).
+  feed: () =>
+    queryOptions({
+      queryKey: categoriesKeys.ruleSuggestionList('all'),
+      queryFn: ({ signal }) =>
+        apiRequest({
+          method: 'GET',
+          path: '/rule-suggestions',
+          responseSchema: listResponseSchema(ruleSuggestionDtoSchema),
+          signal,
+        }),
+    }),
 };

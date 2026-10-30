@@ -1,5 +1,6 @@
 import type { SettingsNavItem } from '@fincheck/ui';
-import { useState } from 'react';
+import { useRouterState } from '@tanstack/react-router';
+import { useEffect } from 'react';
 
 import { AppearanceViewModel } from '#/features/settings/settings/appearance/appearance.viewmodel.tsx';
 import { BackupViewModel } from '#/features/settings/settings/backup/backup.viewmodel.tsx';
@@ -20,9 +21,16 @@ export const SECTION_ID_PREFIX = 'settings-';
 export function SettingsViewModel() {
   const { connections } = useSettingsModel();
   const isDesktop = useIsDesktop();
-  const [activeKey, setActiveKey] = useState<SettingsSectionKey>(() =>
-    getSectionFromHash(window.location.hash),
-  );
+  // The section is the anchor of the URL; the side menu links (`#backup`) go through the shell router.
+  const hash = useRouterState({ select: (state) => state.location.hash });
+  const activeKey: SettingsSectionKey = getSectionFromHash(hash);
+
+  useEffect(() => {
+    if (hash)
+      document
+        .getElementById(`${SECTION_ID_PREFIX}${activeKey}`)
+        ?.scrollIntoView({ block: 'start' });
+  }, [hash, activeKey]);
 
   const bankNames = (connections.data?.items ?? [])
     .filter((connection) => connection.status !== 'disconnected')
@@ -39,20 +47,11 @@ export function SettingsViewModel() {
     href: `#${section.key}`,
   }));
 
-  // The side menu links are hashes: they move to the section instead of changing the route.
-  function goToSection(href: string) {
-    const key = getSectionFromHash(href.slice(href.indexOf('#')));
-    setActiveKey(key);
-    window.history.replaceState(window.history.state, '', `#${key}`);
-    document.getElementById(`${SECTION_ID_PREFIX}${key}`)?.scrollIntoView({ block: 'start' });
-  }
-
   return (
     <SettingsView
       isDesktop={isDesktop}
       navItems={navItems}
       activeKey={activeKey}
-      onNavigate={goToSection}
       sectionIdPrefix={SECTION_ID_PREFIX}
       connections={<ConnectionsViewModel />}
       backup={<BackupViewModel />}

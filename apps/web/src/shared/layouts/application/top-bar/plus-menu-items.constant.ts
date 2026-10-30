@@ -1,15 +1,18 @@
 import type { PlusMenuItem } from '@fincheck/ui';
 
-/** Where each "+" action leads until the creation modals exist (each modal opens on its own screen). */
+/**
+ * Where each "+" action leads: the screen that owns the modal, with the search param that screen
+ * reads to open it (`?new=...`). The month is appended by `buildHref`.
+ */
 export const PLUS_ACTION_PATHS: Record<string, string> = {
-  'new-transaction': '/transactions',
-  'new-installment': '/transactions',
-  'new-bill': '/recurrences/bills',
-  'new-debt': '/recurrences/bills',
-  'new-recurrence': '/recurrences',
-  'connect-account': '/accounts',
-  'new-category': '/categories',
-  'new-rule': '/categories/rules',
+  'new-transaction': '/transactions?new=transaction',
+  'new-installment': '/transactions?new=installment',
+  'new-bill': '/recurrences/bills?new=bill',
+  'new-debt': '/recurrences/bills?new=debt',
+  'new-recurrence': '/recurrences?new=recurrence',
+  'connect-account': '/accounts?new=account',
+  'new-category': '/categories?new=category',
+  'new-rule': '/categories/rules?new=rule',
 };
 
 /** Menu of the general "+" (screens.md, "Botão +"). */

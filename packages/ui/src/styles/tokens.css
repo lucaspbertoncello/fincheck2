@@ -157,7 +157,7 @@
   --z-raised: 1;
   --z-tooltip: 3;
   --z-scrim: 4;
-  --z-modal: 5;
+  --z-modal: 40; /* above the mobile bottom bar (--z-menu), so a sheet's actions are not hidden */
   --z-row-menu-open: 6;
   --z-toast: 7;
   --z-selection-bar: 8;

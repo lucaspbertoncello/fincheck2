@@ -31,6 +31,8 @@ export function UndoToast({ toast }: UndoToastProps) {
       </Text>
       <Button
         slot="close"
+        // The close slot names the button "Close"; the action is what it does, so it names it.
+        aria-label={actionLabel}
         onPress={onAction}
         className="focus-ring h-ctl-touch shrink-0 cursor-pointer rounded-capsule px-s16 text-list font-emphasis text-(--color-toast-accent) transition-colors duration-(--duration-fast) data-[hovered]:bg-(--color-toast-text)/10 data-[pressed]:bg-(--color-toast-text)/10"
       >

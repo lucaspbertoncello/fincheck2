@@ -3,7 +3,7 @@ import type { Rule } from '@fincheck/shared/categories/rule/rule.type.ts';
 import type { Tag } from '@fincheck/shared/categories/tag/tag.type.ts';
 import type { RuleRowData } from '@fincheck/ui';
 
-import { toUiIcon } from '#/features/categories/utils/to-ui-icon.util.ts';
+import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 import { buildRulePhrase } from '#/features/rules/rule-list/utils/build-rule-phrase.util.ts';
 
 /** A rule of the contract as a row of the list; `enabled` can be overridden while a switch is saving. */
@@ -18,7 +18,7 @@ export function toRuleRow(
   return {
     id: rule.id,
     phrase: buildRulePhrase(rule, categories, tags),
-    icon: category ? toUiIcon(category.icon) : 'tag',
+    icon: category ? mapCategoryIcon(category.icon) : 'tag',
     appliedCount: rule.appliedCount,
     active: enabled,
   };

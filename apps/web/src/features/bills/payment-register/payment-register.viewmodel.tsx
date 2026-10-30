@@ -7,7 +7,7 @@ import { useCreateBillPayment } from '#/domain/bills/bill-payment/hooks/use-crea
 import { useDeleteBillPayment } from '#/domain/bills/bill-payment/hooks/use-delete-bill-payment.hook.ts';
 import { useCreateInvoicePayment } from '#/domain/invoices/invoice-payment/hooks/use-create-invoice-payment.hook.ts';
 import { useDeleteInvoicePayment } from '#/domain/invoices/invoice-payment/hooks/use-delete-invoice-payment.hook.ts';
-import { resolvePaymentTarget } from '#/features/bills/bill-list/utils/resolve-payment-target.util.ts';
+import { resolvePaymentTarget } from '#/domain/bills/bill/rules/resolve-payment-target.rule.ts';
 import { useFocusFirstInvalid } from '#/features/bills/hooks/use-focus-first-invalid.hook.ts';
 import { PaymentRegisterView } from '#/features/bills/payment-register/payment-register.view.tsx';
 import { validatePayment } from '#/features/bills/payment-register/utils/validate-payment.util.ts';

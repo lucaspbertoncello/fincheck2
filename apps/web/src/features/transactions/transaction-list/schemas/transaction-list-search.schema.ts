@@ -1,3 +1,4 @@
+import { idSchema } from '@fincheck/shared/common/id/id.schema.ts';
 import { z } from 'zod';
 
 // The URL parser turns "123" into a number; ids and search text must stay text.
@@ -16,6 +17,8 @@ export const transactionListSearchSchema = z.object({
   account: textSchema,
   category: textSchema,
   tag: textSchema,
+  // "Ver transações" of a rule: only what that rule categorized.
+  ruleId: idSchema.optional().catch(undefined),
   uncategorized: z.boolean().optional().catch(undefined),
   // The open panel: edit or split of one transaction.
   edit: textSchema,

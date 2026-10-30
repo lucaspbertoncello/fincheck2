@@ -5,10 +5,10 @@ import type { RowContext } from '#/features/recurrences/recurrence-list/types/ro
 import { buildOccurrenceStatusNote } from '#/features/recurrences/recurrence-list/utils/build-occurrence-status-note.util.ts';
 import { buildRecurrenceAccountLabel } from '#/features/recurrences/recurrence-list/utils/build-recurrence-account-label.util.ts';
 import { describeDateRule } from '#/features/recurrences/recurrence-list/utils/describe-date-rule.util.ts';
-import { getOccurrenceAmount } from '#/features/recurrences/recurrence-list/utils/get-occurrence-amount.util.ts';
-import { getOccurrenceInlineActions } from '#/features/recurrences/recurrence-list/utils/get-occurrence-inline-actions.util.ts';
-import { getOccurrenceRowStatus } from '#/features/recurrences/recurrence-list/utils/get-occurrence-row-status.util.ts';
-import { mapCategoryIcon } from '#/features/recurrences/recurrence-list/utils/map-category-icon.util.ts';
+import { getOccurrenceAmount } from '#/domain/recurrences/occurrence/rules/get-occurrence-amount.rule.ts';
+import { getOccurrenceInlineActions } from '#/domain/recurrences/occurrence/rules/get-occurrence-inline-actions.rule.ts';
+import { getOccurrenceRowStatus } from '#/domain/recurrences/occurrence/rules/get-occurrence-row-status.rule.ts';
+import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 
 /** One occurrence of the month as the data of a `RecurrenceRow`. */
 export function presentOccurrenceRow(
@@ -31,7 +31,7 @@ export function presentOccurrenceRow(
     occurrenceId: occurrence.id,
     recurrenceId: occurrence.recurrenceId,
     name: occurrence.recurrenceName,
-    icon: mapCategoryIcon(categoryIcon),
+    icon: mapCategoryIcon(categoryIcon, 'repeat'),
     flow: occurrence.kind,
     rule: recurrence ? describeDateRule(recurrence.dateRule, recurrence.maxPayments) : '',
     account: recurrence ? buildRecurrenceAccountLabel(recurrence, accountName) : undefined,

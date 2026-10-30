@@ -78,13 +78,12 @@ function RuleQuestion({ question }: { question: TransactionListViewProps['ruleQu
 
   return (
     <div className="flex flex-col gap-s8">
-      <RuleSuggestionBanner message={question.message} onCreate={question.onCreate} />
-      <div className="flex flex-wrap items-center gap-s12">
-        <Button variant="tertiary" size="sm" onPress={question.onDismiss}>
-          Agora não
-        </Button>
-        {question.error ? <span className="text-label text-loss">{question.error}</span> : null}
-      </div>
+      <RuleSuggestionBanner
+        message={question.message}
+        onCreate={question.onCreate}
+        onDismiss={question.onDismiss}
+      />
+      {question.error ? <span className="text-label text-loss">{question.error}</span> : null}
     </div>
   );
 }

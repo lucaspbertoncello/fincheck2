@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getCycleProgress } from '#/features/invoices/invoice-summary/utils/get-cycle-progress.util.ts';
+import { getCycleProgress } from '#/domain/invoices/invoice/rules/get-cycle-progress.rule.ts';
 
 describe('getCycleProgress', () => {
   it('is 0 on the day the cycle opens and 1 on the closing day', () => {

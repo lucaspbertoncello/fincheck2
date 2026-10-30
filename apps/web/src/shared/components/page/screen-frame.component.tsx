@@ -8,6 +8,8 @@ import type { ScreenDefinition } from '#/shared/types/screen.type.ts';
 
 type ScreenFrameProps = {
   screen: ScreenDefinition;
+  /** Passed to the header (the line under the date). */
+  extra?: ReactNode;
   children: ReactNode;
 };
 
@@ -16,12 +18,12 @@ type ScreenFrameProps = {
  * the header and the content (on desktop the layout shows it in the left column). On the mobile
  * Visão geral the panel is the full card; on the other screens it is the compact "mini Livre".
  */
-export function ScreenFrame({ screen, children }: ScreenFrameProps) {
+export function ScreenFrame({ screen, extra, children }: ScreenFrameProps) {
   const isDesktop = useIsDesktop();
 
   return (
     <div className="flex flex-col gap-s16 lg:gap-s24">
-      <ScreenHeader screen={screen} />
+      <ScreenHeader screen={screen} extra={extra} />
       {!isDesktop && screen.showsPanel ? (
         <ApplicationSummaryPanel variant={screen.key === 'overview' ? 'full' : 'compact'} />
       ) : null}

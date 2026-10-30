@@ -3,6 +3,7 @@ import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
 
 import type { createAppRouter } from '#/router/create-router.util.tsx';
+import { useFollowSystemTheme } from '#/shared/hooks/use-follow-system-theme.hook.ts';
 import { MoneyVisibilityProvider } from '#/shared/providers/money-visibility-provider.component.tsx';
 
 type AppProvidersProps = {
@@ -11,6 +12,8 @@ type AppProvidersProps = {
 };
 
 export function AppProviders({ queryClient, router }: AppProvidersProps) {
+  useFollowSystemTheme();
+
   return (
     <QueryClientProvider client={queryClient}>
       <MoneyVisibilityProvider>

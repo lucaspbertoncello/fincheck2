@@ -13,10 +13,13 @@ export function buildListQuery(month: string, search: TransactionListSearch) {
     categoryId: search.category,
     uncategorized: search.category ? undefined : search.uncategorized,
     tagId: search.tag,
+    ruleId: search.ruleId,
   };
 }
 
 /** How many filters of the "Filtros" panel are on (the type has its own control). */
 export function countActiveFilters(search: TransactionListSearch): number {
-  return [search.account, search.category, search.tag, search.uncategorized].filter(Boolean).length;
+  return [search.account, search.category, search.tag, search.uncategorized, search.ruleId].filter(
+    Boolean,
+  ).length;
 }

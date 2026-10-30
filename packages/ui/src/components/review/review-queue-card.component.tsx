@@ -27,6 +27,8 @@ type ReviewQueueCardProps = {
   canGoBack: boolean;
   onBack: () => void;
   onSkip: () => void;
+  /** False when only this transaction is left: "Pular" is disabled. */
+  canSkip?: boolean;
   onSave: () => void;
   saving?: boolean;
   className?: string;
@@ -49,6 +51,7 @@ export function ReviewQueueCard({
   canGoBack,
   onBack,
   onSkip,
+  canSkip = true,
   onSave,
   saving = false,
   className,
@@ -117,7 +120,13 @@ export function ReviewQueueCard({
         >
           Voltar à anterior
         </Button>
-        <Button variant="secondary" onPress={onSkip} fullWidth className="lg:w-auto">
+        <Button
+          variant="secondary"
+          isDisabled={!canSkip}
+          onPress={onSkip}
+          fullWidth
+          className="lg:w-auto"
+        >
           Pular
         </Button>
         <Button

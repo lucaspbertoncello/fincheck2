@@ -17,8 +17,8 @@ import {
 } from '#/features/bills/bill-list/utils/build-total-model.util.ts';
 import { describeInvoicesNote } from '#/features/bills/bill-list/utils/describe-invoices-note.util.ts';
 import { getEndOfMonth } from '#/features/bills/bill-list/utils/get-end-of-month.util.ts';
-import { resolvePaymentTarget } from '#/features/bills/bill-list/utils/resolve-payment-target.util.ts';
-import { resolveRowStatus } from '#/features/bills/bill-list/utils/resolve-row-status.util.ts';
+import { resolvePaymentTarget } from '#/domain/bills/bill/rules/resolve-payment-target.rule.ts';
+import { resolveRowStatus } from '#/domain/bills/bill/rules/resolve-row-status.rule.ts';
 import { DebtCreateModal } from '#/features/bills/debt-create/debt-create.viewmodel.tsx';
 import { useBillSearch } from '#/features/bills/hooks/use-bill-search.hook.ts';
 import { useFoundPayment } from '#/features/bills/hooks/use-found-payment.hook.ts';
@@ -27,7 +27,7 @@ import { PaymentRegisterDialog } from '#/features/bills/payment-register/payment
 import { describeApiError } from '#/features/bills/utils/describe-api-error.util.ts';
 import { formatDayMonth } from '#/features/bills/utils/format-day-month.util.ts';
 import { getBusinessToday } from '#/features/bills/utils/get-business-today.util.ts';
-import { resolveCategoryIcon } from '#/features/bills/utils/resolve-category-icon.util.ts';
+import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
 
 function indexItems(agenda: Agenda.Dto): Map<string, Agenda.Item> {
@@ -63,10 +63,7 @@ export function BillList() {
   const payItem = search.payKey ? (itemsByKey.get(search.payKey) ?? null) : null;
 
   const categoryIcons = new Map<string, IconName>(
-    (categories.data?.items ?? []).map((category) => [
-      category.id,
-      resolveCategoryIcon(category.icon),
-    ]),
+    (categories.data?.items ?? []).map((category) => [category.id, mapCategoryIcon(category.icon)]),
   );
   const accountNames = new Map<string, string>(
     (accounts.data?.items ?? []).map((account) => [

@@ -1,4 +1,4 @@
-import { Button, Chip, FreeBalancePanel, InlineNotice } from '@fincheck/ui';
+import { Button, Chip, FreeBalancePanel } from '@fincheck/ui';
 
 import { useHideValues } from '#/shared/hooks/use-hide-values.hook.ts';
 import { useApplicationSummary } from '#/shared/layouts/application/summary/use-application-summary.hook.ts';
@@ -10,7 +10,7 @@ type ApplicationSummaryPanelProps = {
 
 /**
  * The "Livre até o fim do mês" panel, tied to `GET /dashboard/free-balance`. Loading shows the
- * panel skeleton, a failure shows a retry, and a partial Livre (R2) gets its notice on top.
+ * panel skeleton, a failure shows a retry, and a partial Livre (R2) carries its notice inside the panel.
  */
 export function ApplicationSummaryPanel({ variant }: ApplicationSummaryPanelProps) {
   const { isHidden, toggle } = useHideValues();
@@ -36,10 +36,9 @@ export function ApplicationSummaryPanel({ variant }: ApplicationSummaryPanelProp
     return <FreeBalancePanel variant={variant} isHidden={isHidden} onToggleHidden={toggle} />;
   }
 
-  const { data, partialNotice } = summary;
+  const { data } = summary;
   return (
     <div className="flex flex-col gap-s12">
-      {partialNotice ? <InlineNotice>{partialNotice}</InlineNotice> : null}
       <FreeBalancePanel data={data} variant={variant} isHidden={isHidden} onToggleHidden={toggle} />
       {variant === 'compact' && data.staleNote ? (
         <Chip tone="warn" icon="warning" className="self-start">

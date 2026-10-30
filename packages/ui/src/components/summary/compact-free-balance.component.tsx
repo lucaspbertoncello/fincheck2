@@ -1,5 +1,6 @@
 import { Button, Disclosure, DisclosurePanel, Heading } from 'react-aria-components';
 
+import { InlineNotice } from '#/components/feedback/inline-notice.component.tsx';
 import { Icon } from '#/components/icons/icon.component.tsx';
 import { HideValuesButton } from '#/components/money/hide-values-button.component.tsx';
 import { Money } from '#/components/money/money.component.tsx';
@@ -53,6 +54,7 @@ export function CompactFreeBalance({ data, isHidden, onToggleHidden }: CompactFr
         </Heading>
         <DisclosurePanel>
           <div className="flex flex-col gap-s12 pt-s8">
+            {data.partialNote ? <InlineNotice>{data.partialNote}</InlineNotice> : null}
             <BalanceComposition lines={data.lines} />
             {data.review ? <ReviewLink {...data.review} /> : null}
           </div>

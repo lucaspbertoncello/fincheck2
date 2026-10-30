@@ -5,7 +5,7 @@ import type { CategoryGroupData } from '@fincheck/ui';
 import type { TransactionLookups } from '#/features/transactions/transaction-list/types/transaction-lookups.type.ts';
 import { TRANSACTION_METHOD_LABELS } from '#/features/transactions/transaction-list/constants/transaction-method-labels.constant.ts';
 import { formatShortDate } from '#/features/transactions/transaction-list/utils/format-day-heading.util.ts';
-import { mapCategoryIcon } from '#/features/transactions/transaction-list/utils/map-category-icon.util.ts';
+import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 import { normalizeSearchText } from '#/features/transactions/transaction-list/utils/normalize-search-text.util.ts';
 import { formatMoney } from '#/shared/utils/format-money.util.ts';
 

@@ -1,3 +1,4 @@
+import { InlineNotice } from '#/components/feedback/inline-notice.component.tsx';
 import { AccountList } from '#/components/summary/account-list.component.tsx';
 import { BalanceComposition } from '#/components/summary/balance-composition.component.tsx';
 import { CompactFreeBalance } from '#/components/summary/compact-free-balance.component.tsx';
@@ -38,6 +39,7 @@ export function FreeBalancePanel({
   return (
     <section aria-label="Livre até o fim do mês" className="glass flex flex-col gap-s16 p-s24">
       <FreeBalanceHero data={data} isHidden={isHidden} onToggleHidden={onToggleHidden} />
+      {data.partialNote ? <InlineNotice>{data.partialNote}</InlineNotice> : null}
       <BalanceComposition lines={data.lines} />
       {data.review ? <ReviewLink {...data.review} /> : null}
       <AccountList title="Contas" items={data.accounts} />

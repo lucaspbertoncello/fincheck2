@@ -31,6 +31,21 @@ describe('TransactionListPage', () => {
     expect(screen.getByText(/O banco mudou o valor de/)).toBeInTheDocument();
   });
 
+  it('reads ?ruleId= (the "Ver transações" of a rule) and lists only what that rule categorized', async () => {
+    const asked: Array<string | null> = [];
+    server.use(
+      http.get('/api/transactions', ({ request }) => {
+        asked.push(new URL(request.url).searchParams.get('ruleId'));
+        return HttpResponse.json({ items: [], nextCursor: null });
+      }),
+    );
+    renderApp(`${PAGE}&ruleId=019a0000-0000-7000-8000-000000000001`);
+
+    await waitFor(() => expect(asked).toContain('019a0000-0000-7000-8000-000000000001'), LONG_WAIT);
+    expect(screen.queryByText('CINEMARK')).not.toBeInTheDocument();
+    expect(window.location.search).toContain('ruleId=019a0000-0000-7000-8000-000000000001');
+  });
+
   it('the review strip leads to the review queue, keeping the month', async () => {
     renderApp(PAGE);
     fireEvent.click(await screen.findByRole('button', { name: 'Revisar' }, LONG_WAIT));

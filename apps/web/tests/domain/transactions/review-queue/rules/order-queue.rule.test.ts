@@ -1,7 +1,7 @@
 import type { ReviewQueue } from '@fincheck/shared/transactions/review-queue/review-queue.type.ts';
 import { describe, expect, it } from 'vitest';
 
-import { orderQueue } from '#/features/review/review-queue/utils/order-queue.util.ts';
+import { orderQueue } from '#/domain/transactions/review-queue/rules/order-queue.rule.ts';
 
 function item(id: string): ReviewQueue.ItemDto {
   return { transaction: { id } } as ReviewQueue.ItemDto;

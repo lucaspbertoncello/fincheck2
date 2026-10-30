@@ -5,6 +5,8 @@ export type FreeBalanceItem = {
   id: string;
   label: string;
   cents: number;
+  /** Small seal after the label ("pago, falta vincular"): a payment was found and not linked yet. */
+  badge?: string;
 };
 
 /** A line of the composition: "Saldo nas contas" (+), "A receber" (+), "A pagar" (−). */
@@ -51,6 +53,8 @@ export type FreeBalanceData = {
   /** "dado do Bradesco de ontem", when a bank failed to sync. */
   staleNote?: string;
   lines: FreeBalanceLine[];
+  /** Warning under the value, when the Livre is partial ("Livre parcial: falta o saldo do Nubank"). */
+  partialNote?: string;
   review?: { count: number; subtitle: string; href: string };
   accounts: FreeBalanceAccount[];
   invoices: FreeBalanceInvoice[];
