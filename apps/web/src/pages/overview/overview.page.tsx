@@ -1,13 +1,6 @@
-import { ContentSkeleton } from '@fincheck/ui';
+import { OverviewViewModel } from '#/features/overview/overview/overview.viewmodel.tsx';
 
-import { ScreenFrame } from '#/shared/components/page/screen-frame.component.tsx';
-import { SCREENS } from '#/shared/constants/screens.constant.ts';
-
-/** Visão geral: header and skeleton until the overview feature brings its data. */
+/** Visão geral: the page only mounts the feature. */
 export function OverviewPage() {
-  return (
-    <ScreenFrame screen={SCREENS.overview}>
-      <ContentSkeleton variant="overview" />
-    </ScreenFrame>
-  );
+  return <OverviewViewModel />;
 }

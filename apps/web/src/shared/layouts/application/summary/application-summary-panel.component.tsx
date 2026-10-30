@@ -1,6 +1,7 @@
-import { FreeBalancePanel } from '@fincheck/ui';
+import { Button, Chip, FreeBalancePanel, InlineNotice } from '@fincheck/ui';
 
 import { useHideValues } from '#/shared/hooks/use-hide-values.hook.ts';
+import { useApplicationSummary } from '#/shared/layouts/application/summary/use-application-summary.hook.ts';
 
 type ApplicationSummaryPanelProps = {
   /** "full" on desktop and on the mobile Visão geral; "compact" on the other mobile screens. */
@@ -8,10 +9,43 @@ type ApplicationSummaryPanelProps = {
 };
 
 /**
- * The "Livre até o fim do mês" panel. It has no data in this phase, so it shows its skeleton; the
- * link to `GET /dashboard/free-balance` comes with the Visão geral screen.
+ * The "Livre até o fim do mês" panel, tied to `GET /dashboard/free-balance`. Loading shows the
+ * panel skeleton, a failure shows a retry, and a partial Livre (R2) gets its notice on top.
  */
 export function ApplicationSummaryPanel({ variant }: ApplicationSummaryPanelProps) {
   const { isHidden, toggle } = useHideValues();
-  return <FreeBalancePanel variant={variant} isHidden={isHidden} onToggleHidden={toggle} />;
+  const summary = useApplicationSummary();
+
+  if (summary.status === 'error') {
+    return (
+      <section
+        aria-label="Livre até o fim do mês"
+        role="alert"
+        className="glass flex flex-col items-start gap-s12 p-s16 lg:p-s24"
+      >
+        <p className="text-list text-fg-primary">Não deu para carregar o Livre.</p>
+        <p className="text-label text-fg-secondary">Confira se a API está no ar e tente de novo.</p>
+        <Button variant="secondary" size="sm" onPress={summary.retry}>
+          Tentar de novo
+        </Button>
+      </section>
+    );
+  }
+
+  if (summary.status === 'loading') {
+    return <FreeBalancePanel variant={variant} isHidden={isHidden} onToggleHidden={toggle} />;
+  }
+
+  const { data, partialNotice } = summary;
+  return (
+    <div className="flex flex-col gap-s12">
+      {partialNotice ? <InlineNotice>{partialNotice}</InlineNotice> : null}
+      <FreeBalancePanel data={data} variant={variant} isHidden={isHidden} onToggleHidden={toggle} />
+      {variant === 'compact' && data.staleNote ? (
+        <Chip tone="warn" icon="warning" className="self-start">
+          {data.staleNote}
+        </Chip>
+      ) : null}
+    </div>
+  );
 }
