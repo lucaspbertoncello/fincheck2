@@ -39,6 +39,8 @@ export const agendaItemDtoSchema = z.object({
       accountId: idSchema,
       amountCents: centsSchema,
       occurredOn: businessDateSchema,
+      // The bank text of the payment ("PIX BRADESCO CARTOES"). Optional only until the API sends it.
+      description: z.string().optional(),
     })
     .nullable(),
 });

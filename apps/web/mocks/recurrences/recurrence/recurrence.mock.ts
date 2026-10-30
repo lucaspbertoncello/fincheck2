@@ -56,6 +56,11 @@ function monthOccurrence(recurrenceId: string, month: string) {
   return record ? presentOccurrence(db, record) : null;
 }
 
+function assertRegimeForIncome(kind: string, regime: string | null | undefined) {
+  if (regime && kind !== 'income')
+    fail(422, 'RECURRENCE_REGIME_ONLY_FOR_INCOME', 'O regime s� vale para receita');
+}
+
 function assertCategoryKind(categoryId: string, kind: string) {
   if (findCategory(db, categoryId).kind !== kind)
     fail(422, 'RECURRENCE_CATEGORY_KIND_MISMATCH', 'Categoria de outro tipo');
@@ -181,6 +186,7 @@ export const recurrenceMock = [
             fail(422, 'OCCURRENCE_TRANSACTION_KIND_MISMATCH', 'A transação não bate com o tipo');
         }
 
+        assertRegimeForIncome(body.kind, body.employmentRegime);
         const linkedMonth = linked ? linked.occurredOn.slice(0, 7) : null;
         const record: MockState.RecurrenceRecord = {
           id: newId(),
@@ -190,6 +196,7 @@ export const recurrenceMock = [
           amountMode: body.amountMode ?? 'fixed',
           counterparty: body.counterparty ?? null,
           matchText: body.matchText ? normalizeText(body.matchText) : null,
+          employmentRegime: body.kind === 'income' ? (body.employmentRegime ?? null) : null,
           accountId: body.accountId ?? null,
           method: body.method ?? null,
           categoryId: body.categoryId ?? null,
@@ -258,6 +265,7 @@ export const recurrenceMock = [
         if (record.archivedAt) fail(422, 'RECURRENCE_ARCHIVED', 'A recorrência está arquivada');
         if (body.accountId) findAccount(db, body.accountId);
         if (body.categoryId) assertCategoryKind(body.categoryId, record.kind);
+        assertRegimeForIncome(record.kind, body.employmentRegime);
 
         const { applyFrom, ...changes } = body;
         const touched = {

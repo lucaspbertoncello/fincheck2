@@ -76,6 +76,7 @@ function invoiceItems(database: MockState.Database, month: string): Agenda.Item[
               accountId: suggestion.accountId,
               amountCents: suggestion.amountCents,
               occurredOn: suggestion.occurredOn,
+              description: suggestion.description,
             }
           : null,
       });

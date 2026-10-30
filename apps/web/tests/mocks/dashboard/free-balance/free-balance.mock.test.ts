@@ -65,6 +65,7 @@ describe('dashboard routes', () => {
     expect(course?.presumedTransactionId).not.toBeNull();
     const bradesco = view.openInvoices.find((item) => item.title === 'Fatura Bradesco Black');
     expect(bradesco?.paymentFound).not.toBeNull();
+    expect(bradesco?.paymentFound?.description).toEqual(expect.any(String));
     expect(bradesco?.invoiceState).toBe('closed');
     expect(view.friendsReceivable).toMatchObject({ peopleCount: 1, totalCents: 5800 });
     expect(view.undated.map((item) => item.title)).toEqual(['Conserto do notebook']);

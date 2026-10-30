@@ -76,6 +76,17 @@ describe('createRecurrenceRequestSchema', () => {
     ).toBe(false);
   });
 
+  it('takes the employment regime of an income as CLT, PJ or other', () => {
+    for (const employmentRegime of ['clt', 'pj', 'other']) {
+      expect(createRecurrenceRequestSchema.safeParse({ ...valid, employmentRegime }).success).toBe(
+        true,
+      );
+    }
+    expect(
+      createRecurrenceRequestSchema.safeParse({ ...valid, employmentRegime: 'mei' }).success,
+    ).toBe(false);
+  });
+
   it('refuses an incomplete date rule', () => {
     expect(
       createRecurrenceRequestSchema.safeParse({ ...valid, dateRule: { type: 'around_day' } })
@@ -93,5 +104,9 @@ describe('updateRecurrenceRequestSchema', () => {
       updateRecurrenceRequestSchema.safeParse({ name: 'Novo', applyFrom: 'current_month' }).success,
     ).toBe(true);
     expect(updateRecurrenceRequestSchema.safeParse({ kind: 'expense' }).success).toBe(false);
+  });
+
+  it('clears the employment regime with null', () => {
+    expect(updateRecurrenceRequestSchema.safeParse({ employmentRegime: null }).success).toBe(true);
   });
 });

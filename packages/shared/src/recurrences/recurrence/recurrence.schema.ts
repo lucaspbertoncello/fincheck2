@@ -10,6 +10,7 @@ import {
   AMOUNT_MODES,
   BUSINESS_DAY_NUMBER_LIMITS,
   DATE_RULE_TYPES,
+  EMPLOYMENT_REGIMES,
   MAX_PAYMENTS_LIMITS,
   RECURRENCE_KINDS,
   TOLERANCE_DAYS_LIMITS,
@@ -17,6 +18,7 @@ import {
 
 export const recurrenceKindSchema = z.enum(RECURRENCE_KINDS);
 export const amountModeSchema = z.enum(AMOUNT_MODES);
+export const employmentRegimeSchema = z.enum(EMPLOYMENT_REGIMES);
 export const applyFromSchema = z.enum(['next_month', 'current_month']);
 
 const maxPaymentsSchema = z.int().min(MAX_PAYMENTS_LIMITS.min).max(MAX_PAYMENTS_LIMITS.max);
@@ -86,6 +88,7 @@ export const recurrenceDtoSchema = z.object({
   amountMode: amountModeSchema,
   counterparty: z.string().max(120).nullable(),
   matchText: z.string().max(80).nullable(),
+  employmentRegime: employmentRegimeSchema.nullable(),
   accountId: idSchema.nullable(),
   method: transactionMethodSchema.nullable(),
   categoryId: idSchema.nullable(),
@@ -137,6 +140,7 @@ export const createRecurrenceRequestSchema = z.object({
   amountMode: amountModeSchema.optional(),
   counterparty: z.string().max(120).optional(),
   matchText: z.string().max(80).optional(),
+  employmentRegime: employmentRegimeSchema.optional(),
   accountId: idSchema.optional(),
   method: transactionMethodSchema.optional(),
   categoryId: idSchema.optional(),
@@ -158,6 +162,7 @@ export const updateRecurrenceRequestSchema = z
     amountMode: amountModeSchema.optional(),
     counterparty: z.string().max(120).nullable().optional(),
     matchText: z.string().max(80).nullable().optional(),
+    employmentRegime: employmentRegimeSchema.nullable().optional(),
     accountId: idSchema.nullable().optional(),
     method: transactionMethodSchema.nullable().optional(),
     categoryId: idSchema.nullable().optional(),

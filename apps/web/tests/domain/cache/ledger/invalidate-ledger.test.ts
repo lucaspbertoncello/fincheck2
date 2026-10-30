@@ -16,6 +16,7 @@ function seededClient() {
     ['dashboard', 'agenda', '2026-10'],
     ['categories', 'rule-suggestions', 'a,b'],
     ['categories', 'categories', {}],
+    ['profile', 'current'],
     ['sync', 'connections'],
     ['backup', 'status'],
   ]) {
@@ -46,6 +47,7 @@ describe('cache invalidation', () => {
       'dashboard/agenda',
       'dashboard/free-balance',
       'invoices/open',
+      'profile/current',
       'recurrences/list',
       'transactions/list',
     ]);

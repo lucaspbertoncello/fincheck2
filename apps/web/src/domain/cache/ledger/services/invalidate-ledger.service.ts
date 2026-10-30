@@ -5,13 +5,14 @@ import { billsKeys } from '#/domain/bills/cache/constants/bills-keys.constant.ts
 import { categoriesKeys } from '#/domain/categories/cache/constants/categories-keys.constant.ts';
 import { dashboardKeys } from '#/domain/dashboard/cache/constants/dashboard-keys.constant.ts';
 import { invoicesKeys } from '#/domain/invoices/cache/constants/invoices-keys.constant.ts';
+import { profileKeys } from '#/domain/profile/cache/constants/profile-keys.constant.ts';
 import { recurrencesKeys } from '#/domain/recurrences/cache/constants/recurrences-keys.constant.ts';
 import { transactionsKeys } from '#/domain/transactions/cache/constants/transactions-keys.constant.ts';
 
 // Money moved or a link changed (a transaction, an occurrence, a bill or invoice payment, an
 // account): everything that shows balances or links is stale. That is the transactions, accounts,
-// invoices, recurrences and bills, the dashboard (Livre, month summary, agenda, timeline) and the
-// rule suggestions (they count what Lucas categorized by hand). Resolves when the active queries
+// invoices, recurrences and bills, the dashboard (Livre, month summary, agenda, timeline, spend
+// heatmap), the profile (its income sources are income recurrences) and the rule suggestions (they count what Lucas categorized by hand). Resolves when the active queries
 // have refetched, so a mutation stays pending until the screen is right.
 export function invalidateLedger(queryClient: QueryClient): Promise<unknown> {
   return Promise.all([
@@ -21,6 +22,7 @@ export function invalidateLedger(queryClient: QueryClient): Promise<unknown> {
     queryClient.invalidateQueries({ queryKey: recurrencesKeys.all }),
     queryClient.invalidateQueries({ queryKey: billsKeys.all }),
     queryClient.invalidateQueries({ queryKey: dashboardKeys.all }),
+    queryClient.invalidateQueries({ queryKey: profileKeys.all }),
     queryClient.invalidateQueries({ queryKey: categoriesKeys.ruleSuggestions() }),
   ]);
 }

@@ -10,8 +10,10 @@ import { categoryBreakdownMock } from '#mocks/dashboard/category-breakdown/categ
 import { freeBalanceMock } from '#mocks/dashboard/free-balance/free-balance.mock.ts';
 import { monthSummaryMock } from '#mocks/dashboard/month-summary/month-summary.mock.ts';
 import { spendingCurveMock } from '#mocks/dashboard/spending-curve/spending-curve.mock.ts';
+import { spendHeatmapMock } from '#mocks/dashboard/spend-heatmap/spend-heatmap.mock.ts';
 import { timelineMock } from '#mocks/dashboard/timeline/timeline.mock.ts';
 import { healthMock } from '#mocks/health/health/health.mock.ts';
+import { profileMock } from '#mocks/profile/profile/profile.mock.ts';
 import { invoiceMock } from '#mocks/invoices/invoice/invoice.mock.ts';
 import { occurrenceMock } from '#mocks/recurrences/occurrence/occurrence.mock.ts';
 import { recurrenceMock } from '#mocks/recurrences/recurrence/recurrence.mock.ts';
@@ -38,8 +40,10 @@ export const handlers = [
   ...monthSummaryMock,
   ...spendingCurveMock,
   ...categoryBreakdownMock,
+  ...spendHeatmapMock,
   ...timelineMock,
   ...agendaMock,
   ...connectionMock,
   ...backupMock,
+  ...profileMock,
 ];

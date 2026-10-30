@@ -159,6 +159,12 @@ export namespace MockState {
     lastError: BackupStatus.LastError | null;
   }
 
+  export interface ProfileRecord {
+    name: string;
+    initials: string;
+    updatedAt: string;
+  }
+
   export interface Database {
     accounts: AccountRecord[];
     transactions: TransactionRecord[];
@@ -175,5 +181,6 @@ export namespace MockState {
     runs: RunRecord[];
     syncSettings: { clientId: string; updatedAt: string } | null;
     backup: BackupRecord;
+    profile: ProfileRecord;
   }
 }

@@ -1,4 +1,6 @@
 export const RECURRENCE_KINDS = ['income', 'expense'] as const;
+// How an income is paid (BR-PRF-002); only income recurrences carry it.
+export const EMPLOYMENT_REGIMES = ['clt', 'pj', 'other'] as const;
 export const AMOUNT_MODES = ['fixed', 'last_received'] as const;
 export const DATE_RULE_TYPES = ['fixed_day', 'business_day', 'around_day', 'any_day'] as const;
 

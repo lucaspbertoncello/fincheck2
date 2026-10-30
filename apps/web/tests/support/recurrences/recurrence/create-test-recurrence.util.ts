@@ -10,6 +10,7 @@ export function createTestRecurrence(overrides: Partial<Recurrence.Dto> = {}): R
     amountMode: 'fixed',
     counterparty: null,
     matchText: null,
+    employmentRegime: null,
     accountId: null,
     method: null,
     categoryId: null,

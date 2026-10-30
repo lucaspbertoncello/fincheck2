@@ -6,6 +6,7 @@ import type {
   createRecurrenceRequestSchema,
   createRecurrenceResponseSchema,
   dateRuleSchema,
+  employmentRegimeSchema,
   listRecurrencesQuerySchema,
   previewRecurrenceRequestSchema,
   previewRecurrenceResponseSchema,
@@ -25,6 +26,7 @@ export namespace Recurrence {
   export type ListItem = z.infer<typeof recurrenceListItemSchema>;
   export type Summary = z.infer<typeof recurrenceSummarySchema>;
   export type Kind = z.infer<typeof recurrenceKindSchema>;
+  export type EmploymentRegime = z.infer<typeof employmentRegimeSchema>;
   export type AmountMode = z.infer<typeof amountModeSchema>;
   export type DateRule = z.infer<typeof dateRuleSchema>;
   export type DateRuleType = DateRule['type'];
