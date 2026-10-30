@@ -85,7 +85,7 @@ describe('buildAccountTile', () => {
       archivedAt: '2026-02-01T00:00:00.000Z',
     });
 
-    expect(result.menuItems.map((item) => item.key)).toEqual(['unarchive', 'delete']);
+    expect(result.menuItems.map((item) => item.key)).toEqual(['edit', 'unarchive', 'delete']);
     expect(result.actionLabel).toBeUndefined();
   });
 });

@@ -18,6 +18,8 @@ export const accountsSearchSchema = z.object({
   correct: textParam,
   /** Account id: "Ajustar saldo" or "Atualizar saldo". */
   adjust: textParam,
+  /** Account id: "Editar conta" or "Editar cartão" (the modal that connects, filled). */
+  edit: textParam,
   /** Account id: the delete confirmation. */
   remove: textParam,
 });

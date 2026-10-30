@@ -9,6 +9,11 @@ type FutureInvoicesViewModelProps = {
   onViewInvoice: (month: string) => void;
 };
 
+function withShares<T extends { cents: number }>(parts: T[]): (T & { share: number })[] {
+  const sum = parts.reduce((total, part) => total + Math.abs(part.cents), 0);
+  return parts.map((part) => ({ ...part, share: sum === 0 ? 0 : Math.abs(part.cents) / sum }));
+}
+
 /** "Faturas futuras" of a card: 3 projected months in place of the cards (RF-INV-003). */
 export function FutureInvoicesViewModel({
   cardId,
@@ -24,15 +29,17 @@ export function FutureInvoicesViewModel({
       title: `${monthLabel} ${yearLabel}`,
       totalCents: invoice.totalCents,
       dueLine: buildInvoiceDueLine(invoice),
-      parts: [
-        { key: 'installments', label: 'Parcelas', cents: invoice.breakdown.installmentsCents },
-        {
-          key: 'recurring',
-          label: 'Recorrentes esperadas',
-          cents: invoice.breakdown.expectedRecurringCents,
-        },
-        { key: 'purchases', label: 'Compras', cents: invoice.breakdown.purchasesCents },
-      ].filter((part) => part.cents !== 0),
+      parts: withShares(
+        [
+          { key: 'installments', label: 'Parcelas', cents: invoice.breakdown.installmentsCents },
+          {
+            key: 'recurring',
+            label: 'Recorrentes esperadas',
+            cents: invoice.breakdown.expectedRecurringCents,
+          },
+          { key: 'purchases', label: 'Compras', cents: invoice.breakdown.purchasesCents },
+        ].filter((part) => part.cents !== 0),
+      ),
     };
   });
 

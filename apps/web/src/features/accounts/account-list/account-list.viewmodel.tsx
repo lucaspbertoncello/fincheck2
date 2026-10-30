@@ -113,6 +113,7 @@ export function AccountListViewModel() {
   }
 
   function handleMenuAction(accountId: string, key: string) {
+    if (key === 'edit') update({ edit: accountId });
     if (key === 'archive') handleArchive(accountId);
     if (key === 'unarchive') handleUnarchive(accountId);
     if (key === 'delete') update({ remove: accountId });

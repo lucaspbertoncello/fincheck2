@@ -1,9 +1,18 @@
-import { Banner, Button, FineNote, Modal, MoneyField, Skeleton, TextField } from '@fincheck/ui';
+import {
+  AmountField,
+  BankAvatar,
+  FormModal,
+  FormModalGroup,
+  FormModalMore,
+  Icon,
+  Money,
+  Skeleton,
+  TextField,
+  type BankThemeKey,
+} from '@fincheck/ui';
 import { useRef } from 'react';
 
 import { useFocusFirstInvalid } from '#/features/accounts/form-focus/hooks/use-focus-first-invalid.hook.ts';
-
-const FORM_ID = 'adjust-balance-form';
 
 type AdjustBalanceViewProps = {
   isOpen: boolean;
@@ -11,9 +20,15 @@ type AdjustBalanceViewProps = {
   /** "Ajustar saldo" or "Atualizar saldo". */
   title: string;
   accountName: string;
+  accountTheme: BankThemeKey | 'wallet';
   isLoading: boolean;
+  /** The balance the account shows now (cents, may be negative). */
+  currentCents: number;
+  /** The balance the person wants it to show (cents, never negative). */
   cents: number;
   onCentsChange: (cents: number) => void;
+  /** New balance minus the current one: what the adjustment will post. */
+  differenceCents: number;
   note: string;
   onNoteChange: (note: string) => void;
   error?: string;
@@ -23,15 +38,59 @@ type AdjustBalanceViewProps = {
   onSubmit: () => void;
 };
 
+/** The adjustment in words, with its sign and tone: it is the answer to "what will this do?". */
+function DifferenceLine({ differenceCents }: { differenceCents: number }) {
+  if (differenceCents === 0) {
+    return (
+      <p
+        aria-live="polite"
+        className="rounded-panel border border-dashed border-line px-s16 py-s12 text-label text-fg-secondary"
+      >
+        Digite o novo saldo. A diferença para o atual aparece aqui.
+      </p>
+    );
+  }
+
+  const isGain = differenceCents > 0;
+  return (
+    <p
+      aria-live="polite"
+      className={`flex items-center gap-s12 rounded-panel px-s16 py-s12 text-label text-fg-primary ${
+        isGain ? 'bg-gain-weak' : 'bg-loss-weak'
+      }`}
+    >
+      <span className={isGain ? 'text-gain' : 'text-loss'}>
+        <Icon name={isGain ? 'arrow-up-right' : 'arrow-down-right'} size="md" />
+      </span>
+      <span className="flex flex-col">
+        <span>
+          Vai lançar um ajuste de{' '}
+          <span className={`font-emphasis ${isGain ? 'text-gain' : 'text-loss'}`}>
+            <Money
+              cents={Math.abs(differenceCents)}
+              sign={isGain ? 'plus' : 'minus'}
+              weight="plain"
+            />
+          </span>
+        </span>
+        <span className="text-meta text-fg-secondary">Com a data de hoje, sem mexer no resto.</span>
+      </span>
+    </p>
+  );
+}
+
 /** Sets the balance a manual account must show; the app records the difference as an adjustment. */
 export function AdjustBalanceView({
   isOpen,
   onClose,
   title,
   accountName,
+  accountTheme,
   isLoading,
+  currentCents,
   cents,
   onCentsChange,
+  differenceCents,
   note,
   onNoteChange,
   error,
@@ -40,63 +99,72 @@ export function AdjustBalanceView({
   isSubmitting,
   onSubmit,
 }: AdjustBalanceViewProps) {
-  const form = useRef<HTMLFormElement>(null);
-  useFocusFirstInvalid(form, failedAttempts);
+  const content = useRef<HTMLDivElement>(null);
+  useFocusFirstInvalid(content, failedAttempts);
 
   return (
-    <Modal
+    <FormModal
       isOpen={isOpen}
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
-      isDismissable={!isSubmitting}
+      size="default"
       title={title}
-      subtitle={accountName}
-      actions={
-        <>
-          <Button variant="secondary" isDisabled={isSubmitting} onPress={onClose}>
-            Cancelar
-          </Button>
-          <Button type="submit" form={FORM_ID} loading={isSubmitting} isDisabled={isLoading}>
-            Salvar saldo
-          </Button>
-        </>
+      description="O app lança a diferença como um ajuste de saldo."
+      submitLabel="Salvar saldo"
+      onSubmit={onSubmit}
+      isSubmitting={isSubmitting}
+      submitDisabled={isLoading || differenceCents === 0}
+      submitHint={
+        !isLoading && differenceCents === 0 ? 'Digite um saldo diferente do atual.' : undefined
       }
+      error={submitError ?? undefined}
+      initialFocus="input"
     >
       {isLoading ? (
         <Skeleton className="h-ctl-touch w-full" />
       ) : (
-        <form
-          id={FORM_ID}
-          ref={form}
-          noValidate
-          onSubmit={(event) => {
-            event.preventDefault();
-            onSubmit();
-          }}
-          className="flex flex-col gap-s16"
-        >
-          <MoneyField
-            label="Saldo que a conta deve mostrar"
-            cents={cents}
-            onChange={onCentsChange}
-            size="large"
-            autoFocus
-          />
-          <TextField
-            label="Observação (opcional)"
-            value={note}
-            onChange={onNoteChange}
-            error={error}
-            maxLength={200}
-            autoComplete="off"
-          />
-          <FineNote icon="edit">
-            A diferença vira uma transação de ajuste de saldo, com a data de hoje.
-          </FineNote>
-          {submitError ? <Banner variant="error" title={submitError} /> : null}
-        </form>
+        <div ref={content} className="flex flex-col gap-s16 lg:gap-s24">
+          <div className="flex items-center gap-s12">
+            <BankAvatar theme={accountTheme} name={accountName} size={40} />
+            <div className="flex min-w-0 flex-1 flex-col">
+              <p className="truncate font-title text-body font-emphasis text-fg-primary">
+                {accountName}
+              </p>
+              <p className="text-label text-fg-secondary">Saldo atual</p>
+            </div>
+            <p className="text-money-md text-fg-primary">
+              <Money cents={currentCents} sign="auto" />
+            </p>
+          </div>
+
+          <FormModalGroup label="Quanto a conta deve mostrar">
+            <AmountField
+              kind="income"
+              label="Novo saldo"
+              cents={cents}
+              onChange={onCentsChange}
+              autoFocus
+            />
+            <DifferenceLine differenceCents={differenceCents} />
+          </FormModalGroup>
+
+          <FormModalMore
+            label="Observação"
+            summary={note.trim() ? 'Preenchida' : 'opcional'}
+            hasError={Boolean(error)}
+          >
+            <TextField
+              label="Por que ajustou (opcional)"
+              value={note}
+              onChange={onNoteChange}
+              error={error}
+              maxLength={200}
+              autoComplete="off"
+            />
+          </FormModalMore>
+        </div>
       )}
-    </Modal>
+    </FormModal>
   );
 }

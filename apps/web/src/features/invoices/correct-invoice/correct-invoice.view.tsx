@@ -1,10 +1,11 @@
 import {
-  Banner,
-  Button,
+  AmountField,
   ErrorState,
-  FineNote,
-  Modal,
-  MoneyField,
+  FormModal,
+  FormModalGroup,
+  FormModalMore,
+  FormModalSplit,
+  Money,
   Skeleton,
   TextField,
 } from '@fincheck/ui';
@@ -12,15 +13,22 @@ import { useRef } from 'react';
 
 import { useFocusFirstInvalid } from '#/features/accounts/form-focus/hooks/use-focus-first-invalid.hook.ts';
 
-const FORM_ID = 'correct-invoice-form';
+/** What each source says the invoice is worth. */
+export type InvoiceReference = {
+  key: string;
+  label: string;
+  cents: number;
+};
 
 type CorrectInvoiceViewProps = {
   isOpen: boolean;
   onClose: () => void;
   state: 'loading' | 'error' | 'ready';
   onRetry: () => void;
-  /** What the bank and the app say, so the person sees what is being overridden. */
-  referenceLines: readonly string[];
+  /** The bank total, the app's calculation and the value in use, so the person sees what is being overridden. */
+  references: readonly InvoiceReference[];
+  /** The value the app calculates by the purchases and installments (can be a credit). */
+  computedCents: number;
   cents: number;
   onCentsChange: (cents: number) => void;
   note: string;
@@ -35,13 +43,45 @@ type CorrectInvoiceViewProps = {
   onRemove: () => void;
 };
 
+/** A value that can be a credit: a negative total reads "crédito de R$ X", never a minus (R5). */
+function ReferenceValue({ cents }: { cents: number }) {
+  if (cents >= 0) return <Money cents={cents} sign="none" weight="plain" />;
+  return (
+    <span className="flex items-baseline gap-s4">
+      <span className="text-fg-secondary">crédito de</span>
+      <Money cents={Math.abs(cents)} sign="none" weight="plain" tone="income" />
+    </span>
+  );
+}
+
+/** How far the typed value is from what the app calculated, in words and in the tone of the move. */
+function DifferenceNote({ differenceCents }: { differenceCents: number }) {
+  if (differenceCents === 0) {
+    return <p className="text-meta text-fg-secondary">Igual ao que o app calculou.</p>;
+  }
+  const isMore = differenceCents > 0;
+  return (
+    <p aria-live="polite" className="flex items-baseline gap-s4 text-meta text-fg-secondary">
+      <span className={isMore ? 'text-loss' : 'text-gain'}>
+        <Money
+          cents={Math.abs(differenceCents)}
+          sign={isMore ? 'plus' : 'minus'}
+          weight="emphasis"
+        />
+      </span>
+      {isMore ? 'a mais' : 'a menos'} que o app calculou
+    </p>
+  );
+}
+
 /** Corrects the invoice total when the bank got it wrong, with a note on why (RF-INV-002). */
 export function CorrectInvoiceView({
   isOpen,
   onClose,
   state,
   onRetry,
-  referenceLines,
+  references,
+  computedCents,
   cents,
   onCentsChange,
   note,
@@ -54,74 +94,76 @@ export function CorrectInvoiceView({
   onSave,
   onRemove,
 }: CorrectInvoiceViewProps) {
-  const form = useRef<HTMLFormElement>(null);
-  useFocusFirstInvalid(form, failedAttempts);
+  const content = useRef<HTMLDivElement>(null);
+  useFocusFirstInvalid(content, failedAttempts);
 
   return (
-    <Modal
+    <FormModal
       isOpen={isOpen}
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
-      isDismissable={!isSaving}
       title="Corrigir valor da fatura"
-      subtitle="Vale no lugar do total do banco até você remover."
-      destructiveAction={
-        canRemove ? (
-          <Button variant="tertiary" danger isDisabled={isSaving} onPress={onRemove}>
-            Remover correção
-          </Button>
-        ) : undefined
-      }
-      actions={
-        <>
-          <Button variant="secondary" isDisabled={isSaving} onPress={onClose}>
-            Cancelar
-          </Button>
-          <Button type="submit" form={FORM_ID} loading={isSaving} isDisabled={state !== 'ready'}>
-            Salvar correção
-          </Button>
-        </>
+      description="Vale no lugar do total do banco até você remover."
+      submitLabel="Salvar correção"
+      onSubmit={onSave}
+      isSubmitting={isSaving}
+      submitDisabled={state !== 'ready'}
+      error={submitError ?? undefined}
+      destructive={
+        canRemove ? { label: 'Remover correção', icon: 'close', onPress: onRemove } : undefined
       }
     >
-      {state === 'loading' ? <Skeleton className="h-ctl-touch w-full" /> : null}
-      {state === 'error' ? (
-        <ErrorState title="Não deu para carregar a fatura" onRetry={onRetry} headingLevel={3} />
-      ) : null}
-      {state === 'ready' ? (
-        <form
-          id={FORM_ID}
-          ref={form}
-          noValidate
-          onSubmit={(event) => {
-            event.preventDefault();
-            onSave();
-          }}
-          className="flex flex-col gap-s16"
-        >
-          <MoneyField
-            label="Valor correto da fatura"
-            cents={cents}
-            onChange={onCentsChange}
-            size="large"
-            autoFocus
-          />
-          {referenceLines.map((line) => (
-            <FineNote key={line} icon="calendar">
-              {line}
-            </FineNote>
-          ))}
-          <TextField
-            label="Por que corrigiu (opcional)"
-            value={note}
-            onChange={onNoteChange}
-            error={error}
-            maxLength={200}
-            autoComplete="off"
-          />
-          {submitError ? <Banner variant="error" title={submitError} /> : null}
-        </form>
-      ) : null}
-    </Modal>
+      <div ref={content} className="flex flex-col gap-s16 lg:gap-s24">
+        {state === 'loading' ? <Skeleton className="h-ctl-touch w-full" /> : null}
+        {state === 'error' ? (
+          <ErrorState title="Não deu para carregar a fatura" onRetry={onRetry} headingLevel={3} />
+        ) : null}
+        {state === 'ready' ? (
+          <FormModalSplit
+            aside={
+              <>
+                <AmountField
+                  kind="expense"
+                  label="Valor correto da fatura"
+                  cents={cents}
+                  onChange={onCentsChange}
+                  autoFocus
+                />
+                <DifferenceNote differenceCents={cents - computedCents} />
+              </>
+            }
+          >
+            <FormModalGroup label="O que cada um diz">
+              <ul>
+                {references.map((reference) => (
+                  <li
+                    key={reference.key}
+                    className="flex items-center justify-between gap-s12 border-t border-line py-s8 text-label text-fg-primary first:border-t-0"
+                  >
+                    <span className="text-fg-secondary">{reference.label}</span>
+                    <ReferenceValue cents={reference.cents} />
+                  </li>
+                ))}
+              </ul>
+            </FormModalGroup>
+            <FormModalMore
+              label="Por que corrigiu"
+              summary={note.trim() ? 'Preenchido' : 'opcional'}
+              hasError={Boolean(error)}
+            >
+              <TextField
+                label="Observação (opcional)"
+                value={note}
+                onChange={onNoteChange}
+                error={error}
+                maxLength={200}
+                autoComplete="off"
+              />
+            </FormModalMore>
+          </FormModalSplit>
+        ) : null}
+      </div>
+    </FormModal>
   );
 }

@@ -155,7 +155,7 @@ describe('AccountListPage', () => {
     press(within(carteira).getByRole('button', { name: 'Atualizar saldo' }));
 
     const dialog = await screen.findByRole('dialog', { name: 'Atualizar saldo' });
-    const field = within(dialog).getByRole('textbox', { name: 'Saldo que a conta deve mostrar' });
+    const field = within(dialog).getByRole('textbox', { name: 'Novo saldo' });
     fireEvent.change(field, { target: { value: '9500' } });
     press(within(dialog).getByRole('button', { name: 'Salvar saldo' }));
 

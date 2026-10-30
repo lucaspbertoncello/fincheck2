@@ -91,9 +91,9 @@ describe('Conectar conta (?new=account)', () => {
     const dialog = await openConnectModal();
     fireEvent.click(within(dialog).getByRole('radio', { name: 'Conta manual' }));
 
-    const group = await within(dialog).findByRole('group', { name: 'Tipo de conta' });
-    fireEvent.click(within(group).getByRole('button', { name: 'Cartão de crédito' }));
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Criar conta' }));
+    const group = await within(dialog).findByRole('radiogroup', { name: 'Tipo de conta' });
+    fireEvent.click(within(group).getByRole('radio', { name: 'Cartão de crédito' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Criar cartão' }));
 
     expect(await within(dialog).findByText(/Dê um nome à conta/)).toBeInTheDocument();
     expect(within(dialog).getByText('Escolha o banco')).toBeInTheDocument();
@@ -110,8 +110,8 @@ describe('Conectar conta (?new=account)', () => {
     fireEvent.change(await within(dialog).findByRole('textbox', { name: 'Nome da conta' }), {
       target: { value: 'Conta do Inter' },
     });
-    const banks = within(dialog).getByRole('group', { name: 'Banco' });
-    fireEvent.click(within(banks).getByRole('button', { name: 'Inter' }));
+    const banks = within(dialog).getByRole('radiogroup', { name: 'Banco' });
+    fireEvent.click(within(banks).getByRole('radio', { name: 'Inter' }));
     fireEvent.change(within(dialog).getByRole('textbox', { name: 'Saldo inicial' }), {
       target: { value: '150000' },
     });

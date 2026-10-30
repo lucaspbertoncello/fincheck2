@@ -5,7 +5,6 @@ import { useAccountsSearch } from '#/features/accounts/account-search/hooks/use-
 import { useCorrectInvoiceModel } from '#/features/invoices/correct-invoice/correct-invoice.model.ts';
 import { CorrectInvoiceView } from '#/features/invoices/correct-invoice/correct-invoice.view.tsx';
 import { splitInvoiceTarget } from '#/features/invoices/invoice-summary/utils/split-invoice-target.util.ts';
-import { formatMoney } from '#/shared/utils/format-money.util.ts';
 
 /** "Corrigir valor" of an invoice (BR-INV-004). Opens by `?correct=<cardId>:<YYYY-MM>`. */
 export function CorrectInvoiceViewModel() {
@@ -56,16 +55,28 @@ export function CorrectInvoiceViewModel() {
       onClose={close}
       state={model.isLoading ? 'loading' : model.isError ? 'error' : 'ready'}
       onRetry={model.retry}
-      referenceLines={
+      references={
         invoice
           ? [
               invoice.bankTotalCents === null
                 ? null
-                : `O banco informou ${formatMoney(invoice.bankTotalCents)}.`,
-              `O app calculou ${formatMoney(invoice.computedTotalCents)} pelas compras e parcelas.`,
-            ].filter((line): line is string => line !== null)
+                : { key: 'bank', label: 'O banco informou', cents: invoice.bankTotalCents },
+              {
+                key: 'computed',
+                label: 'O app calculou (compras e parcelas)',
+                cents: invoice.computedTotalCents,
+              },
+              invoice.totalOverrideCents === null
+                ? null
+                : {
+                    key: 'override',
+                    label: 'Sua correção atual',
+                    cents: invoice.totalOverrideCents,
+                  },
+            ].filter((line) => line !== null)
           : []
       }
+      computedCents={invoice?.computedTotalCents ?? 0}
       cents={cents}
       onCentsChange={setTypedCents}
       note={note}

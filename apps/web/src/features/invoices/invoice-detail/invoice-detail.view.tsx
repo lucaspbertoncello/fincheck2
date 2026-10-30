@@ -1,23 +1,23 @@
 import {
   Banner,
   Button,
-  Chip,
   ContentSkeleton,
-  EditDateField,
   ErrorState,
-  Modal,
+  FormModalGroup,
+  FormModalSplit,
+  ModalFrame,
+  ModalHeader,
   Money,
-  MoneyField,
 } from '@fincheck/ui';
-import { useRef } from 'react';
 
-import { useFocusFirstInvalid } from '#/features/accounts/form-focus/hooks/use-focus-first-invalid.hook.ts';
-import type {
-  InvoiceDetailData,
-  InvoiceDetailLine,
-} from '#/features/invoices/invoice-detail/types/invoice-detail.type.ts';
+import { InvoiceHero } from '#/features/invoices/invoice-detail/components/invoice-hero.component.tsx';
+import { InvoiceItemList } from '#/features/invoices/invoice-detail/components/invoice-item-list.component.tsx';
+import { InvoiceLines } from '#/features/invoices/invoice-detail/components/invoice-lines.component.tsx';
+import { PaymentForm } from '#/features/invoices/invoice-detail/components/payment-form.component.tsx';
+import { PaymentSuggestion } from '#/features/invoices/invoice-detail/components/payment-suggestion.component.tsx';
+import type { InvoiceDetailData } from '#/features/invoices/invoice-detail/types/invoice-detail.type.ts';
 
-const TONE = { accent: 'accent', neutral: 'neutral', ok: 'ok', warn: 'warn' } as const;
+const PAYMENT_FORM_ID = 'invoice-payment-form';
 
 type InvoiceDetailViewProps = {
   isOpen: boolean;
@@ -35,6 +35,7 @@ type InvoiceDetailViewProps = {
   onPaymentCentsChange: (cents: number) => void;
   paidOn: string;
   onPaidOnChange: (value: string) => void;
+  today: string;
   paymentError?: string;
   failedAttempts: number;
   onSavePayment: () => void;
@@ -42,23 +43,11 @@ type InvoiceDetailViewProps = {
   onDismissSuggestion: () => void;
 };
 
-function LineList({ lines }: { lines: readonly InvoiceDetailLine[] }) {
-  return (
-    <ul>
-      {lines.map((line) => (
-        <li
-          key={line.key}
-          className="flex items-center justify-between gap-s12 border-t border-line py-s12 text-label text-fg-primary"
-        >
-          <span className="text-fg-secondary">{line.label}</span>
-          <Money cents={line.cents} sign="none" weight="plain" />
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-/** The invoice of a card: total, what it is made of, payments, the payment found and every item (RF-INV-001). */
+/**
+ * The invoice of a card in the modal pattern (RF-INV-001): header with the card-dot, the total as
+ * the protagonist beside what it is made of, the payment the app found, the payments, the items.
+ * The footer holds the one next action: "Registrar pagamento" and, once it is open, "Salvar".
+ */
 export function InvoiceDetailView({
   isOpen,
   onClose,
@@ -74,177 +63,125 @@ export function InvoiceDetailView({
   onPaymentCentsChange,
   paidOn,
   onPaidOnChange,
+  today,
   paymentError,
   failedAttempts,
   onSavePayment,
   onLinkSuggestion,
   onDismissSuggestion,
 }: InvoiceDetailViewProps) {
-  const paymentForm = useRef<HTMLDivElement>(null);
-  useFocusFirstInvalid(paymentForm, failedAttempts);
+  const madeOf = data ? [...data.breakdown, ...data.references] : [];
 
   return (
-    <Modal
+    <ModalFrame
+      bare
+      tall
       isOpen={isOpen}
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
-      size="wide"
-      title={data?.title ?? 'Fatura'}
-      subtitle={data?.cardName}
-      actions={
-        <Button variant="secondary" onPress={onClose}>
-          Fechar
-        </Button>
-      }
+      size="form"
     >
-      {state === 'loading' ? <ContentSkeleton variant="list" /> : null}
-      {state === 'error' ? (
-        <ErrorState title="Não deu para carregar a fatura" onRetry={onRetry} headingLevel={3} />
-      ) : null}
-      {state === 'ready' && data ? (
-        <>
-          {actionError ? <Banner variant="error" title={actionError} /> : null}
-
-          <header className="flex flex-col gap-s4">
-            <div className="flex items-start justify-between gap-s12">
-              {data.totalCents < 0 ? (
-                <p className="flex items-baseline gap-s8 text-money-md text-fg-primary">
-                  <span className="font-title text-body text-fg-secondary">crédito de</span>
-                  <Money cents={Math.abs(data.totalCents)} sign="none" tone="income" />
-                </p>
-              ) : (
-                <p className="text-money-md text-fg-primary">
-                  <Money cents={data.totalCents} sign="none" />
-                </p>
-              )}
-              <Chip tone={TONE[data.statusTone]}>{data.statusLabel}</Chip>
-            </div>
-            <p className="text-label text-fg-secondary">{data.dueLine}</p>
-          </header>
-
-          {data.suggestion ? (
-            <section
-              aria-label="Pagamento encontrado"
-              className="flex flex-col gap-s12 rounded-panel bg-brand-weak p-s16"
-            >
-              <div className="flex flex-col gap-s4">
-                <h3 className="text-body font-emphasis text-fg-primary">Pagamento encontrado</h3>
-                <p className="text-label text-fg-secondary">
-                  {data.suggestion.description}, {data.suggestion.detail}.{' '}
-                  {data.suggestion.isPresumed
-                    ? 'A fatura já o conta como pago; falta só vincular.'
-                    : 'Vincule para abater a fatura.'}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-s8">
-                <Button size="sm" isDisabled={isBusy} onPress={onLinkSuggestion}>
-                  Vincular
-                </Button>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  isDisabled={isBusy}
-                  onPress={onDismissSuggestion}
-                >
-                  Não é este
-                </Button>
-              </div>
-            </section>
+      <div aria-hidden="true" className="flex justify-center pt-s8 lg:hidden">
+        <span className="h-(--size-sheet-handle-height) w-(--size-sheet-handle-width) rounded-capsule bg-(--color-sheet-handle)" />
+      </div>
+      <ModalHeader
+        mark
+        title={data?.title ?? 'Fatura'}
+        subtitle={data?.cardName}
+        className="px-s16 pt-s4 pb-s12 lg:px-s24 lg:pt-s24 lg:pb-s16"
+      />
+      <div className="@container min-h-0 flex-1 overflow-y-auto overscroll-contain px-s16 pt-s4 pb-s16 lg:px-s24">
+        <div className="flex flex-col gap-s16 lg:gap-s24">
+          {state === 'loading' ? <ContentSkeleton variant="list" /> : null}
+          {state === 'error' ? (
+            <ErrorState title="Não deu para carregar a fatura" onRetry={onRetry} headingLevel={3} />
           ) : null}
+          {state === 'ready' && data ? (
+            <>
+              {actionError ? <Banner variant="error" title={actionError} /> : null}
 
-          {data.breakdown.length > 0 || data.references.length > 0 ? (
-            <section aria-label="De que é feita" className="flex flex-col">
-              <h3 className="pb-s8 text-label text-fg-secondary">De que é feita</h3>
-              <LineList lines={[...data.breakdown, ...data.references]} />
-            </section>
-          ) : null}
+              <FormModalSplit aside={<InvoiceHero data={data} />}>
+                {madeOf.length > 0 ? (
+                  <FormModalGroup label="De que é feita">
+                    <InvoiceLines lines={madeOf} />
+                  </FormModalGroup>
+                ) : null}
+              </FormModalSplit>
 
-          <section aria-label="Pagamentos" className="flex flex-col gap-s8">
-            <div className="flex items-center justify-between gap-s12">
-              <h3 className="text-label text-fg-secondary">Pagamentos</h3>
-              {data.canRegisterPayment && !registering ? (
-                <Button size="sm" variant="tertiary" onPress={onStartRegister}>
-                  Registrar pagamento
-                </Button>
-              ) : null}
-            </div>
-            {data.payments.length === 0 ? (
-              <p className="border-t border-line py-s12 text-label text-fg-secondary">
-                Nenhum pagamento ainda.
-              </p>
-            ) : (
-              <ul>
-                {data.payments.map((payment) => (
-                  <li
-                    key={payment.id}
-                    className="flex items-center justify-between gap-s12 border-t border-line py-s12 text-label text-fg-primary"
-                  >
-                    <span>{payment.label}</span>
-                    <Money cents={payment.cents} sign="none" weight="plain" />
-                  </li>
-                ))}
-              </ul>
-            )}
-            {registering ? (
-              <div
-                ref={paymentForm}
-                className="flex flex-col gap-s12 rounded-panel border border-line p-s16"
-              >
-                <MoneyField
-                  label="Valor pago"
-                  cents={paymentCents}
-                  onChange={onPaymentCentsChange}
-                  error={paymentError}
+              {data.suggestion ? (
+                <PaymentSuggestion
+                  suggestion={data.suggestion}
+                  isBusy={isBusy}
+                  onLink={onLinkSuggestion}
+                  onDismiss={onDismissSuggestion}
                 />
-                <EditDateField label="Data do pagamento" value={paidOn} onChange={onPaidOnChange} />
-                <div className="flex flex-wrap gap-s8">
-                  <Button size="sm" loading={isBusy} onPress={onSavePayment}>
-                    Salvar pagamento
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    isDisabled={isBusy}
-                    onPress={onCancelRegister}
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-              </div>
-            ) : null}
-          </section>
+              ) : null}
 
-          <section aria-label="Lançamentos" className="flex flex-col">
-            <h3 className="pb-s8 text-label text-fg-secondary">Lançamentos</h3>
-            {data.items.length === 0 ? (
-              <p className="border-t border-line py-s12 text-label text-fg-secondary">
-                Nenhum lançamento nesta fatura.
-              </p>
-            ) : (
-              <ul>
-                {data.items.map((item) => (
-                  <li
-                    key={item.key}
-                    className="flex items-center gap-s12 border-t border-line py-s12 text-label text-fg-primary"
-                  >
-                    <span className="flex min-w-0 flex-1 flex-col">
-                      <span className="truncate">{item.title}</span>
-                      <span className="text-meta text-fg-secondary">{item.meta}</span>
-                    </span>
-                    <Money
-                      cents={item.cents}
-                      sign="auto"
-                      weight="plain"
-                      tone={item.expected ? 'faded' : 'inherit'}
-                    />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        </>
-      ) : null}
-    </Modal>
+              <FormModalGroup label="Pagamentos">
+                {data.payments.length === 0 ? (
+                  <p className="text-label text-fg-secondary">Nenhum pagamento ainda.</p>
+                ) : (
+                  <ul>
+                    {data.payments.map((payment) => (
+                      <li
+                        key={payment.id}
+                        className="flex items-center justify-between gap-s12 border-t border-line py-s8 text-label text-fg-primary first:border-t-0"
+                      >
+                        <span>{payment.label}</span>
+                        <Money cents={payment.cents} sign="none" weight="plain" />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {registering ? (
+                  <PaymentForm
+                    formId={PAYMENT_FORM_ID}
+                    cents={paymentCents}
+                    onCentsChange={onPaymentCentsChange}
+                    paidOn={paidOn}
+                    onPaidOnChange={onPaidOnChange}
+                    today={today}
+                    error={paymentError}
+                    failedAttempts={failedAttempts}
+                    onSubmit={onSavePayment}
+                  />
+                ) : null}
+              </FormModalGroup>
+
+              <FormModalGroup label="Lançamentos">
+                <InvoiceItemList items={data.items} />
+              </FormModalGroup>
+            </>
+          ) : null}
+        </div>
+      </div>
+      <footer className="flex items-center justify-end gap-s8 border-t border-line px-s16 py-s12 lg:gap-s12 lg:px-s24 lg:py-s16">
+        {registering ? (
+          <>
+            <Button variant="secondary" isDisabled={isBusy} onPress={onCancelRegister}>
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              form={PAYMENT_FORM_ID}
+              loading={isBusy}
+              loadingLabel="Salvando..."
+            >
+              Salvar pagamento
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button variant="secondary" onPress={onClose}>
+              Fechar
+            </Button>
+            {state === 'ready' && data?.canRegisterPayment ? (
+              <Button onPress={onStartRegister}>Registrar pagamento</Button>
+            ) : null}
+          </>
+        )}
+      </footer>
+    </ModalFrame>
   );
 }

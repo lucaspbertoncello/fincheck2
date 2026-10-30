@@ -19,11 +19,15 @@ const EMPTY_FORM: ManualAccountForm = {
   limitCents: 0,
 };
 
-/** The state of the "Conectar conta" modal: mode, item id, manual form and field errors. */
-export function useConnectAccountForm() {
-  const [mode, setMode] = useState<ConnectMode>('pluggy');
+/**
+ * The state of the "Conectar conta" modal: mode, item id, manual form and field errors. Editing
+ * starts from the form of the account (and in the manual mode, the only one it has).
+ */
+export function useConnectAccountForm(initialForm?: ManualAccountForm) {
+  const start = initialForm ?? EMPTY_FORM;
+  const [mode, setMode] = useState<ConnectMode>(initialForm ? 'manual' : 'pluggy');
   const [itemId, setItemId] = useState('');
-  const [form, setForm] = useState<ManualAccountForm>(EMPTY_FORM);
+  const [form, setForm] = useState<ManualAccountForm>(start);
   const [errors, setErrors] = useState<FormErrors>({});
   const [failedAttempts, setFailedAttempts] = useState(0);
 
@@ -37,9 +41,9 @@ export function useConnectAccountForm() {
   }
 
   function reset() {
-    setMode('pluggy');
+    setMode(initialForm ? 'manual' : 'pluggy');
     setItemId('');
-    setForm(EMPTY_FORM);
+    setForm(start);
     setErrors({});
   }
 

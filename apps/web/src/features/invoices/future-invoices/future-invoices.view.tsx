@@ -1,4 +1,12 @@
-import { Button, ContentSkeleton, EmptyState, ErrorState, Money, Section } from '@fincheck/ui';
+import {
+  Button,
+  Chip,
+  ContentSkeleton,
+  EmptyState,
+  ErrorState,
+  Money,
+  Section,
+} from '@fincheck/ui';
 
 export type FutureInvoiceItem = {
   month: string;
@@ -7,7 +15,12 @@ export type FutureInvoiceItem = {
   totalCents: number;
   /** "Fecha 30/11, vence 07/12". */
   dueLine: string;
-  parts: readonly { key: string; label: string; cents: number }[];
+  parts: readonly {
+    key: string;
+    label: string;
+    cents: number;
+    /** 0 to 1: its share of the parts. */ share: number;
+  }[];
 };
 
 type FutureInvoicesViewProps = {
@@ -52,24 +65,39 @@ export function FutureInvoicesView({
       {state === 'ready' && items.length > 0 ? (
         <ul className="grid grid-cols-1 items-start gap-s16 lg:grid-cols-3 lg:gap-s24">
           {items.map((item) => (
-            <li key={item.month} className="glass flex flex-col gap-s12 p-s16 lg:p-s24">
-              <h3 className="font-title text-body font-emphasis text-fg-primary">{item.title}</h3>
-              <p className="text-money-md text-fg-primary">
-                <Money cents={item.totalCents} sign="none" />
-              </p>
-              <p className="text-label text-fg-secondary">{item.dueLine}</p>
-              <ul>
-                {item.parts.map((part) => (
-                  <li
-                    key={part.key}
-                    className="flex items-center justify-between gap-s12 border-t border-line py-s12 text-label text-fg-primary"
-                  >
-                    <span>{part.label}</span>
-                    <Money cents={part.cents} sign="none" weight="plain" />
-                  </li>
-                ))}
-              </ul>
-              <Button variant="tertiary" size="sm" onPress={() => onViewInvoice(item.month)}>
+            <li key={item.month} className="glass flex flex-col gap-s16 p-s16 lg:p-s24">
+              <header className="flex items-center justify-between gap-s8">
+                <h3 className="font-title text-body font-emphasis text-fg-primary">{item.title}</h3>
+                <Chip tone="neutral">Projetada</Chip>
+              </header>
+              <div className="flex flex-col gap-s4">
+                <p className="text-money-lg text-fg-primary">
+                  <Money cents={item.totalCents} sign="none" />
+                </p>
+                <p className="text-label text-fg-secondary">{item.dueLine}</p>
+              </div>
+              {item.parts.length > 0 ? (
+                <ul className="flex flex-col gap-s12">
+                  {item.parts.map((part) => (
+                    <li key={part.key} className="flex flex-col gap-s4">
+                      <span className="flex items-center justify-between gap-s12 text-label text-fg-primary">
+                        <span className="text-fg-secondary">{part.label}</span>
+                        <Money cents={part.cents} sign="none" weight="plain" />
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className="block h-s4 overflow-hidden rounded-capsule bg-subtle"
+                      >
+                        <span
+                          className="block h-full origin-left rounded-capsule bg-brand"
+                          style={{ transform: `scaleX(${part.share})` }}
+                        />
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              <Button variant="secondary" size="sm" onPress={() => onViewInvoice(item.month)}>
                 Ver detalhes
               </Button>
             </li>

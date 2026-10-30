@@ -5,6 +5,7 @@ import { useAccountsSearch } from '#/features/accounts/account-search/hooks/use-
 import { useAdjustBalanceModel } from '#/features/accounts/adjust-balance/adjust-balance.model.ts';
 import { AdjustBalanceView } from '#/features/accounts/adjust-balance/adjust-balance.view.tsx';
 import { describeAdjustError } from '#/features/accounts/adjust-balance/utils/describe-adjust-error.util.ts';
+import { resolveAccountTheme } from '#/features/accounts/account-list/utils/resolve-account-theme.util.ts';
 
 /** "Ajustar saldo" (manual account) and "Atualizar saldo" (wallet). Opens by `?adjust=<accountId>`. */
 export function AdjustBalanceViewModel() {
@@ -17,6 +18,10 @@ export function AdjustBalanceViewModel() {
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  const currentCents = model.account?.balanceCents ?? 0;
+  const targetCents = typedCents ?? currentCents;
+  const differenceCents = targetCents - currentCents;
+
   function close() {
     setTypedCents(null);
     setNote('');
@@ -26,9 +31,9 @@ export function AdjustBalanceViewModel() {
   }
 
   function submit() {
-    if (!model.account) return;
+    if (!model.account || differenceCents === 0) return;
     const parsed = adjustBalanceRequestSchema.safeParse({
-      targetBalanceCents: typedCents ?? model.account.balanceCents ?? 0,
+      targetBalanceCents: targetCents,
       note: note.trim() === '' ? undefined : note.trim(),
     });
     if (!parsed.success) {
@@ -52,9 +57,14 @@ export function AdjustBalanceViewModel() {
       onClose={close}
       title={isWallet ? 'Atualizar saldo' : 'Ajustar saldo'}
       accountName={model.account?.name ?? ''}
+      accountTheme={
+        model.account ? (isWallet ? 'wallet' : resolveAccountTheme(model.account)) : 'fallback'
+      }
       isLoading={model.isLoading}
-      cents={typedCents ?? model.account?.balanceCents ?? 0}
+      currentCents={currentCents}
+      cents={Math.max(0, targetCents)}
       onCentsChange={setTypedCents}
+      differenceCents={differenceCents}
       note={note}
       onNoteChange={setNote}
       error={error ?? undefined}

@@ -1,14 +1,16 @@
+import { useToast } from '@fincheck/ui';
 import { useState } from 'react';
 
 import { useAccountsSearch } from '#/features/accounts/account-search/hooks/use-accounts-search.hook.ts';
 import { useDeleteAccountModel } from '#/features/accounts/delete-account/delete-account.model.ts';
 import { DeleteAccountView } from '#/features/accounts/delete-account/delete-account.view.tsx';
-import { buildDeletionChanges } from '#/features/accounts/delete-account/utils/build-deletion-changes.util.ts';
+import { buildDeletionSummary } from '#/features/accounts/delete-account/utils/build-deletion-summary.util.ts';
 
-/** The confirmation before deleting an account or card. Opens by `?remove=<accountId>`. */
+/** The confirmation before deleting an account or card, or archiving it instead. Opens by `?remove=<accountId>`. */
 export function DeleteAccountViewModel() {
   const { search, update } = useAccountsSearch();
   const model = useDeleteAccountModel(search.remove);
+  const toast = useToast();
   const [failed, setFailed] = useState(false);
 
   function close() {
@@ -16,37 +18,48 @@ export function DeleteAccountViewModel() {
     update({ remove: undefined });
   }
 
-  function confirm() {
-    if (model.isImpactError) {
-      model.retryImpact();
-      return;
-    }
+  function remove() {
     if (!model.account || !model.impact) return;
     setFailed(false);
     model.remove.mutate(model.account.id, { onSuccess: close, onError: () => setFailed(true) });
   }
 
-  const name = model.account?.name ?? 'a conta';
-  const description = failed
-    ? 'Não deu para excluir agora. Tente de novo; nada foi apagado.'
-    : model.isImpactError
-      ? 'Não deu para calcular o que será apagado. Tente de novo.'
-      : model.isLoadingImpact || !model.impact
-        ? 'Calculando o que será apagado...'
-        : 'Isto apaga a conta e tudo que depende dela. Não dá para desfazer.';
+  function archive() {
+    const account = model.account;
+    if (!account) return;
+    setFailed(false);
+    model.archive.mutate(account.id, {
+      onSuccess: () => {
+        close();
+        toast.showUndoToast({
+          message: `${account.name} arquivada. O histórico continua somando nos meses passados.`,
+          onUndo: () => model.unarchive.mutate(account.id),
+        });
+      },
+      onError: () => setFailed(true),
+    });
+  }
+
+  const state = model.isImpactError
+    ? 'error'
+    : model.isLoadingImpact || !model.impact
+      ? 'loading'
+      : 'ready';
 
   return (
     <DeleteAccountView
       isOpen={Boolean(search.remove)}
-      onOpenChange={(open) => {
-        if (!open) close();
-      }}
-      title={`Excluir ${name}?`}
-      description={description}
-      changes={model.impact ? buildDeletionChanges(model.impact) : []}
-      confirmLabel={model.isImpactError ? 'Tentar de novo' : 'Excluir'}
+      onClose={close}
+      title={`Excluir ${model.account?.name ?? 'a conta'}?`}
+      state={state}
+      summary={model.impact ? buildDeletionSummary(model.impact) : null}
+      canArchive={model.account ? !model.account.archivedAt : false}
+      failed={failed}
       isDeleting={model.remove.isPending}
-      onConfirm={confirm}
+      isArchiving={model.archive.isPending}
+      onRetry={model.retryImpact}
+      onArchive={archive}
+      onDelete={remove}
     />
   );
 }

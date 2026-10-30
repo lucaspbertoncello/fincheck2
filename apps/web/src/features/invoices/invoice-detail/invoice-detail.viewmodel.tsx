@@ -28,6 +28,7 @@ export function InvoiceDetailViewModel() {
   function close() {
     setRegistering(false);
     setTypedCents(null);
+    setPaidOn(getTodayBusinessDate(new Date()));
     setError(null);
     setActionError(null);
     update({ invoice: undefined });
@@ -128,6 +129,7 @@ export function InvoiceDetailViewModel() {
       onPaymentCentsChange={setTypedCents}
       paidOn={paidOn}
       onPaidOnChange={setPaidOn}
+      today={getTodayBusinessDate(new Date())}
       paymentError={error ?? undefined}
       failedAttempts={failedAttempts}
       onSavePayment={savePayment}
