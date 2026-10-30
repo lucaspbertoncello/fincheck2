@@ -28,7 +28,7 @@ Todos na raiz.
 | -------------------------------------------- | --------------------------------------------------------------- |
 | `pnpm install`                               | Instala tudo e liga os hooks do Git                             |
 | `pnpm dev`                                   | Sobe a API (`127.0.0.1:3333`) e o web (`127.0.0.1:5173`) juntos |
-| `pnpm --filter @fincheck/web dev:mocks`      | Sobe só o web, com a API simulada pelo MSW                      |
+| `pnpm --filter @fincheck/web dev:mocks`      | Sobe só o web; o servidor do Vite responde `/api` com o MSW     |
 | `pnpm check`                                 | A esteira inteira: formatação, lint, tipos e testes             |
 | `pnpm format`                                | Formata tudo com o Prettier                                     |
 | `pnpm lint` · `pnpm typecheck` · `pnpm test` | Cada etapa da esteira sozinha                                   |

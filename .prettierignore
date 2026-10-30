@@ -6,5 +6,4 @@ coverage/
 CLAUDE.md
 docs/
 apps/web/src/router/route-tree.gen.ts
-apps/web/public/mockServiceWorker.js
 packages/ui/src/styles/tokens.css

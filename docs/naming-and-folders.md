@@ -19,7 +19,7 @@ Regra do dono para o repositório inteiro, front e back (29/10/2026). Todo agent
 4. **O nome diz o que o arquivo faz,** não onde ele está. Serviço e caso de uso começam pelo verbo: `list-transactions.service.ts`, `close-invoice.usecase.ts` (exemplo).
 5. **Um assunto por arquivo.** Nunca um hook universal por feature, que junta tudo da tela: cada hook faz uma coisa e tem o próprio arquivo (`use-transaction-form.hook.ts`, `use-month-filter.hook.ts`, exemplo).
 6. **A extensão segue o conteúdo:** `.tsx` quando o arquivo tem JSX, `.ts` quando não tem. O sufixo não muda por isso: `dashboard.viewmodel.tsx` ou `dashboard.viewmodel.ts`.
-7. **Nomes que a ferramenta exige ficam como a ferramenta quer:** `main.ts`, `main.tsx`, `index.ts` (só no `packages/ui`, ver a regra 7 de Pastas), `vite.config.ts`, `eslint.config.js`, `vitest.config.ts`, `*.d.ts`, `package.json`, `tsconfig.json`, `index.html`, o arquivo de migração do banco (ver Sufixos), o `mockServiceWorker.js` do MSW e o que a ferramenta gera (`*.gen.ts`). Arquivo de estilo, imagem e fonte não leva sufixo de tipo: a extensão já diz o que é (`fincheck.css`, `favicon.svg`, exemplo).
+7. **Nomes que a ferramenta exige ficam como a ferramenta quer:** `main.ts`, `main.tsx`, `index.ts` (só no `packages/ui`, ver a regra 7 de Pastas), `vite.config.ts`, `eslint.config.js`, `vitest.config.ts`, `*.d.ts`, `package.json`, `tsconfig.json`, `index.html`, o arquivo de migração do banco (ver Sufixos) e o que a ferramenta gera (`*.gen.ts`). Arquivo de estilo, imagem e fonte não leva sufixo de tipo: a extensão já diz o que é (`fincheck.css`, `favicon.svg`, exemplo).
 
 ### Nomes dentro do arquivo
 
@@ -97,7 +97,7 @@ Um tipo, um sufixo. Tipo que não está na tabela: escolher o nome no singular, 
 - **O import nomeia o arquivo com a extensão:** `#/database/sqlite.client.ts`, `#/pages/home/home.page.tsx`. É o que o Node exige.
 - **Nos apps, nada de caminho relativo** (`./`, `../`): sempre `#/`. A lint barra. No `packages/shared`, dentro do pacote, caminho relativo (`./health.schema.ts`).
 - **Entre pacotes,** pelo nome do pacote e o caminho do arquivo a partir do `src/`: `@fincheck/shared/system/health/health.type.ts`. O `packages/ui` é a exceção: importa-se pela porta pública (`@fincheck/ui`) e o CSS por `@fincheck/ui/styles/fincheck.css`.
-- **O web nunca importa `mocks/`** (atalho `#mocks/`); só o `main.tsx` liga o MSW, no modo de mocks. A lint barra o resto.
+- **O web nunca importa `mocks/`** (atalho `#mocks/`); só o `vite.config.ts` liga o MSW, no modo de mocks, pelo servidor de desenvolvimento. A lint barra o resto.
 
 ## Testes
 
