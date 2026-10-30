@@ -1,7 +1,14 @@
-import { motion, MotionConfig } from 'motion/react';
+import { MotionConfig } from 'motion/react';
 import { useId } from 'react';
 import { Link } from 'react-aria-components';
 
+import { SegmentedIndicator } from '#/components/forms/segmented-indicator.component.tsx';
+import {
+  SEGMENTED_ITEM_ACTIVE_CLASS,
+  SEGMENTED_ITEM_CLASS,
+  SEGMENTED_ITEM_INACTIVE_CLASS,
+  SEGMENTED_TRACK_CLASS,
+} from '#/components/forms/segmented-classes.constant.ts';
 import { cx } from '#/utils/class-names.util.ts';
 
 export type SegmentedNavItem = {
@@ -27,13 +34,7 @@ export function SegmentedNav({ items, activeKey, label, className }: SegmentedNa
 
   return (
     <MotionConfig reducedMotion="user">
-      <nav
-        aria-label={label}
-        className={cx(
-          'flex rounded-capsule border border-line bg-subtle p-s4 lg:inline-flex',
-          className,
-        )}
-      >
+      <nav aria-label={label} className={cx(SEGMENTED_TRACK_CLASS, 'lg:inline-flex', className)}>
         {items.map((item) => {
           const active = item.key === activeKey;
           return (
@@ -42,18 +43,11 @@ export function SegmentedNav({ items, activeKey, label, className }: SegmentedNa
               href={item.href}
               aria-current={active ? 'page' : undefined}
               className={cx(
-                'relative flex min-h-ctl-touch flex-1 cursor-pointer items-center justify-center rounded-capsule px-s16 text-label font-emphasis whitespace-nowrap no-underline outline-none transition-colors duration-(--duration-fast) lg:min-h-ctl-tab',
-                active ? 'text-fg-primary' : 'text-fg-tertiary data-[hovered]:text-fg-primary',
+                SEGMENTED_ITEM_CLASS,
+                active ? SEGMENTED_ITEM_ACTIVE_CLASS : SEGMENTED_ITEM_INACTIVE_CLASS,
               )}
             >
-              {active ? (
-                <motion.span
-                  layoutId={indicatorId}
-                  aria-hidden="true"
-                  className="absolute inset-0 rounded-capsule bg-(--color-surface-segment-indicator) shadow-(--shadow-indicator)"
-                  transition={{ duration: 0.22, ease: [0.2, 0.8, 0.2, 1] }}
-                />
-              ) : null}
+              {active ? <SegmentedIndicator layoutId={indicatorId} /> : null}
               <span className="relative">{item.label}</span>
             </Link>
           );

@@ -2,7 +2,14 @@
 export { PlusButton } from '#/components/actions/index.ts';
 export { PlusMenu, type PlusMenuItem } from '#/components/actions/index.ts';
 export { CardDot, Logo } from '#/components/brand/index.ts';
-export { Icon, type IconName, type IconSize } from '#/components/icons/index.ts';
+export {
+  CategoryIcon,
+  Icon,
+  type CategoryIconSize,
+  type CategoryIconType,
+  type IconName,
+  type IconSize,
+} from '#/components/icons/index.ts';
 export {
   HideValuesButton,
   Money,
@@ -39,3 +46,33 @@ export {
   type FreeBalanceLine,
 } from '#/components/summary/index.ts';
 export { useMediaQuery } from '#/hooks/viewport/index.ts';
+export {
+  Button,
+  type ButtonProps,
+  type ButtonSize,
+  type ButtonVariant,
+} from '#/components/buttons/index.ts';
+export {
+  Chip,
+  ChoiceChip,
+  CountBadge,
+  VARIATION_COLOR_THRESHOLD,
+  VariationBadge,
+  variationTone,
+  type ChipTone,
+  type VariationTone,
+} from '#/components/chips/index.ts';
+export {
+  Checkbox,
+  FineNote,
+  MoneyField,
+  OkLine,
+  SearchField,
+  SegmentedControl,
+  Switch,
+  TextField,
+  formatCentsInput,
+  parseCentsInput,
+  type SegmentedOption,
+} from '#/components/forms/index.ts';
+export { OverflowMenu, type OverflowMenuItem } from '#/components/menus/index.ts';
