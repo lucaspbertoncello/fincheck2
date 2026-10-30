@@ -1,29 +1,21 @@
-import { cx } from '#/utils/class-names.util.ts';
+import { Chip, type ChipTone } from '#/components/chips/chip.component.tsx';
 
-const TONE_CLASS = {
-  accent: 'bg-brand-weak text-brand',
-  neutral: 'bg-subtle text-fg-secondary',
-  income: 'bg-gain-weak text-gain',
-} as const;
+const CHIP_TONE: Record<'accent' | 'neutral' | 'income', ChipTone> = {
+  accent: 'accent',
+  neutral: 'neutral',
+  income: 'ok',
+};
 
 type CardTagProps = {
-  tone: keyof typeof TONE_CLASS;
+  tone: keyof typeof CHIP_TONE;
   children: string;
 };
 
-/**
- * Small status tag of the bank cards ("Fatura aberta", "Pluggy", "Manual"). Local stand-in until
- * the shared chip of `chips/` is wired in.
- */
+/** Small status tag of the bank cards ("Fatura aberta", "Pluggy", "Manual"): a `Chip` of `chips/`. */
 export function CardTag({ tone, children }: CardTagProps) {
   return (
-    <span
-      className={cx(
-        'inline-flex shrink-0 items-center rounded-capsule px-s12 py-s4 text-meta',
-        TONE_CLASS[tone],
-      )}
-    >
+    <Chip tone={CHIP_TONE[tone]} className="shrink-0">
       {children}
-    </span>
+    </Chip>
   );
 }

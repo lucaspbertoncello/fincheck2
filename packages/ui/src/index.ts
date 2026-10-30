@@ -229,3 +229,29 @@ export {
   type RuleRowData,
   type RuleTokenKind,
 } from '#/components/rules/index.ts';
+export {
+  ExpenseSummaryCard,
+  IncomeSummaryCard,
+  MonthSummaryCard,
+  MonthSummaryCards,
+  ResultSummaryCard,
+  SummaryBar,
+  type SummaryBarSegment,
+} from '#/components/month-summary/index.ts';
+export {
+  SettingRow,
+  SettingsNav,
+  Steps,
+  type SettingsNavItem,
+  type StepItem,
+  type StepStatus,
+} from '#/components/settings/index.ts';
+export {
+  CategoryFilter,
+  CategoryList,
+  TagChip,
+  TagList,
+  type CategoryFilterKey,
+  type ManagedCategory,
+  type TagItem,
+} from '#/components/categories/index.ts';

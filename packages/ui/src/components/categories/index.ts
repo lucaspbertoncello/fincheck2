@@ -1,0 +1,10 @@
+export { ArchivedCategoryRow } from '#/components/categories/archived-category-row.component.tsx';
+export { CategoryFilter } from '#/components/categories/category-filter.component.tsx';
+export type { CategoryFilterKey } from '#/components/categories/category-filter-key.type.ts';
+export { CategoryList } from '#/components/categories/category-list.component.tsx';
+export { CategoryRow } from '#/components/categories/category-row.component.tsx';
+export type { ManagedCategory } from '#/components/categories/managed-category.type.ts';
+export { sortCategories } from '#/components/categories/sort-categories.util.ts';
+export { TagChip } from '#/components/categories/tag-chip.component.tsx';
+export type { TagItem } from '#/components/categories/tag-item.type.ts';
+export { TagList } from '#/components/categories/tag-list.component.tsx';
