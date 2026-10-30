@@ -1,0 +1,36 @@
+/* System scrollbar (components.md "Scrollbar"): thin, invisible track, a thumb in a weak text tone
+   that grows on hover. Applies to the whole app, in both themes, through the thumb tokens.
+   Chromium and Safari: the ::-webkit-scrollbar pseudo-elements. Firefox: scrollbar-width and
+   scrollbar-color. The two never meet: Chromium ignores the pseudo-elements once scrollbar-color
+   is set, so the standard properties live behind a feature query. */
+
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-scrollbar-thumb) transparent;
+  }
+}
+
+::-webkit-scrollbar {
+  width: var(--size-scrollbar);
+  height: var(--size-scrollbar);
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* The 3 px transparent border shrinks the thumb to 4 px; on hover the border drops to 1 px (8 px). */
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-scrollbar-thumb);
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:active {
+  border-width: 1px;
+  background-color: var(--color-scrollbar-thumb-hover);
+}

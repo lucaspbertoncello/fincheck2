@@ -3,6 +3,7 @@ import { BASE_SECTIONS } from '#gallery/components/groups/base-group.component.t
 import { CHARTS_SECTIONS } from '#gallery/components/groups/charts-group.component.tsx';
 import { DAY_STRIP_SECTIONS } from '#gallery/components/groups/day-strip-group.component.tsx';
 import { FEEDBACK_SECTIONS } from '#gallery/components/groups/feedback-group.component.tsx';
+import { FORM_MODAL_SECTIONS } from '#gallery/components/groups/form-modal-group.component.tsx';
 import { FORMS_SECTIONS } from '#gallery/components/groups/forms-group.component.tsx';
 import { ICONS_SECTIONS } from '#gallery/components/groups/icons-group.component.tsx';
 import { MONTH_SUMMARY_SECTIONS } from '#gallery/components/groups/month-summary-group.component.tsx';
@@ -18,6 +19,7 @@ import type { GalleryGroupDef } from '#gallery/types/gallery-group.type.ts';
 export const GALLERY_GROUPS: GalleryGroupDef[] = [
   { id: 'base', title: 'Base', sections: BASE_SECTIONS },
   { id: 'forms', title: 'Formulários', sections: FORMS_SECTIONS },
+  { id: 'form-modal', title: 'Padrão de modal', sections: FORM_MODAL_SECTIONS },
   { id: 'icons', title: 'Ícones', sections: ICONS_SECTIONS },
   { id: 'bank-cards', title: 'Cartões de banco', sections: BANK_CARDS_SECTIONS },
   { id: 'day-strip', title: 'Faixa de dias', sections: DAY_STRIP_SECTIONS },

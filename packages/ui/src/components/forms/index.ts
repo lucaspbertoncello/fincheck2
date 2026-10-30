@@ -11,3 +11,4 @@ export { Switch } from '#/components/forms/switch.component.tsx';
 export { TextField } from '#/components/forms/text-field.component.tsx';
 export { formatCentsInput } from '#/components/forms/format-cents-input.util.ts';
 export { parseCentsInput } from '#/components/forms/parse-cents-input.util.ts';
+export { parsePastedMoney } from '#/components/forms/parse-pasted-money.util.ts';

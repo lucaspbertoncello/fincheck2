@@ -50,7 +50,7 @@ export function TagEditor({ label, tags, onChange, className }: TagEditorProps) 
           aria-label="Adicionar tag"
           value={draft}
           onChange={setDraft}
-          className="flex h-ctl-touch items-center gap-s8 rounded-capsule border border-dashed border-fg-tertiary px-s12 has-[input:focus]:border-brand"
+          className="flex h-ctl-touch items-center gap-s8 field-ring rounded-capsule border border-dashed border-fg-tertiary px-s12"
         >
           <Icon name="plus-circle" size="sm" className="text-fg-secondary" />
           <Input

@@ -36,8 +36,7 @@ export function SearchField({
       onSubmit={onSubmit}
       isDisabled={isDisabled}
       className={cx(
-        'group flex h-ctl-touch min-w-0 items-center gap-s8 rounded-capsule border border-line bg-field px-s16 data-[disabled]:opacity-50',
-        'has-[input:focus]:border-brand has-[input:focus]:shadow-(--shadow-focus-ring)',
+        'field-ring group flex h-ctl-touch min-w-0 items-center gap-s8 rounded-capsule border border-line bg-field px-s16 data-[disabled]:opacity-50',
         className,
       )}
     >

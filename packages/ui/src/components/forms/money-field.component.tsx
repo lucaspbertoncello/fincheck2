@@ -15,7 +15,7 @@ type MoneyFieldProps = {
   /** Integer cents. Zero shows the "0,00" placeholder. */
   cents: number;
   onChange: (cents: number) => void;
-  /** "large" is the big typed amount: 40 px / 300 over a 2 px accent line, "R$" at 20. */
+  /** "large" is the big typed amount: 40 px / 300 over a 2 px line that turns accent on focus, "R$" at 20. For a modal prefer `AmountField`. */
   size?: 'field' | 'large';
   error?: string;
   description?: string;
@@ -64,7 +64,7 @@ export function MoneyField({
         className={cx(
           'flex items-baseline gap-s8',
           large
-            ? 'border-b-2 border-brand has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-4 has-[:focus-visible]:outline-brand'
+            ? 'border-b-2 border-line transition-colors duration-(--duration-fast) focus-within:border-brand'
             : 'relative items-center',
         )}
       >

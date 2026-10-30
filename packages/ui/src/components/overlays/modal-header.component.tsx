@@ -1,5 +1,6 @@
 import { Button, Heading } from 'react-aria-components';
 
+import { CardDot } from '#/components/brand/card-dot.component.tsx';
 import { Icon } from '#/components/icons/icon.component.tsx';
 import { cx } from '#/utils/class-names.util.ts';
 
@@ -8,6 +9,8 @@ type ModalHeaderProps = {
   title: string;
   /** One line under the title (14, secondary). */
   subtitle?: string;
+  /** The system's card-dot before the title: the notch that marks the modals as part of the app. */
+  mark?: boolean;
   /** The "x" button (44). */
   showClose?: boolean;
   className?: string;
@@ -17,14 +20,21 @@ type ModalHeaderProps = {
  * Title, subtitle and "x" of a modal (components.md 13.2). Goes inside `ModalFrame`; the close
  * button uses the dialog's `close` slot, so it needs no callback.
  */
-export function ModalHeader({ title, subtitle, showClose = true, className }: ModalHeaderProps) {
+export function ModalHeader({
+  title,
+  subtitle,
+  mark = false,
+  showClose = true,
+  className,
+}: ModalHeaderProps) {
   return (
     <header className={cx('flex items-start justify-between gap-s16', className)}>
       <div className="flex min-w-0 flex-col gap-s4">
         <Heading
           slot="title"
-          className="font-title text-xl leading-(--line-height-title) font-heading text-fg-primary"
+          className="flex items-center gap-s8 font-title text-xl leading-(--line-height-title) font-heading text-fg-primary"
         >
+          {mark ? <CardDot /> : null}
           {title}
         </Heading>
         {subtitle ? <p className="text-label text-fg-secondary">{subtitle}</p> : null}

@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import './tokens.css';
+@import './scrollbar.css';
 
 @source '../';
 
@@ -126,16 +127,37 @@
 
   /* Every control declares its own focus ring (focus-ring utility); the default one is replaced. */
   :focus-visible {
-    outline: 2px solid var(--color-accent-default);
+    outline: 2px solid var(--color-focus-ring);
     outline-offset: 2px;
   }
 }
 
+/* Focus of buttons, chips and links: one 2 px ring, 2 px off the edge (never over a border). */
 @utility focus-ring {
   &:focus-visible,
   &[data-focus-visible] {
-    outline: 2px solid var(--color-accent-default);
+    outline: 2px solid var(--color-focus-ring);
     outline-offset: 2px;
+  }
+}
+
+/* Focus of a field box (text, money, search, date, select): the 1 px border IS the ring. On focus it
+   takes the ring color and grows to 2 px with a 1 px spread, so there is one ring, no outline over
+   the border and no layout jump. An invalid field rings in the danger color. The box must set its
+   own `outline-none` and `border`. Works on the input itself, on a wrapper (:focus-within) and on
+   the date input (focus inside a segment). */
+@utility field-ring {
+  --field-ring-color: var(--color-focus-ring);
+  transition-property: border-color, box-shadow;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--ease-standard);
+  &[data-invalid] {
+    --field-ring-color: var(--color-danger);
+    border-color: var(--color-danger);
+  }
+  &:focus-within {
+    border-color: var(--field-ring-color);
+    box-shadow: 0 0 0 1px var(--field-ring-color);
   }
 }
 
@@ -160,6 +182,21 @@
   font-size: max(0.8em, var(--font-size-caption));
 }
 
+/* Size of the typed amount: 44 px (40 on the phone) times --amount-fit, which the field lowers when
+   the text gets long (research: modals, rule 1). */
+@utility amount-size {
+  --amount-size: var(--font-size-amount-mobile);
+  font-size: calc(var(--amount-size) * var(--amount-fit, 1));
+  @media (min-width: 64rem) {
+    --amount-size: var(--font-size-amount);
+  }
+}
+
+/* Sign and "R$" next to the typed amount: 0.6 of the number (research: modals, rule 2). */
+@utility amount-affix {
+  font-size: 0.6em;
+}
+
 /* Hidden values: the dots shrink to 0.64 of the number (components.md 8). */
 @utility money-dots-small {
   font-size: 0.64em;
@@ -178,12 +215,6 @@
   &::-webkit-scrollbar {
     display: none;
   }
-}
-
-/* Thin scrollbar in the tone of the borders: for the scroll area inside a modal. */
-@utility scrollbar-subtle {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border-default) transparent;
 }
 
 /* The sliding indicator of the active top tab is its own view-transition group (motion.md 1). */

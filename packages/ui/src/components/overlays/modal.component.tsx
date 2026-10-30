@@ -33,9 +33,7 @@ export function Modal({
   return (
     <ModalFrame {...frame}>
       <ModalHeader title={title} subtitle={subtitle} />
-      <div className="scrollbar-subtle flex min-h-0 flex-1 flex-col gap-s16 overflow-y-auto">
-        {children}
-      </div>
+      <div className="flex min-h-0 flex-1 flex-col gap-s16 overflow-y-auto">{children}</div>
       {actions || destructiveAction ? (
         <ModalActions destructive={destructiveAction}>{actions}</ModalActions>
       ) : null}

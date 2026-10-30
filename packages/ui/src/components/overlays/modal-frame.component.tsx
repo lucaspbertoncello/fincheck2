@@ -13,6 +13,12 @@ export type ModalFrameProps = {
   role?: 'dialog' | 'alertdialog';
   /** Click outside and Esc close it. Turn off while a save is running. */
   isDismissable?: boolean;
+  /** Esc does not close it (while a save runs). Click outside is `isDismissable`. */
+  isKeyboardDismissDisabled?: boolean;
+  /** Taller sheet on the phone: 48 from the top instead of 72 (forms that need the room). */
+  tall?: boolean;
+  /** No padding and no gap in the panel: the content lays out its own header, body and footer. */
+  bare?: boolean;
   /** Accessible name when the content has no `ModalHeader` (which names the dialog by its title). */
   label?: string;
   children: ReactNode;
@@ -31,6 +37,9 @@ export function ModalFrame({
   size = 'default',
   role = 'dialog',
   isDismissable = true,
+  isKeyboardDismissDisabled = false,
+  bare = false,
+  tall = false,
   label,
   children,
   className,
@@ -40,6 +49,7 @@ export function ModalFrame({
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       isDismissable={isDismissable}
+      isKeyboardDismissDisabled={isKeyboardDismissDisabled}
       className={cx(
         'fixed inset-0 z-(--z-modal) flex items-end justify-center bg-scrim px-s16 pb-s24 backdrop-blur-(--blur-glass) lg:items-center lg:p-s24',
         'transition-opacity duration-(--duration-base) ease-(--ease-standard) data-[entering]:opacity-0 data-[exiting]:opacity-0',
@@ -47,10 +57,13 @@ export function ModalFrame({
     >
       <Modal
         className={cx(
-          'flex max-h-[calc(100dvh-var(--space-64)-var(--space-32))] w-full min-w-0 flex-col overflow-hidden rounded-panel border border-line bg-modal shadow-(--shadow-modal) backdrop-blur-(--blur-glass)',
+          'flex w-full min-w-0 flex-col overflow-hidden rounded-panel border border-line bg-modal shadow-(--shadow-modal) backdrop-blur-(--blur-glass)',
           'transition-[transform,opacity] duration-(--duration-base) ease-(--ease-standard)',
           'data-[entering]:translate-y-full data-[entering]:opacity-0 data-[exiting]:translate-y-full data-[exiting]:opacity-0',
           'lg:data-[entering]:translate-y-0 lg:data-[entering]:scale-96 lg:data-[exiting]:translate-y-0 lg:data-[exiting]:scale-96',
+          tall
+            ? 'max-h-[calc(100dvh-var(--space-48)-var(--space-24))] lg:max-h-[calc(100dvh-var(--space-64)-var(--space-32))]'
+            : 'max-h-[calc(100dvh-var(--space-64)-var(--space-32))]',
           MODAL_SIZE_CLASS[size],
           className,
         )}
@@ -58,7 +71,10 @@ export function ModalFrame({
         <Dialog
           role={role}
           aria-label={label}
-          className="flex min-h-0 flex-1 flex-col gap-s16 p-s16 outline-none lg:p-s24"
+          className={cx(
+            'flex min-h-0 flex-1 flex-col outline-none',
+            !bare && 'gap-s16 p-s16 lg:p-s24',
+          )}
         >
           {children}
         </Dialog>

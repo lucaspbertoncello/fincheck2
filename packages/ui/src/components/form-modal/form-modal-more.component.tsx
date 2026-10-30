@@ -1,0 +1,93 @@
+import { useId, useState, type ReactNode } from 'react';
+import { Button as AriaButton } from 'react-aria-components';
+
+import { Icon } from '#/components/icons/icon.component.tsx';
+import { cx } from '#/utils/class-names.util.ts';
+
+type FormModalMoreProps = {
+  /** The toggle ("Mais opções"). */
+  label?: string;
+  /** What is inside, while closed ("2 preenchidas"): the reader knows without opening. */
+  summary?: string;
+  /** Controlled state. Leave out to let the component keep it. */
+  isOpen?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (isOpen: boolean) => void;
+  /** A field inside has an error: stays open so the error is never hidden. */
+  hasError?: boolean;
+  children: ReactNode;
+  className?: string;
+};
+
+/**
+ * Progressive disclosure for the fields that are rarely needed ("Mais opções"): a toggle row in the
+ * look of a group label (accent text, chevron that turns, hairline to the edge) and a panel that
+ * opens by growing its row track while the content fades in. The only layout motion of the modal,
+ * on purpose: the panel must take its height. Closed, the panel is `inert` (no focus, not read).
+ * `prefers-reduced-motion` cuts the animation to 1 ms.
+ */
+export function FormModalMore({
+  label = 'Mais opções',
+  summary,
+  isOpen,
+  defaultOpen = false,
+  onOpenChange,
+  hasError = false,
+  children,
+  className,
+}: FormModalMoreProps) {
+  const [innerOpen, setInnerOpen] = useState(defaultOpen);
+  const panelId = useId();
+  const open = (isOpen ?? innerOpen) || hasError;
+
+  const toggle = () => {
+    const next = !open;
+    setInnerOpen(next);
+    onOpenChange?.(next);
+  };
+
+  return (
+    <section className={cx('flex min-w-0 flex-col', className)}>
+      <div className="flex items-center gap-s12">
+        <AriaButton
+          aria-expanded={open}
+          aria-controls={panelId}
+          onPress={toggle}
+          className="focus-ring -ml-s4 flex min-h-ctl-sm cursor-pointer items-center gap-s4 rounded-capsule px-s4 text-label font-emphasis text-brand data-[hovered]:bg-brand-weak"
+        >
+          <Icon
+            name="chevron-right"
+            size="sm"
+            className={cx(
+              'transition-transform duration-(--duration-slide) ease-(--ease-standard)',
+              open && 'rotate-90',
+            )}
+          />
+          {label}
+        </AriaButton>
+        <span aria-hidden="true" className="h-px flex-1 bg-line" />
+        {summary && !open ? <span className="text-meta text-fg-tertiary">{summary}</span> : null}
+      </div>
+      <div
+        className={cx(
+          'grid transition-[grid-template-rows] duration-(--duration-slide) ease-(--ease-standard)',
+          open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
+        )}
+      >
+        <div className="-mx-s4 min-h-0 overflow-hidden">
+          <div
+            id={panelId}
+            inert={!open}
+            className={cx(
+              'flex flex-col gap-s16 px-s4 pt-s16 pb-s4',
+              'transition-[opacity,transform] duration-(--duration-slide) ease-(--ease-standard)',
+              open ? 'translate-y-0 opacity-100' : '-translate-y-s4 opacity-0',
+            )}
+          >
+            {children}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

@@ -3,11 +3,15 @@ import type { IconName } from '#/components/icons/icon-markup.constant.ts';
 import { cx } from '#/utils/class-names.util.ts';
 
 const SIZE_CLASS = {
+  /** 32 px (pickers and form lists). */
+  sm: 'size-8',
   /** 40 px on the desktop, 36 px on the phone (list rows). */
   row: 'size-9 lg:size-10',
   /** 48 px (review queue header). */
   lg: 'size-12',
 } as const;
+
+const ICON_SIZE = { sm: 'md', row: 'base', lg: 'lg' } as const;
 
 const TYPE_PATH = {
   income: 'M7 17L17 7m0 0H9m8 0v8',
@@ -54,7 +58,7 @@ export function CategoryIcon({
           dashed && 'border border-dashed border-fg-tertiary',
         )}
       >
-        <Icon name={icon} size={size === 'lg' ? 'lg' : 'base'} />
+        <Icon name={icon} size={ICON_SIZE[size]} />
       </span>
       {type ? (
         <svg

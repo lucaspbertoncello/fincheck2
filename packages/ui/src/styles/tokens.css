@@ -51,6 +51,11 @@
   /* Logo (added by front app chat 2: the logo SVGs used literals; these two are the same values) */
   --color-logo-ink: #0b2d22;
   --color-logo-back: #abdec9;
+  /* Polish 1: focus ring of fields and controls (same green as the accent; 6:1 on the field) */
+  --color-focus-ring: oklch(0.48 0.1 168);   /* #006f53 */
+  --color-sheet-handle: oklch(0.25 0.03 180 / 0.22);   /* #1026223a */
+  --color-scrollbar-thumb: oklch(0.25 0.03 180 / 0.28);   /* #10262248 */
+  --color-scrollbar-thumb-hover: oklch(0.25 0.03 180 / 0.5);   /* #10262280 */
 
   --shadow-panel: 0 1px 0 oklch(1 0 0 / .9) inset, 0 0 0 1px oklch(1 0 0 / .5) inset;
   --shadow-button-inset: 0 1px 0 oklch(1 0 0 / .35) inset;
@@ -68,6 +73,7 @@
   --shadow-ring-bg: 0 0 0 2px oklch(0.99 0.002 170);
   --shadow-ring-warn: 0 0 0 2px oklch(0.96 0.04 80);
   --shadow-focus-ring: 0 0 0 3px oklch(0.92 0.04 168 / .8);
+  --shadow-focus-field: 0 0 0 1px var(--color-focus-ring);
   --font-family-title: 'Fustat', system-ui, sans-serif;
   --font-family-body: 'Inter Tight', system-ui, sans-serif;
   --font-family-money: 'Inter Tight', system-ui, sans-serif;
@@ -79,6 +85,8 @@
   --font-weight-logo: 600;
   --font-size-hero: 52px;
   --font-size-hero-mobile: 40px;
+  --font-size-amount: 44px;
+  --font-size-amount-mobile: 40px;
   --font-size-money-xl: 30px;
   --font-size-money-xl-mobile: 32px;
   --font-size-money-card: 28px;
@@ -143,6 +151,10 @@
   --size-panel-left: 376px;
   --size-page-gutter: 32px;
   --size-page-gutter-mobile: 16px;
+  --size-modal-form: 680px;
+  --size-sheet-handle-width: 36px;
+  --size-sheet-handle-height: 4px;
+  --size-scrollbar: 10px;
   --duration-instant: 130ms;
   --duration-fast: 160ms;
   --duration-pop: 180ms;
@@ -213,6 +225,10 @@
   --color-toast-accent: oklch(0.86 0.1 168);   /* #8ce6c4 */
   --color-logo-ink: #e5f2ec;
   --color-logo-back: #24604d;
+  --color-focus-ring: oklch(0.78 0.12 168);   /* #5dd0a9 */
+  --color-sheet-handle: oklch(1 0 0 / 0.24);   /* #ffffff3d */
+  --color-scrollbar-thumb: oklch(1 0 0 / 0.22);   /* #ffffff38 */
+  --color-scrollbar-thumb-hover: oklch(1 0 0 / 0.42);   /* #ffffff6b */
   --shadow-panel: 0 1px 0 oklch(1 0 0 / .08) inset;
   --shadow-plus: 0 1px 0 oklch(1 0 0 / .4) inset, 0 8px 16px -6px oklch(0.46 0.1 168 / .6);
   --shadow-tooltip: 0 4px 16px oklch(0 0 0 / .4);
