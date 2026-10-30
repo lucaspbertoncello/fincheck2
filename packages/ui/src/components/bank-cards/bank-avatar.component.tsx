@@ -63,6 +63,7 @@ export function BankAvatar({ theme: themeKey, name = '', size = 36, className }:
       <svg
         viewBox={art.viewBox}
         focusable="false"
+        fill="currentColor"
         className="h-1/2 w-3/5 overflow-visible"
         dangerouslySetInnerHTML={{ __html: art.markup }}
       />
