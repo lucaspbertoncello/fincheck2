@@ -1,4 +1,6 @@
-import type { CategoryOption, ChoiceOption } from '@fincheck/ui';
+import type { CategoryOption } from '@fincheck/ui';
+
+import type { AccountChipOption } from '#/shared/components/accounts/account-chips.component.tsx';
 
 import type {
   TransactionCreateErrors,
@@ -13,7 +15,7 @@ export type TransactionCreateViewProps = {
   errors: TransactionCreateErrors;
   /** Server error that belongs to no field. */
   formError?: string;
-  accounts: ChoiceOption[];
+  accounts: AccountChipOption[];
   methods: { id: string; label: string }[];
   /** The categories of the chosen type, most used first. */
   categories: CategoryOption[];

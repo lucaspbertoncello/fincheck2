@@ -51,7 +51,7 @@ export const SCREENS: Record<ScreenKey, ScreenDefinition> = {
     path: '/recurrences/bills',
     title: 'Recorrentes',
     tab: 'recurrences',
-    plusLabel: 'Nova conta a pagar ou receber',
+    plusLabel: 'Criar',
     plusMode: 'menu',
     filtersByMonth: true,
     showsPanel: true,

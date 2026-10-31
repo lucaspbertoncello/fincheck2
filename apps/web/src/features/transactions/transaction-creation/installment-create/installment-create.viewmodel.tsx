@@ -16,7 +16,7 @@ import type {
 } from '#/features/transactions/transaction-creation/installment-create/types/installment-create-form.type.ts';
 import { buildInstallmentPreview } from '#/features/transactions/transaction-creation/installment-create/utils/build-installment-preview.util.ts';
 import { buildInvoiceMonths } from '#/features/transactions/transaction-creation/installment-create/utils/build-invoice-months.util.ts';
-import { buildAccountChoices } from '#/features/transactions/transaction-fields/utils/build-account-choices.util.ts';
+import { buildAccountChoices } from '#/shared/utils/build-account-choices.util.ts';
 import { rankCategoriesByUse } from '#/features/transactions/transaction-fields/utils/rank-categories-by-use.util.ts';
 import { collectFieldErrors } from '#/features/transactions/transaction-creation/utils/collect-field-errors.util.ts';
 

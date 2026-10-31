@@ -1,4 +1,6 @@
-import type { CategoryOption, ChoiceOption } from '@fincheck/ui';
+import type { CategoryOption } from '@fincheck/ui';
+
+import type { AccountChipOption } from '#/shared/components/accounts/account-chips.component.tsx';
 
 import type {
   InstallmentCreateErrors,
@@ -13,7 +15,7 @@ export type InstallmentCreateViewProps = {
   onChange: (patch: Partial<InstallmentCreateValues>) => void;
   errors: InstallmentCreateErrors;
   formError?: string;
-  cards: ChoiceOption[];
+  cards: AccountChipOption[];
   /** Expense categories, most used first. */
   categories: CategoryOption[];
   invoiceMonths: { id: string; label: string }[];

@@ -1,11 +1,14 @@
 import { FineNote, SettingsNav, type SettingsNavItem } from '@fincheck/ui';
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
 import { ScreenHeader } from '#/shared/components/page/screen-header.component.tsx';
 import { SCREENS } from '#/shared/constants/screens.constant.ts';
 
 type SettingsViewProps = {
   isDesktop: boolean;
+  /** Left column of the shell grid (desktop); the menu is portaled into it. */
+  panelSlot: HTMLElement | null;
   navItems: SettingsNavItem[];
   activeKey: string;
   /** Each section sits in an element with this prefix plus its key as id. */
@@ -28,12 +31,14 @@ function Notes() {
 }
 
 /**
- * Configurações: no summary panel. On the desktop the left column is the list of the four sections (Perfil first) and
- * the two notes (ui adjustment 13: it does not repeat the page title); on the phone the sections
- * stack in a column and the notes close the page.
+ * Configurações: no summary panel. On the desktop the shell leaves its left column empty and the
+ * list of the four sections (Perfil first) and the two notes are portaled into it, so the column
+ * and the content start where they do on every other screen (ui adjustment 13: it does not repeat
+ * the page title). On the phone the sections stack in a column and the notes close the page.
  */
 export function SettingsView({
   isDesktop,
+  panelSlot,
   navItems,
   activeKey,
   sectionIdPrefix,
@@ -43,13 +48,16 @@ export function SettingsView({
   appearance,
 }: SettingsViewProps) {
   return (
-    <div className="grid gap-s24 lg:grid-cols-[var(--spacing-panel)_minmax(0,1fr)] lg:items-start">
-      {isDesktop ? (
-        <aside className="glass sticky top-s16 flex flex-col gap-s24 p-s24">
-          <SettingsNav items={navItems} activeKey={activeKey} label="Seções de Configurações" />
-          <Notes />
-        </aside>
-      ) : null}
+    <>
+      {isDesktop && panelSlot
+        ? createPortal(
+            <div className="glass flex flex-col gap-s24 p-s24">
+              <SettingsNav items={navItems} activeKey={activeKey} label="Seções de Configurações" />
+              <Notes />
+            </div>,
+            panelSlot,
+          )
+        : null}
       <div className="flex min-w-0 flex-col gap-s16 lg:gap-s24">
         <ScreenHeader screen={SCREENS.settings} />
         <div id={`${sectionIdPrefix}profile`} className="scroll-mt-s16">
@@ -68,6 +76,6 @@ export function SettingsView({
         </div>
         {isDesktop ? null : <Notes />}
       </div>
-    </div>
+    </>
   );
 }

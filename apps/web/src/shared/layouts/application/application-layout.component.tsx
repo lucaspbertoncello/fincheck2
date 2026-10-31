@@ -1,19 +1,21 @@
 import '#/shared/layouts/application/transition/tab-transition.css';
 
 import { Outlet, useRouter } from '@tanstack/react-router';
+import { useState } from 'react';
 import { RouterProvider as AriaRouterProvider } from 'react-aria-components';
 
 import { useIsDesktop } from '#/shared/hooks/use-is-desktop.hook.ts';
 import { ApplicationBottomNav } from '#/shared/layouts/application/navigation/application-bottom-nav.component.tsx';
 import { navigateToHref } from '#/shared/layouts/application/navigation/navigate-to-href.util.ts';
 import { useActiveScreen } from '#/shared/layouts/application/navigation/use-active-screen.hook.ts';
+import { PanelSlotContext } from '#/shared/layouts/application/panel/panel-slot.context.ts';
 import { useSplash } from '#/shared/layouts/application/splash/use-splash.hook.ts';
 import { ApplicationSummaryPanel } from '#/shared/layouts/application/summary/application-summary-panel.component.tsx';
 import { ApplicationTopBar } from '#/shared/layouts/application/top-bar/application-top-bar.component.tsx';
 
 /**
- * Shell of the app: top bar, the summary panel on the left (desktop, every screen but
- * Configurações), the page on the right inside the animated `tab-content` container, and the
+ * Shell of the app: top bar, the summary panel on the left (desktop; on Configurações an empty
+ * slot the screen fills with its section menu, so the column starts in the same place), the page on the right inside the animated `tab-content` container, and the
  * bottom bar on mobile. Links are React Aria links that navigate through the TanStack router.
  *
  * The frame is `relative` with `overflow-y: clip` so nothing inside can stretch the page past
@@ -28,7 +30,7 @@ export function ApplicationLayout() {
   const { screen, monthParam } = useActiveScreen();
   useSplash();
 
-  const showsSidePanel = isDesktop && screen.showsPanel;
+  const [panelSlot, setPanelSlot] = useState<HTMLElement | null>(null);
 
   return (
     <AriaRouterProvider navigate={(href) => navigateToHref(router, href)}>
@@ -36,17 +38,23 @@ export function ApplicationLayout() {
         <ApplicationTopBar screen={screen} monthParam={monthParam} />
         <div
           className={`grid gap-s24 px-gutter-mobile pt-s8 lg:px-gutter lg:pt-s4 ${
-            showsSidePanel ? 'lg:grid-cols-[var(--spacing-panel)_minmax(0,1fr)]' : ''
+            isDesktop ? 'lg:grid-cols-[var(--spacing-panel)_minmax(0,1fr)]' : ''
           }`}
         >
-          {showsSidePanel ? (
-            <aside className="sticky top-s16 self-start">
-              <ApplicationSummaryPanel variant="full" />
-            </aside>
+          {isDesktop ? (
+            screen.showsPanel ? (
+              <aside className="sticky top-s16 self-start">
+                <ApplicationSummaryPanel variant="full" />
+              </aside>
+            ) : (
+              <aside ref={setPanelSlot} className="sticky top-s16 self-start" />
+            )
           ) : null}
-          <main className="tab-content min-w-0">
-            <Outlet />
-          </main>
+          <PanelSlotContext value={panelSlot}>
+            <main className="tab-content min-w-0">
+              <Outlet />
+            </main>
+          </PanelSlotContext>
         </div>
         <ApplicationBottomNav activeTab={screen.tab} monthParam={monthParam} />
       </div>

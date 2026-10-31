@@ -77,7 +77,7 @@ export function DateRuleSentence({ values, errors, onChange }: DateRuleSentenceP
 
   return (
     <div className="flex flex-col gap-s4">
-      <div className="flex min-h-14 flex-wrap items-center gap-x-s8 gap-y-s8 rounded-input border border-line bg-subtle px-s12 py-s8 text-body text-fg-primary">
+      <div className="flex min-h-12 flex-wrap items-center gap-x-s8 gap-y-s4 rounded-input border border-line bg-subtle px-s12 py-s4 text-body text-fg-primary">
         {ruleType === 'fixed_day' ? <Phrase>Todo dia {dayField('Dia do mês')}</Phrase> : null}
         {ruleType === 'business_day' ? (
           <Phrase>

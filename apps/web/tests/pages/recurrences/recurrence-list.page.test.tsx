@@ -266,6 +266,7 @@ describe('RecurrenceListPage', () => {
       renderApp(`${URL}&new=recurrence`);
       const dialog = await screen.findByRole('dialog', { name: 'Nova recorrência' });
 
+      await userEvent.clear(within(dialog).getByRole('textbox', { name: 'Dia do mês' }));
       fireEvent.click(within(dialog).getByRole('button', { name: 'Salvar recorrência' }));
 
       expect(
@@ -292,17 +293,50 @@ describe('RecurrenceListPage', () => {
   });
 
   describe('"Nova recorrência" choices', () => {
-    it('opens with the focus on the name and the next dates under the rule', async () => {
+    it('opens with the focus on the name, the rule filled like its card and the next dates already there', async () => {
       renderApp(`${URL}&new=recurrence`);
       const dialog = await screen.findByRole('dialog', { name: 'Nova recorrência' });
 
       await waitFor(() =>
         expect(within(dialog).getByRole('textbox', { name: 'Nome' })).toHaveFocus(),
       );
-      await userEvent.type(within(dialog).getByRole('textbox', { name: 'Dia do mês' }), '15');
+      expect(within(dialog).getByRole('textbox', { name: 'Dia do mês' })).toHaveValue('15');
+      expect(within(dialog).queryByText(/Complete a regra/)).not.toBeInTheDocument();
 
       const trail = await within(dialog).findByRole('list', { name: 'Próximas datas' });
       expect(within(trail).getAllByRole('listitem')).toHaveLength(3);
+    });
+
+    it('fills the numbers of the rule that is chosen, so it is never opened empty', async () => {
+      renderApp(`${URL}&new=recurrence`);
+      const dialog = await screen.findByRole('dialog', { name: 'Nova recorrência' });
+
+      await userEvent.click(within(dialog).getByRole('radio', { name: /Dia útil/ }));
+      expect(within(dialog).getByRole('textbox', { name: 'Qual dia útil' })).toHaveValue('5');
+
+      await userEvent.click(within(dialog).getByRole('radio', { name: /Por volta de/ }));
+      expect(within(dialog).getByRole('textbox', { name: 'Dias para mais ou menos' })).toHaveValue(
+        '2',
+      );
+      expect(await within(dialog).findByRole('list', { name: 'Próximas datas' })).toBeVisible();
+    });
+
+    it('writes the examples of the four rule cards in full, without cutting them', async () => {
+      renderApp(`${URL}&new=recurrence`);
+      const dialog = await screen.findByRole('dialog', { name: 'Nova recorrência' });
+
+      for (const text of ['Todo dia 15', 'O 5º dia útil', 'Perto do dia 25', 'Sem data certa']) {
+        const example = within(dialog).getByText(text);
+        expect(example.className).not.toContain('truncate');
+      }
+    });
+
+    it('shows the accounts as chips with the bank mark', async () => {
+      renderApp(`${URL}&new=recurrence`);
+      const dialog = await screen.findByRole('dialog', { name: 'Nova recorrência' });
+
+      const nubank = await within(dialog).findByRole('radio', { name: 'Nubank' });
+      expect(nubank.closest('label')?.querySelector('span[aria-hidden]')).not.toBeNull();
     });
 
     it('asks the regime only for income, inside "Mais opções"', async () => {

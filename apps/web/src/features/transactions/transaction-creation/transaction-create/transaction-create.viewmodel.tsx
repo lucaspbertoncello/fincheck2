@@ -7,7 +7,7 @@ import { buildCategoryOptions } from '#/features/transactions/transaction-list/u
 import { describeTransactionError } from '#/features/transactions/transaction-list/utils/describe-transaction-error.util.ts';
 import { focusFirstInvalid } from '#/features/transactions/transaction-list/utils/focus-first-invalid.util.ts';
 import { toBusinessDate } from '#/features/transactions/transaction-list/utils/to-business-date.util.ts';
-import { buildAccountChoices } from '#/features/transactions/transaction-fields/utils/build-account-choices.util.ts';
+import { buildAccountChoices } from '#/shared/utils/build-account-choices.util.ts';
 import { rankCategoriesByUse } from '#/features/transactions/transaction-fields/utils/rank-categories-by-use.util.ts';
 import {
   CARD_METHODS,

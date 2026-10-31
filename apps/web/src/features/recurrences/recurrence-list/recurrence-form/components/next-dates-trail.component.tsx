@@ -11,10 +11,10 @@ type NextDatesTrailProps = {
  */
 export function NextDatesTrail({ tiles }: NextDatesTrailProps) {
   return (
-    <div className="flex flex-col gap-s8">
-      <p className="text-label text-fg-secondary">Próximas datas</p>
+    <div className="flex flex-col">
+      <p className="sr-only">Próximas datas</p>
       {tiles.length === 0 ? (
-        <p className="flex min-h-16 items-center rounded-input border border-dashed border-line px-s12 text-meta text-fg-tertiary">
+        <p className="flex min-h-12 items-center rounded-input border border-dashed border-line px-s12 text-meta text-fg-tertiary">
           Complete a regra e as próximas datas aparecem aqui.
         </p>
       ) : (
@@ -23,7 +23,7 @@ export function NextDatesTrail({ tiles }: NextDatesTrailProps) {
             <li
               key={tile.key}
               aria-label={tile.label}
-              className={`flex min-h-16 flex-col items-center justify-center rounded-input border px-s4 py-s8 ${
+              className={`flex min-h-12 flex-col items-center justify-center rounded-input border px-s4 py-s4 leading-tight ${
                 index === 0 ? 'border-brand bg-brand-weak' : 'border-line bg-subtle'
               }`}
             >

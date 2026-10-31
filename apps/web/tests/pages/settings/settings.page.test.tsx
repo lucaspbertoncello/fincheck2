@@ -470,6 +470,10 @@ describe('SettingsPage', () => {
       await openSettings();
 
       const nav = await screen.findByRole('navigation', { name: 'Seções de Configurações' });
+      // The menu sits in the left column of the shell grid (the slot), beside the page, not
+      // inside it: so it starts where the summary panel starts on the other screens.
+      expect(screen.getByRole('main')).not.toContainElement(nav);
+      expect(nav.closest('aside')?.parentElement).toBe(screen.getByRole('main').parentElement);
       expect(
         within(nav)
           .getAllByRole('link')

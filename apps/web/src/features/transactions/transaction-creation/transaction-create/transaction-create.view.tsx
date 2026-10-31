@@ -14,8 +14,8 @@ import type { TransactionCreateViewProps } from '#/features/transactions/transac
 
 /**
  * "Nova transação" on the form-modal pattern. The amount is the hero (with Despesa | Receita above
- * it) and the description sits right under it; the other column takes what is chosen with a tap
- * (category, date, account). The payment method is rare, so it waits in "Mais opções".
+ * it), then the description and the date; the other column takes what is chosen with a tap
+ * (category, account), so the two columns weigh the same and nothing scrolls. The payment method is rare, so it waits in "Mais opções".
  */
 export function TransactionCreateView(props: TransactionCreateViewProps) {
   const { values, errors } = props;
@@ -57,6 +57,12 @@ export function TransactionCreateView(props: TransactionCreateViewProps) {
               autoComplete="off"
               maxLength={200}
             />
+            <DateQuickField
+              label="Data"
+              value={values.date}
+              onChange={(date) => props.onChange({ date })}
+              error={errors.date}
+            />
           </>
         }
       >
@@ -65,12 +71,6 @@ export function TransactionCreateView(props: TransactionCreateViewProps) {
           categories={props.categories}
           value={values.categoryId}
           onChange={(categoryId) => props.onChange({ categoryId })}
-        />
-        <DateQuickField
-          label="Data"
-          value={values.date}
-          onChange={(date) => props.onChange({ date })}
-          error={errors.date}
         />
         <AccountChoiceField
           accounts={props.accounts}

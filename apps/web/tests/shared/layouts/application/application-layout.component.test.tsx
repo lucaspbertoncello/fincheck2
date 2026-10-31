@@ -203,7 +203,7 @@ describe('ApplicationLayout', () => {
     async (url) => {
       renderApp(url);
       const plus = await screen.findByRole('button', {
-        name: /^(Criar|Nova conta a pagar ou receber)$/,
+        name: 'Criar',
       });
       plus.focus();
       fireEvent.keyDown(plus, { key: 'Enter' });

@@ -244,6 +244,14 @@ describe('TransactionListPage', () => {
     renderApp(`${PAGE}&new=transaction`);
 
     const dialog = await screen.findByRole('dialog', { name: 'Nova transação' }, LONG_WAIT);
+    // The account chips carry the bank mark (or the wallet icon), not a generic icon.
+    const account = await within(dialog).findByRole('radio', { name: 'Nubank' });
+    expect(account.closest('label')?.querySelector('span[aria-hidden]')).not.toBeNull();
+    // The date sits in the left column, under the description.
+    let column = within(dialog).getByRole('textbox', { name: 'Descrição' }).parentElement;
+    while (column && !within(column).queryByText('Data')) column = column.parentElement;
+    expect(column).not.toBeNull();
+    expect(within(column as HTMLElement).queryByText('Categoria')).toBeNull();
     // The amount is where the focus starts, and "Adicionar" waits for it, saying why.
     const amount = within(dialog).getByRole('textbox', { name: 'Valor' });
     await waitFor(() => expect(amount).toHaveFocus());

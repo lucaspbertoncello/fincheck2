@@ -1,7 +1,7 @@
 import { dateRuleSchema } from '@fincheck/shared/recurrences/recurrence/recurrence.schema.ts';
 import type { Recurrence } from '@fincheck/shared/recurrences/recurrence/recurrence.type.ts';
 import { useToast } from '@fincheck/ui';
-import type { CategoryOption, ChoiceOption } from '@fincheck/ui';
+import type { CategoryOption } from '@fincheck/ui';
 import { useState } from 'react';
 
 import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
@@ -27,8 +27,10 @@ import { buildFormValues } from '#/features/recurrences/recurrence-list/recurren
 import { buildHistoryNote } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-history-note.util.ts';
 import { buildUpdateBody } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-update-body.util.ts';
 import { buildPreviewTiles } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-preview-tiles.util.ts';
+import { applyRuleDefaults } from '#/features/recurrences/recurrence-list/recurrence-form/utils/apply-rule-defaults.util.ts';
 import { isApiError } from '#/shared/api/api.error.ts';
 import { useHideValues } from '#/shared/hooks/use-hide-values.hook.ts';
+import { buildAccountChoices } from '#/shared/utils/build-account-choices.util.ts';
 
 type SessionProps = {
   /** Present when editing: the saved recurrence with its history. */
@@ -56,7 +58,11 @@ function RecurrenceFormSession({ saved }: SessionProps) {
   useFocusFirstInvalid(attempt);
 
   function handleChange(patch: Partial<RecurrenceFormValues>) {
-    setValues((current) => ({ ...current, ...patch }));
+    setValues((current) => {
+      const next = { ...current, ...patch };
+      // A new rule type opens complete: its numbers come filled with the example of its card.
+      return patch.ruleType ? { ...next, ...applyRuleDefaults(next) } : next;
+    });
     setErrors({});
     setFormError(null);
   }
@@ -131,9 +137,9 @@ function RecurrenceFormSession({ saved }: SessionProps) {
       name: category.name,
       icon: mapCategoryIcon(category.icon),
     }));
-  const accounts: ChoiceOption[] = (accountsQuery.data?.items ?? [])
-    .filter((account) => account.type !== 'credit_card')
-    .map((account) => ({ key: account.id, label: account.name, icon: 'wallet' }));
+  const accounts = buildAccountChoices(
+    (accountsQuery.data?.items ?? []).filter((account) => account.type !== 'credit_card'),
+  );
   const saving = actions.create.isPending || actions.update.isPending;
 
   return (

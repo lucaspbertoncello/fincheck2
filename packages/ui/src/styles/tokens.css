@@ -56,6 +56,11 @@
   --color-sheet-handle: oklch(0.25 0.03 180 / 0.22);   /* #1026223a */
   --color-scrollbar-thumb: oklch(0.25 0.03 180 / 0.28);   /* #10262248 */
   --color-scrollbar-thumb-hover: oklch(0.25 0.03 180 / 0.5);   /* #10262280 */
+  /* Polish 1: spend map levels (heatmap 1..4); level 1 is 3.2:1 or more on the card, level 0 is the subtle surface */
+  --color-heatmap-1: oklch(0.62 0.11 168);   /* #2f9b79 */
+  --color-heatmap-2: oklch(0.56 0.11 168);   /* #108968 */
+  --color-heatmap-3: oklch(0.5 0.1 168);   /* #057558 */
+  --color-heatmap-4: oklch(0.43 0.09 168);   /* #005f46 */
 
   --shadow-panel: 0 1px 0 oklch(1 0 0 / .9) inset, 0 0 0 1px oklch(1 0 0 / .5) inset;
   --shadow-button-inset: 0 1px 0 oklch(1 0 0 / .35) inset;
@@ -229,6 +234,10 @@
   --color-sheet-handle: oklch(1 0 0 / 0.24);   /* #ffffff3d */
   --color-scrollbar-thumb: oklch(1 0 0 / 0.22);   /* #ffffff38 */
   --color-scrollbar-thumb-hover: oklch(1 0 0 / 0.42);   /* #ffffff6b */
+  --color-heatmap-1: oklch(0.56 0.1 168);   /* #268769 */
+  --color-heatmap-2: oklch(0.64 0.12 168);   /* #25a37e */
+  --color-heatmap-3: oklch(0.72 0.13 168);   /* #37be95 */
+  --color-heatmap-4: oklch(0.82 0.12 168);   /* #6bddb5 */
   --shadow-panel: 0 1px 0 oklch(1 0 0 / .08) inset;
   --shadow-plus: 0 1px 0 oklch(1 0 0 / .4) inset, 0 8px 16px -6px oklch(0.46 0.1 168 / .6);
   --shadow-tooltip: 0 4px 16px oklch(0 0 0 / .4);

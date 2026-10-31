@@ -14,6 +14,7 @@ import { ProfileViewModel } from '#/features/settings/settings/profile/profile.v
 import { joinNames } from '#/features/settings/settings/utils/join-names.util.ts';
 import { useSettingsModel } from '#/features/settings/settings/settings.model.ts';
 import { SettingsView } from '#/features/settings/settings/settings.view.tsx';
+import { usePanelSlot } from '#/shared/layouts/application/panel/panel-slot.context.ts';
 import { useIsDesktop } from '#/shared/hooks/use-is-desktop.hook.ts';
 
 export const SECTION_ID_PREFIX = 'settings-';
@@ -22,6 +23,7 @@ export const SECTION_ID_PREFIX = 'settings-';
 export function SettingsViewModel() {
   const { connections, profile } = useSettingsModel();
   const isDesktop = useIsDesktop();
+  const panelSlot = usePanelSlot();
   // The section is the anchor of the URL; the side menu links (`#backup`) go through the shell router.
   const hash = useRouterState({ select: (state) => state.location.hash });
   const activeKey: SettingsSectionKey = getSectionFromHash(hash);
@@ -53,6 +55,7 @@ export function SettingsViewModel() {
   return (
     <SettingsView
       isDesktop={isDesktop}
+      panelSlot={panelSlot}
       navItems={navItems}
       activeKey={activeKey}
       sectionIdPrefix={SECTION_ID_PREFIX}

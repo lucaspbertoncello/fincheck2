@@ -7,16 +7,16 @@ import {
   FormModal,
   FormModalGroup,
   FormModalMore,
-  FormModalSplit,
   TextField,
 } from '@fincheck/ui';
 import type { CategoryOption, ChoiceOption } from '@fincheck/ui';
 
-import { AccountChoice } from '#/features/recurrences/recurrence-list/recurrence-form/components/account-choice.component.tsx';
 import { CategoryChips } from '#/features/recurrences/recurrence-list/recurrence-form/components/category-chips.component.tsx';
 import { DateRuleCards } from '#/features/recurrences/recurrence-list/recurrence-form/components/date-rule-cards.component.tsx';
 import { DateRuleSentence } from '#/features/recurrences/recurrence-list/recurrence-form/components/date-rule-sentence.component.tsx';
 import { NextDatesTrail } from '#/features/recurrences/recurrence-list/recurrence-form/components/next-dates-trail.component.tsx';
+import { AccountChips } from '#/shared/components/accounts/account-chips.component.tsx';
+import type { AccountChipOption } from '#/shared/components/accounts/account-chips.component.tsx';
 import type { PreviewTile } from '#/features/recurrences/recurrence-list/recurrence-form/types/preview-tile.type.ts';
 import type {
   RecurrenceFormErrors,
@@ -35,7 +35,7 @@ type RecurrenceFormViewProps = {
   /** Categories of the chosen type, the most used first. */
   categories: CategoryOption[];
   /** Accounts as choices (no cards). */
-  accounts: ChoiceOption[];
+  accounts: AccountChipOption[];
   /** Edit only: the confirmations so far. */
   historyNote?: string;
   paused: boolean;
@@ -125,9 +125,12 @@ export function RecurrenceFormView({
         initialFocus='input[name="name"]'
         destructive={editing ? { label: 'Excluir', onPress: onRequestDelete } : undefined}
       >
-        <FormModalSplit
-          aside={
+        <div className="grid grid-cols-1 gap-s16 @xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] @xl:gap-x-s24">
+          {/* Left column on the desktop: the amount, then when it falls. On the phone both columns dissolve and the
+              order classes give: type, amount, name, who, when, category, account. */}
+          <div className="contents @xl:flex @xl:min-w-0 @xl:flex-col @xl:gap-s16 @xl:border-r @xl:border-line @xl:pr-s24">
             <AmountField
+              className="order-1"
               label="Valor esperado"
               name="amountCents"
               cents={values.amountCents}
@@ -143,15 +146,24 @@ export function RecurrenceFormView({
                         employmentRegime: kind === 'income' ? values.employmentRegime : '',
                       })
               }
-              description={
-                income ? 'Quanto costuma entrar por mês.' : 'Quanto costuma sair por mês.'
-              }
               error={errors.amountCents}
             />
-          }
-        >
-          <FormModalGroup>
+            <FormModalGroup label="Quando cai" className="order-5">
+              <div className="flex flex-col gap-s8">
+                <DateRuleCards
+                  value={values.ruleType}
+                  onChange={(ruleType) => onChange({ ruleType })}
+                />
+                <DateRuleSentence values={values} errors={errors} onChange={onChange} />
+                <NextDatesTrail tiles={tiles} />
+              </div>
+            </FormModalGroup>
+          </div>
+
+          {/* Right column: who, what and where. */}
+          <div className="contents @xl:flex @xl:min-w-0 @xl:flex-col @xl:gap-s16">
             <TextField
+              className="order-3"
               label="Nome"
               name="name"
               value={values.name}
@@ -162,6 +174,7 @@ export function RecurrenceFormView({
               autoComplete="off"
             />
             <TextField
+              className="order-4"
               label={income ? 'Vem de quem' : 'Para quem'}
               name="counterparty"
               value={values.counterparty}
@@ -171,32 +184,23 @@ export function RecurrenceFormView({
               maxLength={120}
               autoComplete="off"
             />
-          </FormModalGroup>
-        </FormModalSplit>
-
-        <FormModalGroup label="Quando cai" columns={2}>
-          <DateRuleCards value={values.ruleType} onChange={(ruleType) => onChange({ ruleType })} />
-          <div className="flex flex-col gap-s12">
-            <DateRuleSentence values={values} errors={errors} onChange={onChange} />
-            <NextDatesTrail tiles={tiles} />
+            <CategoryChips
+              key={values.kind}
+              className="order-6"
+              label="Categoria"
+              categories={categories}
+              value={values.categoryId}
+              onChange={(categoryId) => onChange({ categoryId })}
+            />
+            <AccountChips
+              className="order-7"
+              label={income ? 'Entra em' : 'Sai de'}
+              accounts={accounts}
+              value={values.accountId}
+              onChange={(accountId) => onChange({ accountId })}
+            />
           </div>
-        </FormModalGroup>
-
-        <FormModalGroup label="Categoria e conta" columns={2}>
-          <CategoryChips
-            key={values.kind}
-            label="Categoria"
-            categories={categories}
-            value={values.categoryId}
-            onChange={(categoryId) => onChange({ categoryId })}
-          />
-          <AccountChoice
-            label={income ? 'Entra em' : 'Sai de'}
-            accounts={accounts}
-            value={values.accountId}
-            onChange={(accountId) => onChange({ accountId })}
-          />
-        </FormModalGroup>
+        </div>
 
         {editing ? (
           <FormModalGroup label="Esta mudança" columns={2}>

@@ -187,6 +187,23 @@ describe('bill row', () => {
     expect(window.location.search).toContain('edit=');
   });
 
+  it('edits a one-off bill from the keyboard: the name is a button and Enter opens it', async () => {
+    const user = userEvent.setup();
+    renderApp(URL);
+
+    const edit = await screen.findByRole(
+      'button',
+      { name: 'Editar IPVA, cota 2' },
+      { timeout: 4000 },
+    );
+    edit.focus();
+    expect(edit).toHaveFocus();
+    await user.keyboard('{Enter}');
+
+    const dialog = await screen.findByRole('dialog', { name: 'Editar conta' });
+    expect(within(dialog).getByLabelText('Descrição')).toHaveValue('IPVA, cota 2');
+  });
+
   it('does not edit a friend debt by tapping its name', async () => {
     const user = userEvent.setup();
     renderApp(URL);

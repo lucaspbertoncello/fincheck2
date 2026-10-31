@@ -28,6 +28,8 @@ type BillRowProps = {
   actionLabel?: string;
   /** Press of the action button, or of "Vincular" on a paid-unlinked bill. Absent on settled. */
   onAction?: () => void;
+  /** Makes the name a real button that opens the bill to edit (Enter and Space work). Absent: plain text. */
+  onEdit?: () => void;
   className?: string;
 };
 
@@ -48,6 +50,7 @@ export function BillRow({
   settledCents,
   actionLabel,
   onAction,
+  onEdit,
   className,
 }: BillRowProps) {
   const settled = status === 'settled';
@@ -68,14 +71,28 @@ export function BillRow({
     >
       <CategoryIcon icon={icon} type={flow} />
       <div className="min-w-0">
-        <p
-          className={cx(
-            'text-body font-emphasis',
-            settled ? 'text-fg-secondary' : 'text-fg-primary',
-          )}
-        >
-          {name}
-        </p>
+        {onEdit ? (
+          <button
+            type="button"
+            onClick={onEdit}
+            aria-label={`Editar ${name}`}
+            className={cx(
+              'focus-ring -mx-s4 block max-w-full cursor-pointer rounded-input px-s4 text-left text-body font-emphasis hover:underline',
+              settled ? 'text-fg-secondary' : 'text-fg-primary',
+            )}
+          >
+            {name}
+          </button>
+        ) : (
+          <p
+            className={cx(
+              'text-body font-emphasis',
+              settled ? 'text-fg-secondary' : 'text-fg-primary',
+            )}
+          >
+            {name}
+          </p>
+        )}
         <p className="flex flex-wrap items-center gap-x-s8 gap-y-s4 text-label text-fg-secondary">
           {status === 'late' ? (
             <Chip tone="warn" icon="warning">

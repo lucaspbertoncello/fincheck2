@@ -68,10 +68,30 @@ export function SpendHeatmap({ days, label, onSelectDay, className }: SpendHeatm
   const lastRow = lastWeek.reduce((row, day, index) => (day ? index : row), 0);
   const tabStop = active ?? { column: Math.max(weeks.length - 1, 0), row: lastRow };
 
-  // Opens on the current week: the right edge of the map.
+  // Opens on the current week (the right edge of the map) and stays there until the person moves
+  // the map. One write at mount is not enough: the scroller may not have its final width yet
+  // (fonts, a hidden parent that is revealed, the sheet of the phone settling), so the end is
+  // applied again whenever the scroller or its content changes size.
   useLayoutEffect(() => {
     const scroller = scrollerRef.current;
-    if (scroller) scroller.scrollLeft = scroller.scrollWidth;
+    if (!scroller) return;
+    let moved = false;
+    const toEnd = () => {
+      if (!moved) scroller.scrollLeft = scroller.scrollWidth;
+    };
+    const stop = () => {
+      moved = true;
+    };
+    toEnd();
+    const events = ['pointerdown', 'wheel', 'touchstart', 'keydown'] as const;
+    for (const name of events) scroller.addEventListener(name, stop, { passive: true });
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(toEnd);
+    observer?.observe(scroller);
+    if (scroller.firstElementChild) observer?.observe(scroller.firstElementChild);
+    return () => {
+      for (const name of events) scroller.removeEventListener(name, stop);
+      observer?.disconnect();
+    };
   }, [weeks.length]);
 
   const columns = `repeat(${weeks.length}, minmax(var(--heatmap-cell-min), 1fr))`;

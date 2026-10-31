@@ -21,8 +21,14 @@ function rowOf(name: string): HTMLElement {
   return row;
 }
 
+// The first wait of every test is the whole screen: the shell, the agenda query (the mock composes
+// bills, invoices, debts and recurrences) and the free-balance panel. With the full suite running
+// in parallel that takes longer than the 1 s default of waitFor, which made the test flaky. Waiting
+// is not a sleep: it returns as soon as the row is there.
+const SCREEN_LOAD_TIMEOUT = 4000;
+
 function findRow(name: string): Promise<HTMLElement> {
-  return waitFor(() => rowOf(name));
+  return waitFor(() => rowOf(name), { timeout: SCREEN_LOAD_TIMEOUT });
 }
 
 describe('BillListPage', () => {

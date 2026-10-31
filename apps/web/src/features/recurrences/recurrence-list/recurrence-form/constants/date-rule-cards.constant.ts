@@ -14,6 +14,6 @@ export type DateRuleCard = {
 export const DATE_RULE_CARDS: readonly DateRuleCard[] = [
   { key: 'fixed_day', label: 'Dia fixo', example: 'Todo dia 15', icon: 'calendar-mark' },
   { key: 'business_day', label: 'Dia útil', example: 'O 5º dia útil', icon: 'calendar' },
-  { key: 'around_day', label: 'Por volta de', example: 'Dia 25, com folga', icon: 'clock' },
+  { key: 'around_day', label: 'Por volta de', example: 'Perto do dia 25', icon: 'clock' },
   { key: 'any_day', label: 'Qualquer dia', example: 'Sem data certa', icon: 'repeat' },
 ];

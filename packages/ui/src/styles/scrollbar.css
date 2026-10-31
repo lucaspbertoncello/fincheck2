@@ -34,3 +34,9 @@
   border-width: 1px;
   background-color: var(--color-scrollbar-thumb-hover);
 }
+
+/* The gutter stays even when the page is short and has no scrollbar, so centred columns do not
+   shift sideways when a screen starts to scroll (Configurações against Visão geral). */
+html {
+  scrollbar-gutter: stable;
+}
