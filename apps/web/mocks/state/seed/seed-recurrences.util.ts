@@ -6,7 +6,7 @@ import type { SeedIds } from '#mocks/state/seed/build-seed-ids.util.ts';
 import { makeTransactionRecord } from '#mocks/state/seed/make-transaction-record.util.ts';
 import { invoiceMonthFor } from '#mocks/invoices/invoice/invoice-month-for.util.ts';
 import { addMonths } from '#mocks/support/dates/add-months.util.ts';
-import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/clock.constant.ts';
+import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { dateInMonth } from '#mocks/support/dates/date-in-month.util.ts';
 import { dayOf } from '#mocks/support/dates/day-of.util.ts';
 import { nthBusinessDay } from '#mocks/support/dates/nth-business-day.util.ts';

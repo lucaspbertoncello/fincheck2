@@ -6,7 +6,7 @@ import { apiErrorSchema } from '@fincheck/shared/common/api-error/api-error.sche
 import { listResponseSchema } from '@fincheck/shared/common/list/list.schema.ts';
 import { describe, expect, it } from 'vitest';
 
-import { CURRENT_MONTH } from '#mocks/support/dates/clock.constant.ts';
+import { CURRENT_MONTH } from '#mocks/support/dates/mock-clock.store.ts';
 import { callApi } from '#tests/support/mocks/call-api.util.ts';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
 

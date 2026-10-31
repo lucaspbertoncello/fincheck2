@@ -8,7 +8,7 @@ import { computePeriod } from '#mocks/dashboard/month-summary/compute-period.uti
 import { sumLines } from '#mocks/dashboard/month-summary/sum-lines.util.ts';
 import { listMonthOccurrences } from '#mocks/recurrences/occurrence/list-month-occurrences.util.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
-import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/clock.constant.ts';
+import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { daysBetween } from '#mocks/support/dates/days-between.util.ts';
 import { handleRoute } from '#mocks/support/http/handle-route.util.ts';
 import { isConnectionStale } from '#mocks/sync/connection/is-connection-stale.util.ts';

@@ -2,7 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { CURRENT_MONTH } from '#mocks/support/dates/clock.constant.ts';
+import { CURRENT_MONTH } from '#mocks/support/dates/mock-clock.store.ts';
 import { renderApp } from '#tests/support/app/render-app.util.tsx';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
 

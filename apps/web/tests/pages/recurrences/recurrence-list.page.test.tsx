@@ -5,8 +5,9 @@ import { describe, expect, it } from 'vitest';
 
 import { createTestOccurrence } from '#tests/support/recurrences/occurrence/create-test-occurrence.util.ts';
 import { server } from '#mocks/setup/server.util.ts';
-import { CURRENT_MONTH } from '#mocks/support/dates/clock.constant.ts';
+import { CURRENT_MONTH } from '#mocks/support/dates/mock-clock.store.ts';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
+import { makeOccurrenceLate } from '#tests/support/recurrences/occurrence/make-occurrence-late.util.ts';
 import { renderApp } from '#tests/support/app/render-app.util.tsx';
 
 resetDatabaseBeforeEach();
@@ -96,6 +97,7 @@ describe('RecurrenceListPage', () => {
   });
 
   it('links a transaction to an income that is waiting', async () => {
+    makeOccurrenceLate('Lume Design (freela)');
     server.use(
       http.get('/api/occurrences/:id/candidates', () =>
         HttpResponse.json({
@@ -155,6 +157,7 @@ describe('RecurrenceListPage', () => {
   });
 
   it('starts with the closest candidate chosen and links the one picked instead', async () => {
+    makeOccurrenceLate('Lume Design (freela)');
     const first = '3f0c3a1e-0000-4000-8000-000000000001';
     const second = '3f0c3a1e-0000-4000-8000-000000000005';
     let linked: unknown;
@@ -195,6 +198,7 @@ describe('RecurrenceListPage', () => {
   });
 
   it('says so when no transaction is near the occurrence', async () => {
+    makeOccurrenceLate('Lume Design (freela)');
     server.use(http.get('/api/occurrences/:id/candidates', () => HttpResponse.json({ items: [] })));
     renderApp(URL);
     const attention = await findAttentionStrip();

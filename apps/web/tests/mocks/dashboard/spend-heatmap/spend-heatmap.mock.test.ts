@@ -2,7 +2,7 @@ import { spendHeatmapDtoSchema } from '@fincheck/shared/dashboard/spend-heatmap/
 import { describe, expect, it } from 'vitest';
 
 import { addMonths } from '#mocks/support/dates/add-months.util.ts';
-import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/clock.constant.ts';
+import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { daysBetween } from '#mocks/support/dates/days-between.util.ts';
 import { callApi } from '#tests/support/mocks/call-api.util.ts';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';

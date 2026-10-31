@@ -2,7 +2,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { useSpendHeatmap } from '#/domain/dashboard/spend-heatmap/hooks/use-spend-heatmap.hook.ts';
-import { TODAY } from '#mocks/support/dates/clock.constant.ts';
+import { TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { createQueryWrapper } from '#tests/support/api/create-query-wrapper.util.tsx';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
 

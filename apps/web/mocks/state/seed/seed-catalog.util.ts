@@ -2,7 +2,7 @@ import type { MockState } from '#mocks/state/mock-state.type.ts';
 import type { SeedIds } from '#mocks/state/seed/build-seed-ids.util.ts';
 import { toInstant } from '#mocks/support/dates/to-instant.util.ts';
 import { addDays } from '#mocks/support/dates/add-days.util.ts';
-import { TODAY } from '#mocks/support/dates/clock.constant.ts';
+import { TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 
 // Categories and tags: the defaults, one made by Lucas and one archived of each.
 export function seedCatalog(database: MockState.Database, ids: SeedIds): void {

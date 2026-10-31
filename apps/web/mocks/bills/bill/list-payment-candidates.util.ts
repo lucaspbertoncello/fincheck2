@@ -3,7 +3,7 @@ import { normalizeText } from '@fincheck/shared/common/text/normalize-text.util.
 
 import type { MockState } from '#mocks/state/mock-state.type.ts';
 import { addDays } from '#mocks/support/dates/add-days.util.ts';
-import { TODAY } from '#mocks/support/dates/clock.constant.ts';
+import { TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { countsInAccounts } from '#mocks/transactions/transaction/counts-in-accounts.util.ts';
 import { isTransactionLinked } from '#mocks/transactions/transaction/is-transaction-linked.util.ts';
 

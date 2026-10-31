@@ -7,7 +7,7 @@ import { useFreeBalance } from '#/domain/dashboard/free-balance/hooks/use-free-b
 import { useMonthSummary } from '#/domain/dashboard/month-summary/hooks/use-month-summary.hook.ts';
 import { useSpendingCurve } from '#/domain/dashboard/spending-curve/hooks/use-spending-curve.hook.ts';
 import { useTimeline } from '#/domain/dashboard/timeline/hooks/use-timeline.hook.ts';
-import { CURRENT_MONTH } from '#mocks/support/dates/clock.constant.ts';
+import { CURRENT_MONTH } from '#mocks/support/dates/mock-clock.store.ts';
 import { createQueryWrapper } from '#tests/support/api/create-query-wrapper.util.tsx';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
 

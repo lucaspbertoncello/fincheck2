@@ -6,7 +6,7 @@ import { applyRule } from '#mocks/categories/rule/apply-rule.util.ts';
 import { presentRule } from '#mocks/categories/rule/present-rule.util.ts';
 import { newId } from '#mocks/state/mock-id.store.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
-import { NOW_ISO } from '#mocks/support/dates/clock.constant.ts';
+import { NOW_ISO } from '#mocks/support/dates/mock-clock.store.ts';
 import { fail } from '#mocks/support/http/fail.util.ts';
 
 interface NewRule {

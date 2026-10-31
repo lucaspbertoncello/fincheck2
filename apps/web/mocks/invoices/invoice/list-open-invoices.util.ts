@@ -3,7 +3,7 @@ import type { Invoice } from '@fincheck/shared/invoices/invoice/invoice.type.ts'
 import { computeInvoice } from '#mocks/invoices/invoice/compute-invoice.util.ts';
 import { openMonthFor } from '#mocks/invoices/invoice/open-month-for.util.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
-import { TODAY } from '#mocks/support/dates/clock.constant.ts';
+import { TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { addMonths } from '#mocks/support/dates/add-months.util.ts';
 
 // One invoice per active card: the oldest one not paid (closed, partial, overdue) if there is one,

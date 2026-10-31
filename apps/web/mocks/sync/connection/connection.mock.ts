@@ -16,7 +16,7 @@ import { newId } from '#mocks/state/mock-id.store.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
 import { makeTransactionRecord } from '#mocks/state/seed/make-transaction-record.util.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
-import { NOW, NOW_ISO, TODAY } from '#mocks/support/dates/clock.constant.ts';
+import { NOW, NOW_ISO, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { fail } from '#mocks/support/http/fail.util.ts';
 import { handleRoute } from '#mocks/support/http/handle-route.util.ts';
 import { finishRunningRuns } from '#mocks/sync/connection/finish-running-runs.util.ts';

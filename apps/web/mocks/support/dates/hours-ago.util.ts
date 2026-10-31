@@ -1,4 +1,4 @@
-import { NOW } from '#mocks/support/dates/clock.constant.ts';
+import { NOW } from '#mocks/support/dates/mock-clock.store.ts';
 
 // The instant `hours` before the mock's "now".
 export function hoursAgo(hours: number): string {

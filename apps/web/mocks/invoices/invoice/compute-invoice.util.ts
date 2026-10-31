@@ -8,7 +8,7 @@ import { openMonthFor } from '#mocks/invoices/invoice/open-month-for.util.ts';
 import { ensureOccurrences } from '#mocks/recurrences/occurrence/ensure-occurrences.util.ts';
 import { presentOccurrence } from '#mocks/recurrences/occurrence/present-occurrence.util.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
-import { TODAY } from '#mocks/support/dates/clock.constant.ts';
+import { TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { addDays } from '#mocks/support/dates/add-days.util.ts';
 import { fail } from '#mocks/support/http/fail.util.ts';
 import { countsInAccounts } from '#mocks/transactions/transaction/counts-in-accounts.util.ts';

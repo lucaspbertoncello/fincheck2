@@ -5,7 +5,7 @@ import { http } from 'msw';
 import { computePeriod } from '#mocks/dashboard/month-summary/compute-period.util.ts';
 import { sumLines } from '#mocks/dashboard/month-summary/sum-lines.util.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
-import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/clock.constant.ts';
+import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { dayOf } from '#mocks/support/dates/day-of.util.ts';
 import { daysInMonth } from '#mocks/support/dates/days-in-month.util.ts';
 import { handleRoute } from '#mocks/support/http/handle-route.util.ts';

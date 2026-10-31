@@ -10,7 +10,7 @@ import { computeOccurrenceWindow } from '#mocks/recurrences/occurrence/compute-o
 import { db } from '#mocks/state/mock-database.store.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
 import { addMonths } from '#mocks/support/dates/add-months.util.ts';
-import { CURRENT_MONTH, NOW_ISO, TODAY } from '#mocks/support/dates/clock.constant.ts';
+import { CURRENT_MONTH, NOW_ISO, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { handleRoute } from '#mocks/support/http/handle-route.util.ts';
 
 // The next day the money is expected: this month's day when it has not passed, otherwise next

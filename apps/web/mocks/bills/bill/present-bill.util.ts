@@ -2,7 +2,7 @@ import type { BillPayment } from '@fincheck/shared/bills/bill-payment/bill-payme
 import type { Bill } from '@fincheck/shared/bills/bill/bill.type.ts';
 
 import type { MockState } from '#mocks/state/mock-state.type.ts';
-import { TODAY } from '#mocks/support/dates/clock.constant.ts';
+import { TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { countsInAccounts } from '#mocks/transactions/transaction/counts-in-accounts.util.ts';
 
 // The contract's Bill.Dto. A payment tied to a transaction is worth what the transaction is worth

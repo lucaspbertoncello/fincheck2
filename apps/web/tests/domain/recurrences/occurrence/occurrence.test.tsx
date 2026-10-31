@@ -7,7 +7,7 @@ import { useSkipOccurrence } from '#/domain/recurrences/occurrence/hooks/use-ski
 import { useUnskipOccurrence } from '#/domain/recurrences/occurrence/hooks/use-unskip-occurrence.hook.ts';
 import { usePreviewRecurrence } from '#/domain/recurrences/recurrence/hooks/use-preview-recurrence.hook.ts';
 import { useRecurrenceSummary } from '#/domain/recurrences/recurrence/hooks/use-recurrence-summary.hook.ts';
-import { CURRENT_MONTH } from '#mocks/support/dates/clock.constant.ts';
+import { CURRENT_MONTH } from '#mocks/support/dates/mock-clock.store.ts';
 import { createQueryWrapper } from '#tests/support/api/create-query-wrapper.util.tsx';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
 

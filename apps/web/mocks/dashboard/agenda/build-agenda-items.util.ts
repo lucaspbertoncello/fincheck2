@@ -7,10 +7,8 @@ import { openMonthFor } from '#mocks/invoices/invoice/open-month-for.util.ts';
 import { listMonthOccurrences } from '#mocks/recurrences/occurrence/list-month-occurrences.util.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
 import { addMonths } from '#mocks/support/dates/add-months.util.ts';
-import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/clock.constant.ts';
-import { daysInMonth } from '#mocks/support/dates/days-in-month.util.ts';
-
-const END_OF_CURRENT_MONTH = `${CURRENT_MONTH}-${String(daysInMonth(CURRENT_MONTH)).padStart(2, '0')}`;
+import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
+import { dateInMonth } from '#mocks/support/dates/date-in-month.util.ts';
 
 function lastDate(dates: string[]): string | null {
   return dates.length === 0
@@ -95,7 +93,7 @@ function billItems(database: MockState.Database): Agenda.Item[] {
       : 0;
     const settled = bill.status === 'settled';
     const friendReceivable = bill.kind === 'friend' && bill.direction === 'receivable';
-    const dueInTime = bill.dueOn !== null && bill.dueOn <= END_OF_CURRENT_MONTH;
+    const dueInTime = bill.dueOn !== null && bill.dueOn <= dateInMonth(CURRENT_MONTH, 31);
 
     return {
       key: `bill:${bill.id}`,

@@ -2,7 +2,7 @@ import type { MockState } from '#mocks/state/mock-state.type.ts';
 import type { SeedIds } from '#mocks/state/seed/build-seed-ids.util.ts';
 import { makeTransactionRecord } from '#mocks/state/seed/make-transaction-record.util.ts';
 import { addMonths } from '#mocks/support/dates/add-months.util.ts';
-import { CURRENT_MONTH } from '#mocks/support/dates/clock.constant.ts';
+import { CURRENT_MONTH } from '#mocks/support/dates/mock-clock.store.ts';
 import { dateInMonth } from '#mocks/support/dates/date-in-month.util.ts';
 import { daysInMonth } from '#mocks/support/dates/days-in-month.util.ts';
 import { hashUnit } from '#mocks/support/numbers/hash-unit.util.ts';

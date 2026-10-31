@@ -2,7 +2,7 @@ import type { InstallmentPlan } from '@fincheck/shared/transactions/installment-
 
 import { openMonthFor } from '#mocks/invoices/invoice/open-month-for.util.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
-import { TODAY } from '#mocks/support/dates/clock.constant.ts';
+import { TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 
 // The contract's InstallmentPlan.Dto: every installment, the next one and what is still to pay
 // (from the open invoice of the card on).

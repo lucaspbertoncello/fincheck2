@@ -13,7 +13,11 @@ type DayBarProps = {
 export function DayBar({ total, elapsed, caption }: DayBarProps) {
   return (
     <div className="flex flex-col gap-s8">
-      <div role="img" aria-label={`${elapsed} de ${total} dias passados`} className="flex gap-s4">
+      <div
+        role="img"
+        aria-label={`${elapsed} de ${total} ${total === 1 ? 'dia' : 'dias'} passados`}
+        className="flex gap-s4"
+      >
         {Array.from({ length: total }, (_, index) => (
           <span
             key={index}

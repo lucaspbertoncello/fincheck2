@@ -70,6 +70,15 @@ describe('FreeBalancePanel', () => {
     expect(html).toContain('Roxinho');
   });
 
+  it('speaks in the singular on the last day of the month', () => {
+    const html = render({ ...DATA, windowDays: 1, elapsedDays: 0 });
+
+    expect(html).toContain('por dia hoje');
+    expect(html).toContain('1 dia até o fim do mês');
+    expect(html).toContain('0 de 1 dia passados');
+    expect(html).not.toContain('1 dias');
+  });
+
   it('has the eye named by its state', () => {
     expect(render(DATA)).toContain('aria-label="Ocultar valores"');
     expect(render(DATA, true)).toContain('aria-label="Mostrar valores"');

@@ -10,7 +10,7 @@ import { http } from 'msw';
 import { db } from '#mocks/state/mock-database.store.ts';
 import { addDays } from '#mocks/support/dates/add-days.util.ts';
 import { addMonths } from '#mocks/support/dates/add-months.util.ts';
-import { TODAY } from '#mocks/support/dates/clock.constant.ts';
+import { TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { daysBetween } from '#mocks/support/dates/days-between.util.ts';
 import { handleRoute } from '#mocks/support/http/handle-route.util.ts';
 import { buildLines } from '#mocks/transactions/transaction/build-lines.util.ts';

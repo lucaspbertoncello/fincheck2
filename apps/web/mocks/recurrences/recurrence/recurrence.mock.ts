@@ -26,7 +26,7 @@ import { db } from '#mocks/state/mock-database.store.ts';
 import { newId } from '#mocks/state/mock-id.store.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
 import { addMonths } from '#mocks/support/dates/add-months.util.ts';
-import { CURRENT_MONTH, NOW_ISO, TODAY } from '#mocks/support/dates/clock.constant.ts';
+import { CURRENT_MONTH, NOW_ISO, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { fail } from '#mocks/support/http/fail.util.ts';
 import { handleRoute } from '#mocks/support/http/handle-route.util.ts';
 import { findTransaction } from '#mocks/transactions/transaction/find-transaction.util.ts';

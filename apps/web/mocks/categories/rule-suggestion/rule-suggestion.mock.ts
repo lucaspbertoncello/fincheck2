@@ -14,7 +14,7 @@ import { findCategory } from '#mocks/categories/category/find-category.util.ts';
 import { computeRuleEffect } from '#mocks/categories/rule/compute-rule-effect.util.ts';
 import { createRule } from '#mocks/categories/rule/create-rule.util.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
-import { NOW_ISO } from '#mocks/support/dates/clock.constant.ts';
+import { NOW_ISO } from '#mocks/support/dates/mock-clock.store.ts';
 import { handleRoute } from '#mocks/support/http/handle-route.util.ts';
 
 // A suggestion exists when Lucas put 3 or more transactions with the same description in the same

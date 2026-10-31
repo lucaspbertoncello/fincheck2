@@ -34,13 +34,13 @@ export function FreeBalanceHero({ data, isHidden, onToggleHidden }: FreeBalanceH
             weight="emphasis"
             className="text-fg-primary"
           />{' '}
-          por dia nos próximos {data.windowDays} dias
+          {data.windowDays === 1 ? 'por dia hoje' : `por dia nos próximos ${data.windowDays} dias`}
         </p>
       </div>
       <DayBar
         total={data.windowDays}
         elapsed={data.elapsedDays}
-        caption={`${data.windowDays} dias até o fim do mês`}
+        caption={`${data.windowDays} ${data.windowDays === 1 ? 'dia' : 'dias'} até o fim do mês`}
       />
       {data.staleNote ? <StaleChip>{data.staleNote}</StaleChip> : null}
     </div>

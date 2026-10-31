@@ -17,7 +17,7 @@ import { createRule } from '#mocks/categories/rule/create-rule.util.ts';
 import { presentRule } from '#mocks/categories/rule/present-rule.util.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
-import { NOW_ISO } from '#mocks/support/dates/clock.constant.ts';
+import { NOW_ISO } from '#mocks/support/dates/mock-clock.store.ts';
 import { fail } from '#mocks/support/http/fail.util.ts';
 import { handleRoute } from '#mocks/support/http/handle-route.util.ts';
 

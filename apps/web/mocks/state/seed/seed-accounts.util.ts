@@ -2,7 +2,7 @@ import { newId } from '#mocks/state/mock-id.store.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
 import type { SeedIds } from '#mocks/state/seed/build-seed-ids.util.ts';
 import { addDays } from '#mocks/support/dates/add-days.util.ts';
-import { TODAY } from '#mocks/support/dates/clock.constant.ts';
+import { TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { dayOf } from '#mocks/support/dates/day-of.util.ts';
 import { hoursAgo } from '#mocks/support/dates/hours-ago.util.ts';
 import { toInstant } from '#mocks/support/dates/to-instant.util.ts';

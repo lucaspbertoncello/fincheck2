@@ -49,7 +49,7 @@ describe('ReviewQueuePage', () => {
     const card = await openQueue();
 
     expect(within(card).getByRole('heading', { name: 'PIX LANCHONETE ZE' })).toBeInTheDocument();
-    expect(within(card).getByText(/Pix, 21\/10/)).toBeInTheDocument();
+    expect(within(card).getByText(/Pix, 13\/10/)).toBeInTheDocument();
     expect(within(card).getByRole('button', { name: 'Restaurantes' })).toHaveAttribute(
       'aria-pressed',
       'true',

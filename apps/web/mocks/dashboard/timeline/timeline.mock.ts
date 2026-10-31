@@ -8,7 +8,7 @@ import { http } from 'msw';
 import { presentAccount } from '#mocks/accounts/account/present-account.util.ts';
 import { buildAgendaItems } from '#mocks/dashboard/agenda/build-agenda-items.util.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
-import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/clock.constant.ts';
+import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { daysInMonth } from '#mocks/support/dates/days-in-month.util.ts';
 import { handleRoute } from '#mocks/support/http/handle-route.util.ts';
 

@@ -1,7 +1,7 @@
 import { computeOccurrenceWindow } from '#mocks/recurrences/occurrence/compute-occurrence-window.util.ts';
 import { newId } from '#mocks/state/mock-id.store.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
-import { CURRENT_MONTH } from '#mocks/support/dates/clock.constant.ts';
+import { CURRENT_MONTH } from '#mocks/support/dates/mock-clock.store.ts';
 import { addMonths } from '#mocks/support/dates/add-months.util.ts';
 
 // Creates the occurrences that are missing, from the current month to three months ahead. Safe to

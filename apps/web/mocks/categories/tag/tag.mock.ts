@@ -13,7 +13,7 @@ import { findTag } from '#mocks/categories/tag/find-tag.util.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
 import { newId } from '#mocks/state/mock-id.store.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
-import { NOW_ISO } from '#mocks/support/dates/clock.constant.ts';
+import { NOW_ISO } from '#mocks/support/dates/mock-clock.store.ts';
 import { fail } from '#mocks/support/http/fail.util.ts';
 import { handleRoute } from '#mocks/support/http/handle-route.util.ts';
 

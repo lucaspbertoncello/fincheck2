@@ -2,7 +2,7 @@ import type { TransactionBulk } from '@fincheck/shared/transactions/transaction-
 
 import { computeRuleEffect } from '#mocks/categories/rule/compute-rule-effect.util.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
-import { NOW_ISO } from '#mocks/support/dates/clock.constant.ts';
+import { NOW_ISO } from '#mocks/support/dates/mock-clock.store.ts';
 import { toPreviousState } from '#mocks/transactions/transaction/to-previous-state.util.ts';
 
 // Applies a rule to the history: category (when free) and tags (added) go to the matching

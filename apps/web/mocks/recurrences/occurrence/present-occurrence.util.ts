@@ -1,7 +1,7 @@
 import type { Occurrence } from '@fincheck/shared/recurrences/occurrence/occurrence.type.ts';
 
 import type { MockState } from '#mocks/state/mock-state.type.ts';
-import { TODAY } from '#mocks/support/dates/clock.constant.ts';
+import { TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { countsInAccounts } from '#mocks/transactions/transaction/counts-in-accounts.util.ts';
 
 interface PresentOptions {

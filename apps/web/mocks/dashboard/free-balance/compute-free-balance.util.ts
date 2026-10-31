@@ -4,7 +4,7 @@ import { presentAccount } from '#mocks/accounts/account/present-account.util.ts'
 import { buildAgendaItems } from '#mocks/dashboard/agenda/build-agenda-items.util.ts';
 import { isConnectionStale } from '#mocks/sync/connection/is-connection-stale.util.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
-import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/clock.constant.ts';
+import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { dayOf } from '#mocks/support/dates/day-of.util.ts';
 import { daysInMonth } from '#mocks/support/dates/days-in-month.util.ts';
 import { isInReview } from '#mocks/transactions/transaction/is-in-review.util.ts';

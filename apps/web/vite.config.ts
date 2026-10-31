@@ -26,7 +26,8 @@ export default defineConfig(({ mode }) => ({
   },
   test: {
     environment: 'jsdom',
+    env: { TZ: 'America/Sao_Paulo' },
     include: ['tests/**/*.test.{ts,tsx}'],
-    setupFiles: ['./tests/setup.ts'],
+    setupFiles: ['./tests/support/clock/freeze-clock.util.ts', './tests/setup.ts'],
   },
 }));

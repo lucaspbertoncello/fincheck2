@@ -3,7 +3,7 @@ import type { Occurrence } from '@fincheck/shared/recurrences/occurrence/occurre
 import { ensureOccurrences } from '#mocks/recurrences/occurrence/ensure-occurrences.util.ts';
 import { presentOccurrence } from '#mocks/recurrences/occurrence/present-occurrence.util.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
-import { CURRENT_MONTH } from '#mocks/support/dates/clock.constant.ts';
+import { CURRENT_MONTH } from '#mocks/support/dates/mock-clock.store.ts';
 
 function byExpectedOn(a: Occurrence.Dto, b: Occurrence.Dto): number {
   if (a.expectedOn === null && b.expectedOn !== null) return 1;

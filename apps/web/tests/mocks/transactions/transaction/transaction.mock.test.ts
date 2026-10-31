@@ -15,7 +15,7 @@ import {
 import type { Transaction } from '@fincheck/shared/transactions/transaction/transaction.type.ts';
 import { describe, expect, it } from 'vitest';
 
-import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/clock.constant.ts';
+import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { callApi } from '#tests/support/mocks/call-api.util.ts';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
 

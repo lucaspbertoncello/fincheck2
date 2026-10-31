@@ -1,5 +1,5 @@
 import type { MockState } from '#mocks/state/mock-state.type.ts';
-import { NOW_ISO, TODAY } from '#mocks/support/dates/clock.constant.ts';
+import { NOW_ISO, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 
 // A run in the mock lasts until the next read: then it ends well, the connection goes back to
 // active and a first connection finishes bringing its history (and the balance of its account).

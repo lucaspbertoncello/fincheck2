@@ -21,7 +21,7 @@ import { presentAccount } from '#mocks/accounts/account/present-account.util.ts'
 import { newId } from '#mocks/state/mock-id.store.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
-import { CURRENT_MONTH, NOW_ISO, TODAY } from '#mocks/support/dates/clock.constant.ts';
+import { CURRENT_MONTH, NOW_ISO, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { dayOf } from '#mocks/support/dates/day-of.util.ts';
 import { daysInMonth } from '#mocks/support/dates/days-in-month.util.ts';
 import { fail } from '#mocks/support/http/fail.util.ts';

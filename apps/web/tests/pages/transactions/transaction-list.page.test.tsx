@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it, vi } from 'vitest';
 
-import { CURRENT_MONTH } from '#mocks/support/dates/clock.constant.ts';
+import { CURRENT_MONTH } from '#mocks/support/dates/mock-clock.store.ts';
 import { server } from '#mocks/setup/server.util.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
 import { renderApp } from '#tests/support/app/render-app.util.tsx';

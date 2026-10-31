@@ -12,7 +12,7 @@ import { findCategory } from '#mocks/categories/category/find-category.util.ts';
 import { presentCategory } from '#mocks/categories/category/present-category.util.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
 import { newId } from '#mocks/state/mock-id.store.ts';
-import { NOW_ISO } from '#mocks/support/dates/clock.constant.ts';
+import { NOW_ISO } from '#mocks/support/dates/mock-clock.store.ts';
 import { fail } from '#mocks/support/http/fail.util.ts';
 import { handleRoute } from '#mocks/support/http/handle-route.util.ts';
 

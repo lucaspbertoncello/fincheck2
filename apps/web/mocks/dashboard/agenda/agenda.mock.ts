@@ -6,7 +6,7 @@ import { http } from 'msw';
 
 import { buildAgendaItems } from '#mocks/dashboard/agenda/build-agenda-items.util.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
-import { CURRENT_MONTH } from '#mocks/support/dates/clock.constant.ts';
+import { CURRENT_MONTH } from '#mocks/support/dates/mock-clock.store.ts';
 import { handleRoute } from '#mocks/support/http/handle-route.util.ts';
 
 const byDueOn = (a: { dueOn: string | null }, b: { dueOn: string | null }) =>

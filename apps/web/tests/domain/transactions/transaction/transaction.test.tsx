@@ -8,7 +8,7 @@ import { useIgnoreTransaction } from '#/domain/transactions/transaction/hooks/us
 import { useInfiniteTransactions } from '#/domain/transactions/transaction/hooks/use-infinite-transactions.hook.ts';
 import { useTransactions } from '#/domain/transactions/transaction/hooks/use-transactions.hook.ts';
 import { useUnignoreTransaction } from '#/domain/transactions/transaction/hooks/use-unignore-transaction.hook.ts';
-import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/clock.constant.ts';
+import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { createQueryWrapper } from '#tests/support/api/create-query-wrapper.util.tsx';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
 
