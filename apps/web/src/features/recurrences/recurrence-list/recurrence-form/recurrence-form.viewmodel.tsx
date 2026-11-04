@@ -26,7 +26,7 @@ import { buildDateRule } from '#/features/recurrences/recurrence-list/recurrence
 import { buildFormValues } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-form-values.util.ts';
 import { buildHistoryNote } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-history-note.util.ts';
 import { buildUpdateBody } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-update-body.util.ts';
-import { buildPreviewTiles } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-preview-tiles.util.ts';
+import { buildPreviewDates } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-preview-dates.util.ts';
 import { applyRuleDefaults } from '#/features/recurrences/recurrence-list/recurrence-form/utils/apply-rule-defaults.util.ts';
 import { isApiError } from '#/shared/api/api.error.ts';
 import { useHideValues } from '#/shared/hooks/use-hide-values.hook.ts';
@@ -54,7 +54,13 @@ function RecurrenceFormSession({ saved }: SessionProps) {
   const categoriesQuery = useRecurrenceFormCategories(values.kind);
   const accountsQuery = useRecurrenceFormAccounts();
   const dateRule = buildDateRule(values);
-  const preview = useRecurrenceRulePreview(dateRule, dateRuleSchema.safeParse(dateRule).success);
+  const ruleComplete = dateRuleSchema.safeParse(dateRule).success;
+  const preview = useRecurrenceRulePreview(dateRule, ruleComplete);
+  const previewStatus = (() => {
+    if (!ruleComplete) return 'incomplete' as const;
+    if (preview.data) return 'ready' as const;
+    return preview.isError ? ('unavailable' as const) : ('loading' as const);
+  })();
   useFocusFirstInvalid(attempt);
 
   function handleChange(patch: Partial<RecurrenceFormValues>) {
@@ -153,7 +159,8 @@ function RecurrenceFormSession({ saved }: SessionProps) {
       values={values}
       errors={errors}
       onChange={handleChange}
-      tiles={buildPreviewTiles(preview.data?.occurrences ?? [])}
+      previewDates={buildPreviewDates(preview.data?.occurrences ?? [])}
+      previewStatus={previewStatus}
       categories={categories}
       accounts={accounts}
       historyNote={saved ? buildHistoryNote(saved.history, isHidden) : undefined}

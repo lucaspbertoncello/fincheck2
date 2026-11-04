@@ -13,15 +13,15 @@ type CategoryChipsProps = {
 };
 
 const OTHERS_KEY = 'others';
-const SHOWN = 4;
+const SHOWN = 3;
 
 type ChipOption = { key: string; label: string; icon: IconName };
 
 /**
- * Category as touch shortcuts: the four most used of the type as chips with their icon, then
- * "Outras…", which opens the search for the rest. A category picked from the search stays among the
- * chips, so the choice is always visible. The chips are compact (12 px of side padding, small icon)
- * so the five of them fit in two rows of the half-width column of the modal.
+ * Category as touch shortcuts: the three most used of the type as chips with their icon, then
+ * "Outras…", which opens the search for the rest. A category picked from the search takes the place
+ * of the third chip, so the choice is always visible and the group never gets taller. Four compact
+ * chips (12 px of side padding, small icon) make two rows in the half-width column of the modal.
  */
 export function CategoryChips({
   label,
@@ -42,7 +42,8 @@ export function CategoryChips({
 
   const top = categories.slice(0, SHOWN);
   const chosen = categories.find((category) => category.id === value);
-  const shown = chosen && !top.includes(chosen) ? [...top, chosen] : top;
+  // A category picked from the search takes the last place, so the row keeps its length and height.
+  const shown = chosen && !top.includes(chosen) ? [...top.slice(0, SHOWN - 1), chosen] : top;
   const options: ChipOption[] = shown.map((category) => ({
     key: category.id,
     label: category.name,

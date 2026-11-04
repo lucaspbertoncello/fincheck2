@@ -32,19 +32,25 @@ describe('describeDateRule', () => {
         businessDayNumber: 5,
         toleranceDays: null,
       }),
-    ).toBe('Até o 5º dia útil');
+    ).toBe('No 5º dia útil');
     expect(
       describeDateRule({ type: 'around_day', day: 25, businessDayNumber: null, toleranceDays: 2 }),
-    ).toBe('Por volta do dia 25');
+    ).toBe('Perto do dia 25, até 2 dias antes ou depois');
+    expect(
+      describeDateRule({ type: 'around_day', day: 10, businessDayNumber: null, toleranceDays: 1 }),
+    ).toBe('Perto do dia 10, até 1 dia antes ou depois');
+    expect(
+      describeDateRule({ type: 'around_day', day: 10, businessDayNumber: null, toleranceDays: 0 }),
+    ).toBe('Perto do dia 10, sem folga');
     expect(
       describeDateRule(
         { type: 'any_day', day: null, businessDayNumber: null, toleranceDays: null },
         2,
       ),
-    ).toBe('Qualquer dia, em até 2 Pix');
+    ).toBe('Em qualquer dia do mês, em até 2 Pix');
     expect(
       describeDateRule({ type: 'any_day', day: 5, businessDayNumber: null, toleranceDays: null }),
-    ).toBe('Qualquer dia, geralmente no dia 5');
+    ).toBe('Em qualquer dia do mês, geralmente no dia 5');
   });
 });
 

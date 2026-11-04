@@ -290,7 +290,7 @@ describe('RecurrenceListPage', () => {
       fireEvent.click(within(dialog).getByRole('radio', { name: /Dia útil/ }));
 
       expect(
-        await within(dialog).findByRole('textbox', { name: 'Qual dia útil' }),
+        await within(dialog).findByRole('textbox', { name: 'Número do dia útil' }),
       ).toBeInTheDocument();
       expect(within(dialog).queryByRole('textbox', { name: 'Dia do mês' })).not.toBeInTheDocument();
     });
@@ -316,23 +316,49 @@ describe('RecurrenceListPage', () => {
       const dialog = await screen.findByRole('dialog', { name: 'Nova recorrência' });
 
       await userEvent.click(within(dialog).getByRole('radio', { name: /Dia útil/ }));
-      expect(within(dialog).getByRole('textbox', { name: 'Qual dia útil' })).toHaveValue('5');
+      expect(within(dialog).getByRole('textbox', { name: 'Número do dia útil' })).toHaveValue('5');
 
-      await userEvent.click(within(dialog).getByRole('radio', { name: /Por volta de/ }));
-      expect(within(dialog).getByRole('textbox', { name: 'Dias para mais ou menos' })).toHaveValue(
+      await userEvent.click(within(dialog).getByRole('radio', { name: /Perto do dia/ }));
+      expect(within(dialog).getByRole('textbox', { name: 'Dias antes ou depois' })).toHaveValue(
         '2',
       );
       expect(await within(dialog).findByRole('list', { name: 'Próximas datas' })).toBeVisible();
     });
 
-    it('writes the examples of the four rule cards in full, without cutting them', async () => {
+    it('reads the rule as one sentence that follows the chosen type, in the words of the lists', async () => {
+      renderApp(`${URL}&new=recurrence`);
+      const dialog = await screen.findByRole('dialog', { name: 'Nova recorrência' });
+      const sentence = () => within(dialog).getByRole('group', { name: /^Regra: / });
+
+      expect(sentence()).toHaveAccessibleName('Regra: Todo dia 15');
+      expect(sentence()).toHaveTextContent('Todo dia');
+
+      await userEvent.click(within(dialog).getByRole('radio', { name: 'Dia útil' }));
+      expect(sentence()).toHaveAccessibleName('Regra: No 5º dia útil');
+
+      await userEvent.click(within(dialog).getByRole('radio', { name: 'Perto do dia' }));
+      expect(sentence()).toHaveAccessibleName('Regra: Perto do dia 15, até 2 dias antes ou depois');
+
+      await userEvent.click(within(dialog).getByRole('radio', { name: 'Qualquer dia' }));
+      expect(sentence()).toHaveAccessibleName(
+        'Regra: Em qualquer dia do mês, geralmente no dia 15',
+      );
+    });
+
+    it('keeps the box of the next dates in every rule type, with the window for "Perto do dia"', async () => {
       renderApp(`${URL}&new=recurrence`);
       const dialog = await screen.findByRole('dialog', { name: 'Nova recorrência' });
 
-      for (const text of ['Todo dia 15', 'O 5º dia útil', 'Perto do dia 25', 'Sem data certa']) {
-        const example = within(dialog).getByText(text);
-        expect(example.className).not.toContain('truncate');
-      }
+      await userEvent.click(within(dialog).getByRole('radio', { name: 'Perto do dia' }));
+      const dates = await within(dialog).findByRole('list', { name: 'Próximas datas' });
+      const first = within(dates).getAllByRole('listitem')[0];
+
+      expect(first).toHaveAccessibleName(/pode chegar de .* a /);
+      expect(
+        within(dialog).getAllByRole('radio', {
+          name: /Dia fixo|Dia útil|Perto do dia|Qualquer dia/,
+        }),
+      ).toHaveLength(4);
     });
 
     it('shows the accounts as chips with the bank mark', async () => {

@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { EMPTY_FORM_VALUES } from '#/features/recurrences/recurrence-list/recurrence-form/constants/empty-form-values.constant.ts';
 import { buildCreateBody } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-create-body.util.ts';
 import { buildFormValues } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-form-values.util.ts';
-import { buildPreviewTiles } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-preview-tiles.util.ts';
 import { buildHistoryNote } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-history-note.util.ts';
 import { buildUpdateBody } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-update-body.util.ts';
 import { createTestOccurrence } from '#tests/support/recurrences/occurrence/create-test-occurrence.util.ts';
@@ -119,21 +118,6 @@ describe('buildUpdateBody', () => {
 });
 
 describe('form helpers', () => {
-  it('splits the preview dates into tiles of the trail, three at most', () => {
-    const tiles = buildPreviewTiles([
-      { month: '2026-11', expectedOn: '2026-11-20' },
-      { month: '2026-12', expectedOn: null },
-      { month: '2027-01', expectedOn: '2027-01-20' },
-      { month: '2027-02', expectedOn: '2027-02-20' },
-    ]);
-
-    expect(tiles).toHaveLength(3);
-    expect(tiles[0]).toMatchObject({ weekday: 'sex', day: '20', month: 'nov' });
-    expect(tiles[0]?.label).toBe('sexta-feira, 20 de novembro');
-    expect(tiles[1]).toMatchObject({ weekday: '', day: '…', month: 'dez' });
-    expect(tiles[1]?.label).toBe('qualquer dia de dezembro');
-  });
-
   it('writes the history of confirmations', () => {
     const payment = (day: string) => [
       { id: day, transactionId: day, amountCents: 1, occurredOn: day, linkedBy: 'auto' as const },
