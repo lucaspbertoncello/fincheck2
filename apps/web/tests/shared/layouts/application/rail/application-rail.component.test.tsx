@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { renderApp } from '#tests/support/app/render-app.util.tsx';
@@ -17,8 +18,16 @@ function renderDesktop(url: string) {
   return renderApp(url);
 }
 
-// The bottom bar is in the DOM too (hidden by CSS on the desktop), so the rail is found by its class.
-const rail = () => document.querySelector<HTMLElement>('nav.rail')!;
+// The bottom bar is in the DOM too (hidden by CSS on the desktop), so the rail is found by its label.
+// React Aria drops the first pointer event it sees in a page (it has no pointer type to trust
+// yet), so the first hover of a test is repeated; later ones need no help.
+async function hover(element: HTMLElement) {
+  await userEvent.hover(element);
+  await userEvent.unhover(element);
+  await userEvent.hover(element);
+}
+
+const rail = () => document.querySelector<HTMLElement>('nav.glass[aria-label="Principal"]')!;
 
 describe('ApplicationRail', () => {
   it('takes the place of the top bar on the desktop: no banner, the five tabs and Configurações', async () => {
@@ -105,23 +114,83 @@ describe('ApplicationRail', () => {
     await waitFor(() => expect(window.location.search).toContain('new=transaction'));
   });
 
-  it('shows the name of the "+" as visible text for the open rail', async () => {
+  it('never opens: the rail has one fixed width and no text labels, only icons', async () => {
     renderDesktop('/accounts');
     await screen.findByRole('heading', { level: 1, name: 'Contas e cartões' });
-    const plus = await within(rail()).findByRole('button', { name: 'Conectar conta' });
 
-    expect(plus.querySelector('.rail-label')).toHaveTextContent('Conectar conta');
+    expect(rail()).toHaveClass('w-14', 'glass');
+    expect(rail().querySelector('.rail-label')).toBeNull();
+    expect(rail()).not.toHaveAttribute('data-open');
+    await hover(within(rail()).getByRole('link', { name: 'Transações' }));
+    expect(rail()).toHaveClass('w-14');
+    expect(rail()).not.toHaveAttribute('data-open');
   });
 
-  it('leaves the panel slot of Configurações in the grid, sticky at the top', async () => {
+  it('shows the name of an icon as a tip on hover', async () => {
+    renderDesktop('/');
+    await screen.findByRole('heading', { level: 1, name: 'Visão geral' });
+
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    await hover(within(rail()).getByRole('link', { name: 'Recorrentes' }));
+
+    const tip = await screen.findByRole('tooltip');
+    expect(tip).toHaveTextContent('Recorrentes');
+    await userEvent.unhover(within(rail()).getByRole('link', { name: 'Recorrentes' }));
+    await waitFor(() => expect(screen.queryByRole('tooltip')).toBeNull());
+  });
+
+  it('shows the name of an icon on keyboard focus, and the tip says the accessible name', async () => {
+    renderDesktop('/');
+    await screen.findByRole('heading', { level: 1, name: 'Visão geral' });
+
+    await userEvent.tab();
+    const focused = document.activeElement as HTMLElement;
+    expect(rail()).toContainElement(focused);
+
+    const tip = await screen.findByRole('tooltip');
+    // same text as the link's name: the browser drops the equal description, nothing is read twice
+    expect(tip).toHaveTextContent(focused.getAttribute('aria-label') ?? '');
+    expect(focused).toHaveAttribute('aria-describedby', tip.id);
+  });
+
+  it('gives the "+" and Configurações a tip with their names', async () => {
+    renderDesktop('/transactions');
+    await screen.findByRole('heading', { level: 1, name: 'Transações' });
+
+    await hover(await within(rail()).findByRole('button', { name: 'Nova transação' }));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Nova transação');
+    await userEvent.unhover(within(rail()).getByRole('button', { name: 'Nova transação' }));
+    await waitFor(() => expect(screen.queryByRole('tooltip')).toBeNull());
+
+    await hover(within(rail()).getByRole('link', { name: 'Configurações' }));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Configurações');
+  });
+
+  it('centers the icons in the rail, which the shell stretches to the height of the panel', async () => {
+    renderDesktop('/');
+    await screen.findByRole('heading', { level: 1, name: 'Visão geral' });
+
+    expect(rail()).toHaveClass('flex', 'flex-col', 'items-center', 'justify-center');
+    // the rail and the left box are siblings in one sticky pair that stretches both to one height
+    const pair = rail().parentElement!;
+    expect(pair).toHaveClass('sticky', 'flex', 'gap-s8');
+    expect(pair).not.toHaveClass('items-start', 'items-center');
+    expect(rail().nextElementSibling?.tagName).toBe('ASIDE');
+    expect(pair.nextElementSibling).toBe(screen.getByRole('main'));
+  });
+
+  it('leaves the panel slot of Configurações beside the rail, in the sticky pair', async () => {
     renderDesktop('/settings');
     await screen.findByRole('heading', { level: 1, name: 'Configurações' });
 
     const frame = screen.getByRole('main').parentElement?.parentElement;
     expect(frame).toHaveClass('overflow-y-clip', 'min-h-dvh');
-    const slot = screen.getByRole('main').previousElementSibling;
+    const pair = screen.getByRole('main').previousElementSibling;
+    expect(pair).toHaveClass('sticky', 'top-s24', 'xl:top-s32');
+    const slot = rail().nextElementSibling;
     expect(slot?.tagName).toBe('ASIDE');
-    expect(slot).toHaveClass('sticky', 'top-s16');
+    expect(slot).toHaveClass('w-panel');
+    expect(pair).toContainElement(slot as HTMLElement);
   });
 
   it('is not rendered on the phone, which keeps the top bar and the bottom bar', async () => {
@@ -129,6 +198,6 @@ describe('ApplicationRail', () => {
     await screen.findByRole('heading', { level: 1, name: 'Visão geral' });
 
     expect(screen.getAllByRole('banner')).not.toHaveLength(0);
-    expect(document.querySelector('.rail')).toBeNull();
+    expect(document.querySelector('nav.glass[aria-label="Principal"]')).toBeNull();
   });
 });

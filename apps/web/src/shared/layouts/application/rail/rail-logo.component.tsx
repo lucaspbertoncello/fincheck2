@@ -1,4 +1,4 @@
-import { Logo } from '@fincheck/ui';
+import { Logo, Tooltip } from '@fincheck/ui';
 import { Link } from 'react-aria-components';
 
 type RailLogoProps = {
@@ -6,23 +6,24 @@ type RailLogoProps = {
 };
 
 /**
- * Top of the rail: the two cards of the logo sit in the icon column and the name of the brand is
- * revealed as the rail opens (the clip is a width that opens with it). It is also the slot the
- * splash flies into; `data-logo-folded` tells the splash to fade the name on landing, because the
- * closed rail only shows the cards.
+ * Top of the rail: the two cards of the logo, centered in the 40 px cell (the name of the brand
+ * is clipped off, the rail never opens). It is also the slot the splash flies into;
+ * `data-logo-folded` tells the splash to fade the name on landing, because only the cards stay.
  */
 export function RailLogo({ homeHref }: RailLogoProps) {
   return (
-    <Link
-      href={homeHref}
-      aria-label="Fincheck, Visão geral"
-      className="mb-s8 flex h-ctl-tab shrink-0 items-center rounded-capsule outline-none focus-ring"
-    >
-      <span className="rail-logo-clip shrink-0">
-        <span data-logo-slot data-logo-folded className="block w-max">
-          <Logo />
+    <Tooltip label="Fincheck, Visão geral">
+      <Link
+        href={homeHref}
+        aria-label="Fincheck, Visão geral"
+        className="grid size-ctl-tab shrink-0 place-items-center rounded-capsule outline-none focus-ring"
+      >
+        <span className="block w-7 overflow-hidden [clip-path:inset(0)] [contain:paint]">
+          <span data-logo-slot data-logo-folded className="block w-max">
+            <Logo />
+          </span>
         </span>
-      </span>
-    </Link>
+      </Link>
+    </Tooltip>
   );
 }

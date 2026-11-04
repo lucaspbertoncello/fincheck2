@@ -11,16 +11,12 @@ describe('PlusButton', () => {
     expect(html).toContain('aria-label="Criar"');
   });
 
-  it('in the rail form is 40 px high, fills its width and carries the visible text', () => {
-    const html = renderToStaticMarkup(
-      <PlusButton label="Nova transação" compact>
-        <span>Nova transação</span>
-      </PlusButton>,
-    );
+  it('in the rail form is a 40 px circle that fills its width, still named by aria-label', () => {
+    const html = renderToStaticMarkup(<PlusButton label="Nova transação" compact />);
 
     expect(html).toContain('h-ctl-tab');
     expect(html).toContain('w-full');
     expect(html).not.toContain('size-ctl-touch');
-    expect(html).toContain('<span>Nova transação</span>');
+    expect(html).toContain('aria-label="Nova transação"');
   });
 });

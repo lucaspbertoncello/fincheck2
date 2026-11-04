@@ -5,3 +5,4 @@ export { ModalActions } from '#/components/overlays/modal-actions.component.tsx'
 export { ModalFrame, type ModalFrameProps } from '#/components/overlays/modal-frame.component.tsx';
 export { ModalHeader } from '#/components/overlays/modal-header.component.tsx';
 export type { ModalSize } from '#/components/overlays/modal-size.constant.ts';
+export { Tooltip } from '#/components/overlays/tooltip.component.tsx';

@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from 'react';
+import { Fragment } from 'react';
 import { Menu, MenuItem, MenuTrigger, Popover, Separator, Text } from 'react-aria-components';
 
 import { PlusButton } from '#/components/actions/plus-button.component.tsx';
@@ -19,9 +19,8 @@ type PlusMenuProps = {
   label: string;
   items: PlusMenuItem[];
   onAction: (key: string) => void;
-  /** Rail form of the "+" (see `PlusButton`), with its visible text in `children`. */
+  /** Rail form of the "+" (see `PlusButton`): a circle with a tip. */
   compact?: boolean;
-  children?: ReactNode;
   /** Where the menu opens from the "+": under it on the top bar, beside it on the rail. */
   placement?: 'bottom end' | 'right top';
   onOpenChange?: (isOpen: boolean) => void;
@@ -37,15 +36,12 @@ export function PlusMenu({
   items,
   onAction,
   compact,
-  children,
   placement = 'bottom end',
   onOpenChange,
 }: PlusMenuProps) {
   return (
     <MenuTrigger onOpenChange={onOpenChange}>
-      <PlusButton label={label} compact={compact}>
-        {children}
-      </PlusButton>
+      <PlusButton label={label} compact={compact} />
       <Popover
         placement={placement}
         offset={placement === 'right top' ? 16 : 8}

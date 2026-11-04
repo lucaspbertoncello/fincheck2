@@ -158,6 +158,7 @@ export {
   type ConfirmPreview,
   type ModalFrameProps,
   type ModalSize,
+  Tooltip,
 } from '#/components/overlays/index.ts';
 export {
   BankChangedNotice,

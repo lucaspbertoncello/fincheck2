@@ -15,12 +15,16 @@ import { ApplicationSummaryPanel } from '#/shared/layouts/application/summary/ap
 import { ApplicationTopBar } from '#/shared/layouts/application/top-bar/application-top-bar.component.tsx';
 
 /**
- * Shell of the app. Desktop (1024 px and up): the side rail on the left (it opens over the page),
- * in one centered group with the content (rail, panel and page are 24 px apart at any width),
- * then the summary panel (on Configurações an empty slot the screen fills with its section menu,
- * so the column starts in the same place) and the page in the animated `tab-content` container;
- * there is no top bar, so both start at the top of the screen. Phone: top bar, the page and the
- * bottom bar. Links are React Aria links that navigate through the TanStack router.
+ * Shell of the app. Desktop (1024 px and up): ONE frame centered at 84 rem, with the page margin
+ * on all four sides (s24 up to 1279 px, s32 from 1280 px; the same on every screen). Inside it a
+ * row of two: the PAIR on the left and the page (`main`, in the animated `tab-content`
+ * container) on the right, s32 apart. The pair is the icon rail (56 px) and the left box (the
+ * summary panel, or on Configurações an empty slot the screen fills with its section menu), s8
+ * apart, `sticky` at the page margin and stretched to one height: the panel decides it, the rail
+ * follows with its icons centered (never a fixed number). Rail, panel and the top of the page
+ * title start on the same line, the top of the row. There is no top bar on the desktop. Phone:
+ * top bar, the page and the bottom bar, unchanged. Links are React Aria links that navigate
+ * through the TanStack router.
  *
  * The frame is `relative` with `overflow-y: clip` so nothing inside can stretch the page past
  * its own bottom. The Visão geral used to scroll into a blank band: the `sr-only` data table of
@@ -41,37 +45,31 @@ export function ApplicationLayout() {
       <div
         className={
           isDesktop
-            ? 'mx-auto flex min-h-dvh w-full max-w-[84rem] gap-s24 px-s16 xl:px-s24'
-            : 'flex min-h-dvh w-full'
+            ? 'relative mx-auto min-h-dvh w-full max-w-[84rem] overflow-y-clip p-s24 xl:p-s32'
+            : 'relative flex min-h-dvh w-full min-w-0 flex-col overflow-y-clip pb-bottom-nav'
         }
       >
-        {isDesktop ? <ApplicationRail screen={screen} monthParam={monthParam} /> : null}
-        <div className="relative flex min-h-dvh min-w-0 flex-1 flex-col overflow-y-clip pb-bottom-nav lg:pb-s32">
-          {isDesktop ? null : <ApplicationTopBar screen={screen} monthParam={monthParam} />}
-          <div
-            className={`grid w-full gap-s24 ${
-              isDesktop
-                ? 'grid-cols-[var(--spacing-panel)_minmax(0,1fr)] pt-s16'
-                : 'px-gutter-mobile pt-s8'
-            }`}
-          >
-            {isDesktop ? (
-              screen.showsPanel ? (
-                <aside className="sticky top-s16 self-start">
+        {isDesktop ? null : <ApplicationTopBar screen={screen} monthParam={monthParam} />}
+        <div className={isDesktop ? 'flex gap-s32' : 'grid w-full gap-s24 px-gutter-mobile pt-s8'}>
+          {isDesktop ? (
+            <div className="sticky top-s24 flex shrink-0 gap-s8 self-start xl:top-s32">
+              <ApplicationRail screen={screen} monthParam={monthParam} />
+              {screen.showsPanel ? (
+                <aside className="w-panel">
                   <ApplicationSummaryPanel variant="full" />
                 </aside>
               ) : (
-                <aside ref={setPanelSlot} className="sticky top-s16 self-start" />
-              )
-            ) : null}
-            <PanelSlotContext value={panelSlot}>
-              <main className="tab-content min-w-0">
-                <Outlet />
-              </main>
-            </PanelSlotContext>
-          </div>
-          <ApplicationBottomNav activeTab={screen.tab} monthParam={monthParam} />
+                <aside ref={setPanelSlot} className="flex w-panel flex-col [&>*]:flex-1" />
+              )}
+            </div>
+          ) : null}
+          <PanelSlotContext value={panelSlot}>
+            <main className="tab-content min-w-0 flex-1">
+              <Outlet />
+            </main>
+          </PanelSlotContext>
         </div>
+        <ApplicationBottomNav activeTab={screen.tab} monthParam={monthParam} />
       </div>
     </AriaRouterProvider>
   );
