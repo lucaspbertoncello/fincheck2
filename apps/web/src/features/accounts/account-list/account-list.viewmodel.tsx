@@ -74,7 +74,7 @@ export function AccountListViewModel() {
         detail: [
           reason ? `${capitalize(reason)}.` : '',
           age,
-          'Reconecte no Meu Pluggy se persistir.',
+          'Se persistir, reconecte o banco no Open Finance.',
         ]
           .filter(Boolean)
           .join(' '),

@@ -30,8 +30,8 @@ describe('AccountListPage', () => {
     expect(screen.getAllByText('Fatura fechada').length).toBeGreaterThan(0);
 
     const nubank = await screen.findByRole('article', { name: 'Nubank' });
-    expect(within(nubank).getByText('Pluggy')).toBeInTheDocument();
-    expect(within(nubank).getByText(/Atualizado pelo Pluggy há \d+ min/)).toBeInTheDocument();
+    expect(within(nubank).getByText('Open Finance')).toBeInTheDocument();
+    expect(within(nubank).getByText(/Atualizado pelo banco há \d+ min/)).toBeInTheDocument();
     expect(within(nubank).getByText(/3\.486,15/)).toBeInTheDocument();
 
     const carteira = screen.getByRole('article', { name: 'Carteira' });
@@ -47,7 +47,7 @@ describe('AccountListPage', () => {
     await openAccounts();
 
     const bradesco = await screen.findByRole('article', { name: 'Bradesco' });
-    expect(within(bradesco).getByText(/Atualizado pelo Pluggy ontem/)).toBeInTheDocument();
+    expect(within(bradesco).getByText(/Atualizado pelo banco ontem/)).toBeInTheDocument();
   });
 
   it('shows the error state and loads again on "Tentar de novo"', async () => {
@@ -89,7 +89,7 @@ describe('AccountListPage', () => {
     expect(await screen.findByText('Não deu para sincronizar o Bradesco')).toBeInTheDocument();
     const tile = screen.getByRole('article', { name: 'Bradesco' });
     expect(within(tile).getByText(/Conexão com erro/)).toBeInTheDocument();
-    expect(within(tile).getByRole('link', { name: 'Reconectar no Meu Pluggy' })).toHaveAttribute(
+    expect(within(tile).getByRole('link', { name: 'Reconectar no Open Finance' })).toHaveAttribute(
       'href',
       'https://meu.pluggy.ai',
     );

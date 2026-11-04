@@ -44,7 +44,7 @@ export function SettingsViewModel() {
     title: section.title,
     subtitle:
       section.key === 'connections' && bankNames.length > 0
-        ? `Pluggy, ${joinNames(bankNames)}`
+        ? `Open Finance, ${joinNames(bankNames)}`
         : section.key === 'profile' && profile.data
           ? profile.data.name
           : section.subtitle,

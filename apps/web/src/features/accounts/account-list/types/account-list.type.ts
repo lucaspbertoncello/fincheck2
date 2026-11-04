@@ -21,7 +21,7 @@ export type AccountTileData = {
   theme: BankThemeKey | 'wallet';
   name: string;
   subtitle: string;
-  /** "Pluggy" or "Manual". */
+  /** "Open Finance" or "Manual". */
   badge: string;
   /** Null until the bank reports a balance. */
   balanceCents: number | null;

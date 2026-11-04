@@ -47,13 +47,13 @@ describe('SyncErrorBanner', () => {
 });
 
 describe('ConnectionErrorNotice', () => {
-  it('points to Meu Pluggy in a new tab', () => {
+  it('points to Open Finance in a new tab', () => {
     const html = renderToStaticMarkup(
       <ConnectionErrorNotice reason="login com erro" href="https://meu.example/pluggy" />,
     );
 
     expect(html).toContain('Conexão com erro, login com erro');
-    expect(html).toContain('Reconectar no Meu Pluggy');
+    expect(html).toContain('Reconectar no Open Finance');
     expect(html).toContain('href="https://meu.example/pluggy"');
     expect(html).toContain('target="_blank"');
   });

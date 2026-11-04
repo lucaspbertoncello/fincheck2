@@ -38,7 +38,7 @@ function toItem(connection: Connection.Dto, now: Date): ConnectionItem {
     bankTheme: resolveBankThemeKey(connection.institutionCode),
     status: isError ? 'error' : 'active',
     updateLine: connection.lastBankUpdateAt
-      ? `Atualizado pelo Pluggy ${formatTimeAgo(connection.lastBankUpdateAt, now)}`
+      ? `Atualizado pelo banco ${formatTimeAgo(connection.lastBankUpdateAt, now)}`
       : 'Ainda sem dados do banco',
     errorReason:
       isError && connection.errorCode ? CONNECTION_ERROR_REASON[connection.errorCode] : null,
@@ -111,10 +111,10 @@ export function ConnectionsViewModel() {
     if (!parsed.success) {
       const errors: SetupErrors = {};
       if (parsed.error.issues.some((issue) => issue.path[0] === 'clientId')) {
-        errors.clientId = 'Cole o Client ID do Pluggy.';
+        errors.clientId = 'Cole o Client ID do Open Finance.';
       }
       if (parsed.error.issues.some((issue) => issue.path[0] === 'clientSecret')) {
-        errors.clientSecret = 'Cole o Client Secret do Pluggy.';
+        errors.clientSecret = 'Cole o Client Secret do Open Finance.';
       }
       setSetupErrors(errors);
       return;

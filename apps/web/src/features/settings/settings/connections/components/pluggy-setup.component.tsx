@@ -1,11 +1,14 @@
 import { Button, Steps, TextField, type StepItem } from '@fincheck/ui';
+import { Link } from 'react-aria-components';
+
+import { MEU_PLUGGY_URL } from '#/features/settings/settings/connections/constants/meu-pluggy-url.constant.ts';
 
 const SETUP_STEPS: StepItem[] = [
   {
     key: 'account',
     status: 'current',
-    title: 'Crie a conta no Pluggy',
-    description: 'Em meu.pluggy.ai, com o mesmo e-mail dos bancos.',
+    title: 'Crie seu acesso ao Open Finance',
+    description: 'No site do Open Finance, com o mesmo e-mail dos bancos.',
   },
   {
     key: 'keys',
@@ -39,7 +42,17 @@ export function PluggySetup({
 }: PluggySetupProps) {
   return (
     <div className="flex flex-col gap-s24">
-      <Steps items={SETUP_STEPS} label="Passos para conectar o Open Finance" />
+      <div className="flex flex-col gap-s12">
+        <Steps items={SETUP_STEPS} label="Passos para conectar o Open Finance" />
+        <Link
+          href={MEU_PLUGGY_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="focus-ring cursor-pointer self-start rounded-tiny text-label font-emphasis text-brand underline underline-offset-2 data-[hovered]:no-underline"
+        >
+          Abrir o site do Open Finance
+        </Link>
+      </div>
       <form
         noValidate
         onSubmit={(event) => {

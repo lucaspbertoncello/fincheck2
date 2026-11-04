@@ -33,7 +33,7 @@ export function buildDeletionSummary(impact: DeletionImpact.Dto): DeletionSummar
     gone,
     stays: ['As outras contas, as categorias e as regras que não dependem desta conta.'],
     returnNote: impact.returnsOnNextSync
-      ? 'O Pluggy manda a conta de novo na próxima busca, como conta nova e sem histórico. Para só tirá-la de vista, arquive.'
+      ? 'O Open Finance manda a conta de novo na próxima busca, como conta nova e sem histórico. Para só tirá-la de vista, arquive.'
       : null,
   };
 }

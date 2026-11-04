@@ -53,7 +53,7 @@ export function ConnectionsView({
       action={
         state === 'ready' ? (
           <Chip tone="ok" icon="check">
-            Pluggy conectado
+            Open Finance conectado
           </Chip>
         ) : undefined
       }
@@ -98,7 +98,7 @@ export function ConnectionsView({
       {state === 'ready' ? (
         <FineNote icon="clock">
           O app busca os dados de hora em hora, sozinho. Para voltar a receber de um banco com erro,
-          reconecte no Meu Pluggy.
+          reconecte no Open Finance.
         </FineNote>
       ) : null}
       <ConfirmDialog
@@ -112,7 +112,7 @@ export function ConnectionsView({
         changes={[
           { text: 'As transações, as faturas e o histórico ficam no app.' },
           { text: 'As contas e os cartões do banco passam a ser manuais, com o último saldo.' },
-          { icon: 'warning', text: 'Para revogar o acesso de vez, é no Meu Pluggy.' },
+          { icon: 'warning', text: 'Para revogar o acesso de vez, é no Open Finance.' },
         ]}
         confirmLabel="Desconectar"
         loading={isDisconnecting}

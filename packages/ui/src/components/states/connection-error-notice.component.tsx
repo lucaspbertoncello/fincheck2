@@ -12,7 +12,7 @@ type ConnectionErrorNoticeProps = {
 };
 
 /**
- * "Conexão com erro · Reconectar no Meu Pluggy": the account card's line when a connection fails
+ * "Conexão com erro · Reconectar no Open Finance": the account card's line when a connection fails
  * (components.md 14.3 with the MeuPluggy note of screens.md). Replaces the old "Renovar".
  */
 export function ConnectionErrorNotice({ reason, href, className }: ConnectionErrorNoticeProps) {
@@ -29,7 +29,7 @@ export function ConnectionErrorNotice({ reason, href, className }: ConnectionErr
         rel="noreferrer"
         className="focus-ring cursor-pointer rounded-tiny font-emphasis text-brand underline underline-offset-2 data-[hovered]:no-underline"
       >
-        Reconectar no Meu Pluggy
+        Reconectar no Open Finance
       </Link>
     </p>
   );

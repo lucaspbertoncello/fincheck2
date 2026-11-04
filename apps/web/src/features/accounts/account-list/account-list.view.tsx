@@ -103,7 +103,7 @@ export function AccountListView({
         <EmptyState
           icon="plug"
           title="Nenhuma conta ainda"
-          description="Conecte um banco pelo Meu Pluggy ou crie uma conta manual."
+          description="Conecte um banco pelo Open Finance ou crie uma conta manual."
           primaryAction={{ label: 'Conectar conta', onPress: onConnect, icon: 'plug' }}
         />
       ) : (

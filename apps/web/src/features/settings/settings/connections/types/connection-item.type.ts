@@ -19,7 +19,7 @@ export type ConnectionItem = {
   name: string;
   bankTheme: BankThemeKey;
   status: 'active' | 'error';
-  /** "Atualizado pelo Pluggy há 12 min" (active connections). */
+  /** "Atualizado pelo banco há 12 min" (active connections). */
   updateLine: string | null;
   /** The reason after "Conexão com erro" (connections in error). */
   errorReason: string | null;

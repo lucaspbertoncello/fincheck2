@@ -4,7 +4,7 @@ const REASON: Record<Connection.ErrorCode, string> = {
   CONSENT_REVOKED: 'consentimento revogado',
   LOGIN_ERROR: 'login com erro',
   STALE_DATA: 'dados parados',
-  PROVIDER_ERROR: 'Pluggy indisponível',
+  PROVIDER_ERROR: 'Open Finance indisponível',
 };
 
 /** The short reason of a connection error ("login com erro"), for the error line of the card. */

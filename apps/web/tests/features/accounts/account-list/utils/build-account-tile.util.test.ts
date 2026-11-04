@@ -38,11 +38,11 @@ function tile(overrides: Partial<Account.Dto>) {
 }
 
 describe('buildAccountTile', () => {
-  it('says "atualizado pelo Pluggy" for a bank account and offers no balance action', () => {
+  it('says "atualizado pelo banco" for a bank account and offers no balance action', () => {
     const result = tile({});
 
-    expect(result.badge).toBe('Pluggy');
-    expect(result.sync).toEqual({ tone: 'ok', label: 'Atualizado pelo Pluggy há 12 min' });
+    expect(result.badge).toBe('Open Finance');
+    expect(result.sync).toEqual({ tone: 'ok', label: 'Atualizado pelo banco há 12 min' });
     expect(result.actionLabel).toBeUndefined();
   });
 

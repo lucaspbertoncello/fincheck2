@@ -40,8 +40,8 @@ function buildSyncLine(
 
   const updatedAt = account.connection.lastBankUpdateAt;
   const label = updatedAt
-    ? `Atualizado pelo Pluggy ${formatSyncAge(updatedAt, now)}`
-    : 'Aguardando a primeira atualização do Pluggy';
+    ? `Atualizado pelo banco ${formatSyncAge(updatedAt, now)}`
+    : 'Aguardando a primeira atualização do banco';
 
   return { tone: connection?.isStale ? 'stale' : 'ok', label };
 }
@@ -61,7 +61,7 @@ export function buildAccountTile({
     theme: isWallet ? 'wallet' : resolveAccountTheme(account),
     name: account.name,
     subtitle: buildAccountSubtitle(account.type),
-    badge: account.source === 'pluggy' ? 'Pluggy' : 'Manual',
+    badge: account.source === 'pluggy' ? 'Open Finance' : 'Manual',
     balanceCents: account.balanceCents,
     curve: buildBalanceCurve(history),
     curveLabel: `Saldo de ${account.name} no mês`,

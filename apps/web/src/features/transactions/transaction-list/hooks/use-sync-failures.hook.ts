@@ -17,7 +17,8 @@ export function useSyncFailures({ model, reportError }: SyncFailuresArgs): SyncF
     .map((connection) => ({
       connectionId: connection.id,
       institution: connection.institutionName,
-      detail: 'A lista mostra o que já estava guardado. Se persistir, reconecte no Meu Pluggy.',
+      detail:
+        'A lista mostra o que já estava guardado. Se persistir, reconecte o banco no Open Finance.',
       retrying: model.startRun.isPending && model.startRun.variables === connection.id,
       onRetry: () => model.startRun.mutate(connection.id, { onError: reportError }),
     }));

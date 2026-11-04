@@ -41,10 +41,10 @@ describe('SettingsPage', () => {
     it('lists the banks with what the Pluggy last did, and flags the stale one', async () => {
       await openSettings();
 
-      expect(await screen.findByText('Pluggy conectado')).toBeInTheDocument();
+      expect(await screen.findByText('Open Finance conectado')).toBeInTheDocument();
       expect(screen.getByText('Nubank', { selector: 'p' })).toBeInTheDocument();
       expect(screen.getByText('Bradesco', { selector: 'p' })).toBeInTheDocument();
-      expect(screen.getAllByText(/Atualizado pelo Pluggy há/)).toHaveLength(2);
+      expect(screen.getAllByText(/Atualizado pelo banco há/)).toHaveLength(2);
       expect(screen.getByText('Dados desatualizados')).toBeInTheDocument();
       expect(screen.queryByText(/Sincronizar agora/)).not.toBeInTheDocument();
       expect(screen.queryByText(/Sincronizar sozinho/)).not.toBeInTheDocument();
@@ -61,7 +61,7 @@ describe('SettingsPage', () => {
       await openSettings();
 
       expect(await screen.findByText(/Conexão com erro, login com erro/)).toBeInTheDocument();
-      const link = screen.getByRole('link', { name: 'Reconectar no Meu Pluggy' });
+      const link = screen.getByRole('link', { name: 'Reconectar no Open Finance' });
       expect(link).toHaveAttribute('href', 'https://meu.pluggy.ai');
       expect(link).toHaveAttribute('target', '_blank');
     });
@@ -251,15 +251,15 @@ describe('SettingsPage', () => {
         await screen.findByRole('list', { name: 'Passos para conectar o Open Finance' }),
       ).toBeInTheDocument();
       await user.click(screen.getByRole('button', { name: 'Guardar as chaves' }));
-      expect(screen.getByText('Cole o Client ID do Pluggy.')).toBeInTheDocument();
-      expect(screen.getByText('Cole o Client Secret do Pluggy.')).toBeInTheDocument();
+      expect(screen.getByText('Cole o Client ID do Open Finance.')).toBeInTheDocument();
+      expect(screen.getByText('Cole o Client Secret do Open Finance.')).toBeInTheDocument();
       await waitFor(() => expect(screen.getByLabelText('Client ID')).toHaveFocus());
 
       await user.type(screen.getByLabelText('Client ID'), 'meu-client-id');
       await user.type(screen.getByLabelText('Client Secret'), 'meu-segredo');
       await user.click(screen.getByRole('button', { name: 'Guardar as chaves' }));
 
-      expect(await screen.findByText('Pluggy conectado')).toBeInTheDocument();
+      expect(await screen.findByText('Open Finance conectado')).toBeInTheDocument();
     });
 
     it('shows the error with "Tentar de novo" and recovers', async () => {
@@ -484,7 +484,7 @@ describe('SettingsPage', () => {
         expect.stringContaining('Backup'),
         expect.stringContaining('Aparência'),
       ]);
-      expect(await within(nav).findByText('Pluggy, Bradesco e Nubank')).toBeInTheDocument();
+      expect(await within(nav).findByText('Open Finance, Bradesco e Nubank')).toBeInTheDocument();
       // The rail has its own "Configurações" link; the grid (menu + page) shows the title once.
       expect(
         within(screen.getByRole('main').parentElement!).getAllByText('Configurações'),

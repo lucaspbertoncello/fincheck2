@@ -8,7 +8,7 @@ const BASE = {
   theme: 'nubank',
   name: 'Nubank',
   subtitle: 'Conta corrente',
-  badge: 'Pluggy',
+  badge: 'Open Finance',
   balanceCents: 341258,
   curve: [310000, 305000, 330000, 341258],
   curveLabel: 'Saldo do mês',
@@ -27,7 +27,7 @@ describe('AccountCard', () => {
     );
     expect(html).toContain('Nubank');
     expect(html).toContain('Conta corrente');
-    expect(html).toContain('Pluggy');
+    expect(html).toContain('Open Finance');
     expect(html).toContain('3.412,58');
     expect(html).toContain('aria-label="Saldo do mês"');
     expect(html).toContain('Sincronizado há 12 min');
