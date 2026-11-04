@@ -10,7 +10,10 @@ import { useConnectAccountModel } from '#/features/accounts/connect-account/conn
 import { ConnectAccountView } from '#/features/accounts/connect-account/connect-account.view.tsx';
 import { useConnectAccountForm } from '#/features/accounts/connect-account/hooks/use-connect-account-form.hook.ts';
 import { buildFormFromAccount } from '#/features/accounts/connect-account/utils/build-form-from-account.util.ts';
-import { describeConnectError } from '#/features/accounts/connect-account/utils/describe-connect-error.util.ts';
+import {
+  connectErrorNeedsSettings,
+  describeConnectError,
+} from '#/features/accounts/connect-account/utils/describe-connect-error.util.ts';
 import { validateAccountEdit } from '#/features/accounts/connect-account/utils/validate-account-edit.util.ts';
 import { validateManualAccount } from '#/features/accounts/connect-account/utils/validate-manual-account.util.ts';
 
@@ -60,26 +63,37 @@ function ConnectAccountSession({
   const navigate = useNavigate();
   const state = useConnectAccountForm(editAccount ? buildFormFromAccount(editAccount) : undefined);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [connectError, setConnectError] = useState<{
+    message: string;
+    needsSettings: boolean;
+  } | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
   const isEditing = Boolean(editId);
   const isBankLocked = editAccount?.source === 'pluggy';
 
   function close() {
     state.reset();
     setSubmitError(null);
+    setConnectError(null);
+    setIsConnected(false);
     onClose();
   }
 
-  function submitPluggy() {
+  function submitOpenFinance() {
     const parsed = createConnectionRequestSchema.safeParse({ pluggyItemId: state.itemId.trim() });
     if (!parsed.success) {
-      state.showErrors({ itemId: 'O ID do item tem 36 caracteres' });
+      state.showErrors({ itemId: 'O código tem 36 caracteres' });
       return;
     }
     state.clearErrors();
-    setSubmitError(null);
+    setConnectError(null);
     model.createConnection.mutate(parsed.data, {
-      onSuccess: close,
-      onError: (error) => setSubmitError(describeConnectError(error)),
+      onSuccess: () => setIsConnected(true),
+      onError: (error) =>
+        setConnectError({
+          message: describeConnectError(error),
+          needsSettings: connectErrorNeedsSettings(error),
+        }),
     });
   }
 
@@ -115,7 +129,11 @@ function ConnectAccountSession({
     );
   }
 
-  const submit = isEditing ? submitEdit : state.mode === 'pluggy' ? submitPluggy : submitManual;
+  const submit = isEditing
+    ? submitEdit
+    : state.mode === 'open-finance'
+      ? submitOpenFinance
+      : submitManual;
 
   return (
     <ConnectAccountView
@@ -130,11 +148,19 @@ function ConnectAccountSession({
         state.setMode(mode);
         state.clearErrors();
         setSubmitError(null);
+        setConnectError(null);
       }}
       isLoadingSettings={model.isLoadingSettings}
       isConfigured={model.isConfigured}
-      itemId={state.itemId}
-      onItemIdChange={state.setItemId}
+      code={state.itemId}
+      onCodeChange={state.setItemId}
+      isConnected={isConnected}
+      onConnectAnother={() => {
+        state.setItemId('');
+        setConnectError(null);
+        setIsConnected(false);
+      }}
+      connectError={connectError}
       form={state.form}
       onFieldChange={state.setField}
       errors={state.errors}

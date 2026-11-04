@@ -75,7 +75,7 @@ describe('AccountListPage', () => {
       .parentElement as HTMLElement;
     press(within(empty).getByRole('button', { name: 'Conectar conta' }));
 
-    expect(await screen.findByRole('dialog', { name: 'Conectar conta' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'Conectar banco' })).toBeInTheDocument();
     expect(window.location.search).toContain('new=account');
   });
 

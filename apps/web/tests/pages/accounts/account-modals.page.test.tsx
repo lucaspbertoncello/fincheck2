@@ -15,6 +15,16 @@ async function openAccounts(url = '/accounts') {
   await screen.findByRole('heading', { level: 1, name: 'Contas e cartões' });
 }
 
+/** The bank select: opens the list and picks the row by its name. */
+async function chooseBank(
+  user: ReturnType<typeof userEvent.setup>,
+  dialog: HTMLElement,
+  bank: string,
+) {
+  await user.click(within(dialog).getByRole('button', { name: /Banco/ }));
+  await user.click(await screen.findByRole('option', { name: bank }));
+}
+
 async function openMenu(user: ReturnType<typeof userEvent.setup>, name: string, item: string) {
   await user.click(
     await screen.findByRole('button', {
@@ -24,18 +34,18 @@ async function openMenu(user: ReturnType<typeof userEvent.setup>, name: string, 
   await user.click(await screen.findByRole('menuitem', { name: item }));
 }
 
-describe('Conectar conta, modal pattern', () => {
-  it('walks the three steps of the Meu Pluggy as the item id is typed', async () => {
+describe('Conectar banco, modal pattern', () => {
+  it('walks the three steps of the Open Finance as the connection code is typed', async () => {
     const user = userEvent.setup();
     renderApp('/accounts?new=account');
-    const dialog = await screen.findByRole('dialog', { name: 'Conectar conta' });
+    const dialog = await screen.findByRole('dialog', { name: 'Conectar banco' });
     const steps = await within(dialog).findByRole('list', {
-      name: 'Passos para conectar pelo Meu Pluggy',
+      name: 'Passos para conectar pelo Open Finance',
     });
 
-    expect(steps.querySelector('[aria-current=step]')).toHaveTextContent('Conecte o banco');
+    expect(steps.querySelector('[aria-current=step]')).toHaveTextContent('Conecte seu banco');
 
-    await user.click(within(dialog).getByRole('textbox', { name: 'ID do item no Meu Pluggy' }));
+    await user.click(within(dialog).getByRole('textbox', { name: 'Código da conexão' }));
     await user.paste(ITEM_ID);
 
     expect(within(steps).getAllByText(/Concluído:/)).toHaveLength(3);
@@ -44,7 +54,7 @@ describe('Conectar conta, modal pattern', () => {
   it('draws the card in the theme of the bank as the person fills the form, and creates it', async () => {
     const user = userEvent.setup();
     renderApp('/accounts?new=account');
-    const dialog = await screen.findByRole('dialog', { name: 'Conectar conta' });
+    const dialog = await screen.findByRole('dialog', { name: 'Conectar banco' });
 
     await user.click(within(dialog).getByRole('radio', { name: 'Conta manual' }));
     await user.click(
@@ -53,11 +63,7 @@ describe('Conectar conta, modal pattern', () => {
         { name: 'Cartão de crédito' },
       ),
     );
-    await user.click(
-      within(within(dialog).getByRole('radiogroup', { name: 'Banco' })).getByRole('radio', {
-        name: 'Nubank',
-      }),
-    );
+    await chooseBank(user, dialog, 'Nubank');
     await user.type(within(dialog).getByRole('textbox', { name: 'Apelido do cartão' }), 'Roxo');
     await user.type(within(dialog).getByRole('textbox', { name: 'Dia de fechamento' }), '25');
     await user.type(within(dialog).getByRole('textbox', { name: 'Dia de vencimento' }), '6');
@@ -69,7 +75,7 @@ describe('Conectar conta, modal pattern', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Criar cartão' }));
 
     await waitFor(() =>
-      expect(screen.queryByRole('dialog', { name: 'Conectar conta' })).not.toBeInTheDocument(),
+      expect(screen.queryByRole('dialog', { name: 'Conectar banco' })).not.toBeInTheDocument(),
     );
     const created = db.accounts.find((item) => item.name === 'Roxo');
     expect(created?.creditCard?.closingDay).toBe(25);
@@ -79,7 +85,7 @@ describe('Conectar conta, modal pattern', () => {
   it('keeps brand, last digits and limit under "Mais opções", and says what they hold', async () => {
     const user = userEvent.setup();
     renderApp('/accounts?new=account');
-    const dialog = await screen.findByRole('dialog', { name: 'Conectar conta' });
+    const dialog = await screen.findByRole('dialog', { name: 'Conectar banco' });
     await user.click(within(dialog).getByRole('radio', { name: 'Conta manual' }));
     await user.click(
       within(await within(dialog).findByRole('radiogroup', { name: 'Tipo de conta' })).getByRole(
@@ -109,7 +115,7 @@ describe('Conectar conta, modal pattern', () => {
       }),
     ).toBeDisabled();
     expect(
-      within(dialog).queryByRole('radio', { name: 'Pelo Meu Pluggy' }),
+      within(dialog).queryByRole('radio', { name: 'Banco (Open Finance)' }),
     ).not.toBeInTheDocument();
 
     await user.clear(name);

@@ -6,28 +6,19 @@ import { useRef } from 'react';
 
 import { ChoiceCards } from '#/features/accounts/connect-account/components/choice-cards.component.tsx';
 import { ManualAccountForm } from '#/features/accounts/connect-account/components/manual-account-form.component.tsx';
-import { PluggyItemForm } from '#/features/accounts/connect-account/components/pluggy-item-form.component.tsx';
+import {
+  OpenFinanceForm,
+  type OpenFinanceProblemContent,
+} from '#/features/accounts/connect-account/components/open-finance-form.component.tsx';
+import { OpenFinanceSuccess } from '#/features/accounts/connect-account/components/open-finance-success.component.tsx';
+import { StackedPanels } from '#/features/accounts/connect-account/components/stacked-panels.component.tsx';
+import { CONNECT_MODE_OPTIONS } from '#/features/accounts/connect-account/constants/connect-modes.constant.ts';
 import type {
   ConnectMode,
   FormErrors,
   ManualAccountForm as ManualAccountFormValues,
 } from '#/features/accounts/connect-account/types/connect-account.type.ts';
 import { useFocusFirstInvalid } from '#/features/accounts/form-focus/hooks/use-focus-first-invalid.hook.ts';
-
-const MODE_OPTIONS = [
-  {
-    value: 'pluggy' as const,
-    label: 'Pelo Meu Pluggy',
-    icon: 'plug' as const,
-    description: 'Cole o ID do item e o banco vem sozinho',
-  },
-  {
-    value: 'manual' as const,
-    label: 'Conta manual',
-    icon: 'edit' as const,
-    description: 'Você lança e ajusta o saldo',
-  },
-];
 
 export type ConnectAccountViewProps = {
   isOpen: boolean;
@@ -42,8 +33,14 @@ export type ConnectAccountViewProps = {
   onModeChange: (mode: ConnectMode) => void;
   isLoadingSettings: boolean;
   isConfigured: boolean;
-  itemId: string;
-  onItemIdChange: (value: string) => void;
+  /** The connection code pasted from the Open Finance site. */
+  code: string;
+  onCodeChange: (value: string) => void;
+  /** The bank was connected: the modal says what happens now. */
+  isConnected: boolean;
+  onConnectAnother: () => void;
+  /** Why the connect failed, and whether the way out is Configurações instead of trying again. */
+  connectError: { message: string; needsSettings: boolean } | null;
   form: ManualAccountFormValues;
   onFieldChange: <K extends keyof ManualAccountFormValues>(
     key: K,
@@ -51,37 +48,75 @@ export type ConnectAccountViewProps = {
   ) => void;
   errors: FormErrors;
   failedAttempts: number;
+  /** Error of the manual create or of the edit (the connect has `connectError`). */
   submitError: string | null;
   isSubmitting: boolean;
   onSubmit: () => void;
   onOpenSettings: () => void;
-  /** The bank of an account that comes from the Pluggy is not edited by hand. */
+  /** The bank of an account that comes from the Open Finance is not edited by hand. */
   isBankLocked: boolean;
   typeOptions: readonly { value: Account.Type; label: string; icon: IconName }[];
   institutionOptions: readonly { value: Institution.Code; label: string }[];
   brandOptions: readonly { value: CreditCard.Brand; label: string }[];
 };
 
-function resolveTexts(isEditing: boolean, mode: ConnectMode, type: Account.Type) {
+type Texts = { title: string; description: string; submit: string; submitting: string };
+
+/** Every create text is one short line, so the header never changes height. */
+function resolveTexts(
+  isEditing: boolean,
+  isConnected: boolean,
+  mode: ConnectMode,
+  type: Account.Type,
+): Texts {
   if (isEditing) {
     return type === 'credit_card'
       ? {
           title: 'Editar cartão',
           description: 'O apelido, os dias da fatura e o que mais mudou.',
           submit: 'Salvar',
+          submitting: 'Salvando...',
         }
-      : { title: 'Editar conta', description: 'O nome e o banco da conta.', submit: 'Salvar' };
+      : {
+          title: 'Editar conta',
+          description: 'O nome e o banco da conta.',
+          submit: 'Salvar',
+          submitting: 'Salvando...',
+        };
   }
-  const submit =
-    mode === 'pluggy' ? 'Conectar banco' : type === 'credit_card' ? 'Criar cartão' : 'Criar conta';
+  if (isConnected) {
+    return {
+      title: 'Banco conectado',
+      description: 'As contas e os cartões já estão a caminho.',
+      submit: 'Concluir',
+      submitting: 'Concluindo...',
+    };
+  }
+  if (mode === 'open-finance') {
+    return {
+      title: 'Conectar banco',
+      description: 'Traz contas e cartões do seu banco.',
+      submit: 'Conectar banco',
+      submitting: 'Conectando...',
+    };
+  }
   return {
-    title: 'Conectar conta',
-    description: 'Um banco pelo Meu Pluggy ou uma conta lançada à mão.',
-    submit,
+    title: 'Nova conta manual',
+    description: 'Carteira ou banco sem Open Finance.',
+    submit: type === 'credit_card' ? 'Criar cartão' : 'Criar conta',
+    submitting: 'Criando...',
   };
 }
 
-/** "Conectar conta" / "Editar conta": a bank through the Meu Pluggy, or an account typed by hand (RF-ACC-001, RF-ACC-002). */
+/** Same height for every create variant on a wide screen, capped so a short screen scrolls instead. */
+const CREATE_REGION_CLASS = 'lg:min-h-[min(39.5rem,calc(100dvh-16rem))]';
+
+/**
+ * "Conectar banco" / "Nova conta manual" / "Editar conta": a bank through the Open Finance (its
+ * contas e cartões come together), or an account typed by hand (RF-ACC-001, RF-ACC-002). The first
+ * choice says the result; Open Finance, manual and the success share one cell, so switching does
+ * not resize the modal.
+ */
 export function ConnectAccountView({
   isOpen,
   onClose,
@@ -93,8 +128,11 @@ export function ConnectAccountView({
   onModeChange,
   isLoadingSettings,
   isConfigured,
-  itemId,
-  onItemIdChange,
+  code,
+  onCodeChange,
+  isConnected,
+  onConnectAnother,
+  connectError,
   form,
   onFieldChange,
   errors,
@@ -110,8 +148,39 @@ export function ConnectAccountView({
 }: ConnectAccountViewProps) {
   const content = useRef<HTMLDivElement>(null);
   useFocusFirstInvalid(content, failedAttempts);
-  const texts = resolveTexts(isEditing, mode, form.type);
-  const waitingPluggy = mode === 'pluggy' && (!isConfigured || isLoadingSettings);
+  const texts = resolveTexts(isEditing, isConnected, mode, form.type);
+  const isOpenFinance = !isEditing && mode === 'open-finance';
+  const waitingKeys = isOpenFinance && !isConnected && (!isConfigured || isLoadingSettings);
+
+  const problem: OpenFinanceProblemContent | null = !isConfigured
+    ? {
+        variant: 'warning',
+        title: 'Falta configurar o Open Finance',
+        description: 'Salve o Client ID e o Secret em Configurações para conectar um banco.',
+        actionLabel: 'Abrir Configurações',
+        onAction: onOpenSettings,
+      }
+    : connectError
+      ? {
+          variant: 'error',
+          title: connectError.message,
+          actionLabel: connectError.needsSettings ? 'Abrir Configurações' : 'Tentar de novo',
+          onAction: connectError.needsSettings ? onOpenSettings : onSubmit,
+        }
+      : null;
+
+  const manualForm = (
+    <ManualAccountForm
+      form={form}
+      errors={errors}
+      onFieldChange={onFieldChange}
+      typeOptions={typeOptions}
+      institutionOptions={institutionOptions}
+      brandOptions={brandOptions}
+      isEditing={isEditing}
+      isBankLocked={isBankLocked}
+    />
+  );
 
   return (
     <FormModal
@@ -122,16 +191,17 @@ export function ConnectAccountView({
       title={texts.title}
       description={texts.description}
       submitLabel={texts.submit}
-      submittingLabel={isEditing ? 'Salvando...' : 'Conectando...'}
-      onSubmit={onSubmit}
+      submittingLabel={texts.submitting}
+      cancelLabel={isConnected ? 'Fechar' : 'Cancelar'}
+      onSubmit={isConnected ? onClose : onSubmit}
       isSubmitting={isSubmitting}
-      submitDisabled={editState !== 'ready' || waitingPluggy}
+      submitDisabled={editState !== 'ready' || waitingKeys}
       submitHint={
-        waitingPluggy && !isLoadingSettings
-          ? 'Salve as chaves do Pluggy em Configurações para conectar um banco.'
+        waitingKeys && !isLoadingSettings
+          ? 'Salve as chaves do Open Finance em Configurações para conectar um banco.'
           : undefined
       }
-      error={submitError ?? undefined}
+      error={isOpenFinance ? undefined : (submitError ?? undefined)}
       destructive={isEditing ? { label: 'Excluir', onPress: onDelete } : undefined}
       initialFocus="input[type=text]"
     >
@@ -140,39 +210,41 @@ export function ConnectAccountView({
         {editState === 'error' ? (
           <ErrorState title="Não deu para carregar a conta" onRetry={onRetry} headingLevel={3} />
         ) : null}
-        {editState === 'ready' ? (
-          <>
-            {isEditing ? null : (
+        {editState === 'ready' && isEditing ? manualForm : null}
+        {editState === 'ready' && !isEditing ? (
+          <div className={`flex flex-col gap-s16 lg:gap-s24 ${CREATE_REGION_CLASS}`}>
+            {isConnected ? null : (
               <ChoiceCards
-                label="Como conectar"
-                options={MODE_OPTIONS}
+                label="Como adicionar"
+                options={CONNECT_MODE_OPTIONS}
                 value={mode}
                 onChange={onModeChange}
                 columns={2}
+                isDisabled={isSubmitting}
               />
             )}
-            {mode === 'pluggy' ? (
-              <PluggyItemForm
-                isLoading={isLoadingSettings}
-                isConfigured={isConfigured}
-                itemId={itemId}
-                onItemIdChange={onItemIdChange}
-                error={errors['itemId']}
-                onOpenSettings={onOpenSettings}
-              />
-            ) : (
-              <ManualAccountForm
-                form={form}
-                errors={errors}
-                onFieldChange={onFieldChange}
-                typeOptions={typeOptions}
-                institutionOptions={institutionOptions}
-                brandOptions={brandOptions}
-                isEditing={isEditing}
-                isBankLocked={isBankLocked}
-              />
-            )}
-          </>
+            <StackedPanels
+              active={isConnected ? 'success' : mode}
+              panels={{
+                'open-finance': (
+                  <OpenFinanceForm
+                    isLoading={isLoadingSettings}
+                    isActive={mode === 'open-finance'}
+                    code={code}
+                    onCodeChange={onCodeChange}
+                    error={errors['itemId']}
+                    isConnecting={isSubmitting}
+                    problem={isLoadingSettings ? null : problem}
+                    onUseManual={() => onModeChange('manual')}
+                  />
+                ),
+                manual: manualForm,
+                success: isConnected ? (
+                  <OpenFinanceSuccess onConnectAnother={onConnectAnother} />
+                ) : null,
+              }}
+            />
+          </div>
         ) : null}
       </div>
     </FormModal>

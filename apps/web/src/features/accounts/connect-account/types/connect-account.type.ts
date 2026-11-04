@@ -2,8 +2,8 @@ import type { Account } from '@fincheck/shared/accounts/account/account.type.ts'
 import type { CreditCard } from '@fincheck/shared/accounts/credit-card/credit-card.type.ts';
 import type { Institution } from '@fincheck/shared/accounts/institution/institution.type.ts';
 
-/** How the account gets in: a bank through the Meu Pluggy, or typed by hand. */
-export type ConnectMode = 'pluggy' | 'manual';
+/** How the account gets in: a bank through the Open Finance, or typed by hand. */
+export type ConnectMode = 'open-finance' | 'manual';
 
 /** The manual account form as the person types it (days stay text until they are validated). */
 export type ManualAccountForm = {

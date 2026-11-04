@@ -20,6 +20,12 @@ type ChoiceCardsProps<T extends string> = {
   isDisabled?: boolean;
 };
 
+/** Two columns hold the label beside the icon; four are narrow, so the icon sits over the label. */
+const LAYOUT = {
+  2: 'items-center gap-s12 px-s12 py-s8',
+  4: 'flex-col items-center gap-s4 px-s8 py-s12 text-center',
+} as const;
+
 const COLUMNS = {
   2: 'grid-cols-1 @sm:grid-cols-2',
   4: 'grid-cols-2 @xl:grid-cols-4',
@@ -52,7 +58,7 @@ export function ChoiceCards<T extends string>({
             key={option.value}
             value={option.value}
             aria-label={option.label}
-            className="focus-ring flex cursor-pointer items-center gap-s12 rounded-panel border border-line px-s12 py-s8 text-fg-primary transition-[transform,background-color,color,border-color] duration-(--duration-fast) ease-(--ease-standard) data-[disabled]:cursor-default data-[disabled]:opacity-50 data-[hovered]:bg-subtle data-[pressed]:scale-98 data-[selected]:border-brand data-[selected]:bg-brand-weak data-[selected]:text-brand"
+            className={`focus-ring flex cursor-pointer rounded-panel border border-line text-fg-primary ${LAYOUT[columns]} transition-[transform,background-color,color,border-color] duration-(--duration-fast) ease-(--ease-standard) data-[disabled]:cursor-default data-[disabled]:opacity-50 data-[hovered]:bg-subtle data-[pressed]:scale-98 data-[selected]:border-brand data-[selected]:bg-brand-weak data-[selected]:text-brand`}
           >
             <span
               aria-hidden="true"
@@ -60,10 +66,14 @@ export function ChoiceCards<T extends string>({
             >
               <Icon name={option.icon} size="md" />
             </span>
-            <span className="flex min-w-0 flex-col">
-              <span className="text-label font-emphasis">{option.label}</span>
+            <span className="flex w-full min-w-0 flex-col">
+              <span className="truncate text-label font-emphasis whitespace-nowrap">
+                {option.label}
+              </span>
               {option.description ? (
-                <span className="text-meta text-fg-secondary">{option.description}</span>
+                <span className="truncate text-meta whitespace-nowrap text-fg-secondary">
+                  {option.description}
+                </span>
               ) : null}
             </span>
           </Radio>

@@ -14,7 +14,7 @@ import {
 } from '@fincheck/ui';
 
 import { AccountPreview } from '#/features/accounts/connect-account/components/account-preview.component.tsx';
-import { BankChips } from '#/features/accounts/connect-account/components/bank-chips.component.tsx';
+import { BankSelect } from '#/features/accounts/connect-account/components/bank-select.component.tsx';
 import { CardPreview } from '#/features/accounts/connect-account/components/card-preview.component.tsx';
 import { ChoiceCards } from '#/features/accounts/connect-account/components/choice-cards.component.tsx';
 import type {
@@ -37,7 +37,7 @@ type ManualAccountFormProps = {
   brandOptions: readonly Option<CreditCard.Brand>[];
   /** Editing: the kind of account cannot change, and neither the opening balance. */
   isEditing: boolean;
-  /** The bank comes from the Pluggy: it is shown but not changed. */
+  /** The bank comes from the Open Finance: it is shown but not changed. */
   isBankLocked: boolean;
 };
 
@@ -109,14 +109,26 @@ export function ManualAccountForm({
         isDisabled={isEditing}
       />
       {isWallet ? null : (
-        <BankChips
-          label="Banco"
-          options={institutionOptions}
-          value={form.institutionCode}
-          onChange={(code) => onFieldChange('institutionCode', code)}
-          error={errors['institutionCode']}
-          isDisabled={isBankLocked}
-        />
+        <div className="grid grid-cols-1 gap-s16 @sm:grid-cols-2">
+          <BankSelect
+            label="Banco"
+            options={institutionOptions}
+            value={form.institutionCode}
+            onChange={(code) => onFieldChange('institutionCode', code)}
+            error={errors['institutionCode']}
+            isDisabled={isBankLocked}
+          />
+          {form.institutionCode === 'other' ? (
+            <TextField
+              label="Nome do banco"
+              value={form.institutionName}
+              onChange={(value) => onFieldChange('institutionName', value)}
+              error={errors['institutionName']}
+              maxLength={60}
+              autoComplete="off"
+            />
+          ) : null}
+        </div>
       )}
       <FormModalSplit aside={preview}>
         <FormModalGroup label={isCard ? 'O cartão' : 'A conta'}>
@@ -129,16 +141,6 @@ export function ManualAccountForm({
             maxLength={60}
             autoComplete="off"
           />
-          {!isWallet && form.institutionCode === 'other' ? (
-            <TextField
-              label="Nome do banco"
-              value={form.institutionName}
-              onChange={(value) => onFieldChange('institutionName', value)}
-              error={errors['institutionName']}
-              maxLength={60}
-              autoComplete="off"
-            />
-          ) : null}
         </FormModalGroup>
 
         {isCard ? (

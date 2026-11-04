@@ -195,7 +195,9 @@ describe('ApplicationLayout', () => {
 
     await waitFor(() => expect(window.location.search).toContain(param));
     expect(window.location.search).toContain('month=2026-10');
-    expect(await screen.findByRole('dialog', { name: label })).toBeInTheDocument();
+    // The button says where it goes ("Conectar conta"); the modal says what it does.
+    const title = label === 'Conectar conta' ? 'Conectar banco' : label;
+    expect(await screen.findByRole('dialog', { name: title })).toBeInTheDocument();
   });
 
   it.each(['/', '/recurrences/bills', '/settings'])(

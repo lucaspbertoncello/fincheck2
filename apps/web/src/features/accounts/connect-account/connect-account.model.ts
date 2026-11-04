@@ -5,7 +5,7 @@ import { useCreateConnection } from '#/domain/sync/connection/hooks/use-create-c
 import { useSyncSettings } from '#/domain/sync/settings/hooks/use-sync-settings.hook.ts';
 
 /**
- * What "Conectar conta" needs: whether the Pluggy keys exist, the two ways to add an account, and,
+ * What "Conectar conta" needs: whether the Open Finance keys exist, the two ways to add an account, and,
  * when it opens to edit, the account being edited and the update.
  */
 export function useConnectAccountModel(isCreating: boolean, editId: string | undefined) {

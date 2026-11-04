@@ -25,7 +25,7 @@ const EMPTY_FORM: ManualAccountForm = {
  */
 export function useConnectAccountForm(initialForm?: ManualAccountForm) {
   const start = initialForm ?? EMPTY_FORM;
-  const [mode, setMode] = useState<ConnectMode>(initialForm ? 'manual' : 'pluggy');
+  const [mode, setMode] = useState<ConnectMode>(initialForm ? 'manual' : 'open-finance');
   const [itemId, setItemId] = useState('');
   const [form, setForm] = useState<ManualAccountForm>(start);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -41,7 +41,7 @@ export function useConnectAccountForm(initialForm?: ManualAccountForm) {
   }
 
   function reset() {
-    setMode(initialForm ? 'manual' : 'pluggy');
+    setMode(initialForm ? 'manual' : 'open-finance');
     setItemId('');
     setForm(start);
     setErrors({});
