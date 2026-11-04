@@ -67,7 +67,7 @@ export function BankAvatar({ theme: themeKey, name = '', size = 36, className }:
         viewBox={art.viewBox}
         focusable="false"
         fill="currentColor"
-        className={cx('overflow-visible', !full.small && 'h-1/2 w-3/5')}
+        className={cx(full.small ? 'overflow-hidden' : 'overflow-visible h-1/2 w-3/5')}
         style={
           full.small ? { width: `${full.small.fit}%`, height: `${full.small.fit}%` } : undefined
         }

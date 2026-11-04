@@ -31,6 +31,26 @@ describe('ApplicationLayout', () => {
     expect(frame).toHaveClass('relative', 'overflow-y-clip', 'min-h-dvh');
   });
 
+  it('keeps the rail and the content in one centered group, 24 px apart at any width', async () => {
+    const media = stubMatchMedia({ desktop: true });
+    try {
+      renderApp('/');
+      await screen.findByRole('heading', { level: 1, name: 'Visão geral' });
+
+      const group = screen.getByRole('main').parentElement?.parentElement?.parentElement;
+      const rail = document.querySelector('nav.rail')?.parentElement;
+
+      expect(group).toHaveClass('mx-auto', 'flex', 'gap-s24', 'max-w-[84rem]');
+      expect(group).toContainElement(rail as HTMLElement);
+      expect(rail).toHaveClass('w-14');
+      expect(document.querySelector('nav.rail')).toHaveClass('left-0');
+      // the grid has no centering or padding of its own: the group is what centers
+      expect(screen.getByRole('main').parentElement).not.toHaveClass('mx-auto');
+    } finally {
+      media.restore();
+    }
+  });
+
   it('navigates between tabs and marks the current one', async () => {
     renderApp('/');
     await screen.findByRole('heading', { name: 'Visão geral' });

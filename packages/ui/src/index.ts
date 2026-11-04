@@ -47,7 +47,6 @@ export {
   FreeBalancePanel,
   type FreeBalanceAccount,
   type FreeBalanceData,
-  type FreeBalanceInvoice,
   type FreeBalanceItem,
   type FreeBalanceLine,
 } from '#/components/summary/index.ts';

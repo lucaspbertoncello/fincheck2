@@ -29,7 +29,8 @@ const LINKED_CLASS =
 
 /**
  * Frame of the three month summary cards (components.md 3.2): round icon and label, badge, value,
- * subtext and bar with legend. The bar block is pushed to the bottom, so the three cards of the
+ * subtext and bar with legend. The label never truncates: below 272 px of card the icon gives its
+ * room back, and if the badge still does not fit it drops under the label. The bar block is pushed to the bottom, so the three cards of the
  * grid keep the same height whatever the subtext does.
  */
 export function MonthSummaryCard({
@@ -47,20 +48,20 @@ export function MonthSummaryCard({
     <article
       aria-label={label}
       className={cx(
-        'relative flex h-full w-full flex-col gap-s8 rounded-panel p-s16 transition-colors duration-(--duration-fast)',
+        '@container/card relative flex h-full w-full flex-col gap-s8 rounded-panel p-s16 transition-colors duration-(--duration-fast)',
         'max-lg:border max-lg:border-line max-lg:bg-glass',
         href && LINKED_CLASS,
         className,
       )}
     >
-      <header className="flex items-center gap-s8">
+      <header className="flex flex-wrap items-center gap-x-s8 gap-y-s4">
         <span
           aria-hidden="true"
-          className="grid size-6 shrink-0 place-items-center rounded-capsule bg-subtle text-fg-secondary"
+          className="hidden size-6 shrink-0 place-items-center rounded-capsule bg-subtle text-fg-secondary @min-[17rem]/card:grid"
         >
           <Icon name={icon} size="sm" />
         </span>
-        <h3 className="min-w-0 flex-1 truncate text-label font-emphasis text-fg-primary">
+        <h3 className="min-w-0 flex-auto text-label whitespace-nowrap font-emphasis text-fg-primary">
           {href ? (
             <Link
               href={href}
@@ -72,7 +73,7 @@ export function MonthSummaryCard({
             label
           )}
         </h3>
-        {badge}
+        {badge ? <span className="ml-auto flex shrink-0">{badge}</span> : null}
       </header>
       <p className="text-money-lg leading-(--line-height-money) text-fg-primary lg:text-money-card">
         {value}

@@ -260,9 +260,7 @@ describe('RecurrenceListPage', () => {
       // The free-balance panel repeats the names: at least one match must be outside it, in the list.
       await waitFor(() => {
         const names = screen.getAllByText('Seguro do carro');
-        expect(names.some((name) => !name.closest('[aria-label="Livre até o fim do mês"]'))).toBe(
-          true,
-        );
+        expect(names.some((name) => !name.closest('[aria-label="Saldo em contas"]'))).toBe(true);
       });
     });
 

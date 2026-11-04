@@ -94,7 +94,7 @@ type BalanceCompositionProps = {
 
 /**
  * The panel read as a sum: the balance above, then "A receber" (+), "A pagar" (−) and, closing,
- * "Sobra no fim do mês" with the per-day amount. The first two open their items, one at a time;
+ * "Sobra no fim do mês" (the label on its own line, the per-day amount and the result below it). The first two open their items, one at a time;
  * the closing line is not a toggle, it is the result of the lines above it.
  */
 export function BalanceComposition({ data }: BalanceCompositionProps) {
@@ -106,35 +106,34 @@ export function BalanceComposition({ data }: BalanceCompositionProps) {
         ))}
       </DisclosureGroup>
       <div
-        className={cx(ROW, 'mt-s4 border-t border-line pt-s12 [@media(max-height:700px)]:pt-s8')}
+        className={cx(
+          'mt-s4 grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-x-s12 border-t border-line pt-s12',
+          '[@media(max-height:700px)]:pt-s8',
+        )}
       >
-        <RowIcon icon="coins" tone="bg-brand-weak text-brand" />
-        <span className="flex min-w-0 flex-col">
-          <span className="truncate text-list font-emphasis text-fg-primary">
-            {PANEL_LABELS.leftover}
-          </span>
-          <span className="truncate text-meta text-fg-secondary">
-            ≈{' '}
-            <Money
-              cents={data.perDayCents}
-              sign="none"
-              showCents={false}
-              weight="emphasis"
-              className="text-fg-primary"
-            />{' '}
-            {data.windowDays === 1 ? 'hoje' : 'por dia'}
-          </span>
+        <span className="row-span-2">
+          <RowIcon icon="coins" tone="bg-brand-weak text-brand" />
         </span>
-        <span className="flex items-center gap-s4">
+        <span className="col-span-2 text-list font-emphasis whitespace-nowrap text-fg-primary">
+          {PANEL_LABELS.leftover}
+        </span>
+        <span className="text-meta whitespace-nowrap text-fg-secondary">
+          ≈{' '}
           <Money
-            cents={data.freeCents}
+            cents={data.perDayCents}
             sign="none"
+            showCents={false}
             weight="emphasis"
-            signColumn
-            className="text-money-row text-fg-primary"
-          />
-          <span aria-hidden="true" className="size-icon-sm" />
+            className="text-fg-primary"
+          />{' '}
+          {data.windowDays === 1 ? 'hoje' : 'por dia'}
         </span>
+        <Money
+          cents={data.freeCents}
+          sign="none"
+          weight="emphasis"
+          className="text-money-row whitespace-nowrap text-fg-primary"
+        />
       </div>
     </div>
   );

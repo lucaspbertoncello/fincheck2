@@ -21,7 +21,7 @@ export function ApplicationSummaryPanel({ variant }: ApplicationSummaryPanelProp
       <section
         aria-label="Saldo em contas"
         role="alert"
-        className="flex flex-col items-start gap-s12 rounded-card border border-line bg-modal p-s16 shadow-[0_1px_2px_oklch(0_0_0/0.05),0_12px_28px_-14px_oklch(0.2_0.03_180/0.22)] lg:p-s24"
+        className="flex flex-col items-start gap-s12 rounded-panel border border-line bg-modal p-s16 shadow-[0_1px_2px_oklch(0_0_0/0.05),0_12px_28px_-14px_oklch(0.2_0.03_180/0.22)] lg:p-s24"
       >
         <p className="text-list text-fg-primary">Não deu para carregar o saldo.</p>
         <p className="text-label text-fg-secondary">Confira se a API está no ar e tente de novo.</p>

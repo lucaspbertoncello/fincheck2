@@ -159,7 +159,7 @@ function RecurrenceFormSession({ saved }: SessionProps) {
       values={values}
       errors={errors}
       onChange={handleChange}
-      previewDates={buildPreviewDates(preview.data?.occurrences ?? [])}
+      previewDates={buildPreviewDates(preview.data?.occurrences ?? [], values.ruleType)}
       previewStatus={previewStatus}
       categories={categories}
       accounts={accounts}

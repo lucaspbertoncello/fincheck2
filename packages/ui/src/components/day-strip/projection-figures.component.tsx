@@ -30,11 +30,11 @@ function Figure({ label, layout, children }: FigureProps) {
       className={cx(
         'min-w-0',
         layout === 'columns'
-          ? 'flex flex-col gap-s4'
+          ? 'flex flex-wrap items-baseline justify-between gap-x-s8 @min-[30rem]:flex-col @min-[30rem]:flex-nowrap @min-[30rem]:justify-start @min-[30rem]:gap-s4'
           : 'flex flex-wrap items-baseline justify-between gap-x-s8',
       )}
     >
-      <span className="text-meta text-fg-secondary">{label}</span>
+      <span className="text-meta whitespace-nowrap text-fg-secondary">{label}</span>
       {children}
     </span>
   );
@@ -42,7 +42,9 @@ function Figure({ label, layout, children }: FigureProps) {
 
 /**
  * What comes in, what goes out and the projected balance, in that order. Made of spans so it can
- * live inside a button (the week card). Zero reads faded, a negative balance reads red.
+ * live inside a button (the week card). Zero reads faded, a negative balance reads red. The day
+ * layout is three columns when its box is 480 px wide or more and three label/value lines below
+ * that (a phone), so a 5-digit value never overlaps or cuts.
  */
 export function ProjectionFigures({
   inCents,
@@ -52,41 +54,47 @@ export function ProjectionFigures({
   layout,
   className = 'text-money-md',
 }: ProjectionFiguresProps) {
+  // Below 480 px (a phone) the day lines step down one money size, so "R$ 88.888,88" fits beside its label.
+  const size = cx(className, layout === 'columns' && 'shrink-0 @max-[30rem]:text-money-sm');
   return (
-    <span
-      className={cx(
-        'min-w-0',
-        layout === 'columns' ? 'grid grid-cols-3 gap-s12' : 'flex flex-col gap-s8',
-      )}
-    >
-      <Figure label="Entra" layout={layout}>
-        <Money
-          cents={inCents}
-          sign={inCents > 0 ? 'plus' : 'none'}
-          tone={inCents > 0 ? 'income' : 'faded'}
-          weight="plain"
-          className={className}
-        />
-      </Figure>
-      <Figure label="Sai" layout={layout}>
-        <Money
-          cents={outCents}
-          sign={outCents > 0 ? 'minus' : 'none'}
-          tone={outCents > 0 ? 'inherit' : 'faded'}
-          weight="plain"
-          className={cx(className, outCents > 0 && 'text-fg-primary')}
-        />
-      </Figure>
-      {balanceCents === undefined ? null : (
-        <Figure label={balanceLabel} layout={layout}>
+    <span className={cx('min-w-0', layout === 'columns' && '@container block')}>
+      <span
+        className={cx(
+          'min-w-0',
+          layout === 'columns'
+            ? 'grid grid-cols-1 gap-s8 @min-[30rem]:grid-cols-3 @min-[30rem]:gap-s12'
+            : 'flex flex-col gap-s8',
+        )}
+      >
+        <Figure label="Entra" layout={layout}>
           <Money
-            cents={balanceCents}
-            sign="auto"
-            weight="emphasis"
-            className={cx(className, balanceCents < 0 ? 'text-loss' : 'text-fg-primary')}
+            cents={inCents}
+            sign={inCents > 0 ? 'plus' : 'none'}
+            tone={inCents > 0 ? 'income' : 'faded'}
+            weight="plain"
+            className={size}
           />
         </Figure>
-      )}
+        <Figure label="Sai" layout={layout}>
+          <Money
+            cents={outCents}
+            sign={outCents > 0 ? 'minus' : 'none'}
+            tone={outCents > 0 ? 'inherit' : 'faded'}
+            weight="plain"
+            className={cx(size, outCents > 0 && 'text-fg-primary')}
+          />
+        </Figure>
+        {balanceCents === undefined ? null : (
+          <Figure label={balanceLabel} layout={layout}>
+            <Money
+              cents={balanceCents}
+              sign="auto"
+              weight="emphasis"
+              className={cx(size, balanceCents < 0 ? 'text-loss' : 'text-fg-primary')}
+            />
+          </Figure>
+        )}
+      </span>
     </span>
   );
 }

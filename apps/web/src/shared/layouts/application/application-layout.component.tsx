@@ -16,6 +16,7 @@ import { ApplicationTopBar } from '#/shared/layouts/application/top-bar/applicat
 
 /**
  * Shell of the app. Desktop (1024 px and up): the side rail on the left (it opens over the page),
+ * in one centered group with the content (rail, panel and page are 24 px apart at any width),
  * then the summary panel (on Configurações an empty slot the screen fills with its section menu,
  * so the column starts in the same place) and the page in the animated `tab-content` container;
  * there is no top bar, so both start at the top of the screen. Phone: top bar, the page and the
@@ -37,14 +38,20 @@ export function ApplicationLayout() {
 
   return (
     <AriaRouterProvider navigate={(href) => navigateToHref(router, href)}>
-      <div className="flex min-h-dvh w-full">
+      <div
+        className={
+          isDesktop
+            ? 'mx-auto flex min-h-dvh w-full max-w-[84rem] gap-s24 px-s16 xl:px-s24'
+            : 'flex min-h-dvh w-full'
+        }
+      >
         {isDesktop ? <ApplicationRail screen={screen} monthParam={monthParam} /> : null}
         <div className="relative flex min-h-dvh min-w-0 flex-1 flex-col overflow-y-clip pb-bottom-nav lg:pb-s32">
           {isDesktop ? null : <ApplicationTopBar screen={screen} monthParam={monthParam} />}
           <div
-            className={`mx-auto grid w-full max-w-7xl gap-s24 ${
+            className={`grid w-full gap-s24 ${
               isDesktop
-                ? 'grid-cols-[var(--spacing-panel)_minmax(0,1fr)] px-s24 pt-s16 xl:px-gutter'
+                ? 'grid-cols-[var(--spacing-panel)_minmax(0,1fr)] pt-s16'
                 : 'px-gutter-mobile pt-s8'
             }`}
           >

@@ -32,6 +32,7 @@ export function RailLink({
   return (
     <Link
       href={href}
+      aria-label={label}
       aria-current={active ? 'page' : undefined}
       className={`group/link relative flex h-ctl-tab shrink-0 cursor-pointer items-center rounded-capsule text-list font-emphasis tracking-(--letter-spacing-row-name) whitespace-nowrap no-underline outline-none transition-colors duration-(--duration-fast) ease-(--ease-standard) focus-ring ${
         active

@@ -53,10 +53,14 @@ describe('buildFreeBalanceData', () => {
     expect(payable?.items[0]?.cents).toBe(item!.remainingCents);
   });
 
-  it('names the receivable by its first source, never by an amount', () => {
-    const receivable = build(base()).lines.find((line) => line.key === 'receivable');
+  it('counts the receivable ("5 previstos"), so no name can be cut in the narrow column', () => {
+    const { receivable } = base();
+    const line = build(base()).lines.find((item) => item.key === 'receivable');
 
-    expect(receivable?.subtitle).not.toMatch(/R$/);
+    expect(line?.subtitle).toBe(
+      receivable.items.length === 1 ? '1 previsto' : `${receivable.items.length} previstos`,
+    );
+    expect(line?.subtitle).not.toMatch(/R\$/);
   });
 
   it('says the day the payable line goes until', () => {

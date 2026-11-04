@@ -38,10 +38,10 @@ function lastDayLabel(asOfOn: string): string {
   return `${String(lastDay).padStart(2, '0')}/${String(month).padStart(2, '0')}`;
 }
 
+// A count, not a title: a freelancer's name or a long description never fits the 296 px column.
 function receivableSubtitle(items: readonly Agenda.Item[]) {
-  const first = items[0];
-  if (!first) return undefined;
-  return `${first.title}${items.length > 1 ? ` e mais ${items.length - 1}` : ''}`;
+  if (items.length === 0) return undefined;
+  return items.length === 1 ? '1 previsto' : `${items.length} previstos`;
 }
 
 function buildLines({ freeBalance }: BuildFreeBalanceInput): FreeBalanceLine[] {

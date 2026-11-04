@@ -21,19 +21,19 @@ type ApplicationRailProps = {
  * the five tabs with the sliding capsule, and Configurações at the foot. It takes the place of the
  * top tabs and of the top bar, so the panel and the page start at the top of the screen.
  *
- * The 72 px column of the shell is only the reserved room (the rail floats 12 px from the edge);
- * what opens is the rail, over the page.
+ * The 56 px column of the shell is only the reserved room, so rail and panel are one group 24 px
+ * apart (the grid gap); what opens is the rail, over the page.
  */
 export function ApplicationRail({ screen, monthParam }: ApplicationRailProps) {
   const { open, railProps, setMenuOpen } = useRailOpen();
   const items = buildNavigationItems(monthParam);
 
   return (
-    <div className="sticky top-0 z-(--z-menu) h-dvh w-18 shrink-0">
+    <div className="sticky top-0 z-(--z-menu) h-dvh w-14 shrink-0">
       <nav
         aria-label="Principal"
         data-open={open ? '' : undefined}
-        className="rail absolute inset-y-s16 left-s12 rounded-panel backdrop-blur-(--blur-glass)"
+        className="rail absolute inset-y-s16 left-0 rounded-panel backdrop-blur-(--blur-glass)"
         {...railProps}
       >
         <div className="flex h-full flex-col gap-s4 overflow-hidden rounded-[inherit] p-s8">

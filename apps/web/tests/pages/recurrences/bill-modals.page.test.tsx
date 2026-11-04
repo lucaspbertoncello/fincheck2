@@ -58,7 +58,7 @@ describe('new bill modal (the form pattern)', () => {
     await user.type(within(dialog).getByLabelText('Valor'), '34210');
     await user.type(within(dialog).getByLabelText('Descrição'), 'IPTU, parcela 3');
     await user.click(within(dialog).getByRole('button', { name: 'Em 7 dias' }));
-    expect(within(dialog).getByText(/Entra no "A pagar" do Livre até/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/Entra no "A pagar" do mês, até/)).toBeInTheDocument();
     await user.click(within(dialog).getByRole('button', { name: 'Salvar conta' }));
 
     expect(await screen.findByText('Conta "IPTU, parcela 3" criada.')).toBeInTheDocument();

@@ -191,3 +191,22 @@ describe('MonthSummaryCards', () => {
     expect(html).not.toContain('204,25');
   });
 });
+
+describe('MonthSummaryCard header', () => {
+  it('never truncates the label: no ellipsis class, the icon yields room in a narrow card', () => {
+    const html = renderToStaticMarkup(
+      <ResultSummaryCard
+        receivedCents={380200}
+        spentCents={186900}
+        previousResultCents={69530}
+        previousMonthLabel="setembro"
+      />,
+    );
+    const title = html.match(/<h3 class="([^"]*)"/);
+
+    expect(title?.[1]).toContain('whitespace-nowrap');
+    expect(title?.[1]).not.toContain('truncate');
+    expect(html).toContain('@container/card');
+    expect(html).toContain('@min-[17rem]/card:grid');
+  });
+});

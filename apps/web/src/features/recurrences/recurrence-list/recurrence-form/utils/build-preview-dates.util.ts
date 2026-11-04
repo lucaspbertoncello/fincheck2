@@ -1,3 +1,4 @@
+import type { RecurrenceFormValues } from '#/features/recurrences/recurrence-list/recurrence-form/types/recurrence-form.type.ts';
 import type { PreviewDate } from '#/features/recurrences/recurrence-list/recurrence-form/types/preview-date.type.ts';
 
 type PreviewOccurrence = {
@@ -31,20 +32,28 @@ function toDate(key: string): Date {
   return new Date(Date.UTC(year, month - 1, day));
 }
 
-/** "18 a 22 nov", or "30 nov a 3 dez" when the window crosses the month; null when it is one day. */
-function describeWindow(startOn: string, endOn: string): string | null {
-  if (startOn === endOn) return null;
-  const start = toDate(startOn);
-  const end = toDate(endOn);
-  const sameMonth = startOn.slice(0, 7) === endOn.slice(0, 7);
+/**
+ * The window is the days the app looks for the payment in. It is only worth showing where it is a
+ * margin around the day ("Dia fixo" and "Perto do dia"): for "Dia útil" it starts on the 1st and
+ * for "Qualquer dia" it is the whole month, which would only read as noise next to the date.
+ */
+const RULES_WITH_MARGIN: readonly RecurrenceFormValues['ruleType'][] = ['fixed_day', 'around_day'];
 
-  return sameMonth
-    ? `${start.getUTCDate()} a ${end.getUTCDate()} ${clean(monthShort.format(end))}`
-    : `${start.getUTCDate()} ${clean(monthShort.format(start))} a ${end.getUTCDate()} ${clean(monthShort.format(end))}`;
+/** "± 3 dias": the margin around the day the app looks for the payment in; null when it is not symmetric. */
+function describeMargin(expectedOn: string, startOn: string, endOn: string): string | null {
+  const day = 86_400_000;
+  const before = Math.round((toDate(expectedOn).getTime() - toDate(startOn).getTime()) / day);
+  const after = Math.round((toDate(endOn).getTime() - toDate(expectedOn).getTime()) / day);
+  if (before !== after || before === 0) return null;
+  return `± ${before} ${before === 1 ? 'dia' : 'dias'}`;
 }
 
-/** The first three dates of the preview, with the weekday and, when it has one, the window. */
-export function buildPreviewDates(occurrences: readonly PreviewOccurrence[]): PreviewDate[] {
+/** The first three dates of the preview, with the weekday and, when the rule has a margin, the window. */
+export function buildPreviewDates(
+  occurrences: readonly PreviewOccurrence[],
+  ruleType: RecurrenceFormValues['ruleType'],
+): PreviewDate[] {
+  const showsWindow = RULES_WITH_MARGIN.includes(ruleType);
   return occurrences.slice(0, MAX_DATES).map((item) => {
     if (!item.expectedOn) {
       const month = toDate(`${item.month}-01`);
@@ -58,7 +67,9 @@ export function buildPreviewDates(occurrences: readonly PreviewOccurrence[]): Pr
     }
 
     const date = toDate(item.expectedOn);
-    const note = describeWindow(item.windowStartOn, item.windowEndOn);
+    const note = showsWindow
+      ? describeMargin(item.expectedOn, item.windowStartOn, item.windowEndOn)
+      : null;
     const window = note
       ? `, pode chegar de ${dayLong.format(toDate(item.windowStartOn))} a ${dayLong.format(toDate(item.windowEndOn))}`
       : '';

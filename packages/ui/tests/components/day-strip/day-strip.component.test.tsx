@@ -118,6 +118,15 @@ describe('DayStripSection, projection, Dia view', () => {
     expect(html).toContain('>Semana<');
   });
 
+  it('stacks Entra, Sai and the balance as label/value lines in a narrow box, three columns in a wide one', () => {
+    const html = projection('2026-10-25');
+
+    expect(html).toContain('@container');
+    expect(html).toContain('grid-cols-1');
+    expect(html).toContain('@min-[30rem]:grid-cols-3');
+    expect(html).toContain('whitespace-nowrap');
+  });
+
   it('shows one day at a time, never the whole list of days', () => {
     const html = projection('2026-10-25');
 

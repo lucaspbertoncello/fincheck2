@@ -40,6 +40,19 @@ describe('ApplicationRail', () => {
     ]);
   });
 
+  it('names every link by itself, so the labels can stay hidden while the rail is closed', async () => {
+    renderDesktop('/');
+    await screen.findByRole('heading', { level: 1, name: 'Visão geral' });
+
+    for (const name of ['Visão geral', 'Transações', 'Recorrentes', 'Contas e cartões']) {
+      expect(within(rail()).getByRole('link', { name })).toHaveAttribute('aria-label', name);
+    }
+    expect(within(rail()).getByRole('link', { name: 'Configurações' })).toHaveAttribute(
+      'aria-label',
+      'Configurações',
+    );
+  });
+
   it('marks the current tab and carries the sliding capsule only there', async () => {
     renderDesktop('/transactions');
     await screen.findByRole('heading', { level: 1, name: 'Transações' });

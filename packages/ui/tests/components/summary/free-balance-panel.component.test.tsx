@@ -70,6 +70,23 @@ describe('FreeBalancePanel', () => {
     expect(html).toContain('por dia');
   });
 
+  it('keeps the label of the closing line whole: its own line, no ellipsis, no wrap', () => {
+    const html = render(DATA);
+    const label = html.match(/<span class="([^"]*)">Sobra no fim do mês<\/span>/);
+
+    expect(label?.[1]).toContain('whitespace-nowrap');
+    expect(label?.[1]).toContain('col-span-2');
+    expect(label?.[1]).not.toContain('truncate');
+  });
+
+  it('has the same corner radius as the other cards (rounded-panel, never the missing rounded-card)', () => {
+    const html = render(DATA);
+
+    expect(html).toContain('rounded-panel');
+    expect(html).not.toContain('rounded-card');
+    expect(render(DATA, false, 'compact')).toContain('rounded-panel');
+  });
+
   it('no longer carries the bank notice, the invoices, the review row or the balance line', () => {
     const html = render(DATA);
 

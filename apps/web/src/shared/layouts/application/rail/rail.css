@@ -39,18 +39,24 @@
 
 .rail-label {
   opacity: 0;
+  /* Closed, a label is not painted at all (opacity alone left a faint ghost on some captures); it
+     turns hidden only once its 90 ms fade is over. */
+  visibility: hidden;
   transform: translateX(-6px);
   transition:
     opacity 90ms linear,
-    transform 90ms var(--ease-standard);
+    transform 90ms var(--ease-standard),
+    visibility 0s linear 90ms;
 }
 
 .rail[data-open] .rail-label {
   opacity: 1;
+  visibility: visible;
   transform: none;
   transition:
     opacity 200ms var(--ease-standard) calc(60ms + var(--rail-i, 0) * 26ms),
-    transform 240ms var(--ease-standard) calc(60ms + var(--rail-i, 0) * 26ms);
+    transform 240ms var(--ease-standard) calc(60ms + var(--rail-i, 0) * 26ms),
+    visibility 0s linear 0s;
 }
 
 /* The logo: the cards stay, the name is revealed by the width that opens with the rail. */
@@ -58,6 +64,10 @@
   width: 28px;
   margin-left: 6px;
   overflow: hidden;
+  /* Paint containment on top of the overflow: the name of the brand cannot be seen outside the
+     28 px of the cards while the rail is closed. */
+  contain: paint;
+  clip-path: inset(0);
   transition: width var(--duration-slide) var(--ease-standard);
 }
 

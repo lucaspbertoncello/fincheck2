@@ -53,7 +53,7 @@ export function BillFormView({
 
   let amountHint = 'Sem vencimento: fica em "Sem data" e fora do Livre.';
   if (monthly && dueDateText) amountHint = `Repete todo mês, a partir de ${dueDateText}.`;
-  else if (dueDateText) amountHint = `Entra no "${bucket}" do Livre até ${dueDateText}.`;
+  else if (dueDateText) amountHint = `Entra no "${bucket}" do mês, até ${dueDateText}.`;
 
   return (
     <FormModal

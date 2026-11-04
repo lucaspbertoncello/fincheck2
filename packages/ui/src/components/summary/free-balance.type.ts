@@ -33,18 +33,6 @@ export type FreeBalanceAccount = {
 };
 
 /**
- * No longer drawn (the panel dropped "Faturas abertas"). Kept only because the root barrel
- * `packages/ui/src/index.ts` still re-exports it; remove both together.
- */
-export type FreeBalanceInvoice = {
-  id: string;
-  name: string;
-  subtitle: string;
-  amountCents: number;
-  mark?: ReactNode;
-};
-
-/**
  * Ready-made data of the panel. The panel only draws it: the big number is `balanceCents` (sum of
  * the account balances) and `freeCents` closes the equation (balance + receivable − payable). The
  * texts live in `panel-labels.constant.ts`.
