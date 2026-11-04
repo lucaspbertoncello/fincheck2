@@ -59,4 +59,16 @@ describe('getTabTransitionTypes', () => {
     expect(getTabTransitionTypes(change('/', '/settings'))).toBe(false);
     expect(getTabTransitionTypes(change('/settings', '/accounts'))).toBe(false);
   });
+
+  it('slides between the Configurações pages in the order of their menu', () => {
+    expect(getTabTransitionTypes(change('/settings/profile', '/settings/backup'))).toEqual([
+      'tab',
+      'fwd',
+    ]);
+    expect(getTabTransitionTypes(change('/settings/appearance', '/settings/connections'))).toEqual([
+      'tab',
+      'back',
+    ]);
+    expect(getTabTransitionTypes(change('/settings/backup', '/settings/backup'))).toBe(false);
+  });
 });

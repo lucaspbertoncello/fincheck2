@@ -1,4 +1,5 @@
 import {
+  SETTINGS_PAGE_ORDER,
   SUB_SCREEN_ORDER,
   TAB_ORDER,
 } from '#/shared/layouts/application/transition/tab-order.constant.ts';
@@ -31,6 +32,11 @@ function isSubTabChange(from: string, to: string): boolean {
   );
 }
 
+/** Position of a pathname among the Configurações pages, or -1 outside them. */
+function getSettingsPageIndex(pathname: string): number {
+  return SETTINGS_PAGE_ORDER.findIndex((page) => pathname.startsWith(page));
+}
+
 function prefersReducedMotion(): boolean {
   return (
     typeof window.matchMedia === 'function' &&
@@ -42,7 +48,8 @@ function prefersReducedMotion(): boolean {
  * View-transition types of a navigation (motion.md 1): `tab` + `fwd`/`back` between two different
  * tabs and between the two sub-tabs of a tab (Recorrências to A pagar e receber), `reduce`
  * instead of `tab` with reduced motion. First load, month changes, screens of the same tab
- * without sub-tabs and Configurações return false: no transition.
+ * without sub-tabs return false: no transition. The Configurações pages slide like sub-tabs, in
+ * the order of their side menu.
  */
 export function getTabTransitionTypes({
   fromLocation,
@@ -51,6 +58,11 @@ export function getTabTransitionTypes({
 }: LocationChange): string[] | false {
   if (!fromLocation || !pathChanged) return false;
   const kind = prefersReducedMotion() ? 'reduce' : 'tab';
+
+  const fromSettings = getSettingsPageIndex(fromLocation.pathname);
+  const toSettings = getSettingsPageIndex(toLocation.pathname);
+  if (fromSettings >= 0 && toSettings >= 0 && fromSettings !== toSettings)
+    return [kind, toSettings > fromSettings ? 'fwd' : 'back'];
 
   const from = getTabIndex(fromLocation.pathname);
   const to = getTabIndex(toLocation.pathname);
