@@ -2,12 +2,12 @@ import type { ReactNode } from 'react';
 
 type TopBarProps = {
   logo: ReactNode;
-  /** Settings gear and the "+" button. */
+  /** The settings gear. */
   actions: ReactNode;
 };
 
 /**
- * Top bar of the phone: logo, a gap, then the gear and the "+" (56 px). On the desktop the side
+ * Top bar of the phone: logo, a gap, then the gear (56 px). On the desktop the side
  * rail takes all of this.
  */
 export function TopBar({ logo, actions }: TopBarProps) {

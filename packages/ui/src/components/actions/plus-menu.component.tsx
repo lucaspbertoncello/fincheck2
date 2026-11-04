@@ -19,33 +19,23 @@ type PlusMenuProps = {
   label: string;
   items: PlusMenuItem[];
   onAction: (key: string) => void;
-  /** Rail form of the "+" (see `PlusButton`): a circle with a tip. */
-  compact?: boolean;
-  /** Where the menu opens from the "+": under it on the top bar, beside it on the rail. */
-  placement?: 'bottom end' | 'right top';
   onOpenChange?: (isOpen: boolean) => void;
 };
 
 /**
  * The "+" with its menu of general actions (components.md 1.3). Headless React Aria menu: opens
- * with Enter, Space or arrow down, moves with the arrows, closes with Esc. On mobile it becomes a
- * wide sheet 16 px from each edge.
+ * with Enter, Space or arrow down, moves with the arrows, closes with Esc. It opens upward from the
+ * floating "+" (bottom right of the window), aligned to its right edge. On mobile it becomes a wide
+ * sheet 16 px from each side edge.
  */
-export function PlusMenu({
-  label,
-  items,
-  onAction,
-  compact,
-  placement = 'bottom end',
-  onOpenChange,
-}: PlusMenuProps) {
+export function PlusMenu({ label, items, onAction, onOpenChange }: PlusMenuProps) {
   return (
     <MenuTrigger onOpenChange={onOpenChange}>
-      <PlusButton label={label} compact={compact} />
+      <PlusButton label={label} />
       <Popover
-        placement={placement}
-        offset={placement === 'right top' ? 16 : 8}
-        className={`popover-enter ${placement === 'right top' ? 'origin-top-left!' : ''} w-menu rounded-panel border border-line bg-menu shadow-(--shadow-menu) backdrop-blur-(--blur-popover) max-lg:inset-x-s16! max-lg:w-auto!`}
+        placement="top end"
+        offset={12}
+        className="popover-enter w-menu origin-bottom-right! overflow-y-auto rounded-panel border border-line bg-menu shadow-(--shadow-menu) backdrop-blur-(--blur-popover) max-lg:inset-x-s16! max-lg:w-auto!"
       >
         <Menu
           aria-label={label}

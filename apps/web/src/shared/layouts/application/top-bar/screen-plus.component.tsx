@@ -7,31 +7,21 @@ import type { ScreenDefinition } from '#/shared/types/screen.type.ts';
 type ScreenPlusProps = {
   screen: ScreenDefinition;
   monthParam: string | undefined;
-  /** Rail form: a 40 px circle with a tip carrying the name. */
-  compact?: boolean;
-  placement?: 'bottom end' | 'right top';
 };
 
-/** The "+" of a screen: its own modal when the screen has one (`direct`), the general menu otherwise. */
-export function ScreenPlus({ screen, monthParam, compact, placement }: ScreenPlusProps) {
+/** The "+" of a screen (the floating button of the shell): its own modal when the screen has one (`direct`), the general menu otherwise. */
+export function ScreenPlus({ screen, monthParam }: ScreenPlusProps) {
   const handlePlusAction = usePlusAction(monthParam);
 
   if (screen.plusMode === 'menu') {
     return (
-      <PlusMenu
-        label={screen.plusLabel}
-        items={PLUS_MENU_ITEMS}
-        onAction={handlePlusAction}
-        compact={compact}
-        placement={placement}
-      />
+      <PlusMenu label={screen.plusLabel} items={PLUS_MENU_ITEMS} onAction={handlePlusAction} />
     );
   }
 
   return (
     <PlusButton
       label={screen.plusLabel}
-      compact={compact}
       onPress={() => screen.plusAction && handlePlusAction(screen.plusAction)}
     />
   );

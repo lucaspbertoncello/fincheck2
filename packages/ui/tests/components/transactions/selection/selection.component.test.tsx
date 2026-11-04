@@ -26,6 +26,7 @@ describe('SelectionBar', () => {
     const html = renderToStaticMarkup(<SelectionBar count={3} onAction={noop} onClose={noop} />);
 
     expect(html).toContain('role="toolbar"');
+    expect(html).toContain('data-selection-bar'); // the shell hides the floating "+" while it is open
     expect(html).toContain('>3<');
     expect(html).toContain('selecionadas');
     expect(html).toContain('Categorizar');

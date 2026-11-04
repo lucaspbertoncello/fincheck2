@@ -1,4 +1,5 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { ToastProvider, useToast } from '@fincheck/ui';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { hideValuesStore } from '#/shared/stores/hide-values.store.ts';
@@ -10,6 +11,8 @@ afterEach(() => {
   hideValuesStore.set(false);
   window.localStorage.clear();
 });
+
+const floatingPlus = () => document.querySelector<HTMLElement>('[data-floating-plus]')!;
 
 describe('ApplicationLayout', () => {
   it('opens the Visão geral at the root with the date line and the month picker', async () => {
@@ -138,6 +141,99 @@ describe('ApplicationLayout', () => {
     expect(window.localStorage.getItem('fincheck:hide-values')).toBe('1');
   });
 
+  it('floats the "+" at the bottom right of the window, outside the rail, on the desktop', async () => {
+    const media = stubMatchMedia({ desktop: true });
+    try {
+      renderApp('/transactions');
+      await screen.findByRole('heading', { level: 1, name: 'Transações' });
+
+      const wrapper = floatingPlus();
+      const rail = document.querySelector('nav.glass[aria-label="Principal"]')!;
+      expect(wrapper).toHaveClass(
+        'fixed',
+        'lg:right-s24',
+        'lg:bottom-s24',
+        'xl:right-s32',
+        'xl:bottom-s32',
+      );
+      expect(wrapper).toHaveClass('z-(--z-menu)'); // under the modals (--z-modal)
+      expect(wrapper).not.toHaveClass('lg:hidden');
+      expect(within(wrapper).getByRole('button', { name: 'Nova transação' })).toHaveClass(
+        'size-14',
+      );
+      expect(rail).not.toContainElement(wrapper);
+      expect(
+        within(rail as HTMLElement).queryByRole('button', { name: 'Nova transação' }),
+      ).toBeNull();
+    } finally {
+      media.restore();
+    }
+  });
+
+  it('floats the "+" above the bottom bar on the phone, out of the top bar', async () => {
+    renderApp('/');
+    await screen.findByRole('heading', { level: 1, name: 'Visão geral' });
+
+    const wrapper = floatingPlus();
+    expect(wrapper).toHaveClass('fixed', 'right-gutter-mobile');
+    expect(wrapper.className).toContain('safe-area-inset-bottom');
+    expect(wrapper.className).toContain('--spacing-bottom-nav');
+    expect(
+      within(screen.getAllByRole('banner')[0]!).queryByRole('button', { name: 'Criar' }),
+    ).toBeNull();
+  });
+
+  it('hides the "+" while the selection bar is open, and keeps the frame a `group` for that', async () => {
+    renderApp('/');
+    await screen.findByRole('heading', { level: 1, name: 'Visão geral' });
+
+    expect(floatingPlus().className).toContain('group-has-[[data-selection-bar]]/shell:invisible');
+    expect(floatingPlus().parentElement).toHaveClass('group/shell');
+  });
+
+  it('hides the "+" while the selection bar is open, and keeps the frame a `group` for that', async () => {
+    renderApp('/');
+    await screen.findByRole('heading', { level: 1, name: 'Visão geral' });
+
+    expect(floatingPlus().className).toContain('group-has-[[data-selection-bar]]/shell:invisible');
+    expect(floatingPlus().parentElement).toHaveClass('group/shell');
+  });
+
+  it('keeps the undo toasts clear of the "+": above it on the phone, short of its column on the desktop', async () => {
+    function Trigger() {
+      const toast = useToast();
+      return (
+        <button onClick={() => toast.showUndoToast({ message: 'Feito', onUndo: () => {} })}>
+          avisar
+        </button>
+      );
+    }
+    render(
+      <ToastProvider>
+        <Trigger />
+      </ToastProvider>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'avisar' }));
+
+    const region = await screen.findByRole('region', { name: 'Avisos' });
+    expect(region.className).toContain(
+      'pb-[calc(var(--spacing-bottom-nav)+env(safe-area-inset-bottom)+3.5rem+var(--space-16))]',
+    );
+    expect(region.className).toContain('lg:right-[calc(var(--space-24)+3.5rem+var(--space-16))]');
+    expect(region.className).toContain('xl:right-[calc(var(--space-32)+3.5rem+var(--space-16))]');
+  });
+
+  it('reserves room at the end of the page, once in the shell, so the "+" never covers the last item', async () => {
+    renderApp('/transactions');
+    await screen.findByRole('heading', { level: 1, name: 'Transações' });
+
+    const main = screen.getByRole('main');
+    // button (3.5 rem) + the gap: 2 x s16 on the phone, s24 from 1024 px, s32 from 1280 px
+    expect(main.className).toContain('pb-[calc(3.5rem+var(--space-16)*2)]');
+    expect(main.className).toContain('lg:pb-[calc(3.5rem+var(--space-24))]');
+    expect(main.className).toContain('xl:pb-[calc(3.5rem+var(--space-32))]');
+  });
+
   it('opens the "+" menu by keyboard', async () => {
     renderApp('/');
     const plus = await screen.findByRole('button', { name: 'Criar' });
@@ -212,8 +308,8 @@ describe('ApplicationLayout', () => {
   ])('the "+" of %s opens "%s" directly, with the month kept', async (url, label, param) => {
     renderApp(`${url}?month=2026-10`);
     await screen.findByRole('heading', { level: 1 });
-    // The top bar is the first banner; some screens also have their own button of the same name.
-    fireEvent.click(within(screen.getAllByRole('banner')[0]!).getByRole('button', { name: label }));
+    // Some screens also have their own button of the same name; the shell's "+" is the floating one.
+    fireEvent.click(within(floatingPlus()).getByRole('button', { name: label }));
 
     await waitFor(() => expect(window.location.search).toContain(param));
     expect(window.location.search).toContain('month=2026-10');

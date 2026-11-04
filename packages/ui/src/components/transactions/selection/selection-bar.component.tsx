@@ -25,12 +25,15 @@ type SelectionBarProps = {
 /**
  * Floating action bar of the selection mode (components.md 7): glass, radius 16, sticky at the foot
  * of the visible area, never a page footer. On the phone only the 22 px icons show; the labels stay
- * for screen readers.
+ * for screen readers. While it is open the shell hides the floating "+" (it matches
+ * `[data-selection-bar]`), because the bar and the "+" share the bottom edge and the selection
+ * actions replace creating something new.
  */
 export function SelectionBar({ count, onAction, onClose, className }: SelectionBarProps) {
   return (
     <div
       role="toolbar"
+      data-selection-bar
       aria-label="Ações para as transações selecionadas"
       className={cx(
         'sticky bottom-s16 z-(--z-raised) mx-s16 flex items-center justify-between gap-s8 rounded-panel border border-line bg-selection-bar px-s8 py-s4 shadow-(--shadow-bulk-bar) backdrop-blur-(--blur-selection-bar) backdrop-saturate-150',

@@ -98,18 +98,14 @@ describe('ApplicationRail', () => {
     expect(window.location.search).toContain('month=2026-10');
   });
 
-  it('holds the "+" of the screen: the menu on Visão geral, the direct action on Transações', async () => {
-    const view = renderDesktop('/');
-    await screen.findByRole('heading', { level: 1, name: 'Visão geral' });
-    expect(await within(rail()).findByRole('button', { name: 'Criar' })).toHaveAttribute(
-      'aria-haspopup',
-    );
-    view.unmount();
-
+  it('does not hold the "+": it floats at the bottom right of the window', async () => {
     renderDesktop('/transactions');
     await screen.findByRole('heading', { level: 1, name: 'Transações' });
-    const plus = await within(rail()).findByRole('button', { name: 'Nova transação' });
-    expect(plus).not.toHaveAttribute('aria-haspopup');
+
+    expect(within(rail()).queryByRole('button')).toBeNull();
+    const plus = await screen.findByRole('button', { name: 'Nova transação' });
+    expect(rail()).not.toContainElement(plus);
+    expect(plus.closest('[data-floating-plus]')).not.toBeNull();
     fireEvent.click(plus);
     await waitFor(() => expect(window.location.search).toContain('new=transaction'));
   });
@@ -157,9 +153,10 @@ describe('ApplicationRail', () => {
     renderDesktop('/transactions');
     await screen.findByRole('heading', { level: 1, name: 'Transações' });
 
-    await hover(await within(rail()).findByRole('button', { name: 'Nova transação' }));
+    const plus = await screen.findByRole('button', { name: 'Nova transação' });
+    await hover(plus);
     expect(await screen.findByRole('tooltip')).toHaveTextContent('Nova transação');
-    await userEvent.unhover(within(rail()).getByRole('button', { name: 'Nova transação' }));
+    await userEvent.unhover(plus);
     await waitFor(() => expect(screen.queryByRole('tooltip')).toBeNull());
 
     await hover(within(rail()).getByRole('link', { name: 'Configurações' }));

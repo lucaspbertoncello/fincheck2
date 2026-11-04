@@ -29,7 +29,9 @@ function createToastService() {
  * Region and queue of the undo toasts (components.md 13.1). Mount it once at the app root; the queue
  * belongs to the provider, not to a module-level store. The region is an `aria-live` landmark
  * (F6 reaches it), toasts pause their timer on hover and focus, and up to 3 show at once.
- * Sticky 24 from the bottom, centered; on the phone 16 above the bottom navigation.
+ * Fixed 24 from the bottom, centered. The floating "+" is never covered: on the phone the toasts stack
+ * 16 above the "+" (which is 16 above the bottom navigation); on the desktop the region stops 16
+ * short of the "+" column at the right edge (56 px button + the window margin).
  */
 export function ToastProvider({ children }: ToastProviderProps) {
   const [{ queue, api }] = useState(createToastService);
@@ -40,7 +42,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
       <UNSTABLE_ToastRegion
         queue={queue}
         aria-label="Avisos"
-        className="pointer-events-none fixed inset-x-s16 bottom-s16 z-(--z-undo-toast) flex flex-col items-center gap-s8 pb-bottom-nav lg:bottom-s24 lg:pb-0"
+        className="pointer-events-none fixed inset-x-s16 bottom-s16 z-(--z-undo-toast) flex flex-col items-center gap-s8 pb-[calc(var(--spacing-bottom-nav)+env(safe-area-inset-bottom)+3.5rem+var(--space-16))] lg:right-[calc(var(--space-24)+3.5rem+var(--space-16))] lg:bottom-s24 lg:pb-0 xl:right-[calc(var(--space-32)+3.5rem+var(--space-16))]"
       >
         {({ toast }) => <UndoToast toast={toast} />}
       </UNSTABLE_ToastRegion>
