@@ -1,7 +1,8 @@
+import '#/shared/layouts/application/transition/side-resize.css';
 import '#/shared/layouts/application/transition/tab-transition.css';
 
 import { Outlet, useRouter } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { RouterProvider as AriaRouterProvider } from 'react-aria-components';
 
 import { useIsDesktop } from '#/shared/hooks/use-is-desktop.hook.ts';
@@ -10,6 +11,7 @@ import { navigateToHref } from '#/shared/layouts/application/navigation/navigate
 import { useActiveScreen } from '#/shared/layouts/application/navigation/use-active-screen.hook.ts';
 import { ApplicationRail } from '#/shared/layouts/application/rail/application-rail.component.tsx';
 import { PanelSlotContext } from '#/shared/layouts/application/panel/panel-slot.context.ts';
+import { useSideResize } from '#/shared/layouts/application/transition/use-side-resize.hook.ts';
 import { useSplash } from '#/shared/layouts/application/splash/use-splash.hook.ts';
 import { ApplicationSummaryPanel } from '#/shared/layouts/application/summary/application-summary-panel.component.tsx';
 import { ScreenPlus } from '#/shared/layouts/application/top-bar/screen-plus.component.tsx';
@@ -26,6 +28,9 @@ import { ApplicationTopBar } from '#/shared/layouts/application/top-bar/applicat
  * title start on the same line, the top of the row. There is no top bar on the desktop. Phone:
  * top bar, the page and the bottom bar. Links are React Aria links that navigate
  * through the TanStack router.
+ *
+ * When the left box changes kind (summary panel to the Configurações menu and back) the pair
+ * animates its height (`useSideResize`, motion.md 1.4) instead of jumping.
  *
  * The "+" of the screen is ONE fixed button at the bottom right of the window, outside the rail
  * and the top bar: s24 from the right and bottom edges up to 1279 px, s32 from 1280 px (the same
@@ -47,6 +52,8 @@ export function ApplicationLayout() {
   const isDesktop = useIsDesktop();
   const { screen, monthParam } = useActiveScreen();
   useSplash();
+  const pairRef = useRef<HTMLDivElement>(null);
+  useSideResize(pairRef, screen.showsPanel);
 
   const [panelSlot, setPanelSlot] = useState<HTMLElement | null>(null);
 
@@ -62,7 +69,10 @@ export function ApplicationLayout() {
         {isDesktop ? null : <ApplicationTopBar screen={screen} monthParam={monthParam} />}
         <div className={isDesktop ? 'flex gap-s32' : 'grid w-full gap-s24 px-gutter-mobile pt-s8'}>
           {isDesktop ? (
-            <div className="sticky top-s24 flex shrink-0 gap-s8 self-start xl:top-s32">
+            <div
+              ref={pairRef}
+              className="side-pair sticky top-s24 flex shrink-0 gap-s8 self-start xl:top-s32"
+            >
               <ApplicationRail screen={screen} monthParam={monthParam} />
               {screen.showsPanel ? (
                 <aside className="w-panel">

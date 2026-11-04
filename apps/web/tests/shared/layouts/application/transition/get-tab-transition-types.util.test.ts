@@ -55,9 +55,58 @@ describe('getTabTransitionTypes', () => {
     }
   });
 
-  it('has no transition to or from Configurações', () => {
-    expect(getTabTransitionTypes(change('/', '/settings'))).toBe(false);
-    expect(getTabTransitionTypes(change('/settings', '/accounts'))).toBe(false);
+  it('enters Configurações as the position after Categorias, from any tab, marked as an edge', () => {
+    for (const from of [
+      '/',
+      '/transactions',
+      '/recurrences/bills',
+      '/accounts',
+      '/categories/rules',
+    ]) {
+      expect(getTabTransitionTypes(change(from, '/settings'))).toEqual(['tab', 'fwd', 'edge']);
+      expect(getTabTransitionTypes(change(from, '/settings/backup'))).toEqual([
+        'tab',
+        'fwd',
+        'edge',
+      ]);
+    }
+  });
+
+  it('leaves Configurações backward, to any tab, marked as an edge', () => {
+    for (const to of ['/', '/transactions', '/recurrences', '/accounts', '/categories']) {
+      expect(getTabTransitionTypes(change('/settings/profile', to))).toEqual([
+        'tab',
+        'back',
+        'edge',
+      ]);
+      expect(getTabTransitionTypes(change('/settings', to))).toEqual(['tab', 'back', 'edge']);
+    }
+  });
+
+  it('uses the "reduce" type for the edge of Configurações with reduced motion', () => {
+    const original: unknown = Reflect.get(window, 'matchMedia');
+    window.matchMedia = ((query: string) => ({
+      matches: query.includes('prefers-reduced-motion'),
+    })) as unknown as typeof window.matchMedia;
+    try {
+      expect(getTabTransitionTypes(change('/', '/settings'))).toEqual(['reduce', 'fwd', 'edge']);
+      expect(getTabTransitionTypes(change('/settings/backup', '/'))).toEqual([
+        'reduce',
+        'back',
+        'edge',
+      ]);
+    } finally {
+      window.matchMedia = original as typeof window.matchMedia;
+    }
+  });
+
+  it('slides between the list of the phone and its pages, and not within the same screen', () => {
+    expect(getTabTransitionTypes(change('/settings', '/settings/profile'))).toEqual(['tab', 'fwd']);
+    expect(getTabTransitionTypes(change('/settings/appearance', '/settings'))).toEqual([
+      'tab',
+      'back',
+    ]);
+    expect(getTabTransitionTypes(change('/settings', '/settings'))).toBe(false);
   });
 
   it('slides between the Configurações pages in the order of their menu', () => {

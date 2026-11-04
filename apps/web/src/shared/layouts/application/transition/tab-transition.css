@@ -10,6 +10,7 @@
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
+  mix-blend-mode: normal;
 }
 
 ::view-transition-group(content) {
@@ -84,4 +85,16 @@ html:active-view-transition-type(reduce)::view-transition-old(segment-ind) {
   from {
     opacity: 0;
   }
+}
+
+/* Entering or leaving Configurações (`edge`): the left column changes kind and resizes in the DOM
+   (`use-side-resize.hook.ts`), and the icons glide with it. A capsule captured at one height would
+   float away from them, so here it leaves the transition and simply fades in with its icon. */
+html:active-view-transition-type(edge) .tab-indicator {
+  view-transition-name: none;
+  animation: fade-in var(--duration-fast) var(--ease-standard) both;
+}
+
+html:active-view-transition-type(edge):active-view-transition-type(reduce) .tab-indicator {
+  animation: none;
 }

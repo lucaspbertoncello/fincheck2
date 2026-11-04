@@ -1,4 +1,5 @@
 import {
+  SETTINGS_LIST_INDEX,
   SETTINGS_PAGE_ORDER,
   SUB_SCREEN_ORDER,
   TAB_ORDER,
@@ -11,9 +12,19 @@ type LocationChange = {
   pathChanged: boolean;
 };
 
+/**
+ * Position of a pathname in the row of tabs. Configurações comes after the last tab: the rail
+ * puts it at the foot, below Categorias, so entering it from any tab moves forward and leaving
+ * it moves back.
+ */
 function getTabIndex(pathname: string): number {
-  const tab = getScreenByPathname(pathname).tab;
-  return tab ? TAB_ORDER.indexOf(tab) : -1;
+  const screen = getScreenByPathname(pathname);
+  if (screen.key === 'settings') return TAB_ORDER.length;
+  return screen.tab ? TAB_ORDER.indexOf(screen.tab) : -1;
+}
+
+function isSettings(pathname: string): boolean {
+  return getScreenByPathname(pathname).key === 'settings';
 }
 
 /** Position of a pathname among the sub-tabs, or -1 when its screen has none. */
@@ -32,9 +43,14 @@ function isSubTabChange(from: string, to: string): boolean {
   );
 }
 
-/** Position of a pathname among the Configurações pages, or -1 outside them. */
+/**
+ * Position of a pathname among the Configurações pages, or -1 outside Configurações. The list of
+ * the phone (`/settings`) comes before the first page.
+ */
 function getSettingsPageIndex(pathname: string): number {
-  return SETTINGS_PAGE_ORDER.findIndex((page) => pathname.startsWith(page));
+  const page = SETTINGS_PAGE_ORDER.findIndex((candidate) => pathname.startsWith(candidate));
+  if (page >= 0) return page;
+  return isSettings(pathname) ? SETTINGS_LIST_INDEX : -1;
 }
 
 function prefersReducedMotion(): boolean {
@@ -48,8 +64,9 @@ function prefersReducedMotion(): boolean {
  * View-transition types of a navigation (motion.md 1): `tab` + `fwd`/`back` between two different
  * tabs and between the two sub-tabs of a tab (Recorrências to A pagar e receber), `reduce`
  * instead of `tab` with reduced motion. First load, month changes, screens of the same tab
- * without sub-tabs return false: no transition. The Configurações pages slide like sub-tabs, in
- * the order of their side menu.
+ * without sub-tabs return false: no transition. Configurações is the position after the last tab
+ * (type `edge` added when entering or leaving it). Its pages slide like sub-tabs, in the order of
+ * their side menu; on the phone the list comes before the first page.
  */
 export function getTabTransitionTypes({
   fromLocation,
@@ -61,13 +78,18 @@ export function getTabTransitionTypes({
 
   const fromSettings = getSettingsPageIndex(fromLocation.pathname);
   const toSettings = getSettingsPageIndex(toLocation.pathname);
-  if (fromSettings >= 0 && toSettings >= 0 && fromSettings !== toSettings)
+  if (fromSettings !== -1 && toSettings !== -1 && fromSettings !== toSettings)
     return [kind, toSettings > fromSettings ? 'fwd' : 'back'];
 
   const from = getTabIndex(fromLocation.pathname);
   const to = getTabIndex(toLocation.pathname);
   if (from < 0 || to < 0) return false;
-  if (from !== to) return [kind, to > from ? 'fwd' : 'back'];
+  if (from !== to) {
+    const direction = to > from ? 'fwd' : 'back';
+    // `edge`: entering or leaving Configurações, where the left column changes kind.
+    const edge = isSettings(fromLocation.pathname) || isSettings(toLocation.pathname);
+    return edge ? [kind, direction, 'edge'] : [kind, direction];
+  }
 
   if (!isSubTabChange(fromLocation.pathname, toLocation.pathname)) return false;
   const fromSub = getSubScreenIndex(fromLocation.pathname);

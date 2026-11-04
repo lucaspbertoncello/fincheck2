@@ -1,0 +1,23 @@
+/* Left column resize (motion.md 1.4): while the pair (rail + left box) animates its height, the
+   boxes fill it and clip their content, so the real elements resize and nothing is stretched. The
+   content of the new box fades in; the box itself (glass, border, shadow) is already there. */
+
+.side-pair[data-resizing] > nav,
+.side-pair[data-resizing] > aside {
+  overflow: clip;
+}
+
+.side-pair[data-resizing] > aside {
+  display: flex;
+  flex-direction: column;
+}
+
+.side-pair[data-resizing] > aside > * {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: clip;
+}
+
+.side-pair[data-resizing] > aside > * > * {
+  animation: fade-in var(--duration-fast) var(--ease-standard) both;
+}

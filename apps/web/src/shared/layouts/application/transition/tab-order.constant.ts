@@ -27,3 +27,6 @@ export const SETTINGS_PAGE_ORDER = [
   '/settings/backup',
   '/settings/appearance',
 ] as const;
+
+/** Position of the phone list of Configurações (`/settings`) among its pages: before the first. */
+export const SETTINGS_LIST_INDEX = -0.5;
