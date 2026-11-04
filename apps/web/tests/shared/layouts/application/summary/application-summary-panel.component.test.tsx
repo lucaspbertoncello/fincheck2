@@ -14,24 +14,21 @@ afterEach(() => {
 });
 
 describe('ApplicationSummaryPanel', () => {
-  it('shows the Livre from the API on the Visão geral, with accounts, invoices and the review link', async () => {
+  it('shows the balance from the API on the Visão geral, with the equation and the accounts', async () => {
     renderApp('/?month=2026-10');
 
-    const panel = await screen.findByRole('region', { name: 'Livre até o fim do mês' });
-    expect(await within(panel).findByText(/por dia nos próximos \d+ dias/)).toBeInTheDocument();
+    const panel = await screen.findByRole('region', { name: 'Saldo em contas' });
+    expect(await within(panel).findByText('Sobra no fim do mês')).toBeInTheDocument();
     expect(within(panel).getByRole('heading', { name: 'Contas' })).toBeInTheDocument();
-    expect(within(panel).getByRole('heading', { name: 'Faturas abertas' })).toBeInTheDocument();
-    expect(within(panel).getByRole('link', { name: /Para revisar/ })).toHaveAttribute(
-      'href',
-      '/transactions/review?month=2026-10',
-    );
+    expect(within(panel).queryByRole('heading', { name: 'Faturas abertas' })).toBeNull();
+    expect(within(panel).queryByRole('link', { name: /Para revisar/ })).toBeNull();
   });
 
   it('opens the items of a composition line', async () => {
     renderApp('/');
-    const panel = await screen.findByRole('region', { name: 'Livre até o fim do mês' });
+    const panel = await screen.findByRole('region', { name: 'Saldo em contas' });
 
-    const balance = await within(panel).findByRole('button', { name: /Saldo nas contas/ });
+    const balance = await within(panel).findByRole('button', { name: /A receber/ });
     expect(balance).toHaveAttribute('aria-expanded', 'false');
     fireEvent.click(balance);
 
@@ -41,8 +38,10 @@ describe('ApplicationSummaryPanel', () => {
   it('is the compact card on the other screens, with the same data', async () => {
     renderApp('/recurrences');
 
-    const panel = await screen.findByRole('region', { name: 'Livre até o fim do mês' });
-    expect(await within(panel).findByText(/\/dia/)).toBeInTheDocument();
+    const panel = await screen.findByRole('region', { name: 'Saldo em contas' });
+    expect(
+      await within(panel).findByRole('button', { name: 'Ocultar valores' }),
+    ).toBeInTheDocument();
   });
 
   it('shows the error with a retry that brings the panel back', async () => {
@@ -53,20 +52,18 @@ describe('ApplicationSummaryPanel', () => {
     );
     renderApp('/');
 
-    expect(await screen.findByText('Não deu para carregar o Livre.')).toBeInTheDocument();
+    expect(await screen.findByText('Não deu para carregar o saldo.')).toBeInTheDocument();
 
     server.resetHandlers();
     fireEvent.click(screen.getByRole('button', { name: 'Tentar de novo' }));
 
-    expect(await screen.findByText(/por dia nos próximos/)).toBeInTheDocument();
+    expect(await screen.findByText('Sobra no fim do mês')).toBeInTheDocument();
   });
 
   it('does not show on Configurações', async () => {
     renderApp('/settings');
     await screen.findByRole('heading', { level: 1, name: 'Configurações' });
 
-    expect(
-      screen.queryByRole('region', { name: 'Livre até o fim do mês' }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Saldo em contas' })).not.toBeInTheDocument();
   });
 });

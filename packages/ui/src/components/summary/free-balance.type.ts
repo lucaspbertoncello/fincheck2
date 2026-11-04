@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-/** One item inside an expanded composition line (a bank account, a bill, an expected income). */
+/** One item inside an expanded line (a bill, an expected income). */
 export type FreeBalanceItem = {
   id: string;
   label: string;
@@ -9,11 +9,11 @@ export type FreeBalanceItem = {
   badge?: string;
 };
 
-/** A line of the composition: "Saldo nas contas" (+), "A receber" (+), "A pagar" (−). */
+/** A line of the equation: "A receber" (+) or "A pagar" (−). */
 export type FreeBalanceLine = {
-  key: 'balance' | 'receivable' | 'payable';
+  key: 'receivable' | 'payable';
   label: string;
-  /** "R$ 4.200,00 ainda esperado (Maxxy)". At most two lines. */
+  /** One short line under the label ("Maxxy e mais 2"); it is cut when too long. */
   subtitle?: string;
   cents: number;
   sign: 'plus' | 'minus';
@@ -32,30 +32,36 @@ export type FreeBalanceAccount = {
   mark?: ReactNode;
 };
 
+/**
+ * No longer drawn (the panel dropped "Faturas abertas"). Kept only because the root barrel
+ * `packages/ui/src/index.ts` still re-exports it; remove both together.
+ */
 export type FreeBalanceInvoice = {
   id: string;
   name: string;
-  /** "Aberta, vence 06/11". */
   subtitle: string;
   amountCents: number;
-  /** Mini card (40 × 26). Without it the panel draws the default gradient card. */
   mark?: ReactNode;
 };
 
-/** Ready-made data of the "Livre até o fim do mês" panel. The panel only draws it. */
+/**
+ * Ready-made data of the panel. The panel only draws it: the big number is `balanceCents` (sum of
+ * the account balances) and `freeCents` closes the equation (balance + receivable − payable). The
+ * texts live in `panel-labels.constant.ts`.
+ */
 export type FreeBalanceData = {
+  /** Big number: sum of the account balances. */
+  balanceCents: number;
+  /** Closing line: what is left at the end of the month. */
   freeCents: number;
-  /** "≈ R$ 585 por dia nos próximos 10 dias". */
+  /** "≈ R$ 585 por dia". */
   perDayCents: number;
-  /** Days in the strip ("10 dias até o fim do mês") and how many are already behind. */
+  /** Days left in the month; 1 makes the per-day text say "hoje". */
   windowDays: number;
-  elapsedDays: number;
-  /** "dado do Bradesco de ontem", when a bank failed to sync. */
-  staleNote?: string;
   lines: FreeBalanceLine[];
-  /** Warning under the value, when the Livre is partial ("Livre parcial: falta o saldo do Nubank"). */
+  /** Warning under the value, when the total is partial ("Livre parcial: falta o saldo do Nubank"). */
   partialNote?: string;
-  review?: { count: number; subtitle: string; href: string };
   accounts: FreeBalanceAccount[];
-  invoices: FreeBalanceInvoice[];
+  /** "Ver mais" target (Contas e cartões, with the month). Without it the link is not drawn. */
+  moreAccountsHref?: string;
 };

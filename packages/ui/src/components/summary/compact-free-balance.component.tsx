@@ -6,7 +6,8 @@ import { HideValuesButton } from '#/components/money/hide-values-button.componen
 import { Money } from '#/components/money/money.component.tsx';
 import { BalanceComposition } from '#/components/summary/balance-composition.component.tsx';
 import type { FreeBalanceData } from '#/components/summary/free-balance.type.ts';
-import { ReviewLink } from '#/components/summary/review-link.component.tsx';
+import { PANEL_LABELS, PANEL_SURFACE } from '#/components/summary/panel-labels.constant.ts';
+import { cx } from '#/utils/class-names.util.ts';
 
 type CompactFreeBalanceProps = {
   data: FreeBalanceData;
@@ -14,37 +15,26 @@ type CompactFreeBalanceProps = {
   onToggleHidden: () => void;
 };
 
-/** "Mini Livre" for mobile screens other than the Visão geral: value and per day, tap to open the composition. */
+/** "Mini" panel for mobile screens other than the Visão geral: the balance, tap to open the equation. */
 export function CompactFreeBalance({ data, isHidden, onToggleHidden }: CompactFreeBalanceProps) {
   return (
-    <section aria-label="Livre até o fim do mês" className="glass p-s16">
+    <section aria-label={PANEL_LABELS.panel} className={cx(PANEL_SURFACE, 'p-s16')}>
       <Disclosure className="group">
         <div className="flex items-center justify-between gap-s8">
-          <p className="text-meta text-fg-secondary">Livre até o fim do mês</p>
+          <p className="text-meta text-fg-secondary">{PANEL_LABELS.panel}</p>
           <HideValuesButton isHidden={isHidden} onToggle={onToggleHidden} />
         </div>
         <Heading level={2} className="m-0">
           <Button
             slot="trigger"
-            className="flex min-h-ctl-touch w-full cursor-pointer items-center gap-s12 text-start outline-none"
+            className="flex min-h-ctl-touch w-full cursor-pointer items-center justify-between gap-s12 text-start outline-none"
           >
             <Money
-              cents={data.freeCents}
+              cents={data.balanceCents}
               currency="fixed"
               smallDots
               className="text-money-md tracking-(--letter-spacing-money-md) text-fg-primary"
             />
-            <span className="min-w-0 flex-1 text-meta text-fg-secondary">
-              ≈{' '}
-              <Money
-                cents={data.perDayCents}
-                sign="none"
-                showCents={false}
-                weight="emphasis"
-                className="text-fg-primary"
-              />
-              /dia
-            </span>
             <Icon
               name="chevron-down"
               size="md"
@@ -55,8 +45,7 @@ export function CompactFreeBalance({ data, isHidden, onToggleHidden }: CompactFr
         <DisclosurePanel>
           <div className="flex flex-col gap-s12 pt-s8">
             {data.partialNote ? <InlineNotice>{data.partialNote}</InlineNotice> : null}
-            <BalanceComposition lines={data.lines} />
-            {data.review ? <ReviewLink {...data.review} /> : null}
+            <BalanceComposition data={data} />
           </div>
         </DisclosurePanel>
       </Disclosure>

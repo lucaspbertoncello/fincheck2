@@ -14,27 +14,29 @@ function base(): FreeBalance.Dto {
   return structuredClone(computeFreeBalance(db));
 }
 
-function build(freeBalance: FreeBalance.Dto, isHidden = false) {
+function build(freeBalance: FreeBalance.Dto) {
   return buildFreeBalanceData({
     freeBalance,
     accounts: [],
-    openInvoices: [],
-    reviewHref: '/transactions/review?month=2026-10',
-    isHidden,
+    accountsHref: '/accounts?month=2026-10',
     now: NOW,
   });
 }
 
 describe('buildFreeBalanceData', () => {
-  it('maps the Livre, the per-day value and the window of days', () => {
+  it('puts the sum of the account balances in the big number and the old Livre in the closing line', () => {
     const freeBalance = base();
     const data = build(freeBalance);
 
+    expect(data.balanceCents).toBe(freeBalance.accounts.totalCents);
     expect(data.freeCents).toBe(freeBalance.freeBalanceCents);
     expect(data.perDayCents).toBe(freeBalance.perDayCents);
     expect(data.windowDays).toBe(freeBalance.daysRemaining);
-    expect(data.lines.map((line) => line.key)).toEqual(['balance', 'receivable', 'payable']);
-    expect(data.lines[0]?.items).toHaveLength(freeBalance.accounts.items.length);
+    expect(data.moreAccountsHref).toBe('/accounts?month=2026-10');
+  });
+
+  it('keeps only "A receber" and "A pagar" in the lines, with no balance line', () => {
+    expect(build(base()).lines.map((line) => line.key)).toEqual(['receivable', 'payable']);
   });
 
   it('marks an item with a detected payment as "pago, falta vincular" (R1)', () => {
@@ -51,76 +53,31 @@ describe('buildFreeBalanceData', () => {
     expect(payable?.items[0]?.cents).toBe(item!.remainingCents);
   });
 
-  it('never writes an amount in the subtitle when the values are hidden', () => {
-    const freeBalance = base();
-    const visible = build(freeBalance).lines.find((line) => line.key === 'receivable');
-    const hidden = build(freeBalance, true).lines.find((line) => line.key === 'receivable');
+  it('names the receivable by its first source, never by an amount', () => {
+    const receivable = build(base()).lines.find((line) => line.key === 'receivable');
 
-    expect(visible?.subtitle).toMatch(/R\$ \d/);
-    // The digits become dots and the shape stays, so the line keeps its size.
-    expect(hidden?.subtitle).toMatch(/^R\$ •+,•• /);
-    expect(hidden?.subtitle).not.toMatch(/R\$ \d/);
-    expect(hidden?.subtitle?.length).toBe(visible?.subtitle?.length);
+    expect(receivable?.subtitle).not.toMatch(/R$/);
   });
 
   it('says the day the payable line goes until', () => {
     const payable = build(base()).lines.find((line) => line.key === 'payable');
 
-    expect(payable?.subtitle).toBe('até 31/10 e faturas abertas');
-  });
-
-  it('shows "Para revisar" only with something to review, and links it', () => {
-    const freeBalance = base();
-    freeBalance.review = { count: 12, byAccount: [] };
-    expect(build(freeBalance).review).toEqual({
-      count: 12,
-      subtitle: 'Sem categoria',
-      href: '/transactions/review?month=2026-10',
-    });
-
-    freeBalance.review = { count: 0, byAccount: [] };
-    expect(build(freeBalance).review).toBeUndefined();
-  });
-
-  it('writes the stale chip with the age of the bank data', () => {
-    const freeBalance = base();
-    freeBalance.dataFreshness = [
-      {
-        connectionId: 'c1',
-        institutionName: 'Bradesco',
-        status: 'active',
-        lastBankUpdateAt: '2026-10-29T18:40:00-03:00',
-        isStale: true,
-      },
-      {
-        connectionId: 'c2',
-        institutionName: 'Nubank',
-        status: 'error',
-        lastBankUpdateAt: null,
-        isStale: false,
-      },
-    ];
-
-    expect(build(freeBalance).staleNote).toBe(
-      'dado do Bradesco de ontem · conexão do Nubank com erro',
-    );
+    expect(payable?.subtitle).toBe('até 31/10');
   });
 });
 
-describe('buildFreeBalanceData, partial Livre (R2)', () => {
+describe('buildFreeBalanceData, partial balance (R2)', () => {
   it('carries the partial notice for the panel', () => {
     const freeBalance = { ...base(), isPartial: true, accountsWithoutBalance: ['a1'] };
 
     const data = buildFreeBalanceData({
       freeBalance,
       accounts: [{ id: 'a1', name: 'Nubank' }] as never,
-      openInvoices: [],
-      reviewHref: '/transactions/review',
-      isHidden: false,
+      accountsHref: '/accounts',
       now: NOW,
     });
 
-    expect(data.partialNote).toBe('Livre parcial: falta o saldo do Nubank');
+    expect(data.partialNote).toBe('Saldo parcial: falta o saldo do Nubank');
   });
 });
 
@@ -134,7 +91,7 @@ describe('buildPartialNotice', () => {
     const accounts = [{ id: 'a1', name: 'Nubank' }] as never;
 
     expect(buildPartialNotice(freeBalance, accounts)).toBe(
-      'Livre parcial: falta o saldo do Nubank',
+      'Saldo parcial: falta o saldo do Nubank',
     );
   });
 });

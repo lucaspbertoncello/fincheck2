@@ -12,10 +12,10 @@ type PanelListRowProps = {
   cents: number;
 };
 
-/** Row of the panel lists: mark, name, subtitle and the amount at the right (components.md 2.3). */
+/** Row of the panel lists: mark, name, subtitle and the amount at the right; no divider between rows. */
 export function PanelListRow({ mark, name, subtitle, warn = false, cents }: PanelListRowProps) {
   return (
-    <li className="flex items-center gap-s12 border-t border-line py-s12 first:border-t-0">
+    <li className="flex items-center gap-s12 py-s8 [@media(max-height:700px)]:py-s4">
       {mark}
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="truncate text-list font-emphasis text-fg-primary">{name}</span>
@@ -23,7 +23,7 @@ export function PanelListRow({ mark, name, subtitle, warn = false, cents }: Pane
           className={`flex items-center gap-s4 text-meta ${warn ? 'text-caution' : 'text-fg-secondary'}`}
         >
           {warn ? <Icon name="warning" size="xs" /> : null}
-          {subtitle}
+          <span className="truncate">{subtitle}</span>
         </span>
       </span>
       <Money cents={cents} sign="none" weight="plain" className="text-body" />

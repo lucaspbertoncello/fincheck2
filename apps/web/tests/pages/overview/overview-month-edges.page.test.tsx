@@ -35,15 +35,15 @@ describe('OverviewPage on the last day of the month', () => {
     expect(screen.getByText('Sábado, 31 de outubro')).toBeInTheDocument();
   });
 
-  it('says "Faltam 1 dia" and speaks in the singular in the Livre panel', async () => {
+  it('says "Faltam 1 dia" and speaks in the singular in the summary panel', async () => {
     setTestClock(LAST_DAY);
     renderApp('/');
 
     const remaining = await screen.findByText(/^Faltam/);
     expect(remaining).toHaveTextContent('Faltam 1 dia');
     expect(remaining).not.toHaveTextContent('1 dias');
-    expect(await screen.findByText('1 dia até o fim do mês')).toBeInTheDocument();
-    expect(screen.getByText(/por dia hoje/)).toBeInTheDocument();
+    expect(await screen.findByText('Sobra no fim do mês')).toBeInTheDocument();
+    expect(screen.getByText(/≈.*hoje/)).toBeInTheDocument();
     expect(document.body).not.toHaveTextContent('1 dias');
   });
 

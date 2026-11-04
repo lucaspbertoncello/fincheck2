@@ -24,7 +24,7 @@ import {
 import type { ReactNode } from 'react';
 
 import { NAV_ITEMS } from '#gallery/constants/sample-planning.constant.ts';
-import { FREE_BALANCE } from '#gallery/constants/sample-summary.constant.ts';
+import { FREE_BALANCE, FREE_BALANCE_LONG } from '#gallery/constants/sample-summary.constant.ts';
 import type { GallerySectionDef } from '#gallery/types/gallery-group.type.ts';
 import { GalleryVariant } from '#gallery/components/shell/gallery-variant.component.tsx';
 import { State } from '#gallery/components/shell/state.component.tsx';
@@ -240,6 +240,13 @@ export const SHELL_SECTIONS: GallerySectionDef[] = [
             <GalleryVariant caption="full (o olho daqui é local ao painel)" width={460}>
               <FreeBalancePanel
                 data={FREE_BALANCE}
+                isHidden={hidden}
+                onToggleHidden={() => set(!hidden)}
+              />
+            </GalleryVariant>
+            <GalleryVariant caption="full, dados mais longos (cabe em 100dvh - 32 px)" width={344}>
+              <FreeBalancePanel
+                data={FREE_BALANCE_LONG}
                 isHidden={hidden}
                 onToggleHidden={() => set(!hidden)}
               />

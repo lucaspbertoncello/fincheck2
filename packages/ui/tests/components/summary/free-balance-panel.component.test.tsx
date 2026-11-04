@@ -8,24 +8,28 @@ import { FreeBalancePanel } from '#/components/summary/free-balance-panel.compon
 const noop = () => undefined;
 
 const DATA: FreeBalanceData = {
+  balanceCents: 10000000,
   freeCents: 584684,
   perDayCents: 58468,
   windowDays: 10,
-  elapsedDays: 1,
-  staleNote: 'dado do Bradesco de ontem',
   lines: [
-    { key: 'balance', label: 'Saldo nas contas', cents: 540898, sign: 'plus', items: [] },
     {
       key: 'receivable',
       label: 'A receber',
-      subtitle: 'R$ 4.200,00 ainda esperado (Maxxy)',
+      subtitle: 'Maxxy e mais 2',
       cents: 462500,
       sign: 'plus',
       items: [{ id: 'maxxy', label: 'Maxxy', cents: 420000 }],
     },
-    { key: 'payable', label: 'A pagar', cents: 418714, sign: 'minus', items: [] },
+    {
+      key: 'payable',
+      label: 'A pagar',
+      subtitle: 'até 31/10',
+      cents: 418714,
+      sign: 'minus',
+      items: [],
+    },
   ],
-  review: { count: 12, subtitle: 'Sem categoria, do Bradesco', href: '/transactions' },
   accounts: [
     { id: 'nu', name: 'Nubank', subtitle: 'Sincronizado há 12 min', balanceCents: 341258 },
     {
@@ -35,10 +39,10 @@ const DATA: FreeBalanceData = {
       subtitleTone: 'warn',
       balanceCents: 187640,
     },
+    { id: 'wal', name: 'Carteira', subtitle: 'Saldo manual', balanceCents: 5000 },
+    { id: 'inv', name: 'Corretora', subtitle: 'Saldo manual', balanceCents: 9000 },
   ],
-  invoices: [
-    { id: 'roxinho', name: 'Roxinho', subtitle: 'Aberta, vence 06/11', amountCents: 213745 },
-  ],
+  moreAccountsHref: '/accounts?month=2026-10',
 };
 
 function render(
@@ -54,29 +58,62 @@ function render(
 }
 
 describe('FreeBalancePanel', () => {
-  it('draws the data it receives: value, per day, composition, review, accounts and invoices', () => {
+  it('reads as a sum: balance, receivable, payable and what is left', () => {
     const html = render(DATA);
 
-    expect(html).toContain('Livre até o fim do mês');
-    expect(html).toContain('5.846,84');
-    expect(html).toContain('585');
-    expect(html).toContain('10 dias até o fim do mês');
-    expect(html).toContain('dado do Bradesco de ontem');
-    expect(html).toContain('Saldo nas contas');
+    expect(html).toContain('aria-label="Saldo em contas"');
+    expect(html).toContain('100.000,00');
+    expect(html).toContain('A receber');
     expect(html).toContain('A pagar');
-    expect(html).toContain('Para revisar');
+    expect(html).toContain('Sobra no fim do mês');
+    expect(html).toContain('5.846,84');
+    expect(html).toContain('por dia');
+  });
+
+  it('no longer carries the bank notice, the invoices, the review row or the balance line', () => {
+    const html = render(DATA);
+
+    expect(html).not.toContain('Faturas abertas');
+    expect(html).not.toContain('Para revisar');
+    expect(html).not.toContain('Saldo nas contas');
+    expect(html).not.toContain('dado do');
+  });
+
+  it('shows the receivable and the payable with their own icon', () => {
+    const html = render(DATA);
+
+    expect(html).toContain('bg-gain-weak');
+    expect(html.match(/<svg/g)?.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('lists only the first two accounts and counts the rest in "Ver mais"', () => {
+    const html = render(DATA);
+
     expect(html).toContain('Nubank');
-    expect(html).toContain('Faturas abertas');
-    expect(html).toContain('Roxinho');
+    expect(html).toContain('Bradesco');
+    expect(html).not.toContain('Carteira');
+    expect(html).toContain('Ver mais · 2 contas');
+    expect(html).toContain('href="/accounts?month=2026-10"');
+  });
+
+  it('has no "Ver mais" when every account fits', () => {
+    const html = render({ ...DATA, accounts: DATA.accounts.slice(0, 2) });
+
+    expect(html).not.toContain('Ver mais');
   });
 
   it('speaks in the singular on the last day of the month', () => {
-    const html = render({ ...DATA, windowDays: 1, elapsedDays: 0 });
+    const html = render({ ...DATA, windowDays: 1 });
 
-    expect(html).toContain('por dia hoje');
-    expect(html).toContain('1 dia até o fim do mês');
-    expect(html).toContain('0 de 1 dia passados');
-    expect(html).not.toContain('1 dias');
+    expect(html).toContain('hoje');
+    expect(html).not.toContain('por dia');
+  });
+
+  it('tightens its spacing on low windows instead of scrolling', () => {
+    const html = render(DATA);
+
+    expect(html).toContain('[@media(max-height:700px)]:p-s16');
+    expect(html).not.toContain('overflow-y-auto');
   });
 
   it('has the eye named by its state', () => {
@@ -87,6 +124,7 @@ describe('FreeBalancePanel', () => {
   it('hides every amount with the eye on', () => {
     const html = render(DATA, true);
 
+    expect(html).not.toContain('100.000,00');
     expect(html).not.toContain('5.846,84');
     expect(html).not.toContain('3.412,58');
     expect(html).toContain('••••');
@@ -97,12 +135,12 @@ describe('FreeBalancePanel', () => {
 
     expect(html).toContain('aria-busy="true"');
     expect(html).toContain('Carregando');
-    expect(html).not.toMatch(/\d\.\d{3},\d{2}/);
+    expect(html).not.toMatch(/d.d{3},d{2}/);
   });
 
-  it('has a compact version with the value and a skeleton of its own', () => {
-    expect(render(DATA, false, 'compact')).toContain('5.846,84');
-    expect(render(DATA, false, 'compact')).not.toContain('Faturas abertas');
+  it('has a compact version with the balance and a skeleton of its own', () => {
+    expect(render(DATA, false, 'compact')).toContain('100.000,00');
+    expect(render(DATA, false, 'compact')).not.toContain('Ver mais');
     expect(render(undefined, false, 'compact')).toContain('aria-busy="true"');
   });
 });

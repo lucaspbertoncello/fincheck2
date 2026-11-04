@@ -2,8 +2,6 @@ import type { FreeBalanceData } from '@fincheck/ui';
 
 import { useAccounts } from '#/domain/accounts/account/hooks/use-accounts.hook.ts';
 import { useFreeBalance } from '#/domain/dashboard/free-balance/hooks/use-free-balance.hook.ts';
-import { useOpenInvoices } from '#/domain/invoices/invoice/hooks/use-open-invoices.hook.ts';
-import { useHideValues } from '#/shared/hooks/use-hide-values.hook.ts';
 import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
 import { buildHref } from '#/shared/layouts/application/navigation/build-href.util.ts';
 import { buildFreeBalanceData } from '#/shared/layouts/application/summary/utils/build-free-balance-data.util.tsx';
@@ -14,21 +12,19 @@ type ApplicationSummary =
   | { status: 'ready'; data: FreeBalanceData };
 
 /**
- * Data of the Livre panel: `GET /dashboard/free-balance`, plus the accounts (bank marks and sync
- * state) and the open invoices the panel lists. The Livre never depends on the selected month; the
- * month only travels in the "Para revisar" link.
+ * Data of the Livre panel: `GET /dashboard/free-balance`, plus the accounts (bank marks, sync
+ * state and the sum shown as the big number). The numbers never depend on the selected month; the
+ * month only travels in the "Ver mais" link.
  */
 export function useApplicationSummary(): ApplicationSummary {
-  const { isHidden } = useHideValues();
   const { month } = useSelectedMonth();
   const freeBalance = useFreeBalance();
   const accounts = useAccounts();
-  const openInvoices = useOpenInvoices();
 
   if (freeBalance.isError) {
     return { status: 'error', retry: () => void freeBalance.refetch() };
   }
-  if (!freeBalance.data || accounts.isPending || openInvoices.isPending) {
+  if (!freeBalance.data || accounts.isPending) {
     return { status: 'loading' };
   }
 
@@ -39,9 +35,7 @@ export function useApplicationSummary(): ApplicationSummary {
     data: buildFreeBalanceData({
       freeBalance: freeBalance.data,
       accounts: accountItems,
-      openInvoices: openInvoices.data?.items ?? [],
-      reviewHref: buildHref('/transactions/review', month),
-      isHidden,
+      accountsHref: buildHref('/accounts', month),
       now: new Date(),
     }),
   };

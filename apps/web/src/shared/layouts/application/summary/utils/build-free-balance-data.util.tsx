@@ -1,41 +1,25 @@
 import type { Account } from '@fincheck/shared/accounts/account/account.type.ts';
 import type { Agenda } from '@fincheck/shared/dashboard/agenda/agenda.type.ts';
 import type { FreeBalance } from '@fincheck/shared/dashboard/free-balance/free-balance.type.ts';
-import type { Invoice } from '@fincheck/shared/invoices/invoice/invoice.type.ts';
-import { BankAvatar, BankCardMini, resolveBankThemeKey } from '@fincheck/ui';
+import { BankAvatar, resolveBankThemeKey } from '@fincheck/ui';
 import type {
   FreeBalanceAccount,
   FreeBalanceData,
-  FreeBalanceInvoice,
   FreeBalanceItem,
   FreeBalanceLine,
 } from '@fincheck/ui';
 
-import {
-  describeDataAge,
-  describeUpdateTime,
-} from '#/shared/layouts/application/summary/utils/describe-update-time.util.ts';
-import { formatMoneyText } from '#/shared/layouts/application/summary/utils/format-money-text.util.ts';
-import { formatShortDate } from '#/shared/layouts/application/summary/utils/format-short-date.util.ts';
+import { describeUpdateTime } from '#/shared/layouts/application/summary/utils/describe-update-time.util.ts';
 
 type BuildFreeBalanceInput = {
   freeBalance: FreeBalance.Dto;
   accounts: readonly Account.Dto[];
-  openInvoices: readonly Invoice.OpenItem[];
-  /** `/transactions/review` with the selected month. */
-  reviewHref: string;
-  isHidden: boolean;
+  /** `/accounts` with the selected month: where "Ver mais" leads. */
+  accountsHref: string;
   now: Date;
 };
 
 const PRESUMED_NOTE = 'pago, falta vincular';
-
-const INVOICE_STATUS_LABEL: Partial<Record<Invoice.Status, string>> = {
-  open: 'Aberta',
-  closed: 'Fechada',
-  partial: 'Parcial',
-  overdue: 'Vencida',
-};
 
 // R1: an item whose payment was detected but not linked yet carries the seal and already left the
 // total (`remainingCents` is net of the presumed payment).
@@ -54,30 +38,18 @@ function lastDayLabel(asOfOn: string): string {
   return `${String(lastDay).padStart(2, '0')}/${String(month).padStart(2, '0')}`;
 }
 
-function receivableSubtitle(items: readonly Agenda.Item[], isHidden: boolean) {
+function receivableSubtitle(items: readonly Agenda.Item[]) {
   const first = items[0];
   if (!first) return undefined;
-  const more = items.length > 1 ? ` e mais ${items.length - 1}` : '';
-  return `${formatMoneyText(first.remainingCents, isHidden)} ainda esperado (${first.title})${more}`;
+  return `${first.title}${items.length > 1 ? ` e mais ${items.length - 1}` : ''}`;
 }
 
-function buildLines({ freeBalance, isHidden }: BuildFreeBalanceInput): FreeBalanceLine[] {
+function buildLines({ freeBalance }: BuildFreeBalanceInput): FreeBalanceLine[] {
   return [
-    {
-      key: 'balance',
-      label: 'Saldo nas contas',
-      cents: freeBalance.accounts.totalCents,
-      sign: 'plus',
-      items: freeBalance.accounts.items.map((item) => ({
-        id: item.accountId,
-        label: item.name,
-        cents: item.balanceCents,
-      })),
-    },
     {
       key: 'receivable',
       label: 'A receber',
-      subtitle: receivableSubtitle(freeBalance.receivable.items, isHidden),
+      subtitle: receivableSubtitle(freeBalance.receivable.items),
       cents: freeBalance.receivable.totalCents,
       sign: 'plus',
       items: toItems(freeBalance.receivable.items),
@@ -85,7 +57,7 @@ function buildLines({ freeBalance, isHidden }: BuildFreeBalanceInput): FreeBalan
     {
       key: 'payable',
       label: 'A pagar',
-      subtitle: `até ${lastDayLabel(freeBalance.asOfOn)} e faturas abertas`,
+      subtitle: `até ${lastDayLabel(freeBalance.asOfOn)}`,
       cents: freeBalance.payable.totalCents,
       sign: 'minus',
       items: toItems(freeBalance.payable.items),
@@ -137,67 +109,25 @@ function buildAccounts({
   });
 }
 
-function buildInvoices({ accounts, openInvoices }: BuildFreeBalanceInput): FreeBalanceInvoice[] {
-  return openInvoices.map(({ accountId, invoice }) => {
-    const account = accounts.find((candidate) => candidate.id === accountId);
-    const status = INVOICE_STATUS_LABEL[invoice.status] ?? 'Aberta';
-    return {
-      id: `${accountId}:${invoice.month}`,
-      name: account?.name ?? 'Cartão',
-      subtitle: `${status}, vence ${formatShortDate(invoice.dueOn)}`,
-      amountCents: invoice.remainingCents,
-      mark: <BankCardMini theme={resolveBankThemeKey(account?.institutionCode)} />,
-    };
-  });
-}
-
-function buildReviewSubtitle({ freeBalance, accounts }: BuildFreeBalanceInput): string {
-  const { byAccount } = freeBalance.review;
-  const only = byAccount.length === 1 ? byAccount[0] : undefined;
-  if (only) {
-    const name = accounts.find((account) => account.id === only.accountId)?.name;
-    return name ? `Sem categoria, do ${name}` : 'Sem categoria';
-  }
-  return byAccount.length > 1 ? `Sem categoria, de ${byAccount.length} contas` : 'Sem categoria';
-}
-
-/** "dado do Bradesco de ontem" or "conexão do Bradesco com erro", for the stale chip of the hero. */
-function buildStaleNote({ freeBalance, now }: BuildFreeBalanceInput): string | undefined {
-  const notes = freeBalance.dataFreshness.flatMap((entry) => {
-    if (entry.status === 'error') return [`conexão do ${entry.institutionName} com erro`];
-    if (entry.isStale) {
-      return [`dado do ${entry.institutionName} ${describeDataAge(entry.lastBankUpdateAt, now)}`];
-    }
-    return [];
-  });
-  return notes.length > 0 ? notes.join(' · ') : undefined;
-}
-
-/** Turns the Livre answer (plus accounts and open invoices) into what the panel draws. */
+/**
+ * Turns the Livre answer (plus the accounts) into what the panel draws: the big number is the sum
+ * of the account balances (BR-DSH-002); `freeCents` is the old Livre, now "Sobra no fim do mês".
+ */
 export function buildFreeBalanceData(input: BuildFreeBalanceInput): FreeBalanceData {
   const { freeBalance } = input;
   return {
+    balanceCents: freeBalance.accounts.totalCents,
     freeCents: freeBalance.freeBalanceCents,
     perDayCents: freeBalance.perDayCents,
     windowDays: freeBalance.daysRemaining,
-    elapsedDays: 0,
-    staleNote: buildStaleNote(input),
     partialNote: buildPartialNotice(input.freeBalance, input.accounts),
     lines: buildLines(input),
-    review:
-      freeBalance.review.count > 0
-        ? {
-            count: freeBalance.review.count,
-            subtitle: buildReviewSubtitle(input),
-            href: input.reviewHref,
-          }
-        : undefined,
     accounts: buildAccounts(input),
-    invoices: buildInvoices(input),
+    moreAccountsHref: input.accountsHref,
   };
 }
 
-/** R2: "Livre parcial: falta o saldo do Nubank". Undefined when every balance is known. */
+/** R2: "Saldo parcial: falta o saldo do Nubank". Undefined when every balance is known. */
 export function buildPartialNotice(
   freeBalance: FreeBalance.Dto,
   accounts: readonly Account.Dto[],
@@ -206,6 +136,6 @@ export function buildPartialNotice(
   const names = freeBalance.accountsWithoutBalance.map(
     (id) => accounts.find((account) => account.id === id)?.name ?? 'uma conta',
   );
-  if (names.length === 0) return 'Livre parcial: falta o saldo de uma conta';
-  return `Livre parcial: falta o saldo ${names.length > 1 ? 'das contas' : 'do'} ${names.join(', ')}`;
+  if (names.length === 0) return 'Saldo parcial: falta o saldo de uma conta';
+  return `Saldo parcial: falta o saldo ${names.length > 1 ? 'das contas' : 'do'} ${names.join(', ')}`;
 }

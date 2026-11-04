@@ -14,7 +14,7 @@ type HideValuesButtonProps = {
 const LAYER =
   'absolute inset-0 grid place-items-center transition-transform duration-(--duration-instant) ease-(--ease-eye)';
 
-/** The eye beside "Livre até o fim do mês": hides every money value in the app (components.md 8). */
+/** The eye beside "Saldo em contas": hides every money value in the app (components.md 8). */
 export function HideValuesButton({ isHidden, onToggle, className }: HideValuesButtonProps) {
   return (
     <ToggleButton

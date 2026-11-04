@@ -36,26 +36,15 @@ export const DONUT_SLICES: DonutSlice[] = [
 ];
 
 export const FREE_BALANCE: FreeBalanceData = {
+  balanceCents: 640000,
   freeCents: 585000,
   perDayCents: 58500,
   windowDays: 10,
-  elapsedDays: 0,
-  staleNote: 'dado do Banco Aurora de ontem',
   lines: [
-    {
-      key: 'balance',
-      label: 'Saldo nas contas',
-      cents: 640000,
-      sign: 'plus',
-      items: [
-        { id: 'fb-1', label: 'Banco Aurora', cents: 420000 },
-        { id: 'fb-2', label: 'Rio Azul', cents: 220000 },
-      ],
-    },
     {
       key: 'receivable',
       label: 'A receber',
-      subtitle: 'R$ 4.200,00 ainda esperado (Vale Verde)',
+      subtitle: 'Vale Verde',
       cents: 420000,
       sign: 'plus',
       items: [{ id: 'fb-3', label: 'Vale Verde', cents: 420000 }],
@@ -63,6 +52,7 @@ export const FREE_BALANCE: FreeBalanceData = {
     {
       key: 'payable',
       label: 'A pagar',
+      subtitle: 'até 30/11',
       cents: 475000,
       sign: 'minus',
       items: [
@@ -71,7 +61,6 @@ export const FREE_BALANCE: FreeBalanceData = {
       ],
     },
   ],
-  review: { count: 12, subtitle: 'transações sem categoria', href: '#review' },
   accounts: [
     {
       id: 'fa-1',
@@ -86,9 +75,51 @@ export const FREE_BALANCE: FreeBalanceData = {
       subtitleTone: 'warn',
       balanceCents: 220000,
     },
+    { id: 'fa-3', name: 'Carteira', subtitle: 'Saldo manual', balanceCents: 12000 },
   ],
-  invoices: [
-    { id: 'fi-1', name: 'Banco Aurora', subtitle: 'Aberta, vence 06/11', amountCents: 295000 },
+  moreAccountsHref: '#accounts',
+};
+
+/** Longest case: long names, values in the R$ 100.000,00 range. The panel must still fit 100dvh - 32 px. */
+export const FREE_BALANCE_LONG: FreeBalanceData = {
+  ...FREE_BALANCE,
+  balanceCents: 10000000,
+  freeCents: 7345012,
+  perDayCents: 734501,
+  lines: [
+    {
+      key: 'receivable',
+      label: 'A receber',
+      subtitle: 'Consultoria Vale Verde Tecnologia e mais 3',
+      cents: 12500000,
+      sign: 'plus',
+      items: [{ id: 'fl-1', label: 'Consultoria Vale Verde Tecnologia', cents: 12500000 }],
+    },
+    {
+      key: 'payable',
+      label: 'A pagar',
+      subtitle: 'até 30/11',
+      cents: 10154988,
+      sign: 'minus',
+      items: [],
+    },
+  ],
+  accounts: [
+    {
+      id: 'fl-a1',
+      name: 'Banco Aurora Internacional Prime',
+      subtitle: 'Sincronizado há 12 min',
+      balanceCents: 9500000,
+    },
+    {
+      id: 'fl-a2',
+      name: 'Rio Azul Investimentos e Previdência',
+      subtitle: 'Falhou ontem às 18:40',
+      subtitleTone: 'warn',
+      balanceCents: 500000,
+    },
+    { id: 'fl-a3', name: 'Carteira', subtitle: 'Saldo manual', balanceCents: 12000 },
+    { id: 'fl-a4', name: 'Reserva', subtitle: 'Saldo manual', balanceCents: 12000 },
   ],
 };
 
