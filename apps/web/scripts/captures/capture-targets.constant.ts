@@ -4,8 +4,14 @@ export type CaptureTarget = {
   /** Part of the file name: `<name> <viewport> <theme>.png`. */
   name: string;
   path: string;
-  /** Screens take the whole page; a modal is taken on the viewport. */
-  kind: 'screen' | 'modal';
+  /**
+   * Screens take the whole page; a modal is taken on the viewport. A section is one part of a
+   * long page (the four of Configurações): the page scrolls to `#<sectionId>` and the viewport is
+   * taken, so each section has its own picture with its menu item active.
+   */
+  kind: 'screen' | 'modal' | 'section';
+  /** Element id the section capture waits for (only for `kind: 'section'`). */
+  sectionId?: string;
 };
 
 export const SCREEN_TARGETS: CaptureTarget[] = [
@@ -18,10 +24,30 @@ export const SCREEN_TARGETS: CaptureTarget[] = [
   { name: 'accounts', path: '/accounts', kind: 'screen' },
   { name: 'categories', path: '/categories', kind: 'screen' },
   { name: 'rules', path: '/categories/rules', kind: 'screen' },
-  { name: 'settings profile', path: '/settings#profile', kind: 'screen' },
-  { name: 'settings connections', path: '/settings#connections', kind: 'screen' },
-  { name: 'settings backup', path: '/settings#backup', kind: 'screen' },
-  { name: 'settings appearance', path: '/settings#appearance', kind: 'screen' },
+  {
+    name: 'settings profile',
+    path: '/settings#profile',
+    kind: 'section',
+    sectionId: 'settings-profile',
+  },
+  {
+    name: 'settings connections',
+    path: '/settings#connections',
+    kind: 'section',
+    sectionId: 'settings-connections',
+  },
+  {
+    name: 'settings backup',
+    path: '/settings#backup',
+    kind: 'section',
+    sectionId: 'settings-backup',
+  },
+  {
+    name: 'settings appearance',
+    path: '/settings#appearance',
+    kind: 'section',
+    sectionId: 'settings-appearance',
+  },
 ];
 
 export const MODAL_TARGETS: CaptureTarget[] = [
