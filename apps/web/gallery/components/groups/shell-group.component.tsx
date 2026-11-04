@@ -16,7 +16,6 @@ import {
   SettingsLink,
   Skeleton,
   SyncErrorBanner,
-  TabNav,
   TopBar,
   MoneyVisibilityContext,
   useMediaQuery,
@@ -62,13 +61,12 @@ function MediaQueryProbe() {
 export const SHELL_SECTIONS: GallerySectionDef[] = [
   {
     id: 'top-bar',
-    title: 'TopBar, TabNav e SettingsLink',
+    title: 'TopBar e SettingsLink',
     content: (
       <>
-        <GalleryVariant caption="TopBar completa (as abas só aparecem no desktop)" width={1040}>
+        <GalleryVariant caption="TopBar do celular (no desktop, o trilho lateral)" width={420}>
           <TopBar
             logo={<Logo className="h-7 w-auto" />}
-            navigation={<TabNav items={NAV_ITEMS} activeKey="transactions" label="Principal" />}
             actions={
               <>
                 <SettingsLink href="#settings" label="Configurações" active={false} />
@@ -76,9 +74,6 @@ export const SHELL_SECTIONS: GallerySectionDef[] = [
               </>
             }
           />
-        </GalleryVariant>
-        <GalleryVariant caption="TabNav sem aba ativa" width={1040}>
-          <TabNav items={NAV_ITEMS} activeKey={null} label="Principal" />
         </GalleryVariant>
         <GalleryVariant caption="SettingsLink inativo / ativo">
           <div className="flex gap-s8">

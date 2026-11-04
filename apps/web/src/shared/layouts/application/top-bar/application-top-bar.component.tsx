@@ -1,14 +1,8 @@
-import { Logo, PlusButton, PlusMenu, SettingsLink, TabNav, TopBar } from '@fincheck/ui';
-import { useRouter } from '@tanstack/react-router';
+import { Logo, SettingsLink, TopBar } from '@fincheck/ui';
 import { Link } from 'react-aria-components';
 
 import { buildHref } from '#/shared/layouts/application/navigation/build-href.util.ts';
-import { buildNavigationItems } from '#/shared/layouts/application/navigation/build-navigation-items.util.ts';
-import { navigateToHref } from '#/shared/layouts/application/navigation/navigate-to-href.util.ts';
-import {
-  PLUS_ACTION_PATHS,
-  PLUS_MENU_ITEMS,
-} from '#/shared/layouts/application/top-bar/plus-menu-items.constant.ts';
+import { ScreenPlus } from '#/shared/layouts/application/top-bar/screen-plus.component.tsx';
 import type { ScreenDefinition } from '#/shared/types/screen.type.ts';
 
 type ApplicationTopBarProps = {
@@ -16,16 +10,8 @@ type ApplicationTopBarProps = {
   monthParam: string | undefined;
 };
 
-/** Top bar of the app: logo, the five tabs, the settings gear and the "+" of the screen. */
+/** Top bar of the phone: logo, the settings gear and the "+" of the screen. The tabs are in the bottom bar. */
 export function ApplicationTopBar({ screen, monthParam }: ApplicationTopBarProps) {
-  const router = useRouter();
-  const items = buildNavigationItems(monthParam);
-
-  function handlePlusAction(key: string) {
-    const path = PLUS_ACTION_PATHS[key];
-    if (path) navigateToHref(router, buildHref(path, monthParam));
-  }
-
   return (
     <TopBar
       logo={
@@ -39,7 +25,6 @@ export function ApplicationTopBar({ screen, monthParam }: ApplicationTopBarProps
           </span>
         </Link>
       }
-      navigation={<TabNav items={items} activeKey={screen.tab} label="Principal" />}
       actions={
         <>
           <SettingsLink
@@ -47,18 +32,7 @@ export function ApplicationTopBar({ screen, monthParam }: ApplicationTopBarProps
             label="Configurações"
             active={screen.key === 'settings'}
           />
-          {screen.plusMode === 'menu' ? (
-            <PlusMenu
-              label={screen.plusLabel}
-              items={PLUS_MENU_ITEMS}
-              onAction={handlePlusAction}
-            />
-          ) : (
-            <PlusButton
-              label={screen.plusLabel}
-              onPress={() => screen.plusAction && handlePlusAction(screen.plusAction)}
-            />
-          )}
+          <ScreenPlus screen={screen} monthParam={monthParam} />
         </>
       }
     />

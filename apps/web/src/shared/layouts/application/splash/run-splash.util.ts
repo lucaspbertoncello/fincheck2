@@ -14,7 +14,7 @@ function finish(splash: HTMLElement | null): void {
 }
 
 /**
- * Splash exit (motion.md 2): the logo flies from the center to its place in the top bar while a
+ * Splash exit (motion.md 2): the logo flies from the center to its place in the top bar (the rail on the desktop) while a
  * round hole opens in the green and shows the app. The markup and the intro live in index.html,
  * so there is no white screen on F5. Click or any key skips it. With reduced motion there is no
  * green and no flight: the app fades in over 200 ms. Runs once; without the splash it does nothing.
@@ -67,6 +67,17 @@ export function runSplash(): void {
     .forEach((name) =>
       name.animate([{ fill: '#fff' }, { fill: ink }], { ...options, duration: 420, easing: EASE }),
     );
+  // On the desktop the slot is the closed rail, which shows only the cards: the name folds away as it lands.
+  if (slot.hasAttribute('data-logo-folded')) {
+    fly.querySelectorAll('.sl-name, .sl-dot').forEach((part) =>
+      part.animate([{ opacity: 1 }, { opacity: 0 }], {
+        ...options,
+        duration: 300,
+        delay: delay + 220,
+        easing: EASE,
+      }),
+    );
+  }
   fly
     .querySelectorAll('.sl-white')
     .forEach((white) =>

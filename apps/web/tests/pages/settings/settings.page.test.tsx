@@ -485,7 +485,10 @@ describe('SettingsPage', () => {
         expect.stringContaining('Aparência'),
       ]);
       expect(await within(nav).findByText('Pluggy, Bradesco e Nubank')).toBeInTheDocument();
-      expect(screen.getAllByText('Configurações')).toHaveLength(1);
+      // The rail has its own "Configurações" link; the grid (menu + page) shows the title once.
+      expect(
+        within(screen.getByRole('main').parentElement!).getAllByText('Configurações'),
+      ).toHaveLength(1);
       expect(within(nav).getByRole('link', { name: /Perfil/ })).toHaveAttribute(
         'aria-current',
         'page',

@@ -1,0 +1,74 @@
+/* Side rail (components.md 1.2, motion.md 1.3). 56 px of icons that opens to 232 px OVER the page,
+   never pushing it. The shell sets `data-open` on `.rail` (pointer at rest, keyboard focus, or the
+   "+" menu open). Closed it is glass; open it turns solid (glass let the panel behind show through
+   and the labels lost contrast) and lifts on a shadow that fades in. Labels come in one after the
+   other (`--rail-i` is the row), 6 px from the left; on closing they leave first, all together.
+   Only width, opacity and transform move. */
+
+.rail {
+  width: 56px;
+  background-color: var(--color-surface-glass);
+  box-shadow:
+    0 0 0 1px var(--color-border-default),
+    var(--shadow-panel);
+  transition:
+    width var(--duration-slide) var(--ease-standard),
+    background-color var(--duration-base) var(--ease-standard);
+}
+
+.rail[data-open] {
+  width: 232px;
+  background-color: var(--color-surface-menu);
+}
+
+/* The lift: a shadow that is only painted outside the box, faded in so it never flips. */
+.rail::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--shadow-popover);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-slide) var(--ease-standard);
+}
+
+.rail[data-open]::before {
+  opacity: 1;
+}
+
+.rail-label {
+  opacity: 0;
+  transform: translateX(-6px);
+  transition:
+    opacity 90ms linear,
+    transform 90ms var(--ease-standard);
+}
+
+.rail[data-open] .rail-label {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 200ms var(--ease-standard) calc(60ms + var(--rail-i, 0) * 26ms),
+    transform 240ms var(--ease-standard) calc(60ms + var(--rail-i, 0) * 26ms);
+}
+
+/* The logo: the cards stay, the name is revealed by the width that opens with the rail. */
+.rail-logo-clip {
+  width: 28px;
+  margin-left: 6px;
+  overflow: hidden;
+  transition: width var(--duration-slide) var(--ease-standard);
+}
+
+.rail[data-open] .rail-logo-clip {
+  width: calc(100% - 6px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail-label,
+  .rail[data-open] .rail-label {
+    transform: none;
+    transition-delay: 0ms;
+  }
+}

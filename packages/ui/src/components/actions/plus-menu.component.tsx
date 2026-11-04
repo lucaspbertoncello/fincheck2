@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import { Menu, MenuItem, MenuTrigger, Popover, Separator, Text } from 'react-aria-components';
 
 import { PlusButton } from '#/components/actions/plus-button.component.tsx';
@@ -19,6 +19,12 @@ type PlusMenuProps = {
   label: string;
   items: PlusMenuItem[];
   onAction: (key: string) => void;
+  /** Rail form of the "+" (see `PlusButton`), with its visible text in `children`. */
+  compact?: boolean;
+  children?: ReactNode;
+  /** Where the menu opens from the "+": under it on the top bar, beside it on the rail. */
+  placement?: 'bottom end' | 'right top';
+  onOpenChange?: (isOpen: boolean) => void;
 };
 
 /**
@@ -26,14 +32,24 @@ type PlusMenuProps = {
  * with Enter, Space or arrow down, moves with the arrows, closes with Esc. On mobile it becomes a
  * wide sheet 16 px from each edge.
  */
-export function PlusMenu({ label, items, onAction }: PlusMenuProps) {
+export function PlusMenu({
+  label,
+  items,
+  onAction,
+  compact,
+  children,
+  placement = 'bottom end',
+  onOpenChange,
+}: PlusMenuProps) {
   return (
-    <MenuTrigger>
-      <PlusButton label={label} />
+    <MenuTrigger onOpenChange={onOpenChange}>
+      <PlusButton label={label} compact={compact}>
+        {children}
+      </PlusButton>
       <Popover
-        placement="bottom end"
-        offset={8}
-        className="popover-enter w-menu rounded-panel border border-line bg-menu shadow-(--shadow-menu) backdrop-blur-(--blur-popover) max-lg:inset-x-s16! max-lg:w-auto!"
+        placement={placement}
+        offset={placement === 'right top' ? 16 : 8}
+        className={`popover-enter ${placement === 'right top' ? 'origin-top-left!' : ''} w-menu rounded-panel border border-line bg-menu shadow-(--shadow-menu) backdrop-blur-(--blur-popover) max-lg:inset-x-s16! max-lg:w-auto!`}
       >
         <Menu
           aria-label={label}

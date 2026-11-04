@@ -22,7 +22,6 @@ export {
   BottomNav,
   SegmentedNav,
   SettingsLink,
-  TabNav,
   TopBar,
   type NavItem,
   type SegmentedNavItem,
