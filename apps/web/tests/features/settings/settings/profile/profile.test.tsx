@@ -24,15 +24,15 @@ afterEach(() => {
 });
 
 async function openProfile() {
-  renderApp('/settings');
-  return screen.findByRole('heading', { level: 2, name: 'Perfil' });
+  renderApp('/settings/profile');
+  return screen.findByRole('heading', { level: 1, name: 'Perfil' });
 }
 
 describe('Perfil', () => {
   it('opens first in the side menu and shows the name, the initials and the expected income', async () => {
     await openProfile();
 
-    const nav = await screen.findByRole('navigation', { name: 'Seções de Configurações' });
+    const nav = await screen.findByRole('navigation', { name: 'Páginas de Configurações' });
     expect(within(nav).getAllByRole('link')[0]).toHaveTextContent('Perfil');
     expect(await screen.findByText('Davi Moreira', { selector: 'p' })).toBeInTheDocument();
     expect(screen.getByText('DM')).toBeInTheDocument();

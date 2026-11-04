@@ -1,8 +1,11 @@
-/** One backup of the folder, ready to draw in the restore dialog. */
+/** One backup of the folder, ready to draw in the list. */
 export type BackupFileItem = {
   fileName: string;
-  /** "21/10 às 03:00 · 14,2 MB". */
-  label: string;
+  /** "Ontem às 03:00". */
+  moment: string;
+  /** "14,2 MB". */
+  size: string;
   /** "21/10", for the title of the confirmation. */
   day: string;
+  isLatest: boolean;
 };

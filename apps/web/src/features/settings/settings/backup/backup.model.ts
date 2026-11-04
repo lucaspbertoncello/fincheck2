@@ -9,13 +9,13 @@ import { useBackupStatus } from '#/domain/backup/backup-status/hooks/use-backup-
 const POLL_MS = 1000;
 
 /**
- * What the "Backup" section reads and changes. The status is polled while a backup runs, and the
- * list of files is read only while the restore dialog is open.
+ * What the Backup page reads and changes. The status is polled while a backup runs; the list of
+ * files is read as soon as there is a folder, because the page shows the latest ones.
  */
-export function useBackupModel({ isRestoreOpen }: { isRestoreOpen: boolean }) {
+export function useBackupModel() {
   const [isWatching, setIsWatching] = useState(false);
   const status = useBackupStatus({ refetchInterval: isWatching ? POLL_MS : false });
-  const files = useBackupFiles({ enabled: isRestoreOpen });
+  const files = useBackupFiles({ enabled: Boolean(status.data?.folderPath) });
   const startRun = useStartBackupRun();
   const updateSettings = useUpdateBackupSettings();
   const restore = useRestoreBackup();

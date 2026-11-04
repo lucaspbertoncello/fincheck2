@@ -1,6 +1,7 @@
-import { Chip, ConfirmDialog, FineNote, Section } from '@fincheck/ui';
+import { Chip, ConfirmDialog, EmptyState, ErrorState, FineNote, Section } from '@fincheck/ui';
 
-import { SectionError } from '#/features/settings/settings/components/section-error.component.tsx';
+import { SettingsPageFrame } from '#/features/settings/settings/components/settings-page-frame.component.tsx';
+import { SETTINGS_SECTION } from '#/features/settings/settings/constants/settings-sections.constant.ts';
 import { SectionSkeleton } from '#/features/settings/settings/components/section-skeleton.component.tsx';
 import { ConnectionRow } from '#/features/settings/settings/connections/components/connection-row.component.tsx';
 import { PendingMatches } from '#/features/settings/settings/connections/components/pending-matches.component.tsx';
@@ -16,6 +17,8 @@ type ConnectionsViewProps = {
   /** The sentence under the action that failed. */
   actionError: string | null;
   onRetry: () => void;
+  /** Opens the flow that connects the first bank (Contas e cartões). */
+  onConnect: () => void;
   /** Name of the bank being disconnected: opens the confirmation. */
   disconnectingName: string | null;
   isDisconnecting: boolean;
@@ -29,12 +32,19 @@ type ConnectionsViewProps = {
   setup: PluggySetupProps;
 };
 
-/** "Conexões": the state of each bank and "Desconectar"; the search itself is automatic. */
+const PAGE = SETTINGS_SECTION.connections;
+
+/**
+ * "Conexões": one page, three possible bodies. Loading and error keep the header; before the keys
+ * there is the setup; after, the group of connected banks and the one that says how often the app
+ * reads them (the search itself is automatic).
+ */
 export function ConnectionsView({
   state,
   items,
   actionError,
   onRetry,
+  onConnect,
   disconnectingName,
   isDisconnecting,
   onAskDisconnect,
@@ -47,59 +57,81 @@ export function ConnectionsView({
   setup,
 }: ConnectionsViewProps) {
   return (
-    <Section
-      title="Conexões"
-      variant="glass"
-      action={
-        state === 'ready' ? (
-          <Chip tone="ok" icon="check">
-            Open Finance conectado
-          </Chip>
-        ) : undefined
-      }
-    >
-      {state === 'loading' ? <SectionSkeleton label="Carregando as conexões" /> : null}
-      {state === 'error' ? (
-        <SectionError message="Não deu para carregar as conexões." onRetry={onRetry} />
+    <SettingsPageFrame title={PAGE.title} description={PAGE.description}>
+      {state === 'loading' ? (
+        <Section title="Bancos conectados" divider={false}>
+          <SectionSkeleton label="Carregando as conexões" rows={3} />
+        </Section>
       ) : null}
-      {state === 'setup' ? <PluggySetup {...setup} /> : null}
+      {state === 'error' ? (
+        <ErrorState
+          title="Não deu para carregar as conexões."
+          description="Confira se o app está rodando e tente de novo."
+          onRetry={onRetry}
+        />
+      ) : null}
+      {state === 'setup' ? (
+        <Section title="Ligar o Open Finance" divider={false}>
+          <PluggySetup {...setup} />
+          {actionError ? (
+            <p role="alert" className="text-meta text-loss">
+              {actionError}
+            </p>
+          ) : null}
+        </Section>
+      ) : null}
       {state === 'ready' && items.length === 0 ? (
-        <FineNote icon="plug">
-          Nenhum banco conectado ainda. Conecte o primeiro pelo botão +, em Conectar conta.
-        </FineNote>
+        <EmptyState
+          icon="plug"
+          title="Nenhum banco conectado ainda"
+          description="Conecte o primeiro em Contas e cartões: o app passa a ler as contas e as faturas sozinho."
+          primaryAction={{ label: 'Conectar conta', icon: 'plus-circle', onPress: onConnect }}
+        />
       ) : null}
       {state === 'ready' && items.length > 0 ? (
-        <ul className="flex flex-col">
-          {items.map((item) => (
-            <li
-              key={item.id}
-              className="flex flex-col gap-s16 border-t border-line py-s16 first:border-t-0 first:pt-0"
-            >
-              <ConnectionRow item={item} onDisconnect={() => onAskDisconnect(item.id)} />
-              {item.pendingMatches.length > 0 ? (
-                <PendingMatches
-                  bankName={item.name}
-                  matches={item.pendingMatches}
-                  choices={choices}
-                  onChoose={onChoose}
-                  isSaving={isSavingMatches}
-                  onConfirm={() => onConfirmMatches(item.id)}
-                />
-              ) : null}
-            </li>
-          ))}
-        </ul>
-      ) : null}
-      {actionError ? (
-        <p role="alert" className="text-meta text-loss">
-          {actionError}
-        </p>
+        <Section
+          title="Bancos conectados"
+          divider={false}
+          action={
+            <Chip tone="ok" icon="check">
+              Open Finance conectado
+            </Chip>
+          }
+        >
+          <ul className="flex flex-col">
+            {items.map((item) => (
+              <li
+                key={item.id}
+                className="flex flex-col gap-s16 border-t border-line py-s16 first:border-t-0 first:pt-0"
+              >
+                <ConnectionRow item={item} onDisconnect={() => onAskDisconnect(item.id)} />
+                {item.pendingMatches.length > 0 ? (
+                  <PendingMatches
+                    bankName={item.name}
+                    matches={item.pendingMatches}
+                    choices={choices}
+                    onChoose={onChoose}
+                    isSaving={isSavingMatches}
+                    onConfirm={() => onConfirmMatches(item.id)}
+                  />
+                ) : null}
+              </li>
+            ))}
+          </ul>
+          {actionError ? (
+            <p role="alert" className="text-meta text-loss">
+              {actionError}
+            </p>
+          ) : null}
+        </Section>
       ) : null}
       {state === 'ready' ? (
-        <FineNote icon="clock">
-          O app busca os dados de hora em hora, sozinho. Para voltar a receber de um banco com erro,
-          reconecte no Open Finance.
-        </FineNote>
+        <Section title="Atualização">
+          <FineNote icon="clock">
+            O app busca os dados de hora em hora, sozinho. Para voltar a receber de um banco com
+            erro, reconecte no Open Finance.
+          </FineNote>
+        </Section>
       ) : null}
       <ConfirmDialog
         isOpen={disconnectingName !== null}
@@ -118,6 +150,6 @@ export function ConnectionsView({
         loading={isDisconnecting}
         onConfirm={onConfirmDisconnect}
       />
-    </Section>
+    </SettingsPageFrame>
   );
 }

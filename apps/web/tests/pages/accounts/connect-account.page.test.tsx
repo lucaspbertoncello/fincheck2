@@ -128,7 +128,7 @@ describe('Conectar conta (?new=account)', () => {
     expect(within(dialog).getByRole('button', { name: 'Criar conta manual' })).toBeInTheDocument();
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Abrir Configurações' }));
-    await waitFor(() => expect(window.location.pathname).toBe('/settings'));
+    await waitFor(() => expect(window.location.pathname).toBe('/settings/connections'));
   });
 
   it('validates the manual card form with the API schema and focuses the first invalid field', async () => {

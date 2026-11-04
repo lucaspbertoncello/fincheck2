@@ -59,7 +59,7 @@ function useOverviewModel(): OverviewModel {
     },
     alerts: monthSummary.data
       ? buildAlerts(monthSummary.data.alerts, {
-          settings: buildHref('/settings', month),
+          settings: buildHref('/settings/connections', month),
           recurrences: buildHref('/recurrences', month),
         })
       : [],

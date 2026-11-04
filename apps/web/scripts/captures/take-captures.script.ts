@@ -79,11 +79,6 @@ async function capture(
   await page.goto(`${origin}${target.path}`, { waitUntil: 'load' });
   await page.waitForFunction(() => !document.documentElement.hasAttribute('data-splash'));
   if (target.kind === 'modal') await page.locator('[role="dialog"]').first().waitFor();
-  if (target.kind === 'section' && target.sectionId) {
-    const section = page.locator(`#${target.sectionId}`);
-    await section.waitFor();
-    await section.evaluate((element) => element.scrollIntoView({ block: 'start' }));
-  }
   await page.waitForLoadState('networkidle');
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(SETTLE_MS);

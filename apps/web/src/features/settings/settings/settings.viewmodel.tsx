@@ -1,68 +1,32 @@
-import type { SettingsNavItem } from '@fincheck/ui';
-import { useRouterState } from '@tanstack/react-router';
-import { useEffect } from 'react';
+import { Outlet, useRouterState } from '@tanstack/react-router';
 
-import { AppearanceViewModel } from '#/features/settings/settings/appearance/appearance.viewmodel.tsx';
-import { BackupViewModel } from '#/features/settings/settings/backup/backup.viewmodel.tsx';
-import { ConnectionsViewModel } from '#/features/settings/settings/connections/connections.viewmodel.tsx';
-import {
-  SETTINGS_SECTIONS,
-  type SettingsSectionKey,
-} from '#/features/settings/settings/constants/settings-sections.constant.ts';
-import { getSectionFromHash } from '#/features/settings/settings/utils/get-section-from-hash.util.ts';
-import { ProfileViewModel } from '#/features/settings/settings/profile/profile.viewmodel.tsx';
-import { joinNames } from '#/features/settings/settings/utils/join-names.util.ts';
-import { useSettingsModel } from '#/features/settings/settings/settings.model.ts';
+import { useSettingsNavItems } from '#/features/settings/settings/hooks/use-settings-nav-items.hook.ts';
 import { SettingsView } from '#/features/settings/settings/settings.view.tsx';
-import { usePanelSlot } from '#/shared/layouts/application/panel/panel-slot.context.ts';
+import { findSectionByPathname } from '#/features/settings/settings/utils/find-section-by-pathname.util.ts';
 import { useIsDesktop } from '#/shared/hooks/use-is-desktop.hook.ts';
+import { usePanelSlot } from '#/shared/layouts/application/panel/panel-slot.context.ts';
 
-export const SECTION_ID_PREFIX = 'settings-';
-
-/** Screen of Configurações: the side menu (desktop) and the four sections, the section in the URL hash. */
+/**
+ * Frame of Configurações: on the desktop the menu of the four pages goes into the left column of
+ * the shell and stays there while the pages change; the page of the route comes in the `Outlet`.
+ */
 export function SettingsViewModel() {
-  const { connections, profile } = useSettingsModel();
   const isDesktop = useIsDesktop();
   const panelSlot = usePanelSlot();
-  // The section is the anchor of the URL; the side menu links (`#backup`) go through the shell router.
-  const hash = useRouterState({ select: (state) => state.location.hash });
-  const activeKey: SettingsSectionKey = getSectionFromHash(hash);
-
-  useEffect(() => {
-    if (hash)
-      document
-        .getElementById(`${SECTION_ID_PREFIX}${activeKey}`)
-        ?.scrollIntoView({ block: 'start' });
-  }, [hash, activeKey]);
-
-  const bankNames = (connections.data?.items ?? [])
-    .filter((connection) => connection.status !== 'disconnected')
-    .map((connection) => connection.institutionName);
-
-  const navItems: SettingsNavItem[] = SETTINGS_SECTIONS.map((section) => ({
-    key: section.key,
-    title: section.title,
-    subtitle:
-      section.key === 'connections' && bankNames.length > 0
-        ? `Open Finance, ${joinNames(bankNames)}`
-        : section.key === 'profile' && profile.data
-          ? profile.data.name
-          : section.subtitle,
-    icon: section.icon,
-    href: `#${section.key}`,
-  }));
+  const navItems = useSettingsNavItems();
+  // The committed pathname (as `useActiveScreen` reads it): the marked item changes with the new page.
+  const pathname = useRouterState({
+    select: (state) => state.matches.at(-1)?.pathname ?? state.location.pathname,
+  });
 
   return (
     <SettingsView
       isDesktop={isDesktop}
       panelSlot={panelSlot}
       navItems={navItems}
-      activeKey={activeKey}
-      sectionIdPrefix={SECTION_ID_PREFIX}
-      profile={<ProfileViewModel />}
-      connections={<ConnectionsViewModel />}
-      backup={<BackupViewModel />}
-      appearance={<AppearanceViewModel />}
-    />
+      activeKey={findSectionByPathname(pathname)?.key ?? null}
+    >
+      <Outlet />
+    </SettingsView>
   );
 }

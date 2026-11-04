@@ -156,7 +156,7 @@ describe('ApplicationLayout', () => {
   });
 
   it('switches the theme on Configurações', async () => {
-    renderApp('/settings');
+    renderApp('/settings/appearance');
     fireEvent.click(await screen.findByRole('radio', { name: 'Escuro' }));
 
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');

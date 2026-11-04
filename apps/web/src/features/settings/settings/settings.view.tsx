@@ -1,81 +1,49 @@
-import { FineNote, SettingsNav, type SettingsNavItem } from '@fincheck/ui';
+import { SettingsNav, type SettingsNavItem } from '@fincheck/ui';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ScreenHeader } from '#/shared/components/page/screen-header.component.tsx';
-import { SCREENS } from '#/shared/constants/screens.constant.ts';
+import { SettingsNotes } from '#/features/settings/settings/components/settings-notes.component.tsx';
 
 type SettingsViewProps = {
   isDesktop: boolean;
   /** Left column of the shell grid (desktop); the menu is portaled into it. */
   panelSlot: HTMLElement | null;
   navItems: SettingsNavItem[];
-  activeKey: string;
-  /** Each section sits in an element with this prefix plus its key as id. */
-  sectionIdPrefix: string;
-  profile: ReactNode;
-  connections: ReactNode;
-  backup: ReactNode;
-  appearance: ReactNode;
+  /** The page on screen, or null on the list of the phone. */
+  activeKey: string | null;
+  /** The page of the route. */
+  children: ReactNode;
 };
 
-function Notes() {
-  return (
-    <div className="flex flex-col gap-s12">
-      <FineNote icon="lock">Tokens e chaves ficam criptografados neste PC.</FineNote>
-      <p className="text-meta text-fg-secondary">
-        Ícones Solar, de 480 Design, sob licença CC BY 4.0.
-      </p>
-    </div>
-  );
-}
-
 /**
- * Configurações: no summary panel. On the desktop the shell leaves its left column empty and the
- * list of the four sections (Perfil first) and the two notes are portaled into it, so the column
- * and the content start where they do on every other screen (ui adjustment 13: it does not repeat
- * the page title). On the phone the sections stack in a column and the notes close the page.
+ * Configurações has no summary panel. On the desktop the shell leaves its left column empty and
+ * the menu of the pages (the active one marked) and the two notes are portaled into it, so the
+ * column and the content start where they do on every other screen. On the phone there is no
+ * column: `/settings` is the list and each page comes alone, with the way back.
  */
 export function SettingsView({
   isDesktop,
   panelSlot,
   navItems,
   activeKey,
-  sectionIdPrefix,
-  profile,
-  connections,
-  backup,
-  appearance,
+  children,
 }: SettingsViewProps) {
   return (
     <>
       {isDesktop && panelSlot
         ? createPortal(
             <div className="glass flex flex-col gap-s24 p-s24">
-              <SettingsNav items={navItems} activeKey={activeKey} label="Seções de Configurações" />
-              <Notes />
+              <SettingsNav
+                items={navItems}
+                activeKey={activeKey ?? ''}
+                label="Páginas de Configurações"
+              />
+              <SettingsNotes />
             </div>,
             panelSlot,
           )
         : null}
-      <div className="flex min-w-0 flex-col gap-s16 lg:gap-s24">
-        <ScreenHeader screen={SCREENS.settings} />
-        <div id={`${sectionIdPrefix}profile`} className="scroll-mt-s16">
-          {profile}
-        </div>
-        <div id={`${sectionIdPrefix}connections`} className="scroll-mt-s16">
-          {connections}
-        </div>
-        <div className="grid items-start gap-s16 lg:grid-cols-2 lg:gap-s24">
-          <div id={`${sectionIdPrefix}backup`} className="scroll-mt-s16">
-            {backup}
-          </div>
-          <div id={`${sectionIdPrefix}appearance`} className="scroll-mt-s16">
-            {appearance}
-          </div>
-        </div>
-        {isDesktop ? null : <Notes />}
-      </div>
+      <div className="min-w-0">{children}</div>
     </>
   );
 }

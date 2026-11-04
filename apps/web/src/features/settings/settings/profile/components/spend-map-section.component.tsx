@@ -27,7 +27,7 @@ export function SpendMapSection({
   onSelectDay,
 }: SpendMapSectionProps) {
   return (
-    <Section title="Gasto dos últimos 12 meses" variant="glass">
+    <Section title="Gasto dos últimos 12 meses">
       {state === 'loading' ? <SectionSkeleton label="Carregando o mapa de gastos" /> : null}
       {state === 'error' ? (
         <SectionError message="Não deu para carregar o mapa de gastos." onRetry={onRetry} />

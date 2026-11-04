@@ -9,6 +9,11 @@ import { recurrencesRoute } from '#/router/routes/recurrences.route.tsx';
 import { rootRoute } from '#/router/routes/root.route.tsx';
 import { reviewRoute } from '#/router/routes/review.route.tsx';
 import { rulesRoute } from '#/router/routes/rules.route.tsx';
+import { settingsAppearanceRoute } from '#/router/routes/settings-appearance.route.tsx';
+import { settingsBackupRoute } from '#/router/routes/settings-backup.route.tsx';
+import { settingsConnectionsRoute } from '#/router/routes/settings-connections.route.tsx';
+import { settingsIndexRoute } from '#/router/routes/settings-index.route.tsx';
+import { settingsProfileRoute } from '#/router/routes/settings-profile.route.tsx';
 import { settingsRoute } from '#/router/routes/settings.route.tsx';
 import { transactionsRoute } from '#/router/routes/transactions.route.tsx';
 import { getTabTransitionTypes } from '#/shared/layouts/application/transition/get-tab-transition-types.util.ts';
@@ -24,7 +29,13 @@ export function createAppRouter(queryClient: QueryClient) {
       accountsRoute,
       categoriesRoute,
       rulesRoute,
-      settingsRoute,
+      settingsRoute.addChildren([
+        settingsIndexRoute,
+        settingsProfileRoute,
+        settingsConnectionsRoute,
+        settingsBackupRoute,
+        settingsAppearanceRoute,
+      ]),
     ]),
     context: { queryClient },
     defaultPreload: 'intent',

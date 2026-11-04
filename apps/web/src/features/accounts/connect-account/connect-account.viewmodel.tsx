@@ -172,7 +172,7 @@ function ConnectAccountSession({
         model.updateAccount.isPending
       }
       onSubmit={submit}
-      onOpenSettings={() => void navigate({ to: '/settings' })}
+      onOpenSettings={() => void navigate({ to: '/settings/connections' })}
       isBankLocked={isBankLocked}
       typeOptions={TYPE_OPTIONS}
       institutionOptions={INSTITUTION_OPTIONS}

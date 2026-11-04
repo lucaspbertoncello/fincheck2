@@ -1,6 +1,7 @@
 import type { Connection } from '@fincheck/shared/sync/connection/connection.type.ts';
 import { saveSyncSettingsRequestSchema } from '@fincheck/shared/sync/settings/settings.schema.ts';
 import { resolveBankThemeKey } from '@fincheck/ui';
+import { useRouter } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 
 import { CONNECTION_ERROR_REASON } from '#/features/settings/settings/connections/constants/connection-error-reason.constant.ts';
@@ -13,6 +14,7 @@ import type {
 import { describeAccountCandidate } from '#/features/settings/settings/connections/utils/describe-account-candidate.util.ts';
 import { formatTimeAgo } from '#/features/settings/settings/connections/utils/format-time-ago.util.ts';
 import { focusFirstInvalid } from '#/features/settings/settings/utils/focus-first-invalid.util.ts';
+import { navigateToHref } from '#/shared/layouts/application/navigation/navigate-to-href.util.ts';
 import { getActionErrorMessage } from '#/features/settings/settings/utils/get-action-error-message.util.ts';
 
 type SetupErrors = { clientId?: string; clientSecret?: string };
@@ -54,6 +56,7 @@ function toItem(connection: Connection.Dto, now: Date): ConnectionItem {
 /** Adapts the connections and the Pluggy keys to the section: states, dialog, choices, form. */
 export function ConnectionsViewModel() {
   const { settings, connections, disconnect, resolveMatches, saveSettings } = useConnectionsModel();
+  const router = useRouter();
 
   const [target, setTarget] = useState<{ id: string; name: string } | null>(null);
   const [choices, setChoices] = useState<Record<string, string | null>>({});
@@ -143,6 +146,7 @@ export function ConnectionsViewModel() {
         void settings.refetch();
         void connections.refetch();
       }}
+      onConnect={() => navigateToHref(router, '/accounts?new=account')}
       disconnectingName={target?.name ?? null}
       isDisconnecting={disconnect.isPending}
       onAskDisconnect={(id) => {

@@ -25,6 +25,10 @@ const SCREENS = [
   '/categories',
   '/categories/rules',
   '/settings',
+  '/settings/profile',
+  '/settings/connections',
+  '/settings/backup',
+  '/settings/appearance',
 ];
 
 const listener = vi.fn();

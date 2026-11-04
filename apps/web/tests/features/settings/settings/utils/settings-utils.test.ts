@@ -4,7 +4,8 @@ import { formatBackupMoment } from '#/features/settings/settings/backup/utils/fo
 import { formatFileSize } from '#/features/settings/settings/backup/utils/format-file-size.util.ts';
 import { formatTimeAgo } from '#/features/settings/settings/connections/utils/format-time-ago.util.ts';
 import { getActionErrorMessage } from '#/features/settings/settings/utils/get-action-error-message.util.ts';
-import { getSectionFromHash } from '#/features/settings/settings/utils/get-section-from-hash.util.ts';
+import { findSectionByHash } from '#/features/settings/settings/utils/find-section-by-hash.util.ts';
+import { findSectionByPathname } from '#/features/settings/settings/utils/find-section-by-pathname.util.ts';
 import { joinNames } from '#/features/settings/settings/utils/join-names.util.ts';
 import { ApiError } from '#/shared/api/api.error.ts';
 
@@ -46,13 +47,22 @@ describe('formatFileSize', () => {
   });
 });
 
-describe('getSectionFromHash', () => {
-  it('reads the section of the hash and falls back to the first', () => {
-    expect(getSectionFromHash('#backup')).toBe('backup');
-    expect(getSectionFromHash('#appearance')).toBe('appearance');
-    expect(getSectionFromHash('#connections')).toBe('connections');
-    expect(getSectionFromHash('')).toBe('profile');
-    expect(getSectionFromHash('#nada')).toBe('profile');
+describe('findSectionByHash', () => {
+  it('reads the section of an old anchor and says nothing for the rest', () => {
+    expect(findSectionByHash('#backup')?.path).toBe('/settings/backup');
+    expect(findSectionByHash('#appearance')?.path).toBe('/settings/appearance');
+    expect(findSectionByHash('#connections')?.path).toBe('/settings/connections');
+    expect(findSectionByHash('#profile')?.path).toBe('/settings/profile');
+    expect(findSectionByHash('')).toBeUndefined();
+    expect(findSectionByHash('#nada')).toBeUndefined();
+  });
+});
+
+describe('findSectionByPathname', () => {
+  it('finds the section of a page, with or without the trailing slash, and none for the list', () => {
+    expect(findSectionByPathname('/settings/backup')?.key).toBe('backup');
+    expect(findSectionByPathname('/settings/backup/')?.key).toBe('backup');
+    expect(findSectionByPathname('/settings')).toBeUndefined();
   });
 });
 

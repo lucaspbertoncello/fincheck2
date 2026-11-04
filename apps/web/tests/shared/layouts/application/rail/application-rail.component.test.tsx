@@ -76,8 +76,8 @@ describe('ApplicationRail', () => {
   });
 
   it('marks Configurações without a sliding capsule', async () => {
-    renderDesktop('/settings');
-    await screen.findByRole('heading', { level: 1, name: 'Configurações' });
+    renderDesktop('/settings/profile');
+    await screen.findByRole('heading', { level: 1, name: 'Perfil' });
 
     expect(within(rail()).getByRole('link', { name: 'Configurações' })).toHaveAttribute(
       'aria-current',
@@ -180,8 +180,8 @@ describe('ApplicationRail', () => {
   });
 
   it('leaves the panel slot of Configurações beside the rail, in the sticky pair', async () => {
-    renderDesktop('/settings');
-    await screen.findByRole('heading', { level: 1, name: 'Configurações' });
+    renderDesktop('/settings/profile');
+    await screen.findByRole('heading', { level: 1, name: 'Perfil' });
 
     const frame = screen.getByRole('main').parentElement?.parentElement;
     expect(frame).toHaveClass('overflow-y-clip', 'min-h-dvh');

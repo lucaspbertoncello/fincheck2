@@ -5,6 +5,7 @@ import { waitForHealthy } from '#/domain/health/health/services/wait-for-healthy
 import { useBackupModel } from '#/features/settings/settings/backup/backup.model.ts';
 import { BackupView } from '#/features/settings/settings/backup/backup.view.tsx';
 import type { BackupFileItem } from '#/features/settings/settings/backup/types/backup-file-item.type.ts';
+import { capitalizeFirst } from '#/features/settings/settings/backup/utils/capitalize-first.util.ts';
 import { describeBackupError } from '#/features/settings/settings/backup/utils/describe-backup-error.util.ts';
 import { formatBackupDay } from '#/features/settings/settings/backup/utils/format-backup-day.util.ts';
 import { formatBackupMoment } from '#/features/settings/settings/backup/utils/format-backup-moment.util.ts';
@@ -13,25 +14,23 @@ import { focusFirstInvalid } from '#/features/settings/settings/utils/focus-firs
 import { getActionErrorMessage } from '#/features/settings/settings/utils/get-action-error-message.util.ts';
 import { reloadApp } from '#/shared/utils/reload-app.util.ts';
 
-type RestoreStep = 'closed' | 'choose' | 'confirm';
-
 const FOLDER_FORMAT_ERROR =
   'Use o caminho completo da pasta, como D:\\Backups\\Fincheck ou \\\\servidor\\backups.';
 
-/** Adapts the backup status, the folder form and the restore dialogs to the section. */
+/** How many backups the list shows before "Mostrar todos". */
+const SHORT_LIST_COUNT = 5;
+
+/** Adapts the backup status, the folder form, the list and the restore to the page. */
 export function BackupViewModel() {
-  const [restoreStep, setRestoreStep] = useState<RestoreStep>('closed');
-  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [targetFile, setTargetFile] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [isEditingFolder, setIsEditingFolder] = useState(false);
   const [folderDraft, setFolderDraft] = useState('');
   const [folderError, setFolderError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [restoreError, setRestoreError] = useState<string | null>(null);
   const [safetyCopy, setSafetyCopy] = useState<string | null>(null);
 
-  const { status, files, startRun, updateSettings, restore } = useBackupModel({
-    isRestoreOpen: restoreStep !== 'closed',
-  });
+  const { status, files, startRun, updateSettings, restore } = useBackupModel();
 
   useEffect(() => {
     if (folderError) focusFirstInvalid();
@@ -41,12 +40,15 @@ export function BackupViewModel() {
   const data = status.data;
   const folderPath = data?.folderPath ?? null;
 
-  const fileItems: BackupFileItem[] = (files.data?.items ?? []).map((file) => ({
+  const allItems: BackupFileItem[] = (files.data?.items ?? []).map((file, index) => ({
     fileName: file.fileName,
-    label: `${formatBackupMoment(file.createdAt, now)} · ${formatFileSize(file.sizeBytes)}`,
+    moment: capitalizeFirst(formatBackupMoment(file.createdAt, now)),
+    size: formatFileSize(file.sizeBytes),
     day: formatBackupDay(file.createdAt),
+    isLatest: index === 0,
   }));
-  const selectedItem = fileItems.find((item) => item.fileName === selectedFile) ?? null;
+  const items = isExpanded ? allItems : allItems.slice(0, SHORT_LIST_COUNT);
+  const target = allItems.find((item) => item.fileName === targetFile) ?? null;
 
   function startEditingFolder() {
     setFolderDraft(folderPath ?? '');
@@ -78,29 +80,28 @@ export function BackupViewModel() {
     });
   }
 
-  function closeRestore() {
-    setRestoreStep('closed');
-    setSelectedFile(null);
-    setRestoreError(null);
+  function askRestore(fileName: string) {
+    setActionError(null);
+    setSafetyCopy(null);
+    setTargetFile(fileName);
   }
 
   function confirmRestore() {
-    if (!selectedFile) return;
-    setRestoreError(null);
+    if (!targetFile) return;
     restore.mutate(
-      { fileName: selectedFile },
+      { fileName: targetFile },
       {
         onSuccess: (answer) => {
           setSafetyCopy(answer.safetyCopyFileName);
-          closeRestore();
+          setTargetFile(null);
           // The API reopens by itself: wait for /health, then reload to read the restored data.
           void waitForHealthy().then((isBack) => {
             if (isBack) reloadApp();
           });
         },
         onError: (error) => {
-          setRestoreError(getActionErrorMessage(error, 'Não deu para restaurar esse backup.'));
-          setRestoreStep('choose');
+          setTargetFile(null);
+          setActionError(getActionErrorMessage(error, 'Não deu para restaurar esse backup.'));
         },
       },
     );
@@ -111,19 +112,21 @@ export function BackupViewModel() {
       state={status.isPending ? 'loading' : status.isError ? 'error' : 'ready'}
       onRetry={() => void status.refetch()}
       folderPath={folderPath}
-      lastBackupLine={
+      last={
         data?.lastBackup
-          ? `Último backup ${formatBackupMoment(data.lastBackup.createdAt, now)}, ${formatFileSize(data.lastBackup.sizeBytes)}. Um por dia, os últimos ${data.keepCount} guardados.`
-          : folderPath
-            ? `Nenhum backup ainda. Um por dia, os últimos ${data?.keepCount ?? 30} ficam guardados.`
-            : null
-      }
-      nextBackupLine={
-        data?.nextScheduledAt
-          ? `Próximo backup ${formatBackupMoment(data.nextScheduledAt, now)}.`
+          ? {
+              moment: capitalizeFirst(formatBackupMoment(data.lastBackup.createdAt, now)),
+              size: formatFileSize(data.lastBackup.sizeBytes),
+            }
           : null
       }
-      errorLine={data?.lastError ? describeBackupError(data.lastError.code) : null}
+      failure={data?.lastError ? describeBackupError(data.lastError.code) : null}
+      nextMoment={
+        data?.nextScheduledAt
+          ? capitalizeFirst(formatBackupMoment(data.nextScheduledAt, now))
+          : null
+      }
+      keepCount={data?.keepCount ?? 30}
       actionError={actionError}
       safetyCopy={safetyCopy}
       isRunning={startRun.isPending || (data?.running ?? false)}
@@ -138,26 +141,22 @@ export function BackupViewModel() {
         onSave: saveFolder,
         onCancel: () => setIsEditingFolder(false),
       }}
+      files={{
+        isLoading: files.isPending && folderPath !== null,
+        isError: files.isError,
+        items,
+        canExpand: allItems.length > SHORT_LIST_COUNT,
+        isExpanded,
+        totalCount: allItems.length,
+        onToggleExpanded: () => setIsExpanded((current) => !current),
+        onRetry: () => void files.refetch(),
+      }}
       restore={{
-        step: restoreStep,
-        isFilesLoading: files.isPending,
-        isFilesError: files.isError,
-        files: fileItems,
-        selectedFile,
-        selectedDay: selectedItem?.day ?? null,
-        error: restoreError,
+        target,
         isRestoring: restore.isPending,
-        onOpen: () => {
-          setRestoreError(null);
-          setSafetyCopy(null);
-          setRestoreStep('choose');
-        },
-        onSelectFile: setSelectedFile,
-        onContinue: () => setRestoreStep('confirm'),
-        onBack: () => setRestoreStep('choose'),
-        onClose: closeRestore,
+        onAsk: askRestore,
+        onCancel: () => setTargetFile(null),
         onConfirm: confirmRestore,
-        onRetryFiles: () => void files.refetch(),
       }}
     />
   );

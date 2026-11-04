@@ -1,4 +1,7 @@
-import { SegmentedControl, Section, type SegmentedOption } from '@fincheck/ui';
+import { Section, SegmentedControl, SettingRow, type SegmentedOption } from '@fincheck/ui';
+
+import { SettingsPageFrame } from '#/features/settings/settings/components/settings-page-frame.component.tsx';
+import { SETTINGS_SECTION } from '#/features/settings/settings/constants/settings-sections.constant.ts';
 
 const THEME_OPTIONS: SegmentedOption[] = [
   { key: 'light', label: 'Claro' },
@@ -6,31 +9,35 @@ const THEME_OPTIONS: SegmentedOption[] = [
   { key: 'system', label: 'Sistema' },
 ];
 
+const PAGE = SETTINGS_SECTION.appearance;
+
 type AppearanceViewProps = {
   value: string;
   onChange: (key: string) => void;
 };
 
-/** "Aparência": the theme, Claro | Escuro | Sistema (RNF-011). The control sits under its text. */
+/**
+ * "Aparência": the page for how the app looks, in groups. Today there is one, Tema (RNF-011); a
+ * new group (density, language...) is one more `Section` in this column.
+ */
 export function AppearanceView({ value, onChange }: AppearanceViewProps) {
   return (
-    <Section title="Aparência" variant="glass">
-      <div className="flex flex-col gap-s16">
-        <div className="flex flex-col gap-s4">
-          <p className="text-body font-emphasis text-fg-primary">Tema</p>
-          <p className="text-meta text-fg-secondary">
-            Segue o Windows quando em &quot;Sistema&quot;
-          </p>
-        </div>
-        <div>
-          <SegmentedControl
-            label="Tema"
-            options={THEME_OPTIONS}
-            value={value}
-            onChange={onChange}
-          />
-        </div>
-      </div>
-    </Section>
+    <SettingsPageFrame title={PAGE.title} description={PAGE.description}>
+      <Section title="Tema" divider={false}>
+        <SettingRow
+          label="Cores do app"
+          description="Em Sistema, o app segue o tema do Windows."
+          stackOnPhone
+          control={
+            <SegmentedControl
+              label="Tema"
+              options={THEME_OPTIONS}
+              value={value}
+              onChange={onChange}
+            />
+          }
+        />
+      </Section>
+    </SettingsPageFrame>
   );
 }
