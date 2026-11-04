@@ -14,6 +14,7 @@
     }
   },
   "scripts": {
+    "captures": "pnpm --filter @fincheck/web captures",
     "dev": "pnpm --parallel --filter \"./apps/*\" dev",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
     "format": "prettier --write .",

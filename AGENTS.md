@@ -24,16 +24,17 @@ App pessoal de finanças, um usuário, só local no Windows. O planejamento (pro
 
 Todos na raiz.
 
-| Comando                                      | O que faz                                                       |
-| -------------------------------------------- | --------------------------------------------------------------- |
-| `pnpm install`                               | Instala tudo e liga os hooks do Git                             |
-| `pnpm dev`                                   | Sobe a API (`127.0.0.1:3333`) e o web (`127.0.0.1:5173`) juntos |
-| `pnpm --filter @fincheck/web dev:mocks`      | Sobe só o web; o servidor do Vite responde `/api` com o MSW     |
-| `pnpm check`                                 | A esteira inteira: formatação, lint, tipos e testes             |
-| `pnpm format`                                | Formata tudo com o Prettier                                     |
-| `pnpm lint` · `pnpm typecheck` · `pnpm test` | Cada etapa da esteira sozinha                                   |
-| `pnpm --filter <nome> test`                  | Os testes de um pacote só (`@fincheck/api`, `@fincheck/web`…)   |
-| `pnpm --filter @fincheck/web build`          | Build de produção do web (confere que empacota; não há deploy)  |
+| Comando                                      | O que faz                                                                                                                                                                            |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pnpm install`                               | Instala tudo e liga os hooks do Git                                                                                                                                                  |
+| `pnpm dev`                                   | Sobe a API (`127.0.0.1:3333`) e o web (`127.0.0.1:5173`) juntos                                                                                                                      |
+| `pnpm --filter @fincheck/web dev:mocks`      | Sobe só o web; o servidor do Vite responde `/api` com o MSW                                                                                                                          |
+| `pnpm captures <pasta>`                      | Capturas de todas as telas e modais (claro e escuro, 1280, 1440 e 375 px), com mocks e data fixa; sobe e derruba um servidor em `127.0.0.1`. Detalhe em `apps/web/scripts/captures/` |
+| `pnpm check`                                 | A esteira inteira: formatação, lint, tipos e testes                                                                                                                                  |
+| `pnpm format`                                | Formata tudo com o Prettier                                                                                                                                                          |
+| `pnpm lint` · `pnpm typecheck` · `pnpm test` | Cada etapa da esteira sozinha                                                                                                                                                        |
+| `pnpm --filter <nome> test`                  | Os testes de um pacote só (`@fincheck/api`, `@fincheck/web`…)                                                                                                                        |
+| `pnpm --filter @fincheck/web build`          | Build de produção do web (confere que empacota; não há deploy)                                                                                                                       |
 
 ## Esteira
 

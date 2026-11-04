@@ -1,6 +1,6 @@
 import { apiErrorSchema } from '@fincheck/shared/common/api-error/api-error.schema.ts';
 import { getResponse, type RequestHandler } from 'msw';
-import type { Plugin } from 'vite';
+import type { Plugin, ViteDevServer } from 'vite';
 
 import { sendFetchResponse } from '#mocks/setup/send-fetch-response.util.ts';
 import { toFetchRequest } from '#mocks/setup/to-fetch-request.util.ts';
@@ -14,7 +14,8 @@ export function mockApiServer(): Plugin {
   return {
     name: 'fincheck:mock-api-server',
     apply: 'serve',
-    configureServer(server) {
+    async configureServer(server) {
+      await freezeClockFromEnvironment(server);
       // No `return () => ...`: the middleware runs before Vite's own, so nothing proxies `/api`.
       server.middlewares.use((incoming, outgoing, next) => {
         if (!incoming.url?.startsWith('/api/')) return next();
@@ -39,4 +40,17 @@ export function mockApiServer(): Plugin {
       });
     },
   };
+}
+
+// FINCHECK_MOCK_NOW (an ISO instant) fixes the mock "today" before the seed loads; the capture script
+// sets it so the screenshots show the same day the tests use. Without it the clock is the real one.
+async function freezeClockFromEnvironment(server: ViteDevServer): Promise<void> {
+  const now = process.env['FINCHECK_MOCK_NOW'];
+  if (!now) return;
+  const { setMockClock } = (await server.ssrLoadModule(
+    '/mocks/support/dates/mock-clock.store.ts',
+  )) as {
+    setMockClock: (now: Date) => void;
+  };
+  setMockClock(new Date(now));
 }
