@@ -56,8 +56,8 @@ const FADE_VARIANTS = {
  * "‹ Outubro 2026 ›". The arrows sit in fixed places: the window between them is as wide as the
  * widest month (an invisible sizer holds all twelve), so no month name pushes them. A month
  * change is a slider: the text leaves and enters sliding in the direction of the move, clipped
- * to the window so it never passes over the arrows. The name is 15/16 px regular, the year is
- * secondary (components.md 1.5). Screen readers hear the month in a polite live region; the
+ * to the window so it never passes over the arrows. Month, year and arrows share the secondary
+ * text color; the text is 14 px on the phone and 15 px on the desktop, regular (components.md 1.5). Screen readers hear the month in a polite live region; the
  * animated text is hidden from them.
  */
 export function MonthPicker({ monthLabel, yearLabel, onPrevious, onNext }: MonthPickerProps) {
@@ -89,7 +89,7 @@ export function MonthPicker({ monthLabel, yearLabel, onPrevious, onNext }: Month
       </span>
       <span
         aria-hidden="true"
-        className="grid overflow-hidden text-center text-list whitespace-nowrap text-fg-primary lg:text-body"
+        className="grid overflow-hidden text-center text-label whitespace-nowrap text-fg-secondary lg:text-list"
       >
         <span className="invisible col-start-1 row-start-1 grid">
           {MONTH_NAMES.map((name) => (
@@ -110,7 +110,7 @@ export function MonthPicker({ monthLabel, yearLabel, onPrevious, onNext }: Month
             className="col-start-1 row-start-1"
           >
             <span className="font-title font-plain">{monthLabel}</span>{' '}
-            <span className="font-plain text-fg-secondary tabular-nums">{yearLabel}</span>
+            <span className="font-plain tabular-nums">{yearLabel}</span>
           </motion.span>
         </AnimatePresence>
       </span>

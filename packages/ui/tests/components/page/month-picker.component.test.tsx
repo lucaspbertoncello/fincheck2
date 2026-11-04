@@ -26,12 +26,20 @@ describe('MonthPicker', () => {
     expect(html).toMatch(/<span aria-hidden="true" class="grid overflow-hidden[^"]*">/);
   });
 
-  it('writes the month regular, not bold, smaller than the old 18 px', () => {
+  it('writes the month regular and small: 14 px on the phone, 15 px on the desktop', () => {
     const html = render('Outubro');
 
-    expect(html).not.toMatch(/font-bold|font-emphasis|text-subsection/);
-    expect(html).toContain('text-list');
-    expect(html).toContain('lg:text-body');
+    expect(html).not.toMatch(/font-bold|font-emphasis|text-subsection|text-body/);
+    expect(html).toContain('text-label');
+    expect(html).toContain('lg:text-list');
+  });
+
+  it('paints month, year and arrows in the same secondary color', () => {
+    const html = render('Outubro');
+
+    expect(html).not.toContain('text-fg-primary');
+    expect(html).toMatch(/class="grid overflow-hidden[^"]*text-fg-secondary/);
+    expect(html.match(/<button[^>]*text-fg-secondary/g)?.length).toBe(2);
   });
 
   it('keeps the arrows still: the window is as wide as the widest month, whatever the month shown', () => {
