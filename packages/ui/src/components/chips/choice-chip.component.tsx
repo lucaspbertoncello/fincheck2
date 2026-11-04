@@ -32,7 +32,7 @@ export function ChoiceChip({
       onChange={onChange}
       isDisabled={isDisabled}
       className={cx(
-        'focus-ring inline-flex h-ctl-tab cursor-pointer items-center gap-s8 rounded-capsule border px-s16 text-label whitespace-nowrap',
+        'focus-ring inline-flex h-ctl-tab max-w-full min-w-0 cursor-pointer items-center gap-s8 rounded-capsule border px-s16 text-label whitespace-nowrap',
         'transition-transform duration-(--duration-fast) ease-(--ease-standard) data-[pressed]:scale-96',
         'data-[disabled]:cursor-default data-[disabled]:opacity-50',
         ghost ? 'border-dashed border-fg-tertiary' : 'border-line',
@@ -43,7 +43,7 @@ export function ChoiceChip({
       )}
     >
       {icon ? <Icon name={icon} size="sm" /> : null}
-      {children}
+      <span className="truncate">{children}</span>
     </ToggleButton>
   );
 }

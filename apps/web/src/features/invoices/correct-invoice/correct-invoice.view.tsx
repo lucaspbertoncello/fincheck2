@@ -110,9 +110,7 @@ export function CorrectInvoiceView({
       isSubmitting={isSaving}
       submitDisabled={state !== 'ready'}
       error={submitError ?? undefined}
-      destructive={
-        canRemove ? { label: 'Remover correção', icon: 'close', onPress: onRemove } : undefined
-      }
+      destructive={canRemove ? { label: 'Remover', icon: 'close', onPress: onRemove } : undefined}
     >
       <div ref={content} className="flex flex-col gap-s16 lg:gap-s24">
         {state === 'loading' ? <Skeleton className="h-ctl-touch w-full" /> : null}

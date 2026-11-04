@@ -73,7 +73,7 @@ export function TransactionSplitModal({ splitter }: TransactionSplitModalProps) 
       error={splitter.error}
       destructive={
         splitter.isSplit
-          ? { label: 'Desfazer a divisão', icon: 'split', onPress: splitter.onUnsplit }
+          ? { label: 'Desfazer', icon: 'split', onPress: splitter.onUnsplit }
           : undefined
       }
       onSubmit={() => {

@@ -89,7 +89,7 @@ export function CandidateRowsField({
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          className="focus-ring mt-s4 self-start rounded-capsule px-s4 text-label font-emphasis text-brand"
+          className="focus-ring mt-s4 self-start rounded-capsule px-s4 text-label font-emphasis whitespace-nowrap text-brand"
         >
           Ver todas ({options.length})
         </button>

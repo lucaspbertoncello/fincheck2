@@ -73,7 +73,7 @@ export function ModalFrame({
           aria-label={label}
           className={cx(
             'flex min-h-0 flex-1 flex-col outline-none',
-            !bare && 'gap-s16 p-s16 lg:p-s24',
+            !bare && 'gap-s16 overflow-y-auto p-s16 lg:p-s24',
           )}
         >
           {children}

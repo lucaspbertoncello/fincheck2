@@ -53,7 +53,7 @@ export function FormModalMore({
           aria-expanded={open}
           aria-controls={panelId}
           onPress={toggle}
-          className="focus-ring -ml-s4 flex min-h-ctl-sm cursor-pointer items-center gap-s4 rounded-capsule px-s4 text-label font-emphasis text-brand data-[hovered]:bg-brand-weak"
+          className="focus-ring -ml-s4 flex min-h-ctl-sm cursor-pointer items-center gap-s4 rounded-capsule px-s4 text-label font-emphasis whitespace-nowrap text-brand data-[hovered]:bg-brand-weak"
         >
           <Icon
             name="chevron-right"

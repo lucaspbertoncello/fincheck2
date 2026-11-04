@@ -89,14 +89,16 @@ export function ChoiceField({
             key={option.key}
             value={option.key}
             className={cx(
-              'focus-ring inline-flex h-ctl-tab cursor-pointer items-center gap-s8 rounded-capsule border border-line px-s16 text-label whitespace-nowrap text-fg-primary',
+              'focus-ring inline-flex h-ctl-tab max-w-full min-w-0 cursor-pointer items-center gap-s8 rounded-capsule border border-line px-s16 text-label whitespace-nowrap text-fg-primary',
               'transition-[transform,background-color,color,border-color] duration-(--duration-fast) ease-(--ease-standard) data-[pressed]:scale-96',
               'data-[hovered]:bg-subtle data-[disabled]:cursor-default data-[disabled]:opacity-50',
               'data-[selected]:border-brand data-[selected]:bg-brand-weak data-[selected]:text-brand',
             )}
           >
             {option.icon ? <Icon name={option.icon} size="md" /> : null}
-            {option.label}
+            <span className="truncate" title={option.label}>
+              {option.label}
+            </span>
           </Radio>
         ))}
       </div>

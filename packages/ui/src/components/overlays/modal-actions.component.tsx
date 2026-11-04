@@ -18,7 +18,7 @@ export function ModalActions({ children, destructive, className }: ModalActionsP
   return (
     <footer
       className={cx(
-        'flex flex-col-reverse gap-s8 lg:flex-row lg:items-center lg:gap-s12',
+        'mt-auto flex flex-col-reverse gap-s8 lg:flex-row lg:items-center lg:gap-s12',
         destructive ? 'lg:justify-between' : 'lg:justify-end',
         className,
       )}

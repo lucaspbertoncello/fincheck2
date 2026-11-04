@@ -72,13 +72,17 @@ export function ConfirmDialog({
         </Heading>
         <p className="text-body text-fg-secondary">{description}</p>
       </div>
-      {changes && changes.length > 0 ? <ConfirmChangeList changes={changes} /> : null}
-      {preview ? (
-        <p className="flex flex-wrap items-center gap-x-s8 text-label text-fg-secondary">
-          <s>{preview.before}</s>
-          <Icon name="chevron-right" size="sm" />
-          <span className="font-emphasis text-fg-primary">{preview.after}</span>
-        </p>
+      {(changes && changes.length > 0) || preview ? (
+        <div className="flex min-h-0 flex-col gap-s16 overflow-y-auto">
+          {changes && changes.length > 0 ? <ConfirmChangeList changes={changes} /> : null}
+          {preview ? (
+            <p className="flex flex-wrap items-center gap-x-s8 text-label text-fg-secondary">
+              <s>{preview.before}</s>
+              <Icon name="chevron-right" size="sm" />
+              <span className="font-emphasis text-fg-primary">{preview.after}</span>
+            </p>
+          ) : null}
+        </div>
       ) : null}
       <ModalActions>
         <Button variant="secondary" isDisabled={loading} onPress={() => onOpenChange(false)}>

@@ -21,7 +21,7 @@ export function TagChip({ tag, onRename, onArchive, onRestore, className }: TagC
   return (
     <span
       className={cx(
-        'inline-flex h-ctl-touch items-center gap-s8 rounded-capsule bg-subtle pr-s4 pl-s12 text-label text-fg-primary lg:h-8',
+        'inline-flex h-ctl-touch items-center gap-s8 rounded-capsule bg-subtle pr-s4 pl-s12 text-label whitespace-nowrap text-fg-primary lg:h-8',
         archived && 'text-fg-secondary',
         className,
       )}

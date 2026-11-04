@@ -33,7 +33,7 @@ export function TagEditor({ label, tags, onChange, className }: TagEditorProps) 
         {tags.map((tag) => (
           <span
             key={tag}
-            className="inline-flex items-center gap-s4 rounded-capsule border border-line pl-s12 text-label text-fg-secondary"
+            className="inline-flex items-center gap-s4 rounded-capsule border border-line pl-s12 text-label whitespace-nowrap text-fg-secondary"
           >
             <Icon name="hash" size="xs" />
             {tag}

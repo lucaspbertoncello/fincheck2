@@ -7,7 +7,7 @@ import type { IconName } from '#/components/icons/icon-markup.constant.ts';
 import { SegmentedIndicator } from '#/components/forms/segmented-indicator.component.tsx';
 import {
   SEGMENTED_ITEM_ACTIVE_CLASS,
-  SEGMENTED_ITEM_CLASS,
+  SEGMENTED_ITEM_FIT_CLASS,
   SEGMENTED_ITEM_INACTIVE_CLASS,
   SEGMENTED_TRACK_CLASS,
 } from '#/components/forms/segmented-classes.constant.ts';
@@ -69,7 +69,7 @@ export function SegmentedControl({
             id={option.key}
             className={({ isSelected }) =>
               cx(
-                SEGMENTED_ITEM_CLASS,
+                SEGMENTED_ITEM_FIT_CLASS,
                 isSelected ? SEGMENTED_ITEM_ACTIVE_CLASS : SEGMENTED_ITEM_INACTIVE_CLASS,
               )
             }
@@ -78,7 +78,9 @@ export function SegmentedControl({
               <>
                 {isSelected ? <SegmentedIndicator layoutId={indicatorId} /> : null}
                 {option.icon ? <Icon name={option.icon} size="md" className="relative" /> : null}
-                <span className="relative">{option.label}</span>
+                <span className="relative truncate" title={option.label}>
+                  {option.label}
+                </span>
               </>
             )}
           </ToggleButton>

@@ -14,7 +14,7 @@ export function DayFilterChip({ filter }: DayFilterChipProps) {
       <Button
         onPress={filter.onClear}
         aria-label={`${filter.label}. Mostrar o mês todo`}
-        className="focus-ring inline-flex h-ctl-tab cursor-pointer items-center gap-s8 rounded-capsule border border-brand bg-brand-weak pr-s8 pl-s16 text-label text-brand tabular-nums data-[hovered]:brightness-95"
+        className="focus-ring inline-flex h-ctl-tab cursor-pointer items-center gap-s8 rounded-capsule border border-brand bg-brand-weak pr-s8 pl-s16 text-label whitespace-nowrap text-brand tabular-nums data-[hovered]:brightness-95"
       >
         {filter.label}
         <span aria-hidden="true" className="grid size-ctl-sm place-items-center">

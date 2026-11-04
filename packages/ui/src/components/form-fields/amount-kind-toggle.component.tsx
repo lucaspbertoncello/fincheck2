@@ -77,7 +77,7 @@ export function AmountKindToggle({
                   isSelected ? kind.dot : 'text-fg-tertiary',
                 )}
               />
-              <span className="relative">{kind.label}</span>
+              <span className="relative truncate">{kind.label}</span>
             </>
           )}
         </ToggleButton>

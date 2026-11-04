@@ -113,7 +113,7 @@ function FormModalForm({
                 icon={destructive.icon ?? 'trash'}
                 isDisabled={isSubmitting}
                 onPress={destructive.onPress}
-                className="mr-auto lg:order-1"
+                className="mr-auto max-lg:px-s12 lg:order-1"
               >
                 {destructive.label}
               </Button>

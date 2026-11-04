@@ -59,10 +59,12 @@ export function AccountChips({
           <Radio
             key={account.key}
             value={account.key}
-            className="focus-ring inline-flex h-ctl-tab cursor-pointer items-center gap-s8 rounded-capsule border border-line pr-s16 pl-s8 text-label whitespace-nowrap text-fg-primary transition-[transform,background-color,color,border-color] duration-(--duration-fast) ease-(--ease-standard) data-[disabled]:cursor-default data-[disabled]:opacity-50 data-[hovered]:bg-subtle data-[pressed]:scale-96 data-[selected]:border-brand data-[selected]:bg-brand-weak data-[selected]:text-brand"
+            className="focus-ring inline-flex h-ctl-tab max-w-full min-w-0 cursor-pointer items-center gap-s8 rounded-capsule border border-line pr-s16 pl-s8 text-label whitespace-nowrap text-fg-primary transition-[transform,background-color,color,border-color] duration-(--duration-fast) ease-(--ease-standard) data-[disabled]:cursor-default data-[disabled]:opacity-50 data-[hovered]:bg-subtle data-[pressed]:scale-96 data-[selected]:border-brand data-[selected]:bg-brand-weak data-[selected]:text-brand"
           >
             <BankAvatar theme={account.theme} name={account.label} size={24} />
-            {account.label}
+            <span className="truncate" title={account.label}>
+              {account.label}
+            </span>
           </Radio>
         ))}
       </div>

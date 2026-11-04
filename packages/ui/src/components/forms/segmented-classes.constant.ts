@@ -3,9 +3,18 @@
 /** The glass track: padding 4, subtle fill, 1 px border. */
 export const SEGMENTED_TRACK_CLASS = 'flex rounded-capsule border border-line bg-subtle p-s4';
 
-/** One item: 44 px on the phone, 40 px on the desktop, equal widths. */
-export const SEGMENTED_ITEM_CLASS =
-  'focus-ring relative flex min-h-ctl-touch flex-1 cursor-pointer items-center justify-center gap-s8 rounded-capsule px-s16 text-label font-emphasis whitespace-nowrap no-underline transition-colors duration-(--duration-fast) lg:min-h-ctl-tab';
+/**
+ * One item without its width rule: 44 px on the phone, 40 px on the desktop, never wraps. The
+ * label ellipsizes (with a `title`) only when even its own width does not fit.
+ */
+const SEGMENTED_ITEM_BASE_CLASS =
+  'focus-ring relative flex min-h-ctl-touch min-w-0 cursor-pointer items-center justify-center gap-s8 rounded-capsule px-s12 text-label font-emphasis whitespace-nowrap no-underline transition-colors duration-(--duration-fast) lg:min-h-ctl-tab lg:px-s16';
+
+/** Equal widths (two options with a sliding indicator, and the link version). */
+export const SEGMENTED_ITEM_CLASS = `${SEGMENTED_ITEM_BASE_CLASS} flex-1`;
+
+/** Content width first, the extra space shared: long and short labels all stay on one line. */
+export const SEGMENTED_ITEM_FIT_CLASS = `${SEGMENTED_ITEM_BASE_CLASS} flex-auto`;
 
 export const SEGMENTED_ITEM_ACTIVE_CLASS = 'text-fg-primary';
 export const SEGMENTED_ITEM_INACTIVE_CLASS = 'text-fg-tertiary data-[hovered]:text-fg-primary';

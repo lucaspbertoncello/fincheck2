@@ -36,7 +36,7 @@ function kindOf(nature: TransactionNature, direction: AmountKind): AmountKind {
 
 /**
  * "Editar transação": the same modal as "Nova transação" (form-modal pattern), with the values of
- * the transaction. Nature (Despesa | Receita | Transferência, R6) sits above the amount; a
+ * the transaction. Nature (Despesa | Receita | Transferência, R6) is a full-width row above the two columns, so four options still fit on one line; a
  * transfer asks for its other leg instead of a category. Tags wait in "Mais opções", the bank's
  * original shows when the transaction was edited, and "Excluir" (manual ones only) is at the left
  * of the footer. Creating and editing differ only in the words and the values.
@@ -63,23 +63,21 @@ export function TransactionEditModal({ editor }: TransactionEditModalProps) {
       destructive={editor.canDelete ? { label: 'Excluir', onPress: editor.onDelete } : undefined}
       onSubmit={editor.onSave}
     >
+      <SegmentedControl
+        label="Tipo da transação"
+        options={natures}
+        value={values.nature}
+        onChange={(nature) => patch({ nature: nature as TransactionNature })}
+      />
       <FormModalSplit
         aside={
           <>
-            <div className="flex flex-col gap-s12">
-              <SegmentedControl
-                label="Tipo da transação"
-                options={natures}
-                value={values.nature}
-                onChange={(nature) => patch({ nature: nature as TransactionNature })}
-              />
-              <AmountField
-                cents={values.amountCents}
-                onChange={(amountCents) => patch({ amountCents })}
-                kind={kindOf(values.nature, editor.direction)}
-                error={errors.amount}
-              />
-            </div>
+            <AmountField
+              cents={values.amountCents}
+              onChange={(amountCents) => patch({ amountCents })}
+              kind={kindOf(values.nature, editor.direction)}
+              error={errors.amount}
+            />
             <TextField
               label="Descrição"
               value={values.description}

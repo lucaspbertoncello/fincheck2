@@ -111,27 +111,29 @@ export function DeleteAccountView({
         </p>
       </div>
 
-      {state === 'loading' ? (
-        <div aria-busy="true" className="flex flex-col gap-s8">
-          <Skeleton className="h-ctl-touch w-full" />
-          <Skeleton className="h-ctl-sm w-full" />
-        </div>
-      ) : null}
+      <div className="flex min-h-0 flex-col gap-s16 overflow-y-auto">
+        {state === 'loading' ? (
+          <div aria-busy="true" className="flex flex-col gap-s8">
+            <Skeleton className="h-ctl-touch w-full" />
+            <Skeleton className="h-ctl-sm w-full" />
+          </div>
+        ) : null}
 
-      {state === 'ready' && summary ? (
-        <>
-          <ImpactList
-            label="O que some"
-            icon="trash"
-            tone="loss"
-            items={
-              summary.gone.length > 0 ? summary.gone : ['Só a conta: não há nada dentro dela.']
-            }
-          />
-          <ImpactList label="O que fica" icon="check" tone="neutral" items={summary.stays} />
-          {summary.returnNote ? <Banner variant="warning" title={summary.returnNote} /> : null}
-        </>
-      ) : null}
+        {state === 'ready' && summary ? (
+          <>
+            <ImpactList
+              label="O que some"
+              icon="trash"
+              tone="loss"
+              items={
+                summary.gone.length > 0 ? summary.gone : ['Só a conta: não há nada dentro dela.']
+              }
+            />
+            <ImpactList label="O que fica" icon="check" tone="neutral" items={summary.stays} />
+            {summary.returnNote ? <Banner variant="warning" title={summary.returnNote} /> : null}
+          </>
+        ) : null}
+      </div>
 
       <ModalActions>
         <Button variant="secondary" isDisabled={isBusy} onPress={onClose}>
