@@ -1,3 +1,4 @@
+import { BANK_MARK_ART, type BankMarkArt } from '#/components/bank-cards/bank-mark-art.constant.ts';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
@@ -32,12 +33,14 @@ describe('bank theme colors', () => {
     }
   });
 
-  it('paints every avatar on the mid stop, with the mark color and a fill that is not black', () => {
+  it('paints every avatar on the mid stop (or the stop its small mark asks for), with the mark color and a fill that is not black', () => {
     for (const key of KEYS) {
       const theme = BANK_THEMES[key];
       if (!theme.mark) continue;
       const html = renderToStaticMarkup(<BankAvatar theme={key} />);
-      expect(html, `${key} ground`).toContain(`background:${theme.gradient.stops[1]}`);
+      const art: BankMarkArt = BANK_MARK_ART[theme.mark.art];
+      const stop = theme.gradient.stops[art.small?.groundStop ?? 1];
+      expect(html, `${key} ground`).toContain(`background:${stop}`);
       expect(html, `${key} mark`).toContain(`color:${theme.mark.color}`);
       expect(html, `${key} fill`).toContain('fill="currentColor"');
     }

@@ -1,5 +1,5 @@
 import { Icon } from '#/components/icons/icon.component.tsx';
-import { BANK_MARK_ART } from '#/components/bank-cards/bank-mark-art.constant.ts';
+import { BANK_MARK_ART, type BankMarkArt } from '#/components/bank-cards/bank-mark-art.constant.ts';
 import { BANK_THEMES } from '#/components/bank-cards/bank-themes.constant.ts';
 import type { BankThemeKey } from '#/components/bank-cards/bank-theme.type.ts';
 import { cx } from '#/utils/class-names.util.ts';
@@ -39,9 +39,9 @@ export function BankAvatar({ theme: themeKey, name = '', size = 36, className }:
   }
 
   const theme = BANK_THEMES[themeKey];
-  const ground = theme.gradient.stops[1];
 
   if (!theme.mark) {
+    const ground = theme.gradient.stops[1];
     return (
       <span
         aria-hidden="true"
@@ -53,7 +53,10 @@ export function BankAvatar({ theme: themeKey, name = '', size = 36, className }:
     );
   }
 
-  const art = BANK_MARK_ART[theme.mark.art];
+  const full: BankMarkArt = BANK_MARK_ART[theme.mark.art];
+  // Wide wordmarks turn to blur in a small circle: marks with a low-detail version use it there.
+  const art = full.small ?? full;
+  const ground = theme.gradient.stops[full.small?.groundStop ?? 1];
   return (
     <span
       aria-hidden="true"
@@ -64,7 +67,10 @@ export function BankAvatar({ theme: themeKey, name = '', size = 36, className }:
         viewBox={art.viewBox}
         focusable="false"
         fill="currentColor"
-        className="h-1/2 w-3/5 overflow-visible"
+        className={cx('overflow-visible', !full.small && 'h-1/2 w-3/5')}
+        style={
+          full.small ? { width: `${full.small.fit}%`, height: `${full.small.fit}%` } : undefined
+        }
         dangerouslySetInnerHTML={{ __html: art.markup }}
       />
     </span>
