@@ -137,9 +137,10 @@ export function RecurrenceFormView({
         destructive={editing ? { label: 'Excluir', onPress: onRequestDelete } : undefined}
       >
         <div className="flex flex-col gap-s12 @xl:gap-s16">
-          {/* Desktop: two columns and a band. Left the amount and the name; right the category, the account
-              and "Mais opções"; under both, "Quando cai" across the width. On the phone the columns dissolve
-              and the order classes give: type, amount, name, when, category, account, more. */}
+          {/* Desktop: two columns and a band. Left the amount and the name; right the category and the account;
+              under both, "Quando cai" across the width; "Mais opções" last, outside the grid, so opening it
+              moves nothing that was there. On the phone the columns dissolve and the order classes give:
+              type, amount, name, when, category, account, then more. */}
           <div className="grid grid-cols-1 gap-s16 @xl:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] @xl:gap-x-s24 @xl:gap-y-s12">
             <div className="contents @xl:flex @xl:min-w-0 @xl:flex-col @xl:gap-s16 @xl:border-r @xl:border-line @xl:pr-s24">
               <AmountField
@@ -190,98 +191,6 @@ export function RecurrenceFormView({
                 value={values.accountId}
                 onChange={(accountId) => onChange({ accountId })}
               />
-
-              <FormModalMore
-                className="order-6"
-                summary={summarize(values, paused, editing)}
-                hasError={Boolean(errors.matchText || errors.maxPayments || errors.counterparty)}
-              >
-                {editing ? (
-                  <>
-                    <ChoiceField
-                      label="A mudança vale"
-                      variant="segmented"
-                      options={APPLY_FROM_OPTIONS}
-                      value={values.applyFrom}
-                      onChange={(key) =>
-                        onChange({ applyFrom: key as RecurrenceFormValues['applyFrom'] })
-                      }
-                    />
-                    <div className="flex flex-col gap-s4">
-                      <span className="text-label text-fg-secondary">
-                        {paused ? 'Esta recorrência está pausada' : 'Precisa de um tempo?'}
-                      </span>
-                      <Button
-                        variant="secondary"
-                        icon={paused ? 'sync' : 'clock'}
-                        loading={pausing}
-                        onPress={onPause}
-                        aria-describedby={pauseHintId}
-                      >
-                        {paused ? 'Retomar' : 'Pausar'}
-                      </Button>
-                      <p id={pauseHintId} className="sr-only">
-                        Pausar tira do Livre e das projeções, sem apagar o histórico.
-                      </p>
-                    </div>
-                  </>
-                ) : null}
-                <>
-                  <TextField
-                    label={income ? 'Vem de quem' : 'Para quem'}
-                    name="counterparty"
-                    value={values.counterparty}
-                    onChange={(counterparty) => onChange({ counterparty })}
-                    error={errors.counterparty}
-                    placeholder={income ? 'Alvorada Tecnologia' : 'Forma Academia'}
-                    maxLength={120}
-                    autoComplete="off"
-                  />
-                  <TextField
-                    label="Aparece no extrato como"
-                    name="matchText"
-                    value={values.matchText}
-                    onChange={(matchText) => onChange({ matchText })}
-                    error={errors.matchText}
-                    description="O nome que o banco escreve, como G PRADO. Ajuda a confirmar sozinho."
-                    maxLength={80}
-                    autoComplete="off"
-                  />
-                  <TextField
-                    label="Pagamentos por mês"
-                    name="maxPayments"
-                    value={values.maxPayments}
-                    onChange={(text) => onChange({ maxPayments: digitsOnly(text) })}
-                    error={errors.maxPayments}
-                    inputMode="numeric"
-                    description="Mais de 1 para valor dividido em Pix. De 1 a 5."
-                    autoComplete="off"
-                  />
-                  {income ? (
-                    <ChoiceField
-                      label="Regime"
-                      variant="segmented"
-                      options={REGIME_OPTIONS}
-                      value={values.employmentRegime === '' ? null : values.employmentRegime}
-                      onChange={(key) =>
-                        onChange({
-                          employmentRegime: key as RecurrenceFormValues['employmentRegime'],
-                        })
-                      }
-                      description="Só para saber de onde vem esta renda."
-                    />
-                  ) : null}
-                </>
-                {historyNote ? (
-                  <FineNote icon="history">{historyNote}</FineNote>
-                ) : (
-                  <FineNote icon="calendar">
-                    {matchHint
-                      ? `Confirma sozinho quando um lançamento de ${matchHint} chegar perto do valor esperado, dentro da janela da regra.`
-                      : 'Sem um nome do extrato, só confirma sozinho quando o valor bate exato dentro da janela da regra.'}
-                  </FineNote>
-                )}
-              </FormModalMore>
             </div>
 
             <div className="order-3 @xl:col-span-2">
@@ -294,6 +203,97 @@ export function RecurrenceFormView({
               />
             </div>
           </div>
+
+          <FormModalMore
+            summary={summarize(values, paused, editing)}
+            hasError={Boolean(errors.matchText || errors.maxPayments || errors.counterparty)}
+          >
+            {editing ? (
+              <>
+                <ChoiceField
+                  label="A mudança vale"
+                  variant="segmented"
+                  options={APPLY_FROM_OPTIONS}
+                  value={values.applyFrom}
+                  onChange={(key) =>
+                    onChange({ applyFrom: key as RecurrenceFormValues['applyFrom'] })
+                  }
+                />
+                <div className="flex flex-col gap-s4">
+                  <span className="text-label text-fg-secondary">
+                    {paused ? 'Esta recorrência está pausada' : 'Precisa de um tempo?'}
+                  </span>
+                  <Button
+                    variant="secondary"
+                    icon={paused ? 'sync' : 'clock'}
+                    loading={pausing}
+                    onPress={onPause}
+                    aria-describedby={pauseHintId}
+                  >
+                    {paused ? 'Retomar' : 'Pausar'}
+                  </Button>
+                  <p id={pauseHintId} className="sr-only">
+                    Pausar tira do Livre e das projeções, sem apagar o histórico.
+                  </p>
+                </div>
+              </>
+            ) : null}
+            <>
+              <TextField
+                label={income ? 'Vem de quem' : 'Para quem'}
+                name="counterparty"
+                value={values.counterparty}
+                onChange={(counterparty) => onChange({ counterparty })}
+                error={errors.counterparty}
+                placeholder={income ? 'Alvorada Tecnologia' : 'Forma Academia'}
+                maxLength={120}
+                autoComplete="off"
+              />
+              <TextField
+                label="Aparece no extrato como"
+                name="matchText"
+                value={values.matchText}
+                onChange={(matchText) => onChange({ matchText })}
+                error={errors.matchText}
+                description="O nome que o banco escreve, como G PRADO. Ajuda a confirmar sozinho."
+                maxLength={80}
+                autoComplete="off"
+              />
+              <TextField
+                label="Pagamentos por mês"
+                name="maxPayments"
+                value={values.maxPayments}
+                onChange={(text) => onChange({ maxPayments: digitsOnly(text) })}
+                error={errors.maxPayments}
+                inputMode="numeric"
+                description="Mais de 1 para valor dividido em Pix. De 1 a 5."
+                autoComplete="off"
+              />
+              {income ? (
+                <ChoiceField
+                  label="Regime"
+                  variant="segmented"
+                  options={REGIME_OPTIONS}
+                  value={values.employmentRegime === '' ? null : values.employmentRegime}
+                  onChange={(key) =>
+                    onChange({
+                      employmentRegime: key as RecurrenceFormValues['employmentRegime'],
+                    })
+                  }
+                  description="Só para saber de onde vem esta renda."
+                />
+              ) : null}
+            </>
+            {historyNote ? (
+              <FineNote icon="history">{historyNote}</FineNote>
+            ) : (
+              <FineNote icon="calendar">
+                {matchHint
+                  ? `Confirma sozinho quando um lançamento de ${matchHint} chegar perto do valor esperado, dentro da janela da regra.`
+                  : 'Sem um nome do extrato, só confirma sozinho quando o valor bate exato dentro da janela da regra.'}
+              </FineNote>
+            )}
+          </FormModalMore>
         </div>
       </FormModal>
       <ConfirmDialog

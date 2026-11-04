@@ -76,3 +76,36 @@ describe('Modal box (fixed size, no wrap)', () => {
     everyShortControlStaysOnOneLine(bill);
   });
 });
+
+/**
+ * "Mais opções" enters last (components.md 13.6): from the toggle up to the scrolling body, nothing
+ * follows it, so opening it cannot push any block that was already on screen.
+ */
+function nothingFollowsTheToggleSection(dialog: HTMLElement) {
+  const toggle = within(dialog).getByRole('button', {
+    name: /Mais opções|Observação|Por que corrigiu/,
+  });
+  let node: HTMLElement | null = toggle.closest('section');
+  expect(node, 'the toggle has no section').not.toBeNull();
+  while (node && !node.className.includes('overflow-y-auto')) {
+    expect(
+      node.nextElementSibling,
+      `something follows <${node.tagName} class="${node.className}">`,
+    ).toBeNull();
+    node = node.parentElement;
+  }
+  expect(node, 'no scrolling body above the toggle').not.toBeNull();
+}
+
+describe('"Mais opções" enters last', () => {
+  it.each([
+    ['Nova transação', `/transactions?month=${CURRENT_MONTH}&new=transaction`],
+    ['Nova recorrência', `/recurrences?month=${CURRENT_MONTH}&new=recurrence`],
+    ['Nova conta a pagar ou receber', `/recurrences/bills?month=${CURRENT_MONTH}&new=bill`],
+  ])('%s: nothing follows the toggle in the body', async (name, url) => {
+    renderApp(url);
+    const dialog = await screen.findByRole('dialog', { name }, LONG_WAIT);
+
+    nothingFollowsTheToggleSection(dialog);
+  });
+});

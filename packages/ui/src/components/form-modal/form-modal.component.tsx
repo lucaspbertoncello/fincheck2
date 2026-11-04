@@ -39,7 +39,7 @@ type FormModalProps = {
   error?: string;
   /** Edit only: the destructive action, alone at the left of the footer. */
   destructive?: FormModalDestructive;
-  /** `form` (680, two columns) by default; `wide` (560) and `default` (440) for short forms. */
+  /** `form` (760, two columns) by default; `wide` (640) and `default` (480) for short forms. */
   size?: Extract<ModalSize, 'form' | 'wide' | 'default'>;
   /** CSS selector of the field that gets the focus on open. Default: the first text field. */
   initialFocus?: string;

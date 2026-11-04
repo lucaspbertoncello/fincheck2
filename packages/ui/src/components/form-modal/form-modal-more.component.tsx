@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from 'react';
+import { useId, useRef, useState, type ReactNode, type TransitionEvent } from 'react';
 import { Button as AriaButton } from 'react-aria-components';
 
 import { Icon } from '#/components/icons/icon.component.tsx';
@@ -25,6 +25,12 @@ type FormModalMoreProps = {
  * opens by growing its row track while the content fades in. The only layout motion of the modal,
  * on purpose: the panel must take its height. Closed, the panel is `inert` (no focus, not read).
  * `prefers-reduced-motion` cuts the animation to 1 ms.
+ *
+ * Placement rule (components.md 13.6): what "Mais opções" reveals enters last, so nothing that was
+ * on screen moves. Put it as the last child of the body (or of the last column of a
+ * `FormModalSplit`), never before a group that follows it. When it opens and the revealed content
+ * ends up outside the visible part of the body, the body scrolls down to it (smoothly, instantly
+ * under `prefers-reduced-motion`); the focus stays on the toggle.
  */
 export function FormModalMore({
   label = 'Mais opções',
@@ -39,11 +45,27 @@ export function FormModalMore({
   const [innerOpen, setInnerOpen] = useState(defaultOpen);
   const panelId = useId();
   const open = (isOpen ?? innerOpen) || hasError;
+  const trackRef = useRef<HTMLDivElement>(null);
 
   const toggle = () => {
     const next = !open;
     setInnerOpen(next);
     onOpenChange?.(next);
+  };
+
+  /** The row track finished growing: bring the revealed content into view only if it is cut off. */
+  const revealIfCut = (event: TransitionEvent<HTMLDivElement>) => {
+    if (
+      !open ||
+      event.target !== event.currentTarget ||
+      event.propertyName !== 'grid-template-rows'
+    ) {
+      return;
+    }
+    const track = trackRef.current;
+    if (!track || typeof track.scrollIntoView !== 'function') return;
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    track.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' });
   };
 
   return (
@@ -69,6 +91,8 @@ export function FormModalMore({
         {summary && !open ? <span className="text-meta text-fg-tertiary">{summary}</span> : null}
       </div>
       <div
+        ref={trackRef}
+        onTransitionEnd={revealIfCut}
         className={cx(
           'grid transition-[grid-template-rows] duration-(--duration-slide) ease-(--ease-standard)',
           open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
