@@ -3,3 +3,6 @@
 export const HEATMAP_QUANTILES = [0.25, 0.5, 0.75] as const;
 
 export const HEATMAP_MONTHS = 12;
+
+// The longest range `from`/`to` can ask for, both ends included (a whole year, leap year too).
+export const HEATMAP_MAX_RANGE_DAYS = 366;

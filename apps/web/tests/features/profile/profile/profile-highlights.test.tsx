@@ -62,7 +62,7 @@ describe('Perfil: curiosidades', () => {
     const title = await openSection();
     const mapTitle = await screen.findByRole('heading', {
       level: 2,
-      name: 'Gasto dos últimos 12 meses',
+      name: 'Mapa de gastos',
     });
 
     expect(mapTitle.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

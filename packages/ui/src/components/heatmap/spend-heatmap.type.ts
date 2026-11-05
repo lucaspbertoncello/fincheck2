@@ -15,3 +15,6 @@ export type SpendHeatmapGrid = {
   weeks: (SpendHeatmapDay | null)[][];
   monthLabels: { column: number; label: string }[];
 };
+
+/** "year": a column per week (January to December). "month": a calendar, a row per week. */
+export type SpendHeatmapView = 'year' | 'month';

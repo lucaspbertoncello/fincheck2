@@ -15,12 +15,20 @@ type MonthPickerPeriod = PeriodMenuProps & {
 };
 
 type MonthPickerProps = {
-  /** "Outubro". */
+  /** "Outubro". Ignored when `unit` is "year". */
   monthLabel: string;
   /** "2026". */
   yearLabel: string;
   onPrevious: () => void;
   onNext: () => void;
+  /**
+   * What one arrow press moves: a month (the default) or a year. In "year" only the year shows and
+   * the arrows read "Ano anterior" and "Próximo ano" (the Mês | Ano map of Perfil).
+   */
+  unit?: 'month' | 'year';
+  /** Stops the arrows at an end ("not past the current month"): dimmed, no press, no focus. */
+  isPreviousDisabled?: boolean;
+  isNextDisabled?: boolean;
   /** Only where the screen reads wider periods (Transações): adds the period button. */
   period?: MonthPickerPeriod;
 };
@@ -28,7 +36,7 @@ type MonthPickerProps = {
 type Direction = 1 | -1;
 
 const ARROW =
-  'group relative grid size-ctl-sm shrink-0 cursor-pointer place-items-center rounded-capsule text-fg-secondary outline-none transition-[background-color,color,transform] duration-(--duration-fast) after:absolute after:-inset-1.5 after:content-[""] data-[hovered]:bg-brand-weak data-[hovered]:text-brand data-[pressed]:scale-94 data-[focus-visible]:outline-2 data-[focus-visible]:outline-offset-2 data-[focus-visible]:outline-brand lg:size-8';
+  'group relative grid size-ctl-sm shrink-0 cursor-pointer place-items-center rounded-capsule text-fg-secondary outline-none transition-[background-color,color,transform] duration-(--duration-fast) after:absolute after:-inset-1.5 after:content-[""] data-[hovered]:bg-brand-weak data-[hovered]:text-brand data-[pressed]:scale-94 data-[disabled]:pointer-events-none data-[disabled]:opacity-40 data-[focus-visible]:outline-2 data-[focus-visible]:outline-offset-2 data-[focus-visible]:outline-brand lg:size-8';
 
 /** Every month name, so the window is as wide as the widest one and the arrows never move. */
 const MONTH_NAMES = [
@@ -84,13 +92,17 @@ export function MonthPicker({
   yearLabel,
   onPrevious,
   onNext,
+  unit = 'month',
+  isPreviousDisabled,
+  isNextDisabled,
   period,
 }: MonthPickerProps) {
   const [direction, setDirection] = useState<Direction>(1);
   const reduced = useReducedMotion();
   const variants = reduced ? FADE_VARIANTS : SLIDE_VARIANTS;
   const rangeLabel = period?.rangeLabel ?? null;
-  const spoken = rangeLabel ?? `${monthLabel} ${yearLabel}`;
+  const isYear = unit === 'year';
+  const spoken = rangeLabel ?? (isYear ? yearLabel : `${monthLabel} ${yearLabel}`);
 
   function handlePrevious() {
     setDirection(-1);
@@ -103,10 +115,11 @@ export function MonthPicker({
   }
 
   return (
-    <div role="group" aria-label="Mês" className="flex items-center gap-s4">
+    <div role="group" aria-label={isYear ? 'Ano' : 'Mês'} className="flex items-center gap-s4">
       <Button
-        aria-label="Mês anterior"
+        aria-label={isYear ? 'Ano anterior' : 'Mês anterior'}
         onPress={handlePrevious}
+        isDisabled={isPreviousDisabled}
         className={cx(ARROW, rangeLabel && 'invisible')}
       >
         <Icon
@@ -123,11 +136,15 @@ export function MonthPicker({
         className="grid overflow-hidden text-center text-label whitespace-nowrap text-fg-secondary lg:text-list"
       >
         <span className="invisible col-start-1 row-start-1 grid">
-          {MONTH_NAMES.map((name) => (
-            <span key={name} className="col-start-1 row-start-1 tabular-nums">
-              {name} {yearLabel}
-            </span>
-          ))}
+          {isYear ? (
+            <span className="col-start-1 row-start-1 tabular-nums">0000</span>
+          ) : (
+            MONTH_NAMES.map((name) => (
+              <span key={name} className="col-start-1 row-start-1 tabular-nums">
+                {name} {yearLabel}
+              </span>
+            ))
+          )}
           {period ? (
             <span className="col-start-1 row-start-1 tabular-nums">{RANGE_SIZER}</span>
           ) : null}
@@ -145,6 +162,8 @@ export function MonthPicker({
           >
             {rangeLabel ? (
               <span className="font-plain tabular-nums">{rangeLabel}</span>
+            ) : isYear ? (
+              <span className="font-plain tabular-nums">{yearLabel}</span>
             ) : (
               <>
                 <span className="font-title font-plain">{monthLabel}</span>{' '}
@@ -155,8 +174,9 @@ export function MonthPicker({
         </AnimatePresence>
       </span>
       <Button
-        aria-label="Próximo mês"
+        aria-label={isYear ? 'Próximo ano' : 'Próximo mês'}
         onPress={handleNext}
+        isDisabled={isNextDisabled}
         className={cx(ARROW, rangeLabel && 'invisible')}
       >
         <Icon

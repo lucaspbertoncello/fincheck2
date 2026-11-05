@@ -3,6 +3,8 @@ import { useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from '
 import { buildHeatmapGrid } from '#/components/heatmap/build-heatmap-grid.util.ts';
 import { clampHeatmapLevel } from '#/components/heatmap/clamp-heatmap-level.util.ts';
 import { describeHeatmapDay } from '#/components/heatmap/describe-heatmap-day.util.ts';
+import { maskFutureHeatmapDays } from '#/components/heatmap/mask-future-heatmap-days.util.ts';
+import { SpendHeatmapMonth } from '#/components/heatmap/spend-heatmap-month.component.tsx';
 import { formatHeatmapDayWithYear } from '#/components/heatmap/format-heatmap-day-with-year.util.ts';
 import {
   HEATMAP_LEVEL_CLASS,
@@ -13,7 +15,11 @@ import {
   moveHeatmapFocus,
   type HeatmapPosition,
 } from '#/components/heatmap/move-heatmap-focus.util.ts';
-import type { SpendHeatmapDay } from '#/components/heatmap/spend-heatmap.type.ts';
+import type {
+  SpendHeatmapDay,
+  SpendHeatmapGrid,
+  SpendHeatmapView,
+} from '#/components/heatmap/spend-heatmap.type.ts';
 import { formatMoneyParts } from '#/components/money/format-money-parts.util.ts';
 import { maskMoneyText } from '#/components/money/mask-money-text.util.ts';
 import { useMoneyHidden } from '#/components/money/money-visibility.context.ts';
@@ -22,8 +28,18 @@ import { cx } from '#/utils/class-names.util.ts';
 type SpendHeatmapProps = {
   /** One item per day, in order, no gaps. The API already sets each `level`. */
   days: SpendHeatmapDay[];
-  /** Accessible name of the grid ("Gasto por dia nos últimos 12 meses"). */
+  /** Accessible name of the grid ("Gasto por dia em 2026"). */
   label: string;
+  /**
+   * "year" (the default): a column per week, Sunday on top, the months over it. "month": a
+   * calendar with a row per week and the day number in each square, for a map of one month.
+   */
+  view?: SpendHeatmapView;
+  /**
+   * Today (`YYYY-MM-DD`). A map that runs past it (a year up to 31 December) shows the days after
+   * it as faint outlines that cannot be chosen, and opens on the week of today.
+   */
+  today?: string;
   /** Enter or a tap on a day (the screen opens that day's transactions). */
   onSelectDay: (date: string) => void;
   className?: string;
@@ -49,35 +65,87 @@ function tipPosition(row: number): { top?: string; bottom?: string } {
 }
 
 /**
- * The 12-month spend map (BR-PRF-003): a square per day, a column per week, Sunday on top, the
- * month over the week that holds its 1st, Seg, Qua and Sex at the left. Fluid on the desktop; on the
+ * The spend map (BR-PRF-003). The year view (the default, also fit for 12 months): a square per
+ * day, a column per week, Sunday on top, the month over the week that holds its 1st, Seg, Qua and
+ * Sex at the left. The month view is a calendar (see `SpendHeatmapMonth`). Fluid on the desktop; on the
  * phone the squares keep a touchable size and the map scrolls sideways, opening on the current week.
  * The grid is a real `grid`: one tab stop, arrows move a day, Home and End go along the row, Page Up
  * and Down along the column. The tip (date and value) shows on hover and on focus, Esc hides it.
  * Every day has a name for screen readers (value first, then the date).
  */
-export function SpendHeatmap({ days, label, onSelectDay, className }: SpendHeatmapProps) {
+export function SpendHeatmap({
+  days,
+  label,
+  view = 'year',
+  today,
+  onSelectDay,
+  className,
+}: SpendHeatmapProps) {
+  const grid = useMemo(() => buildHeatmapGrid(days), [days]);
+
+  if (view === 'month') {
+    return (
+      <SpendHeatmapMonth
+        grid={grid}
+        label={label}
+        today={today}
+        onSelectDay={onSelectDay}
+        className={className}
+      />
+    );
+  }
+
+  return (
+    <SpendHeatmapYear
+      grid={grid}
+      label={label}
+      today={today}
+      onSelectDay={onSelectDay}
+      className={className}
+    />
+  );
+}
+
+type SpendHeatmapYearProps = Pick<
+  SpendHeatmapProps,
+  'label' | 'today' | 'onSelectDay' | 'className'
+> & {
+  grid: SpendHeatmapGrid;
+};
+
+function SpendHeatmapYear({ grid, label, today, onSelectDay, className }: SpendHeatmapYearProps) {
   const hidden = useMoneyHidden();
-  const { weeks, monthLabels } = useMemo(() => buildHeatmapGrid(days), [days]);
+  const { weeks, monthLabels } = grid;
+  const navigable = useMemo(() => maskFutureHeatmapDays(weeks, today), [weeks, today]);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const cellRefs = useRef(new Map<string, HTMLButtonElement>());
   const [tip, setTip] = useState<Tip | null>(null);
   const [active, setActive] = useState<HeatmapPosition | null>(null);
 
-  const lastWeek = weeks[weeks.length - 1] ?? [];
-  const lastRow = lastWeek.reduce((row, day, index) => (day ? index : row), 0);
-  const tabStop = active ?? { column: Math.max(weeks.length - 1, 0), row: lastRow };
+  // The last day that can be chosen (the last of the map, or today when the map runs past it).
+  const lastColumn = navigable.reduce(
+    (last, week, index) => (week.some(Boolean) ? index : last),
+    0,
+  );
+  const lastRow = (navigable[lastColumn] ?? []).reduce((row, day, index) => (day ? index : row), 0);
+  const tabStop = active ?? { column: lastColumn, row: lastRow };
 
-  // Opens on the current week (the right edge of the map) and stays there until the person moves
-  // the map. One write at mount is not enough: the scroller may not have its final width yet
-  // (fonts, a hidden parent that is revealed, the sheet of the phone settling), so the end is
-  // applied again whenever the scroller or its content changes size.
+  // Opens on the current week (the right edge of the map; with a few weeks ahead when the map runs
+  // to 31 December) and stays there until the person moves the map. One write at mount is not
+  // enough: the scroller may not have its final width yet (fonts, a hidden parent that is
+  // revealed, the sheet of the phone settling), so the position is applied again whenever the
+  // scroller or its content changes size.
   useLayoutEffect(() => {
     const scroller = scrollerRef.current;
     if (!scroller) return;
     let moved = false;
     const toEnd = () => {
-      if (!moved) scroller.scrollLeft = scroller.scrollWidth;
+      if (moved) return;
+      const ahead = Math.min(lastColumn + 3, weeks.length - 1);
+      scroller.scrollLeft =
+        ahead === weeks.length - 1
+          ? scroller.scrollWidth
+          : ((ahead + 1) / weeks.length) * scroller.scrollWidth - scroller.clientWidth;
     };
     const stop = () => {
       moved = true;
@@ -92,7 +160,7 @@ export function SpendHeatmap({ days, label, onSelectDay, className }: SpendHeatm
       for (const name of events) scroller.removeEventListener(name, stop);
       observer?.disconnect();
     };
-  }, [weeks.length]);
+  }, [weeks.length, lastColumn]);
 
   const columns = `repeat(${weeks.length}, minmax(var(--heatmap-cell-min), 1fr))`;
 
@@ -103,8 +171,8 @@ export function SpendHeatmap({ days, label, onSelectDay, className }: SpendHeatm
     }
     if (!isHeatmapKey(event.key)) return;
     event.preventDefault();
-    const next = moveHeatmapFocus(weeks, tabStop, event.key);
-    const day = weeks[next.column]?.[next.row];
+    const next = moveHeatmapFocus(navigable, tabStop, event.key);
+    const day = navigable[next.column]?.[next.row];
     if (!day) return;
     setActive(next);
     cellRefs.current.get(day.date)?.focus();
@@ -170,6 +238,16 @@ export function SpendHeatmap({ days, label, onSelectDay, className }: SpendHeatm
                 {weeks.map((week, column) => {
                   const day = week[row];
                   if (!day) return <span key={column} role="presentation" aria-hidden="true" />;
+                  if (today && day.date > today) {
+                    return (
+                      <span
+                        key={day.date}
+                        role="presentation"
+                        aria-hidden="true"
+                        className="h-(--heatmap-cell) w-full rounded-mini border border-dashed border-line opacity-60"
+                      />
+                    );
+                  }
                   const isTabStop = tabStop.column === column && tabStop.row === row;
                   const showTip = () =>
                     setTip({ date: day.date, totalCents: day.totalCents, column, row });

@@ -3,4 +3,5 @@ export { SpendHeatmapLegend } from '#/components/heatmap/spend-heatmap-legend.co
 export type {
   SpendHeatmapDay,
   SpendHeatmapLevel,
+  SpendHeatmapView,
 } from '#/components/heatmap/spend-heatmap.type.ts';

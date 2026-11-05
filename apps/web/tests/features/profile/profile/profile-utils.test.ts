@@ -30,7 +30,46 @@ describe('summarizeHeatmap', () => {
       averageCents: 3750,
       daysWithoutSpending: 2,
       spendingDays: 2,
+      dayCount: 4,
     });
+  });
+
+  it('counts only the days up to today, so a year that has not ended does not pull the average down', () => {
+    const summary = summarizeHeatmap(
+      {
+        fromOn: '2026-10-01',
+        untilOn: '2026-10-04',
+        totalCents: 15000,
+        spendingDays: 2,
+        peak: { date: '2026-10-01', totalCents: 10000 },
+        levels: [],
+        days,
+      },
+      '2026-10-03',
+    );
+
+    expect(summary.dayCount).toBe(3);
+    expect(summary.averageCents).toBe(5000);
+    expect(summary.daysWithoutSpending).toBe(1);
+  });
+
+  it('leaves out of the figures what a day after today holds (the total, the biggest day)', () => {
+    const summary = summarizeHeatmap(
+      {
+        fromOn: '2026-10-01',
+        untilOn: '2026-10-04',
+        totalCents: 90000,
+        spendingDays: 3,
+        peak: { date: '2026-10-04', totalCents: 75000 },
+        levels: [],
+        days: [...days.slice(0, 3), { date: '2026-10-04', totalCents: 75000, level: 4 }],
+      },
+      '2026-10-03',
+    );
+
+    expect(summary.peak).toEqual({ date: '2026-10-01', totalCents: 10000 });
+    expect(summary.averageCents).toBe(5000);
+    expect(summary.spendingDays).toBe(2);
   });
 
   it('does not divide by zero when there are no days', () => {

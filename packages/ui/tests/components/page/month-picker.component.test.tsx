@@ -142,4 +142,37 @@ describe('MonthPicker', () => {
       expect(month).not.toMatch(/<button class="[^"]* invisible"/);
     });
   });
+
+  it('moves a year at a time when the unit is the year: only the year shows, the arrows say so', () => {
+    const html = renderToStaticMarkup(
+      <MonthPicker
+        monthLabel="Outubro"
+        yearLabel="2026"
+        unit="year"
+        onPrevious={noop}
+        onNext={noop}
+      />,
+    );
+
+    expect(html).toContain('aria-label="Ano"');
+    expect(html).toContain('aria-label="Ano anterior"');
+    expect(html).toContain('aria-label="Próximo ano"');
+    expect(html).toMatch(/aria-live="polite"[^>]*>2026</);
+    expect(html).not.toContain('Outubro');
+  });
+
+  it('stops an arrow at an end: it is disabled, not hidden', () => {
+    const html = renderToStaticMarkup(
+      <MonthPicker
+        monthLabel="Outubro"
+        yearLabel="2026"
+        isNextDisabled
+        onPrevious={noop}
+        onNext={noop}
+      />,
+    );
+
+    expect(html).toMatch(/<button[^>]*aria-label="Próximo mês"[^>]*disabled/);
+    expect(html).not.toMatch(/<button[^>]*aria-label="Mês anterior"[^>]*disabled/);
+  });
 });

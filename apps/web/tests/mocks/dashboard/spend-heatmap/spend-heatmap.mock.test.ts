@@ -86,4 +86,69 @@ describe('spend heatmap route', () => {
     expect(map.fromOn).toBe(`${addMonths(CURRENT_MONTH, -14)}-01`);
     expect((await callApi('GET', '/dashboard/spend-heatmap?until=2026-13-40')).status).toBe(400);
   });
+
+  describe('a month or a year asked as from and to', () => {
+    const year = CURRENT_MONTH.slice(0, 4);
+
+    it('answers a whole month, one item per day, with the levels of that month', async () => {
+      const month = addMonths(CURRENT_MONTH, -1);
+      const map = await heatmap(`?from=${month}-01&to=${month}-30`);
+
+      expect(map.fromOn).toBe(`${month}-01`);
+      expect(map.untilOn).toBe(`${month}-30`);
+      expect(map.days.map((day) => day.date.slice(0, 7))).toEqual(Array(30).fill(month));
+      expect(map.days).toHaveLength(30);
+      expect(map.totalCents).toBe(map.days.reduce((sum, day) => sum + day.totalCents, 0));
+      expect(map.spendingDays).toBeGreaterThan(0);
+    });
+
+    it('answers a whole year from 1 January to 31 December, one item per day', async () => {
+      const map = await heatmap(`?from=${year}-01-01&to=${year}-12-31`);
+
+      expect(map.fromOn).toBe(`${year}-01-01`);
+      expect(map.untilOn).toBe(`${year}-12-31`);
+      expect(map.days).toHaveLength(daysBetween(map.fromOn, map.untilOn) + 1);
+      expect(map.days.some((day) => day.date > TODAY)).toBe(true);
+      expect(map.totalCents).toBe(map.days.reduce((sum, day) => sum + day.totalCents, 0));
+    });
+
+    it('scales the intensity to the period asked: a quiet month still has its four levels', async () => {
+      const month = addMonths(CURRENT_MONTH, -2);
+      const monthMap = await heatmap(`?from=${month}-01&to=${month}-28`);
+      const yearMap = await heatmap();
+
+      expect(monthMap.levels).toHaveLength(4);
+      expect(monthMap.levels).not.toEqual(yearMap.levels);
+      const used = new Set(monthMap.days.map((day) => day.level));
+      expect([...used].filter((level) => level > 0).length).toBeGreaterThanOrEqual(3);
+      expect(Math.max(...monthMap.days.map((day) => day.level))).toBe(4);
+    });
+
+    it('gives an empty period no levels and every day at level 0', async () => {
+      const map = await heatmap('?from=2001-03-01&to=2001-03-31');
+
+      expect(map.levels).toEqual([]);
+      expect(map.spendingDays).toBe(0);
+      expect(map.peak).toBeNull();
+      expect(map.days.every((day) => day.level === 0)).toBe(true);
+    });
+
+    it('refuses a bad range: only one end, backwards, over 366 days, or mixed with until', async () => {
+      expect((await callApi('GET', '/dashboard/spend-heatmap?from=2026-10-01')).status).toBe(400);
+      expect(
+        (await callApi('GET', '/dashboard/spend-heatmap?from=2026-10-31&to=2026-10-01')).status,
+      ).toBe(400);
+      expect(
+        (await callApi('GET', '/dashboard/spend-heatmap?from=2026-01-01&to=2027-01-02')).status,
+      ).toBe(400);
+      expect(
+        (
+          await callApi(
+            'GET',
+            '/dashboard/spend-heatmap?until=2026-10-31&from=2026-10-01&to=2026-10-31',
+          )
+        ).status,
+      ).toBe(400);
+    });
+  });
 });

@@ -12,6 +12,39 @@ describe('getSpendHeatmapQuerySchema', () => {
     expect(getSpendHeatmapQuerySchema.safeParse({ until: '2026-02-30' }).success).toBe(false);
     expect(getSpendHeatmapQuerySchema.safeParse({ until: '2026-10' }).success).toBe(false);
   });
+
+  it('takes a month or a year as from and to, both ends included', () => {
+    expect(
+      getSpendHeatmapQuerySchema.safeParse({ from: '2026-10-01', to: '2026-10-31' }).success,
+    ).toBe(true);
+    expect(
+      getSpendHeatmapQuerySchema.safeParse({ from: '2026-01-01', to: '2026-12-31' }).success,
+    ).toBe(true);
+    expect(
+      getSpendHeatmapQuerySchema.safeParse({ from: '2028-01-01', to: '2028-12-31' }).success,
+    ).toBe(true);
+  });
+
+  it('refuses from without to, from after to and a range over 366 days', () => {
+    expect(getSpendHeatmapQuerySchema.safeParse({ from: '2026-10-01' }).success).toBe(false);
+    expect(getSpendHeatmapQuerySchema.safeParse({ to: '2026-10-31' }).success).toBe(false);
+    expect(
+      getSpendHeatmapQuerySchema.safeParse({ from: '2026-10-31', to: '2026-10-01' }).success,
+    ).toBe(false);
+    expect(
+      getSpendHeatmapQuerySchema.safeParse({ from: '2026-01-01', to: '2027-01-02' }).success,
+    ).toBe(false);
+  });
+
+  it('does not combine until with from and to', () => {
+    expect(
+      getSpendHeatmapQuerySchema.safeParse({
+        until: '2026-10-31',
+        from: '2026-10-01',
+        to: '2026-10-31',
+      }).success,
+    ).toBe(false);
+  });
 });
 
 describe('spendHeatmapDtoSchema', () => {

@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 
 import { buildHeatmapGrid } from '#/components/heatmap/build-heatmap-grid.util.ts';
 import { describeHeatmapDay } from '#/components/heatmap/describe-heatmap-day.util.ts';
+import { HEATMAP_DAY_NUMBER_CLASS } from '#/components/heatmap/heatmap-level.constant.ts';
+import { maskFutureHeatmapDays } from '#/components/heatmap/mask-future-heatmap-days.util.ts';
 import { moveHeatmapFocus } from '#/components/heatmap/move-heatmap-focus.util.ts';
 import {
   SpendHeatmap,
@@ -146,5 +148,106 @@ describe('SpendHeatmap', () => {
 
     expect(html).toContain('Menos');
     expect(html).toContain('Mais');
+  });
+});
+
+describe('maskFutureHeatmapDays', () => {
+  const { weeks } = buildHeatmapGrid(DAYS);
+
+  it('takes out the days after today and keeps the rest', () => {
+    const masked = maskFutureHeatmapDays(weeks, '2026-11-02');
+
+    expect(
+      masked
+        .flat()
+        .filter(Boolean)
+        .map((day) => day?.date),
+    ).toEqual(['2026-10-28', '2026-10-29', '2026-10-30', '2026-10-31', '2026-11-01', '2026-11-02']);
+    expect(maskFutureHeatmapDays(weeks)).toBe(weeks);
+  });
+
+  it('keeps the focus off the days that have not come', () => {
+    const masked = maskFutureHeatmapDays(weeks, '2026-11-02');
+
+    expect(moveHeatmapFocus(masked, { column: 1, row: 1 }, 'ArrowRight')).toEqual({
+      column: 1,
+      row: 1,
+    });
+    expect(moveHeatmapFocus(masked, { column: 1, row: 0 }, 'End')).toEqual({ column: 1, row: 0 });
+  });
+});
+
+describe('SpendHeatmap, year view running past today', () => {
+  function renderYear(today?: string) {
+    return renderToStaticMarkup(
+      <SpendHeatmap
+        days={DAYS}
+        label="Gasto por dia em 2026"
+        today={today}
+        onSelectDay={() => undefined}
+      />,
+    );
+  }
+
+  it('draws the days after today as inert outlines, with the tab stop on today', () => {
+    const html = renderYear('2026-11-02');
+
+    expect(html.match(/<button/g)).toHaveLength(6);
+    expect(html).toContain('border-dashed');
+    expect(html.match(/tabindex="0"/g)).toHaveLength(1);
+    expect(html).not.toContain('aria-label="R$ 370,35, domingo, 8 de novembro"');
+  });
+});
+
+describe('SpendHeatmap, month view', () => {
+  // October 2026: starts on a Thursday, 31 days, 5 weeks (rows).
+  const october = makeDays('2026-10-01', '2026-10-31');
+
+  function renderMonth(today?: string, hidden = false) {
+    return renderToStaticMarkup(
+      <MoneyVisibilityContext value={hidden}>
+        <SpendHeatmap
+          days={october}
+          view="month"
+          label="Gasto por dia em outubro de 2026"
+          today={today}
+          onSelectDay={() => undefined}
+        />
+      </MoneyVisibilityContext>,
+    );
+  }
+
+  it('is a calendar: the weekdays on top, a row per week, the day number in each square', () => {
+    const html = renderMonth();
+
+    for (const name of ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']) {
+      expect(html).toContain(`>${name}<`);
+    }
+    expect(html).toContain('role="grid"');
+    expect(html).toContain('aria-rowcount="5"');
+    expect(html.match(/role="row"/g)).toHaveLength(5);
+    expect(html.match(/<button/g)).toHaveLength(31);
+    expect(html).toContain('>31</span>');
+    expect(html.match(/tabindex="0"/g)).toHaveLength(1);
+  });
+
+  it('names every day for a screen reader, value first, and hides the digits when asked', () => {
+    expect(renderMonth()).toMatch(
+      /aria-label="(Sem gastos|R\$ [\d.,]+), quinta-feira, 1 de outubro"/,
+    );
+    expect(renderMonth(undefined, true)).not.toMatch(/R\$ \d/);
+  });
+
+  it('shows the days after today as faint outlines and marks today', () => {
+    const html = renderMonth('2026-10-22');
+
+    expect(html.match(/<button/g)).toHaveLength(22);
+    expect(html.match(/border-dashed/g)).toHaveLength(9);
+    expect(html.match(/font-emphasis underline /g)).toHaveLength(1);
+  });
+
+  it('takes the text color from the fill so the number stays readable', () => {
+    expect(HEATMAP_DAY_NUMBER_CLASS[0]).toBe('text-fg-tertiary');
+    expect(HEATMAP_DAY_NUMBER_CLASS[4]).toContain('--color-text-on-accent-solid');
   });
 });

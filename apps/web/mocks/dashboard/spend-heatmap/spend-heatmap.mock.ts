@@ -15,7 +15,7 @@ import { daysBetween } from '#mocks/support/dates/days-between.util.ts';
 import { handleRoute } from '#mocks/support/http/handle-route.util.ts';
 import { buildLines } from '#mocks/transactions/transaction/build-lines.util.ts';
 
-// One square per day for the last 12 calendar months: what was spent that day by competence
+// One square per day for the last 12 calendar months (or for the `from`/`to` asked): what was spent that day by competence
 // (BR-DSH-001), the same lines the spending curve and the categories read.
 export const spendHeatmapMock = [
   http.get(
@@ -23,8 +23,10 @@ export const spendHeatmapMock = [
     handleRoute(
       { query: getSpendHeatmapQuerySchema, response: spendHeatmapDtoSchema },
       ({ query }) => {
-        const untilOn = query.until ?? TODAY;
-        const fromOn = `${addMonths(untilOn.slice(0, 7), -(HEATMAP_MONTHS - 1))}-01`;
+        // `from` and `to` ask for a month or a year (the levels then scale to that period);
+        // otherwise the 12 calendar months up to `until` (default today).
+        const untilOn = query.to ?? query.until ?? TODAY;
+        const fromOn = query.from ?? `${addMonths(untilOn.slice(0, 7), -(HEATMAP_MONTHS - 1))}-01`;
 
         const spentByDay = new Map<string, number>();
         for (const line of buildLines(db)) {

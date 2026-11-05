@@ -22,4 +22,18 @@ export const spendHeatmapQueries = {
           signal,
         }),
     }),
+  // A period (`from` and `to`, both included): a month or a year for the Mês | Ano of Perfil.
+  range: (from: string, to: string) =>
+    queryOptions({
+      queryKey: dashboardKeys.spendHeatmap(`${from}..${to}`),
+      queryFn: ({ signal }) =>
+        apiRequest({
+          method: 'GET',
+          path: '/dashboard/spend-heatmap',
+          querySchema: getSpendHeatmapQuerySchema,
+          query: { from, to },
+          responseSchema: spendHeatmapDtoSchema,
+          signal,
+        }),
+    }),
 };

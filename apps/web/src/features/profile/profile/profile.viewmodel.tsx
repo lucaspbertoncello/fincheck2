@@ -17,10 +17,10 @@ import { navigateToHref } from '#/shared/layouts/application/navigation/navigate
 /**
  * Wires Perfil. The name is edited in a modal here; an income source is a recurrence, so adding
  * or editing one goes to the recurrence modal of Recorrências (one form, no copy), and a day of the
- * map opens that day's transactions.
+ * map (a month or a year, chosen on the map) opens that day's transactions.
  */
 export function ProfileViewModel() {
-  const { profile, heatmap, highlights, categories } = useProfileModel();
+  const { profile, spendPeriod, heatmap, highlights, categories } = useProfileModel();
   const router = useRouter();
   const isDesktop = useIsDesktop();
   const [isEditing, setIsEditing] = useState(false);
@@ -28,6 +28,7 @@ export function ProfileViewModel() {
   const profileState = profile.isError ? 'error' : profile.data ? 'ready' : 'loading';
   const heatmapState = heatmap.isError ? 'error' : heatmap.data ? 'ready' : 'loading';
   const highlightsState = highlights.isError ? 'error' : highlights.data ? 'ready' : 'loading';
+  const today = getSaoPauloDateKey(new Date());
   const categoryNames = new Map((categories.data?.items ?? []).map((item) => [item.id, item.name]));
 
   return (
@@ -42,8 +43,15 @@ export function ProfileViewModel() {
       spendMap={
         <SpendMapSection
           state={heatmapState}
+          period={spendPeriod.period}
+          isCurrent={spendPeriod.isCurrent}
+          isRefreshing={heatmap.isPlaceholderData}
           data={heatmap.data}
-          summary={heatmap.data ? summarizeHeatmap(heatmap.data) : undefined}
+          summary={heatmap.data ? summarizeHeatmap(heatmap.data, today) : undefined}
+          today={today}
+          onModeChange={spendPeriod.setMode}
+          onPrevious={spendPeriod.goToPrevious}
+          onNext={spendPeriod.goToNext}
           onRetry={() => void heatmap.refetch()}
           onSelectDay={(date) => navigateToHref(router, buildHeatmapDayHref(date))}
         />
@@ -54,7 +62,7 @@ export function ProfileViewModel() {
           items={buildHighlightItems({
             highlights: highlights.data ?? null,
             categoryName: (categoryId) => categoryNames.get(categoryId),
-            today: getSaoPauloDateKey(new Date()),
+            today,
           })}
           onRetry={() => void highlights.refetch()}
         />
