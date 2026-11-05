@@ -70,12 +70,44 @@ describe('RecurrenceRow', () => {
     expect(html).toContain('width:50%');
   });
 
-  it('moves the partial amount under the state on the phone, so the name keeps its width', () => {
+  it('writes the partial amount in two lines at the right end: "R$ 425" over "de R$ 850"', () => {
     const html = renderToStaticMarkup(
       row({ flow: 'income', status: 'partial', amountCents: 42500, totalCents: 85000 }),
     );
-    expect(html).toContain('row-start-3');
-    expect(html).toContain('lg:w-48');
+
+    expect(html.indexOf('425,00')).toBeLessThan(html.indexOf('850,00'));
+    expect(html).toContain('>de <');
+    expect(html).toContain('whitespace-nowrap');
+    // The value column comes after the text and before the "…" menu.
+    expect(html.indexOf('Academia Corpo')).toBeLessThan(html.indexOf('425,00'));
+    expect(html.indexOf('850,00')).toBeLessThan(html.indexOf('Ações de Academia Corpo'));
+  });
+
+  it('writes state, rule and account on one truncated detail line, with the whole text in the title', () => {
+    const html = renderToStaticMarkup(row());
+
+    expect(html).toContain('title="Em 3 dias · Todo dia 25 · Bradesco, débito"');
+    expect(html).toContain('truncate');
+  });
+
+  it('shows one badge (the state) and puts the decisions on the strip under the text', () => {
+    const html = renderToStaticMarkup(row({ status: 'late', inlineActions: ['mark-done'] }));
+
+    expect(html.match(/rounded-capsule font-plain/g)).toHaveLength(1);
+    expect(html).toContain('lg:col-start-2');
+  });
+
+  it('in the "reason" mode the detail line is the reason alone', () => {
+    const html = renderToStaticMarkup(
+      row({
+        detailMode: 'reason',
+        status: 'late',
+        statusNote: 'Venceu 20/10, sem pagamento ligado',
+      }),
+    );
+
+    expect(html).toContain('title="Venceu 20/10, sem pagamento ligado"');
+    expect(html).not.toContain('Todo dia 25');
   });
 
   it('marks late, different and paid-unlinked states', () => {
@@ -169,6 +201,7 @@ describe('NeedsAttentionStrip', () => {
     expect(html).toContain('2 recorrências');
     expect(html).toContain('Diarista Rosa');
     expect(html).toContain('bg-caution-weak');
+    expect(html).toContain('border-caution');
   });
 });
 
@@ -239,9 +272,10 @@ describe('BillRow', () => {
     );
 
     expect(html).toContain('role="progressbar"');
-    expect(html).toContain('recebido');
     expect(html).toContain('falta');
     expect(html).toContain('58,00');
+    expect(html).toContain('116,00');
+    expect(html.indexOf('58,00')).toBeLessThan(html.indexOf('116,00'));
     expect(html).toContain('Registrar recebimento');
     expect(html).toContain('+');
   });
@@ -281,6 +315,45 @@ describe('BillRow', () => {
     expect(html).toContain('Paga em 28/09');
     expect(html).toContain('text-fg-tertiary');
     expect(html).not.toContain('Registrar');
+  });
+
+  it('shows two badges at most: the status, the kind, and the payment found goes on the detail line', () => {
+    const html = renderToStaticMarkup(
+      <BillRow
+        name="Fatura Bradesco Black"
+        icon="card"
+        flow="expense"
+        status="paid-unlinked"
+        badges={[{ label: 'Fatura' }, { label: 'Outro' }]}
+        dueText="Vence 28/10"
+        foundPayment="Pagamento encontrado no Bradesco"
+        amountCents={128490}
+        onAction={noop}
+      />,
+    );
+
+    expect(html.match(/rounded-capsule font-plain/g)).toHaveLength(2);
+    expect(html).toContain('Pago, falta vincular');
+    expect(html).toContain('Fatura<');
+    expect(html).not.toContain('Outro');
+    expect(html).toContain('Vence 28/10 · Pagamento encontrado no Bradesco');
+  });
+
+  it('puts the button on the strip under the text, not at the right end', () => {
+    const html = renderToStaticMarkup(
+      <BillRow
+        name="Internet Fibra"
+        icon="wifi"
+        flow="expense"
+        status="open"
+        dueText="Vence 27/10"
+        amountCents={11990}
+        onAction={noop}
+      />,
+    );
+
+    expect(html.indexOf('119,90')).toBeLessThan(html.indexOf('Registrar pagamento'));
+    expect(html).toContain('lg:col-start-2');
   });
 
   it('hides the amount when the eye is on', () => {

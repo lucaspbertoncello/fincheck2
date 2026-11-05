@@ -1,7 +1,5 @@
 import { ProgressBar } from 'react-aria-components';
 
-import { cx } from '#/utils/class-names.util.ts';
-
 type PartialBarProps = {
   paidCents: number;
   totalCents: number;
@@ -15,7 +13,7 @@ export function PartialBar({ paidCents, totalCents, label, className }: PartialB
   const percent = totalCents > 0 ? Math.min(100, Math.max(0, (paidCents / totalCents) * 100)) : 0;
 
   return (
-    <ProgressBar aria-label={label} value={percent} className={cx('w-24', className)}>
+    <ProgressBar aria-label={label} value={percent} className={className ?? 'w-24'}>
       <div className="h-1.5 overflow-hidden rounded-capsule bg-track">
         <div className="h-full rounded-capsule bg-brand" style={{ width: `${percent}%` }} />
       </div>

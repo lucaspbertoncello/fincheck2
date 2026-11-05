@@ -78,11 +78,11 @@ describe('RecurrenceListPage', () => {
     renderApp(URL);
     const attention = await findAttentionStrip();
 
-    // The question sits in the item right after the row of the Internet.
-    const question = attention.getByText('Internet').closest('li')?.nextElementSibling;
-    if (!(question instanceof HTMLElement)) throw new Error('No question under Internet');
+    // The question sits in the action strip of the Internet row (Musicando asks the same).
+    const internet = attention.getByText('Internet').closest('li');
+    if (!internet) throw new Error('No row for Internet');
 
-    fireEvent.click(within(question).getByRole('button', { name: 'Atualizar' }));
+    fireEvent.click(within(internet).getByRole('button', { name: 'Atualizar' }));
 
     await waitFor(() => expect(attention.queryByText('Internet')).not.toBeInTheDocument());
   });

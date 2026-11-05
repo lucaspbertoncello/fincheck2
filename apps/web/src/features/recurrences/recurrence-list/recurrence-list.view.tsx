@@ -4,14 +4,12 @@ import {
   Chip,
   ConfirmDialog,
   DayStripSection,
-  ExpectedValueUpdate,
   NeedsAttentionStrip,
   RecurrenceList,
   Section,
   TotalCard,
   type RecurrenceAction,
 } from '@fincheck/ui';
-import { Fragment } from 'react';
 
 import { DayOccurrenceList } from '#/features/recurrences/recurrence-list/components/day-occurrence-list.component.tsx';
 import { IdleRecurrenceRow } from '#/features/recurrences/recurrence-list/components/idle-recurrence-row.component.tsx';
@@ -125,19 +123,12 @@ function ReadyContent({
       {attentionRows.length > 0 ? (
         <NeedsAttentionStrip countLabel={countLabel(attentionRows.length)}>
           {attentionRows.map((row) => (
-            <Fragment key={row.occurrenceId}>
-              <OccurrenceRowItem row={row} onAction={onRowAction} />
-              {row.difference ? (
-                <li className="pb-s12 lg:pl-14">
-                  <ExpectedValueUpdate
-                    newCents={row.difference.newCents}
-                    keptCents={row.difference.keptCents}
-                    onUpdate={() => onDecideDifference(row, 'update')}
-                    onKeep={() => onDecideDifference(row, 'keep')}
-                  />
-                </li>
-              ) : null}
-            </Fragment>
+            <OccurrenceRowItem
+              key={row.occurrenceId}
+              row={row}
+              onAction={onRowAction}
+              onDecideDifference={onDecideDifference}
+            />
           ))}
         </NeedsAttentionStrip>
       ) : null}

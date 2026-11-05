@@ -2,10 +2,12 @@ import { Button } from '#/components/buttons/index.ts';
 import { Chip } from '#/components/chips/index.ts';
 import { CategoryIcon } from '#/components/icons/index.ts';
 import type { IconName } from '#/components/icons/index.ts';
+import { ListRow } from '#/components/list-row/index.ts';
 import { Money } from '#/components/money/index.ts';
 import { PartialBar } from '#/components/recurrences/partial-bar.component.tsx';
 import type { BillBadge, BillStatus } from '#/components/recurrences/bill-row.type.ts';
 import type { RecurrenceFlow } from '#/components/recurrences/recurrence-status.type.ts';
+
 import { cx } from '#/utils/class-names.util.ts';
 
 type BillRowProps = {
@@ -14,11 +16,11 @@ type BillRowProps = {
   /** "expense" is a bill to pay, "income" is something to receive (friend debt, refund). */
   flow: RecurrenceFlow;
   status: BillStatus;
-  /** Labels beside the due date. */
+  /** Labels after the name. The row shows two at most, the status chip (Atrasada, Pago, falta vincular) first. */
   badges?: readonly BillBadge[];
   /** "Vence 25/10, em 3 dias", "Paga em 28/09". */
   dueText: string;
-  /** Invoice with a payment detected: "Pagamento encontrado no Bradesco". */
+  /** Invoice with a payment detected: "Pagamento encontrado no Bradesco". Goes on the detail line, not in a badge. */
   foundPayment?: string;
   /** Integer cents: the total of the bill. */
   amountCents: number;
@@ -34,9 +36,10 @@ type BillRowProps = {
 };
 
 /**
- * Bill row (components.md 10.2, ui adjustment 3): icon with type badge, name, badges and due text,
- * amount through Money, partial bar with "pago X · falta Y", and "Registrar pagamento". Settled
- * rows are faded and have no button. Friend debts use the "Dívida" badge and the partial bar.
+ * Bill row (components.md 10.2) on the standard list row: icon with type badge, name and up to two
+ * badges (the status chip, then the kind: Recorrente, Dívida, Fatura), one detail line (due text,
+ * the payment found, what is left), the amount at the right end (a partial one in two lines, with
+ * the bar) and the action button on a strip of its own. Settled rows are faded and have no button.
  */
 export function BillRow({
   name,
@@ -60,98 +63,82 @@ export function BillRow({
     status === 'paid-unlinked'
       ? 'Vincular'
       : (actionLabel ?? (flow === 'income' ? 'Registrar recebimento' : 'Registrar pagamento'));
+  const statusChip =
+    status === 'late' ? (
+      <Chip key="status" tone="warn" icon="warning">
+        Atrasada
+      </Chip>
+    ) : status === 'paid-unlinked' ? (
+      <Chip key="status" tone="accent" icon="link">
+        Pago, falta vincular
+      </Chip>
+    ) : null;
+  const chips = [
+    ...(statusChip ? [statusChip] : []),
+    ...(badges ?? []).map((badge) => (
+      <Chip key={badge.label} tone={badge.tone} icon={badge.icon}>
+        {badge.label}
+      </Chip>
+    )),
+  ].slice(0, 2);
+  const detailParts = [dueText, foundPayment].filter(Boolean).join(' · ');
 
   return (
-    <li
-      className={cx(
-        'grid grid-cols-[auto_1fr_auto] items-center gap-x-s12 gap-y-s8 py-s12 lg:grid-cols-[auto_1fr_auto_auto]',
-        settled && 'text-fg-tertiary',
-        className,
-      )}
-    >
-      <CategoryIcon icon={icon} type={flow} />
-      <div className="min-w-0">
-        {onEdit ? (
-          <button
-            type="button"
-            onClick={onEdit}
-            aria-label={`Editar ${name}`}
-            className={cx(
-              'focus-ring -mx-s4 block max-w-full cursor-pointer rounded-input px-s4 text-left text-body font-emphasis hover:underline',
-              settled ? 'text-fg-secondary' : 'text-fg-primary',
-            )}
-          >
-            {name}
-          </button>
+    <ListRow
+      mark={<CategoryIcon icon={icon} type={flow} />}
+      name={name}
+      onOpen={onEdit}
+      openLabel={onEdit ? `Editar ${name}` : undefined}
+      nameClassName={settled ? 'text-fg-secondary' : undefined}
+      badges={
+        chips.length === 2 ? [chips[0], chips[1]] : chips.length === 1 ? [chips[0]] : undefined
+      }
+      detail={
+        partial ? (
+          <>
+            {detailParts} · falta{' '}
+            <Money cents={amountCents - settledCents} sign="none" weight="plain" />
+          </>
         ) : (
-          <p
-            className={cx(
-              'text-body font-emphasis',
-              settled ? 'text-fg-secondary' : 'text-fg-primary',
-            )}
-          >
-            {name}
-          </p>
-        )}
-        <p className="flex flex-wrap items-center gap-x-s8 gap-y-s4 text-label text-fg-secondary">
-          {status === 'late' ? (
-            <Chip tone="warn" icon="warning">
-              Atrasada
-            </Chip>
-          ) : null}
-          {status === 'paid-unlinked' ? (
-            <Chip tone="accent" icon="link">
-              Pago, falta vincular
-            </Chip>
-          ) : null}
-          {badges?.map((badge) => (
-            <Chip key={badge.label} tone={badge.tone} icon={badge.icon}>
-              {badge.label}
-            </Chip>
-          ))}
-          <span>{dueText}</span>
-          {foundPayment ? (
-            <Chip tone="ok" icon="link">
-              {foundPayment}
-            </Chip>
-          ) : null}
-        </p>
-      </div>
-      <div className="flex min-w-0 flex-col items-end gap-s4">
+          detailParts
+        )
+      }
+      detailTitle={partial ? undefined : detailParts}
+      value={
         <Money
-          cents={amountCents}
+          cents={partial ? settledCents : amountCents}
           sign={sign}
           signColumn
           weight="plain"
           tone={settled ? 'faded' : flow === 'income' ? 'income' : 'inherit'}
           className="text-money-row"
         />
-        {partial ? (
+      }
+      valueNote={
+        partial ? (
           <>
-            <PartialBar
-              paidCents={settledCents}
-              totalCents={amountCents}
-              label={flow === 'income' ? `Recebido de ${name}` : `Pago de ${name}`}
-              className="w-24 lg:w-28"
-            />
-            <span className="text-meta text-fg-secondary">
-              {flow === 'income' ? 'recebido' : 'pago'}{' '}
-              <Money cents={settledCents} sign="none" weight="plain" /> · falta{' '}
-              <Money cents={amountCents - settledCents} sign="none" weight="plain" />
-            </span>
+            de <Money cents={amountCents} sign="none" weight="plain" className="text-meta" />
           </>
-        ) : null}
-      </div>
-      {!settled && onAction ? (
-        <Button
-          size="sm"
-          variant="secondary"
-          onPress={onAction}
-          className="col-start-2 col-end-4 justify-self-start lg:col-start-auto lg:col-end-auto"
-        >
-          {label}
-        </Button>
-      ) : null}
-    </li>
+        ) : undefined
+      }
+      valueExtra={
+        partial ? (
+          <PartialBar
+            paidCents={settledCents}
+            totalCents={amountCents}
+            label={flow === 'income' ? `Recebido de ${name}` : `Pago de ${name}`}
+            className="w-full min-w-24"
+          />
+        ) : undefined
+      }
+      actions={
+        !settled && onAction ? (
+          <Button size="sm" variant="secondary" onPress={onAction}>
+            {label}
+          </Button>
+        ) : undefined
+      }
+      className={cx(settled && 'text-fg-tertiary', className)}
+    />
   );
 }

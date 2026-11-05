@@ -239,6 +239,7 @@ export {
   type RecurrenceStatus,
   type TotalCardItem,
 } from '#/components/recurrences/index.ts';
+export { ListRow, type ListRowBadges } from '#/components/list-row/index.ts';
 export {
   RuleEditor,
   RuleList,

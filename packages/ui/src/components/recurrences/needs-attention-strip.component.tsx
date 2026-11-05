@@ -9,15 +9,16 @@ type NeedsAttentionStripProps = {
   title?: string;
   /** Count chip text: "2 recorrências". */
   countLabel: string;
-  /** The `RecurrenceRow`s (and any `ExpectedValueUpdate`) that need a decision. */
+  /** The `RecurrenceRow`s that need a decision. */
   children: ReactNode;
   className?: string;
 };
 
 /**
- * "Precisa de você" strip (components.md 10.1): warm box with an alert icon, a count chip and the
- * rows that ask for a decision, split by a faint warn rule. The screen renders it only when there
- * is something to decide.
+ * "Precisa de você" strip (components.md 10.1): a soft warm box (the warn-weak token at 45% over the
+ * page, a faint warn border) with an alert icon, a count chip and the rows that ask for a decision,
+ * each a standard list row, split by a faint warn rule. The screen renders it only when there is
+ * something to decide.
  */
 export function NeedsAttentionStrip({
   title = 'Precisa de você',
@@ -31,7 +32,7 @@ export function NeedsAttentionStrip({
     <section
       aria-labelledby={titleId}
       className={cx(
-        'rounded-panel bg-caution-weak px-s16 pt-s16 pb-s8 lg:px-s24 lg:pt-s16',
+        'rounded-panel border border-caution/20 bg-caution-weak/45 px-s16 pt-s16 pb-s8 lg:px-s24',
         className,
       )}
     >

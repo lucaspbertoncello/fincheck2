@@ -12,7 +12,7 @@ type ExpectedValueUpdateProps = {
   className?: string;
 };
 
-/** "Atualizar o valor esperado para R$ 23,90?" with "Atualizar" and "Manter R$ 21,90" (10.1). */
+/** "Atualizar o valor esperado para R$ 23,90?" with "Atualizar" and "Manter R$ 21,90" (10.1). It goes on the action strip of the row (`RecurrenceRow` `decision`). */
 export function ExpectedValueUpdate({
   newCents,
   keptCents,

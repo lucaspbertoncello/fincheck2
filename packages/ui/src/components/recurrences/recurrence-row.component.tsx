@@ -1,6 +1,9 @@
+import type { ReactNode } from 'react';
+
 import { Button } from '#/components/buttons/index.ts';
 import { CategoryIcon } from '#/components/icons/index.ts';
 import type { IconName } from '#/components/icons/index.ts';
+import { ListRow } from '#/components/list-row/index.ts';
 import { OverflowMenu } from '#/components/menus/index.ts';
 import { Money } from '#/components/money/index.ts';
 import { buildRecurrenceMenu } from '#/components/recurrences/build-recurrence-menu.util.ts';
@@ -13,7 +16,6 @@ import type {
   RecurrenceInlineAction,
   RecurrenceStatus,
 } from '#/components/recurrences/recurrence-status.type.ts';
-import { cx } from '#/utils/class-names.util.ts';
 
 type RecurrenceRowProps = {
   name: string;
@@ -24,22 +26,30 @@ type RecurrenceRowProps = {
   /** Account or sender beside the rule ("Nubank, crédito", "Pix de G. Prado"). */
   account?: string;
   status: RecurrenceStatus;
-  /** Second line of the state column: "Recebido 07/10", "Em 3 dias", "Esperado 21,90". */
+  /** What the state says in a few words: "Recebido 07/10", "Em 3 dias", "Venceu 20/10, sem pagamento ligado". */
   statusNote?: string;
   /** Integer cents: the expected amount, or what came in so far when `status` is "partial". */
   amountCents: number;
-  /** Partial only: the full expected amount ("425,00 de 850,00" with the bar). */
+  /** Partial only: the full expected amount ("R$ 400" over "de R$ 800" with the bar). */
   totalCents?: number;
-  /** Buttons under the row, for the occurrences that ask for a decision. */
+  /** Buttons on the strip under the row, for the occurrences that ask for a decision. */
   inlineActions?: readonly RecurrenceInlineAction[];
+  /**
+   * "reason" (the "Precisa de você" strip) makes the detail line the reason alone; the default
+   * writes the state, the rule and the account.
+   */
+  detailMode?: 'schedule' | 'reason';
+  /** Replaces the strip content with a decision of its own (`ExpectedValueUpdate`). */
+  decision?: ReactNode;
   onAction: (action: RecurrenceAction) => void;
   className?: string;
 };
 
 /**
- * Recurrence row (components.md 10.2, ui adjustment 3): category icon with type badge, name, date
- * rule and account, state column (chip and note), amount through Money (sign column, weight 400)
- * and the "…" menu. 4 columns on the phone with the state on a second line.
+ * Recurrence row (components.md 10.2) on the standard list row: category icon with type badge, name
+ * and the status chip, one detail line (state, rule, account), the amount at the right end (a
+ * partial one in two lines, "R$ 400" over "de R$ 800", with the bar), the "…" menu and the
+ * decision buttons on a strip of their own.
  */
 export function RecurrenceRow({
   name,
@@ -52,6 +62,8 @@ export function RecurrenceRow({
   amountCents,
   totalCents,
   inlineActions,
+  detailMode = 'schedule',
+  decision,
   onAction,
   className,
 }: RecurrenceRowProps) {
@@ -59,84 +71,68 @@ export function RecurrenceRow({
   const partial = status === 'partial' && totalCents !== undefined;
   const sign = flow === 'income' ? 'plus' : 'minus';
   const tone = dismissed ? 'faded' : flow === 'income' ? 'income' : 'inherit';
+  const detail = (detailMode === 'reason' ? [statusNote] : [statusNote, rule, account]).filter(
+    (part): part is string => Boolean(part),
+  );
 
   return (
-    <li
-      className={cx(
-        'grid grid-cols-[auto_1fr_auto_auto] items-center gap-x-s12 gap-y-s4 py-s12 lg:grid-cols-[auto_1fr_11rem_auto_auto]',
-        className,
-      )}
-    >
-      <CategoryIcon icon={icon} type={flow} />
-      <div className="min-w-0">
-        <p
-          className={cx(
-            'text-body font-emphasis',
-            dismissed ? 'text-fg-tertiary line-through' : 'text-fg-primary',
-          )}
-        >
-          {name}
-        </p>
-        <p className="flex flex-wrap gap-x-s12 text-label text-fg-secondary">
-          <span>{rule}</span>
-          {account ? <span>{account}</span> : null}
-        </p>
-      </div>
-      <div className="col-start-2 col-end-5 row-start-2 flex items-center gap-s8 lg:col-start-auto lg:col-end-auto lg:row-start-auto lg:flex-col lg:items-end lg:gap-s4">
-        <RecurrenceStatusChip status={status} />
-        {statusNote ? <span className="text-meta text-fg-secondary">{statusNote}</span> : null}
-      </div>
-      <div
-        className={cx(
-          'flex min-w-0 gap-s4 lg:col-auto lg:row-auto lg:w-48 lg:flex-col lg:items-end',
-          // Phone, partial: the "425,00 de 850,00" block drops under the state so the name keeps its width.
-          partial ? 'col-start-2 col-end-5 row-start-3 items-center gap-s12' : 'flex-col items-end',
-        )}
-      >
-        {partial ? (
+    <ListRow
+      mark={<CategoryIcon icon={icon} type={flow} />}
+      name={name}
+      nameClassName={dismissed ? 'text-fg-tertiary line-through' : undefined}
+      badges={[<RecurrenceStatusChip key="status" status={status} />]}
+      detail={detail.join(' · ')}
+      detailTitle={detail.join(' · ')}
+      value={
+        <Money
+          cents={amountCents}
+          sign={sign}
+          signColumn
+          weight="plain"
+          tone={tone}
+          className="text-money-row"
+        />
+      }
+      valueNote={
+        partial ? (
           <>
-            <span className="inline-flex items-baseline gap-s4 text-money-row whitespace-nowrap">
-              <Money cents={amountCents} sign={sign} signColumn weight="plain" tone={tone} />
-              <span className="text-meta text-fg-secondary">de</span>
-              <Money cents={totalCents} sign="none" weight="plain" tone="faded" />
-            </span>
-            <PartialBar
-              paidCents={amountCents}
-              totalCents={totalCents}
-              label={`Recebido de ${name}`}
-            />
+            de <Money cents={totalCents} sign="none" weight="plain" className="text-meta" />
           </>
-        ) : (
-          <Money
-            cents={amountCents}
-            sign={sign}
-            signColumn
-            weight="plain"
-            tone={tone}
-            className="text-money-row"
+        ) : undefined
+      }
+      valueExtra={
+        partial ? (
+          <PartialBar
+            paidCents={amountCents}
+            totalCents={totalCents}
+            label={`Recebido de ${name}`}
+            className="w-full min-w-24"
           />
-        )}
-      </div>
-      <OverflowMenu
-        label={`Ações de ${name}`}
-        items={buildRecurrenceMenu(flow, status)}
-        onAction={(key) => onAction(key as RecurrenceAction)}
-        className="col-start-4 row-start-1 lg:col-auto lg:row-auto"
-      />
-      {inlineActions?.length ? (
-        <div className="col-span-full flex flex-wrap items-center gap-s8 lg:col-start-2">
-          {inlineActions.map((action) => (
-            <Button
-              key={action}
-              size="sm"
-              variant={action === 'edit-expected' ? 'tertiary' : 'secondary'}
-              onPress={() => onAction(action)}
-            >
-              {recurrenceActionLabel(action, flow)}
-            </Button>
-          ))}
-        </div>
-      ) : null}
-    </li>
+        ) : undefined
+      }
+      menu={
+        <OverflowMenu
+          label={`Ações de ${name}`}
+          items={buildRecurrenceMenu(flow, status)}
+          onAction={(key) => onAction(key as RecurrenceAction)}
+        />
+      }
+      actions={
+        decision ??
+        (inlineActions?.length
+          ? inlineActions.map((action) => (
+              <Button
+                key={action}
+                size="sm"
+                variant={action === 'edit-expected' ? 'tertiary' : 'secondary'}
+                onPress={() => onAction(action)}
+              >
+                {recurrenceActionLabel(action, flow)}
+              </Button>
+            ))
+          : undefined)
+      }
+      className={className}
+    />
   );
 }
