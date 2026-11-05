@@ -18,6 +18,8 @@ export type BannerVariant = keyof typeof VARIANT;
 
 type BannerProps = {
   variant: BannerVariant;
+  /** Replaces the variant icon at the left (the logo of a service). */
+  mark?: ReactNode;
   /** 16 px message. */
   title: string;
   /** 14 px line under it: the reason, the time of the attempts. */
@@ -45,6 +47,7 @@ type BannerProps = {
  */
 export function Banner({
   variant,
+  mark,
   title,
   description,
   actionLabel,
@@ -92,7 +95,7 @@ export function Banner({
       )}
     >
       <div className="flex min-w-0 flex-1 items-start gap-s16">
-        <Icon name={style.name} size="lg" className={cx('mt-s4 lg:mt-0', style.icon)} />
+        {mark ?? <Icon name={style.name} size="lg" className={cx('mt-s4 lg:mt-0', style.icon)} />}
         <div className="flex min-w-0 flex-col gap-s4">
           <p className="text-body font-emphasis text-fg-primary">{title}</p>
           {description ? <p className="text-label text-fg-secondary">{description}</p> : null}

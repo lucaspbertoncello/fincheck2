@@ -1,4 +1,4 @@
-import { Banner } from '@fincheck/ui';
+import { Banner, ServiceLogo } from '@fincheck/ui';
 
 import type { SubscriptionSuggestionData } from '#/features/recurrences/subscription-list/types/subscription-list.type.ts';
 
@@ -17,6 +17,11 @@ export function SubscriptionSuggestion({
   return (
     <Banner
       variant="suggestion"
+      mark={
+        suggestion.service ? (
+          <ServiceLogo slug={suggestion.service.slug} name={suggestion.service.name} />
+        ) : undefined
+      }
       title={suggestion.title}
       description={suggestion.description}
       actionsPlacement="below"

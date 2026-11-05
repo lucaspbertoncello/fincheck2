@@ -3,6 +3,7 @@ import type {
   RecurrenceFlow,
   RecurrenceInlineAction,
   RecurrenceStatus,
+  ServiceLogoData,
 } from '@fincheck/ui';
 
 /** One occurrence of the month, ready for `RecurrenceRow`. */
@@ -11,6 +12,8 @@ export type OccurrenceRowData = {
   recurrenceId: string;
   name: string;
   icon: IconName;
+  /** The service the name or the matching text points to (its logo); null shows the category icon. */
+  service: ServiceLogoData | null;
   flow: RecurrenceFlow;
   /** "Todo dia 20", "Por volta do dia 25". */
   rule: string;
@@ -33,6 +36,7 @@ export type IdleRecurrenceData = {
   recurrenceId: string;
   name: string;
   icon: IconName;
+  service: ServiceLogoData | null;
   flow: RecurrenceFlow;
   rule: string;
   /** "Pausada" or "Começa em 11/2026". */

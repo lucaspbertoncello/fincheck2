@@ -41,6 +41,7 @@ export function BillAgendaSection({
             key={row.key}
             name={row.name}
             icon={row.icon}
+            service={row.service}
             flow={row.flow}
             status={row.status}
             badges={row.badges}

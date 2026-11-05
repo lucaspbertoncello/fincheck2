@@ -1,4 +1,4 @@
-import { Button, CategoryIcon, Chip, ListRow, OverflowMenu } from '@fincheck/ui';
+import { Button, CategoryIcon, Chip, ListRow, OverflowMenu, ServiceLogo } from '@fincheck/ui';
 
 import type { IdleRecurrenceData } from '#/features/recurrences/recurrence-list/types/recurrence-list.type.ts';
 
@@ -12,7 +12,13 @@ type IdleRecurrenceRowProps = {
 export function IdleRecurrenceRow({ recurrence, onResume, onEdit }: IdleRecurrenceRowProps) {
   return (
     <ListRow
-      mark={<CategoryIcon icon={recurrence.icon} type={recurrence.flow} />}
+      mark={
+        recurrence.service ? (
+          <ServiceLogo slug={recurrence.service.slug} name={recurrence.service.name} />
+        ) : (
+          <CategoryIcon icon={recurrence.icon} type={recurrence.flow} />
+        )
+      }
       name={recurrence.name}
       detail={recurrence.rule}
       detailTitle={recurrence.rule}

@@ -1,4 +1,4 @@
-import { CategoryIcon, ListRow, Money, RecurrenceStatusChip } from '@fincheck/ui';
+import { CategoryIcon, ListRow, Money, RecurrenceStatusChip, ServiceLogo } from '@fincheck/ui';
 
 import type { OccurrenceRowData } from '#/features/recurrences/recurrence-list/types/recurrence-list.type.ts';
 
@@ -9,7 +9,13 @@ export function DayOccurrenceList({ items }: { items: readonly OccurrenceRowData
       {items.map((item) => (
         <ListRow
           key={item.occurrenceId}
-          mark={<CategoryIcon icon={item.icon} type={item.flow} />}
+          mark={
+            item.service ? (
+              <ServiceLogo slug={item.service.slug} name={item.service.name} />
+            ) : (
+              <CategoryIcon icon={item.icon} type={item.flow} />
+            )
+          }
           name={item.name}
           badges={[<RecurrenceStatusChip key="status" status={item.status} />]}
           detail={item.statusNote}

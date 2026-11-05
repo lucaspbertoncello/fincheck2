@@ -3,6 +3,7 @@ import type { BillBadge, IconName } from '@fincheck/ui';
 
 import type { BillRowModel } from '#/features/bills/bill-list/bill-list.model.ts';
 import { describeDueDate } from '#/features/bills/bill-list/utils/describe-due-date.util.ts';
+import { recognizeService } from '#/domain/recurrences/service-logo/rules/recognize-service.rule.ts';
 import { resolveRowStatus } from '#/domain/bills/bill/rules/resolve-row-status.rule.ts';
 
 type RowContext = {
@@ -50,6 +51,7 @@ export function buildBillRows(items: readonly Agenda.Item[], context: RowContext
       key: item.key,
       name: item.title,
       icon: resolveIcon(item, context),
+      service: item.badge === 'recurring' ? recognizeService(item.title) : null,
       flow: item.flow === 'in' ? 'income' : 'expense',
       status,
       badges: resolveBadges(item),

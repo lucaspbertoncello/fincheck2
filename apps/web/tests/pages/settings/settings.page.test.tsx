@@ -676,6 +676,9 @@ describe('SettingsPage', () => {
       expect(
         screen.getByText(/Ícones Solar, de 480 Design, sob licença CC BY 4.0/),
       ).toBeInTheDocument();
+      expect(
+        screen.getByText('Logos de serviços do Simple Icons (CC0); as marcas pertencem aos donos.'),
+      ).toBeInTheDocument();
     });
 
     it('opens a page from the list on the phone, with the way back', async () => {

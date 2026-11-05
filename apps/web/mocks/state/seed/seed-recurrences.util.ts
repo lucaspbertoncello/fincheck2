@@ -157,9 +157,9 @@ export function seedRecurrences(database: MockState.Database, ids: SeedIds): voi
       ...base,
       id: rec.streaming,
       kind: 'expense',
-      name: 'Streamflix',
+      name: 'Netflix',
       expectedAmountCents: 4490,
-      matchText: 'STREAMFLIX',
+      matchText: 'NETFLIX',
       accountId: acc.nuCartao,
       method: 'credit',
       categoryId: cat.assinaturas,
@@ -367,7 +367,7 @@ export function seedRecurrences(database: MockState.Database, ids: SeedIds): voi
     streaming.recurrence,
     streaming.occurrence.expectedOn ?? TODAY,
     4490,
-    'STREAMFLIX',
+    'NETFLIX',
     null,
   );
   // Diarista (late) and Plano celular (still to come, inside the Nubank invoice) have no payment.

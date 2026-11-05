@@ -62,7 +62,7 @@ describe('recurrences routes (reads)', () => {
     );
     expect(summary.incomes.count).toBe(5);
     expect(summary.incomes.expectedCents).toBe(123_000 + 137_000 + 395_000 + 80_000 + 74_000);
-    // 5 fixed expenses plus 3 subscriptions on the card (Musicando, Nuvem+, Treina Cursos).
+    // 5 fixed expenses plus 3 subscriptions on the card (Spotify, Nuvem+, Treina Cursos).
     expect(summary.expenses.count).toBe(8);
     expect(summary.expenses.differentCount).toBeGreaterThanOrEqual(1);
     expect(summary.expenses.paidCount).toBeGreaterThanOrEqual(2);

@@ -27,14 +27,14 @@ interface SubscriptionSeed {
   endedDaysAgo?: number;
 }
 
-// Streamflix (charged) and Plano celular (still to come) come from `seedRecurrences`; these add the
+// Netflix (charged) and Plano celular (still to come) come from `seedRecurrences`; these add the
 // other cases of the Assinaturas tab: a price that went up, one that did not charge, one that was
 // ended and charged anyway. Names and amounts are made up.
 const SUBSCRIPTIONS: readonly SubscriptionSeed[] = [
   {
-    name: 'Musicando',
-    matchText: 'MUSICANDO',
-    description: 'MUSICANDO PREMIUM',
+    name: 'Spotify',
+    matchText: 'SPOTIFY',
+    description: 'SPOTIFY PREMIUM',
     expectedCents: 2190,
     categoryKey: 'assinaturas',
     daysAgo: 4,
@@ -80,7 +80,7 @@ const REPEATED_PURCHASES: ReadonlyArray<{
   // Oldest month first; the last one is this month.
   { description: 'LEITURA MENSAL CLUBE', categoryKey: 'lazer', daysAgo: 9, amounts: [3290, 3290] },
   {
-    description: 'PODCAST PLUS',
+    description: 'DEEZER PREMIUM',
     categoryKey: 'assinaturas',
     daysAgo: 11,
     amounts: [1790, 1790, 1990],

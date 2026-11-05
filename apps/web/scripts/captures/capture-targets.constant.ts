@@ -52,6 +52,8 @@ export const SCREEN_TARGETS: CaptureTarget[] = [
   { name: 'settings connections', path: '/settings/connections', kind: 'screen' },
   { name: 'settings backup', path: '/settings/backup', kind: 'screen' },
   { name: 'settings appearance', path: '/settings/appearance', kind: 'screen' },
+  // The gallery group with the 26 service logos side by side (18 logos, 8 initials), to check them.
+  { name: 'service logos gallery', path: '/gallery.html#service-logos', kind: 'screen' },
 ];
 
 export const MODAL_TARGETS: CaptureTarget[] = [

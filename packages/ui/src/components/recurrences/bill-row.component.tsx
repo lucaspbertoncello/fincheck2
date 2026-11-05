@@ -4,6 +4,7 @@ import { CategoryIcon } from '#/components/icons/index.ts';
 import type { IconName } from '#/components/icons/index.ts';
 import { ListRow } from '#/components/list-row/index.ts';
 import { Money } from '#/components/money/index.ts';
+import { ServiceLogo, type ServiceLogoData } from '#/components/service-logos/index.ts';
 import { PartialBar } from '#/components/recurrences/partial-bar.component.tsx';
 import type { BillBadge, BillStatus } from '#/components/recurrences/bill-row.type.ts';
 import type { RecurrenceFlow } from '#/components/recurrences/recurrence-status.type.ts';
@@ -13,6 +14,8 @@ import { cx } from '#/utils/class-names.util.ts';
 type BillRowProps = {
   name: string;
   icon: IconName;
+  /** A recognized subscription service (a recurring charge): its logo replaces the category icon. */
+  service?: ServiceLogoData | null;
   /** "expense" is a bill to pay, "income" is something to receive (friend debt, refund). */
   flow: RecurrenceFlow;
   status: BillStatus;
@@ -46,6 +49,7 @@ type BillRowProps = {
 export function BillRow({
   name,
   icon,
+  service,
   flow,
   status,
   badges,
@@ -88,7 +92,13 @@ export function BillRow({
 
   return (
     <ListRow
-      mark={<CategoryIcon icon={icon} type={flow} />}
+      mark={
+        service ? (
+          <ServiceLogo slug={service.slug} name={service.name} />
+        ) : (
+          <CategoryIcon icon={icon} type={flow} />
+        )
+      }
       name={name}
       onOpen={onEdit}
       openLabel={onEdit ? `Editar ${name}` : undefined}

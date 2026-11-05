@@ -17,6 +17,7 @@ export function OccurrenceRowItem({ row, onAction, onDecideDifference }: Occurre
     <RecurrenceRow
       name={row.name}
       icon={row.icon}
+      service={row.service}
       flow={row.flow}
       rule={row.rule}
       account={row.account}

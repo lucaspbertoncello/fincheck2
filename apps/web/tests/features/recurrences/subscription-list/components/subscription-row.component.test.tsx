@@ -8,6 +8,7 @@ const ROW: SubscriptionRowData = {
   recurrenceId: 's1',
   name: 'Streaming Plus',
   icon: 'wifi',
+  service: null,
   detail: 'Roxinho · dia 12',
   status: 'charged',
   ended: false,
@@ -72,6 +73,35 @@ describe('SubscriptionRow', () => {
     expect(html).toContain('border-caution/20');
     expect(html).toContain('Cobrou R$ 2,00 a mais.');
     expect(html).toContain('Atualizar valor');
+  });
+
+  it('puts the logo of a recognized service where the category icon was, with no type badge', () => {
+    const html = renderToStaticMarkup(
+      <SubscriptionRow
+        row={{ ...ROW, name: 'Netflix', service: { name: 'Netflix', slug: 'netflix' } }}
+        first
+        onAction={noop}
+      />,
+    );
+
+    expect(html).toContain('data-service="netflix"');
+    expect(html).not.toContain('data-type=');
+  });
+
+  it('writes the initial of a service that has no logo file, and keeps the icon of an unknown one', () => {
+    const initial = renderToStaticMarkup(
+      <SubscriptionRow
+        row={{ ...ROW, name: 'Disney+', service: { name: 'Disney+', slug: null } }}
+        first
+        onAction={noop}
+      />,
+    );
+    const unknown = renderToStaticMarkup(<SubscriptionRow row={ROW} first onAction={noop} />);
+
+    expect(initial).toContain('data-service="initial"');
+    expect(initial).toContain('>D<');
+    expect(unknown).toContain('data-type="expense"');
+    expect(unknown).not.toContain('data-service');
   });
 
   it('keeps at most two badges: the state and "Encerrada"', () => {

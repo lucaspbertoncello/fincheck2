@@ -1,5 +1,6 @@
 import type { Subscription } from '@fincheck/shared/recurrences/subscription/subscription.type.ts';
 
+import { recognizeService } from '#/domain/recurrences/service-logo/rules/recognize-service.rule.ts';
 import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 import type { SubscriptionRowData } from '#/features/recurrences/subscription-list/types/subscription-list.type.ts';
 import { buildSubscriptionAlert } from '#/features/recurrences/subscription-list/utils/build-subscription-alert.util.ts';
@@ -32,6 +33,7 @@ export function presentSubscriptionRow(
     recurrenceId: recurrence.id,
     name: recurrence.name,
     icon: mapCategoryIcon(categoryIcon, 'subscription'),
+    service: recognizeService(recurrence.name, recurrence.matchText),
     detail: [card, `dia ${item.chargeDay}`].filter(Boolean).join(' · '),
     status: item.status,
     ended,

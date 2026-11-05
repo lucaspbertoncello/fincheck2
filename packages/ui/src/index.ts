@@ -91,6 +91,13 @@ export {
   type AmountKind,
   type ChoiceOption,
 } from '#/components/form-fields/index.ts';
+export {
+  SERVICE_LOGO_ART,
+  ServiceLogo,
+  type ServiceLogoArt,
+  type ServiceLogoData,
+  type ServiceLogoSlug,
+} from '#/components/service-logos/index.ts';
 export { Collapse } from '#/components/disclosure/index.ts';
 export {
   FormModal,

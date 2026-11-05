@@ -44,9 +44,9 @@ describe('GET /subscriptions (items and summary)', () => {
 
     expect(names).toEqual(
       expect.arrayContaining([
-        'Streamflix',
+        'Netflix',
         'Plano celular',
-        'Musicando',
+        'Spotify',
         'Nuvem+ 200 GB',
         'Treina Cursos',
         'Revista Digital',
@@ -65,17 +65,17 @@ describe('GET /subscriptions (items and summary)', () => {
   it('marks charged, to charge and did not charge', async () => {
     const data = await readSubscriptions();
 
-    expect(itemNamed(data, 'Streamflix')).toMatchObject({ status: 'charged', alert: null });
+    expect(itemNamed(data, 'Netflix')).toMatchObject({ status: 'charged', alert: null });
     expect(itemNamed(data, 'Plano celular')).toMatchObject({ status: 'upcoming', alert: null });
     expect(itemNamed(data, 'Nuvem+ 200 GB')).toMatchObject({
       status: 'missed',
       alert: { kind: 'missed' },
     });
-    expect(itemNamed(data, 'Streamflix').lastChargeCents).toBe(4490);
+    expect(itemNamed(data, 'Netflix').lastChargeCents).toBe(4490);
   });
 
   it('warns that the price changed with the amounts before and after', async () => {
-    const musicando = itemNamed(await readSubscriptions(), 'Musicando');
+    const musicando = itemNamed(await readSubscriptions(), 'Spotify');
 
     expect(musicando.status).toBe('charged');
     expect(musicando.alert).toEqual({ kind: 'price_changed', fromCents: 2190, toCents: 2490 });
@@ -126,27 +126,27 @@ describe('GET /subscriptions (items and summary)', () => {
 
   it('follows the other lists: pausing a subscription takes it out of the tab and the total', async () => {
     const before = await readSubscriptions();
-    const streamflix = itemNamed(before, 'Streamflix');
+    const streamflix = itemNamed(before, 'Netflix');
 
     expect((await callApi('POST', `/recurrences/${streamflix.recurrence.id}/pause`)).status).toBe(
       200,
     );
     const after = await readSubscriptions();
 
-    expect(after.items.map((item) => item.recurrence.name)).not.toContain('Streamflix');
+    expect(after.items.map((item) => item.recurrence.name)).not.toContain('Netflix');
     expect(after.summary.activeCount).toBe(before.summary.activeCount - 1);
     expect(after.summary.monthlyTotalCents).toBe(before.summary.monthlyTotalCents - 4490);
   });
 
   it('updating the expected amount to the last charge clears the price warning', async () => {
-    const musicando = itemNamed(await readSubscriptions(), 'Musicando');
+    const musicando = itemNamed(await readSubscriptions(), 'Spotify');
 
     const updated = await callApi('PATCH', `/recurrences/${musicando.recurrence.id}`, {
       expectedAmountCents: 2490,
     });
     expect(updated.status).toBe(200);
 
-    expect(itemNamed(await readSubscriptions(), 'Musicando').alert).toBeNull();
+    expect(itemNamed(await readSubscriptions(), 'Spotify').alert).toBeNull();
   });
 });
 
@@ -156,7 +156,7 @@ describe('GET /subscriptions (suggestions)', () => {
 
   it('suggests what came back on the card without a recurrence, with the last charge', async () => {
     const data = await readSubscriptions();
-    const podcast = seeded(data, 'PODCAST PLUS');
+    const podcast = seeded(data, 'DEEZER PREMIUM');
     const leitura = seeded(data, 'LEITURA MENSAL');
 
     expect(podcast).toMatchObject({ lastAmountCents: 1990, monthsSeen: 3 });
@@ -164,8 +164,8 @@ describe('GET /subscriptions (suggestions)', () => {
     expect(leitura).toMatchObject({ lastAmountCents: 3290, monthsSeen: 2 });
     expect(podcast?.accountId).toBe(findTestCard().id);
     // What a recurrence already covers is never suggested.
-    expect(seeded(data, 'STREAMFLIX')).toBeUndefined();
-    expect(seeded(data, 'MUSICANDO')).toBeUndefined();
+    expect(seeded(data, 'NETFLIX')).toBeUndefined();
+    expect(seeded(data, 'SPOTIFY')).toBeUndefined();
     expect(seeded(data, 'REVISTA DIGITAL')).toBeUndefined();
   });
 
@@ -254,7 +254,7 @@ describe('POST /subscriptions/suggestions/accept and /dismiss', () => {
   }
 
   it('creates the recurrence the way the contract says and links the charges it saw', async () => {
-    const key = await suggestionKey('PODCAST PLUS');
+    const key = await suggestionKey('DEEZER PREMIUM');
     const answer = await callApi('POST', '/subscriptions/suggestions/accept', { key });
     expect(answer.status).toBe(201);
     const { recurrence, occurrence } = createRecurrenceResponseSchema.parse(answer.json);
@@ -263,9 +263,9 @@ describe('POST /subscriptions/suggestions/accept and /dismiss', () => {
       kind: 'expense',
       method: 'credit',
       accountId: findTestCard().id,
-      name: 'Podcast Plus',
+      name: 'Deezer Premium',
       expectedAmountCents: 1990,
-      matchText: 'PODCAST PLUS',
+      matchText: 'DEEZER PREMIUM',
       dateRule: { type: 'fixed_day' },
     });
     expect(occurrence?.status).toBe('confirmed');
@@ -278,12 +278,12 @@ describe('POST /subscriptions/suggestions/accept and /dismiss', () => {
 
     // It is a subscription now, it shows in Recorrências and the suggestion is gone.
     const data = await readSubscriptions();
-    expect(itemNamed(data, 'Podcast Plus').status).toBe('charged');
+    expect(itemNamed(data, 'Deezer Premium').status).toBe('charged');
     expect(data.suggestions.map((item) => item.key)).not.toContain(key);
     const list = listResponseSchema(recurrenceListItemSchema).parse(
       (await callApi('GET', `/recurrences?month=${CURRENT_MONTH}`)).json,
     ).items;
-    expect(list.map((item) => item.name)).toContain('Podcast Plus');
+    expect(list.map((item) => item.name)).toContain('Deezer Premium');
   });
 
   it('takes the name and the category the request overwrites', async () => {
@@ -304,7 +304,7 @@ describe('POST /subscriptions/suggestions/accept and /dismiss', () => {
   });
 
   it('brings the suggestion back when the accepted recurrence is deleted (the undo)', async () => {
-    const key = await suggestionKey('PODCAST PLUS');
+    const key = await suggestionKey('DEEZER PREMIUM');
     const { recurrence } = createRecurrenceResponseSchema.parse(
       (await callApi('POST', '/subscriptions/suggestions/accept', { key })).json,
     );
@@ -313,11 +313,11 @@ describe('POST /subscriptions/suggestions/accept and /dismiss', () => {
 
     const data = await readSubscriptions();
     expect(data.suggestions.map((item) => item.key)).toContain(key);
-    expect(data.items.map((item) => item.recurrence.name)).not.toContain('Podcast Plus');
+    expect(data.items.map((item) => item.recurrence.name)).not.toContain('Deezer Premium');
   });
 
   it('dismisses by key: the suggestion does not come back, the others stay', async () => {
-    const key = await suggestionKey('PODCAST PLUS');
+    const key = await suggestionKey('DEEZER PREMIUM');
     const before = (await readSubscriptions()).suggestions.length;
 
     expect((await callApi('POST', '/subscriptions/suggestions/dismiss', { key })).status).toBe(204);

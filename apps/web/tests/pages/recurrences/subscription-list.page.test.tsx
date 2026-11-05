@@ -48,7 +48,7 @@ async function suggestionBanner(name: string): Promise<HTMLElement> {
 describe('SubscriptionListPage', () => {
   it('shows the totals of the active ones, by month and by year', async () => {
     renderApp(URL);
-    await findRow('Streamflix');
+    await findRow('Netflix');
 
     const monthly = 4490 + 5499 + 2190 + 1990 + 7900;
     expect(screen.getByText('Por mês')).toBeInTheDocument();
@@ -60,10 +60,25 @@ describe('SubscriptionListPage', () => {
     expect(screen.getAllByText(format(monthly * 12)).length).toBeGreaterThan(0);
   });
 
+  it('shows the logo of the services it recognizes, in the banner too, and the icon of the others', async () => {
+    renderApp(URL);
+
+    const netflix = await findRow('Netflix');
+    const spotify = await findRow('Spotify');
+    const nuvem = await findRow('Nuvem+ 200 GB');
+    const banner = await suggestionBanner('Deezer Premium');
+
+    expect(netflix.querySelector('[data-service="netflix"]')).not.toBeNull();
+    expect(spotify.querySelector('[data-service="spotify"]')).not.toBeNull();
+    expect(banner.querySelector('[data-service="deezer"]')).not.toBeNull();
+    expect(nuvem.querySelector('[data-service]')).toBeNull();
+    expect(nuvem.querySelector('[data-type="expense"]')).not.toBeNull();
+  });
+
   it('lists each subscription with the card, the day and the state of the month', async () => {
     renderApp(URL);
 
-    const streamflix = await findRow('Streamflix');
+    const streamflix = await findRow('Netflix');
     expect(within(streamflix).getByText('Cobrada')).toBeInTheDocument();
     expect(within(streamflix).getByText(/^Roxinho · dia \d+$/)).toBeInTheDocument();
     expect(within(await findRow('Plano celular')).getByText('A cobrar')).toBeInTheDocument();
@@ -77,7 +92,7 @@ describe('SubscriptionListPage', () => {
   it('warns on the row: price that went up, charge that did not come, charge after the end', async () => {
     renderApp(URL);
 
-    const musicando = await findRow('Musicando');
+    const musicando = await findRow('Spotify');
     expect(within(musicando).getByText('Subiu de R$ 21,90 para R$ 24,90')).toBeInTheDocument();
     expect(within(musicando).getByRole('button', { name: 'Atualizar valor' })).toBeInTheDocument();
     const nuvem = await findRow('Nuvem+ 200 GB');
@@ -88,16 +103,14 @@ describe('SubscriptionListPage', () => {
       within(revista).getByText('Revista Digital cobrou R$ 34,90 depois de encerrada'),
     ).toBeInTheDocument();
     // No warning, no button, on a subscription that behaved.
-    expect(
-      within(await findRow('Streamflix')).queryByRole('button', { name: 'Encerrar' }),
-    ).toBeNull();
+    expect(within(await findRow('Netflix')).queryByRole('button', { name: 'Encerrar' })).toBeNull();
   });
 
   it('hides the values with the eye, also inside the sentences', async () => {
     hideValuesStore.set(true);
     renderApp(URL);
 
-    const musicando = await findRow('Musicando');
+    const musicando = await findRow('Spotify');
 
     expect(within(musicando).queryByText(/21,90/)).toBeNull();
     expect(within(musicando).getByText(/Subiu de R\$ ••,•• para R\$ ••,••/)).toBeInTheDocument();
@@ -105,16 +118,16 @@ describe('SubscriptionListPage', () => {
 
   it('"Atualizar valor" sets the expected amount to the last charge, with an undo', async () => {
     renderApp(URL);
-    const musicando = await findRow('Musicando');
+    const musicando = await findRow('Spotify');
 
     fireEvent.click(within(musicando).getByRole('button', { name: 'Atualizar valor' }));
 
-    expect(await screen.findByText('Musicando agora é R$ 24,90.')).toBeInTheDocument();
+    expect(await screen.findByText('Spotify agora é R$ 24,90.')).toBeInTheDocument();
     await waitFor(() => expect(isFolded(within(musicando).getByText(/Subiu de/))).toBe(true));
     const after = listSubscriptionsResponseSchema.parse(
       (await callApi('GET', `/subscriptions?month=${CURRENT_MONTH}`)).json,
     );
-    expect(after.items.find((item) => item.recurrence.name === 'Musicando')).toMatchObject({
+    expect(after.items.find((item) => item.recurrence.name === 'Spotify')).toMatchObject({
       alert: null,
       recurrence: { expectedAmountCents: 2490 },
     });
@@ -140,9 +153,9 @@ describe('SubscriptionListPage', () => {
 
   it('"Encerrar" is also in the "…" menu, next to "Editar" and "Excluir"', async () => {
     renderApp(URL);
-    const streamflix = await findRow('Streamflix');
+    const streamflix = await findRow('Netflix');
 
-    fireEvent.click(within(streamflix).getByRole('button', { name: 'Ações de Streamflix' }));
+    fireEvent.click(within(streamflix).getByRole('button', { name: 'Ações de Netflix' }));
 
     expect(await screen.findByRole('menuitem', { name: 'Editar' })).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'Encerrar' })).toBeInTheDocument();
@@ -151,10 +164,10 @@ describe('SubscriptionListPage', () => {
 
   it('opens the recurrence in the edit modal of Recorrências when the row is pressed', async () => {
     renderApp(URL);
-    const streamflix = await findRow('Streamflix');
-    const id = db.recurrences.find((item) => item.name === 'Streamflix')?.id;
+    const streamflix = await findRow('Netflix');
+    const id = db.recurrences.find((item) => item.name === 'Netflix')?.id;
 
-    fireEvent.click(within(streamflix).getByRole('button', { name: 'Abrir Streamflix' }));
+    fireEvent.click(within(streamflix).getByRole('button', { name: 'Abrir Netflix' }));
 
     expect(await screen.findByRole('dialog', { name: 'Editar recorrência' })).toBeInTheDocument();
     expect(window.location.search).toContain(`edit=${id}`);
@@ -165,9 +178,9 @@ describe('SubscriptionListPage', () => {
     it('says it as "Parece uma assinatura: nome, valor" with the two answers', async () => {
       renderApp(URL);
 
-      const banner = await suggestionBanner('Podcast Plus');
+      const banner = await suggestionBanner('Deezer Premium');
 
-      expect(within(banner).getByText(/Podcast Plus, R\$ 19,90/)).toBeInTheDocument();
+      expect(within(banner).getByText(/Deezer Premium, R\$ 19,90/)).toBeInTheDocument();
       expect(within(banner).getByText(/3 meses seguidos no Roxinho/)).toBeInTheDocument();
       expect(within(banner).getByRole('button', { name: 'Acompanhar' })).toBeInTheDocument();
       expect(within(banner).getByRole('button', { name: 'Agora não' })).toBeInTheDocument();
@@ -175,30 +188,30 @@ describe('SubscriptionListPage', () => {
 
     it('"Acompanhar" creates the subscription, folds the suggestion and offers the undo', async () => {
       renderApp(URL);
-      const banner = await suggestionBanner('Podcast Plus');
+      const banner = await suggestionBanner('Deezer Premium');
 
       fireEvent.click(within(banner).getByRole('button', { name: 'Acompanhar' }));
 
-      expect(await screen.findByText('Podcast Plus agora é acompanhada.')).toBeInTheDocument();
+      expect(await screen.findByText('Deezer Premium agora é acompanhada.')).toBeInTheDocument();
       await waitFor(() => expect(isFolded(banner)).toBe(true));
-      expect(await findRow('Podcast Plus')).toBeInTheDocument();
-      expect(db.recurrences.some((item) => item.name === 'Podcast Plus')).toBe(true);
+      expect(await findRow('Deezer Premium')).toBeInTheDocument();
+      expect(db.recurrences.some((item) => item.name === 'Deezer Premium')).toBe(true);
 
       // The undo deletes the recurrence it created, and the suggestion comes back.
       fireEvent.click(screen.getByRole('button', { name: 'Desfazer' }));
       await waitFor(() => expect(isFolded(banner)).toBe(false));
       expect(
-        db.recurrences.find((item) => item.name === 'Podcast Plus')?.archivedAt,
+        db.recurrences.find((item) => item.name === 'Deezer Premium')?.archivedAt,
       ).not.toBeNull();
     });
 
     it('"Agora não" folds it and, undone, only opens it again: nothing was sent', async () => {
       renderApp(URL);
-      const banner = await suggestionBanner('Podcast Plus');
+      const banner = await suggestionBanner('Deezer Premium');
 
       fireEvent.click(within(banner).getByRole('button', { name: 'Agora não' }));
 
-      expect(await screen.findByText(/Podcast Plus dispensada/)).toBeInTheDocument();
+      expect(await screen.findByText(/Deezer Premium dispensada/)).toBeInTheDocument();
       await waitFor(() => expect(isFolded(banner)).toBe(true));
       expect(db.subscriptionDismissals).toEqual([]);
 
@@ -209,7 +222,7 @@ describe('SubscriptionListPage', () => {
 
     it('"Agora não" is sent when the toast closes without the undo', async () => {
       renderApp(URL);
-      const banner = await suggestionBanner('Podcast Plus');
+      const banner = await suggestionBanner('Deezer Premium');
 
       fireEvent.click(within(banner).getByRole('button', { name: 'Agora não' }));
 
@@ -279,7 +292,7 @@ describe('SubscriptionListPage', () => {
 
   it('is the third tab of Recorrentes, after "A pagar e receber"', async () => {
     renderApp(URL);
-    await findRow('Streamflix');
+    await findRow('Netflix');
 
     const nav = screen.getByRole('navigation', { name: 'Seções de Recorrentes' });
     const links = within(nav).getAllByRole('link');

@@ -1,5 +1,6 @@
 import type { Subscription } from '@fincheck/shared/recurrences/subscription/subscription.type.ts';
 
+import { recognizeService } from '#/domain/recurrences/service-logo/rules/recognize-service.rule.ts';
 import type { SubscriptionSuggestionData } from '#/features/recurrences/subscription-list/types/subscription-list.type.ts';
 import { formatMoneyText } from '#/features/recurrences/subscription-list/utils/format-money-text.util.ts';
 import { formatShortDate } from '#/features/recurrences/subscription-list/utils/format-short-date.util.ts';
@@ -17,6 +18,7 @@ export function presentSubscriptionSuggestion(
   return {
     key: suggestion.key,
     name,
+    service: recognizeService(suggestion.description),
     title: `Parece uma assinatura: ${name}, ${formatMoneyText(suggestion.lastAmountCents, hidden)}`,
     description: `Cobrada em ${suggestion.monthsSeen} meses seguidos${card ? ` no ${card}` : ''}, a última em ${formatShortDate(suggestion.lastChargedOn)}.`,
   };

@@ -11,6 +11,7 @@ import { MONTH_SUMMARY_SECTIONS } from '#gallery/components/groups/month-summary
 import { RECURRENCES_SECTIONS } from '#gallery/components/groups/recurrences-group.component.tsx';
 import { REVIEW_SECTIONS } from '#gallery/components/groups/review-group.component.tsx';
 import { RULES_SECTIONS } from '#gallery/components/groups/rules-group.component.tsx';
+import { SERVICE_LOGOS_SECTIONS } from '#gallery/components/groups/service-logos-group.component.tsx';
 import { SETTINGS_SECTIONS } from '#gallery/components/groups/settings-group.component.tsx';
 import { SHELL_SECTIONS } from '#gallery/components/groups/shell-group.component.tsx';
 import { TRANSACTIONS_SECTIONS } from '#gallery/components/groups/transactions-group.component.tsx';
@@ -22,6 +23,7 @@ export const GALLERY_GROUPS: GalleryGroupDef[] = [
   { id: 'forms', title: 'Formulários', sections: FORMS_SECTIONS },
   { id: 'form-modal', title: 'Padrão de modal', sections: FORM_MODAL_SECTIONS },
   { id: 'icons', title: 'Ícones', sections: ICONS_SECTIONS },
+  { id: 'service-logos', title: 'Logos de serviços', sections: SERVICE_LOGOS_SECTIONS },
   { id: 'bank-cards', title: 'Cartões de banco', sections: BANK_CARDS_SECTIONS },
   { id: 'day-strip', title: 'Faixa de dias', sections: DAY_STRIP_SECTIONS },
   { id: 'charts', title: 'Gráficos', sections: CHARTS_SECTIONS },

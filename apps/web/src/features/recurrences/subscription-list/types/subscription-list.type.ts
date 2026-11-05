@@ -1,5 +1,5 @@
 import type { Subscription } from '@fincheck/shared/recurrences/subscription/subscription.type.ts';
-import type { IconName } from '@fincheck/ui';
+import type { IconName, ServiceLogoData } from '@fincheck/ui';
 
 /** The warning of a row: what happened and, when there is one, the button that answers it. */
 export type SubscriptionAlertData = {
@@ -14,6 +14,8 @@ export type SubscriptionRowData = {
   recurrenceId: string;
   name: string;
   icon: IconName;
+  /** The service the name or the matching text points to (its logo); null shows the category icon. */
+  service: ServiceLogoData | null;
   /** "Roxinho · dia 12": the card and the day of the charge. */
   detail: string;
   status: Subscription.Status;
@@ -36,6 +38,8 @@ export type SubscriptionSuggestionData = {
   description: string;
   /** "Podcast Plus", for the toasts. */
   name: string;
+  /** The service the description points to; null keeps the suggestion icon. */
+  service: ServiceLogoData | null;
 };
 
 export type ActionErrorData = { message: string; onRetry: () => void };

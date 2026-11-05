@@ -6,6 +6,7 @@ import {
   ListRow,
   Money,
   OverflowMenu,
+  ServiceLogo,
   type ChipTone,
   type IconName,
   type OverflowMenuItem,
@@ -59,7 +60,13 @@ export function SubscriptionRow({ row, first, onAction }: SubscriptionRowProps) 
 
   return (
     <ListRow
-      mark={<CategoryIcon icon={row.icon} type="expense" />}
+      mark={
+        row.service ? (
+          <ServiceLogo slug={row.service.slug} name={row.service.name} />
+        ) : (
+          <CategoryIcon icon={row.icon} type="expense" />
+        )
+      }
       name={row.name}
       onOpen={() => onAction(row, 'open')}
       openLabel={`Abrir ${row.name}`}

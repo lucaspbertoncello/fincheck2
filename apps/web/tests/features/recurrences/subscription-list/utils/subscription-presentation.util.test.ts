@@ -139,8 +139,18 @@ describe('suggestion presentation', () => {
     ).toEqual({
       key: 'PODCAST PLUS|card',
       name: 'Podcast Plus',
+      service: null,
       title: 'Parece uma assinatura: Podcast Plus, R$\u00a019,90',
       description: 'Cobrada em 3 meses seguidos no Roxinho, a última em 12/10.',
+    });
+  });
+
+  it('carries the service the description points to, for the logo of the banner', () => {
+    const spotify = { ...suggestion, description: 'SPOTIFY PREMIUM' };
+
+    expect(presentSubscriptionSuggestion(spotify, new Map(), false).service).toEqual({
+      name: 'Spotify',
+      slug: 'spotify',
     });
   });
 

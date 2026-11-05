@@ -1,4 +1,4 @@
-import type { IconName } from '@fincheck/ui';
+import type { IconName, ServiceLogoData } from '@fincheck/ui';
 
 export type InvoiceTone = 'accent' | 'neutral' | 'ok' | 'warn';
 
@@ -58,14 +58,20 @@ export type InvoiceHighlightsData = {
   nextCents: number;
 };
 
-/** What goes at the left of a line. The only place that decides it: a subscription logo enters here. */
-export type InvoiceItemMarkData = {
-  kind: 'category';
-  icon: IconName;
-  /** Drawn with the type badge (red for a purchase, green for a refund). */
-  type: 'income' | 'expense';
-  uncategorized: boolean;
-};
+/** What goes at the left of a line. The only place that decides it: the category icon or a service logo. */
+export type InvoiceItemMarkData =
+  | {
+      kind: 'category';
+      icon: IconName;
+      /** Drawn with the type badge (red for a purchase, green for a refund). */
+      type: 'income' | 'expense';
+      uncategorized: boolean;
+    }
+  | {
+      /** A recognized subscription service (BR-REC-017): its logo in the circle. */
+      kind: 'subscription';
+      service: ServiceLogoData;
+    };
 
 export type InvoiceItemBadgeData = {
   /** "3/10". */

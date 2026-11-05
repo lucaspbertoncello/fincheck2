@@ -2,6 +2,7 @@ import type { Category } from '@fincheck/shared/categories/category/category.typ
 import type { Invoice } from '@fincheck/shared/invoices/invoice/invoice.type.ts';
 
 import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
+import { recognizeService } from '#/domain/recurrences/service-logo/rules/recognize-service.rule.ts';
 import type {
   InvoiceItemBadgeData,
   InvoiceItemGroupData,
@@ -30,6 +31,7 @@ function buildRow(
   if (item.type === 'expected_recurrence') {
     const when = item.expectedOn ? formatShortDate(item.expectedOn) : null;
     const expected = when ? `esperada em ${when}` : 'esperada no mês';
+    const service = recognizeService(item.recurrenceName);
 
     return {
       key: item.occurrenceId,
@@ -37,7 +39,9 @@ function buildRow(
       detail: `Recorrente · ${expected}`,
       cents: centsOf(item),
       expected: true,
-      mark: { kind: 'category', icon: 'repeat', type: 'expense', uncategorized: false },
+      mark: service
+        ? { kind: 'subscription', service }
+        : { kind: 'category', icon: 'repeat', type: 'expense', uncategorized: false },
       badges: [
         { label: 'Esperada', description: 'Cobrança esperada, ainda não lançada', tone: 'neutral' },
       ],
@@ -56,6 +60,8 @@ function buildRow(
     });
   }
   const categoryName = category?.name ?? 'Sem categoria';
+  // A refund keeps the category icon: its green badge is what says it came back.
+  const service = isRefund ? null : recognizeService(item.description);
 
   return {
     key: item.transactionId,
@@ -63,12 +69,14 @@ function buildRow(
     detail: withDate ? `${formatShortDate(item.occurredOn)} · ${categoryName}` : categoryName,
     cents: item.amountCents,
     expected: false,
-    mark: {
-      kind: 'category',
-      icon: mapCategoryIcon(category?.icon),
-      type: isRefund ? 'income' : 'expense',
-      uncategorized: !category,
-    },
+    mark: service
+      ? { kind: 'subscription', service }
+      : {
+          kind: 'category',
+          icon: mapCategoryIcon(category?.icon),
+          type: isRefund ? 'income' : 'expense',
+          uncategorized: !category,
+        },
     badges,
   };
 }

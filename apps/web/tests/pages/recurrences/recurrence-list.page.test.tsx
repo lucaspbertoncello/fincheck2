@@ -33,7 +33,7 @@ describe('RecurrenceListPage', () => {
     expect(attention.getByText('Diarista')).toBeInTheDocument();
     expect(attention.getByText('Internet')).toBeInTheDocument();
     expect(attention.getAllByText('Atrasado').length).toBeGreaterThan(0);
-    // Internet and Musicando (a subscription whose price went up) both wait for an answer.
+    // Internet and Spotify (a subscription whose price went up) both wait for an answer.
     expect(attention.getAllByText('Valor diferente')).toHaveLength(2);
 
     expect(screen.getByText(/^Receitas esperadas em /)).toBeInTheDocument();
@@ -78,7 +78,7 @@ describe('RecurrenceListPage', () => {
     renderApp(URL);
     const attention = await findAttentionStrip();
 
-    // The question sits in the action strip of the Internet row (Musicando asks the same).
+    // The question sits in the action strip of the Internet row (Spotify asks the same).
     const internet = attention.getByText('Internet').closest('li');
     if (!internet) throw new Error('No row for Internet');
 

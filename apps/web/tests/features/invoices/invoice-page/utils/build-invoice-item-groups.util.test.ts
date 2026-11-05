@@ -69,7 +69,7 @@ describe('buildInvoiceItemGroups', () => {
     const refund = first?.rows.find((row) => row.title === 'Estorno');
 
     expect(refund?.badges[0]?.label).toBe('Estorno');
-    expect(refund?.mark.type).toBe('income');
+    expect(refund?.mark).toMatchObject({ kind: 'category', type: 'income' });
     expect(refund?.cents).toBe(2500);
   });
 
@@ -82,7 +82,47 @@ describe('buildInvoiceItemGroups', () => {
       cents: -5499,
       detail: 'Recorrente · esperada no mês',
     });
-    expect(row?.mark.icon).toBe('repeat');
+    expect(row?.mark).toMatchObject({ kind: 'category', icon: 'repeat' });
+  });
+
+  it('puts the logo of the service on a purchase and on an expected charge it recognizes', () => {
+    const groups = buildInvoiceItemGroups(
+      [
+        purchase('NETFLIX.COM', '2026-10-21', -5590),
+        purchase('OPENAI *CHATGPT SUBSCR', '2026-10-21', -10_000),
+        {
+          type: 'expected_recurrence',
+          occurrenceId: ID,
+          recurrenceName: 'Spotify',
+          expectedOn: null,
+          amountCents: 2190,
+        },
+      ],
+      CATEGORIES,
+      'date',
+      '2026-10-22',
+    );
+    const marks = groups.flatMap((group) => group.rows.map((row) => [row.title, row.mark]));
+
+    expect(marks).toEqual([
+      ['NETFLIX.COM', { kind: 'subscription', service: { name: 'Netflix', slug: 'netflix' } }],
+      [
+        'OPENAI *CHATGPT SUBSCR',
+        { kind: 'subscription', service: { name: 'ChatGPT', slug: null } },
+      ],
+      ['Spotify', { kind: 'subscription', service: { name: 'Spotify', slug: 'spotify' } }],
+    ]);
+  });
+
+  it('keeps the category icon on a refund of a service, so the green badge says it came back', () => {
+    const [group] = buildInvoiceItemGroups(
+      [purchase('NETFLIX.COM', '2026-10-21', 5590)],
+      CATEGORIES,
+      'date',
+      '2026-10-22',
+    );
+
+    expect(group?.rows[0]?.mark).toMatchObject({ kind: 'category', type: 'income' });
   });
 
   it('orders by value in one block, the biggest charge first, with the date on each line', () => {
@@ -112,6 +152,6 @@ describe('buildInvoiceItemGroups', () => {
     );
 
     expect(group?.rows[0]?.detail).toBe('Sem categoria');
-    expect(group?.rows[0]?.mark.uncategorized).toBe(true);
+    expect(group?.rows[0]?.mark).toMatchObject({ kind: 'category', uncategorized: true });
   });
 });

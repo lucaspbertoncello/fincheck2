@@ -5,6 +5,7 @@ import { CategoryIcon } from '#/components/icons/index.ts';
 import type { IconName } from '#/components/icons/index.ts';
 import { ListRow } from '#/components/list-row/index.ts';
 import { OverflowMenu } from '#/components/menus/index.ts';
+import { ServiceLogo, type ServiceLogoData } from '#/components/service-logos/index.ts';
 import { Money } from '#/components/money/index.ts';
 import { buildRecurrenceMenu } from '#/components/recurrences/build-recurrence-menu.util.ts';
 import { PartialBar } from '#/components/recurrences/partial-bar.component.tsx';
@@ -20,6 +21,8 @@ import type {
 type RecurrenceRowProps = {
   name: string;
   icon: IconName;
+  /** A recognized subscription service: its logo replaces the category icon. */
+  service?: ServiceLogoData | null;
   flow: RecurrenceFlow;
   /** Date rule in Portuguese: "Todo dia 20", "Por volta do dia 25", "Até o 5º dia útil". */
   rule: string;
@@ -54,6 +57,7 @@ type RecurrenceRowProps = {
 export function RecurrenceRow({
   name,
   icon,
+  service,
   flow,
   rule,
   account,
@@ -77,7 +81,13 @@ export function RecurrenceRow({
 
   return (
     <ListRow
-      mark={<CategoryIcon icon={icon} type={flow} />}
+      mark={
+        service ? (
+          <ServiceLogo slug={service.slug} name={service.name} />
+        ) : (
+          <CategoryIcon icon={icon} type={flow} />
+        )
+      }
       name={name}
       nameClassName={dismissed ? 'text-fg-tertiary line-through' : undefined}
       badges={[<RecurrenceStatusChip key="status" status={status} />]}

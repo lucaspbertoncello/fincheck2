@@ -1,4 +1,11 @@
-import type { BillBadge, BillStatus, IconName, RecurrenceFlow, TotalCardItem } from '@fincheck/ui';
+import type {
+  BillBadge,
+  BillStatus,
+  IconName,
+  RecurrenceFlow,
+  ServiceLogoData,
+  TotalCardItem,
+} from '@fincheck/ui';
 
 /** One line of the agenda, ready for `BillRow`. */
 export type BillRowModel = {
@@ -6,6 +13,8 @@ export type BillRowModel = {
   key: string;
   name: string;
   icon: IconName;
+  /** A recurring charge that is one of the known services: its logo replaces the icon. */
+  service: ServiceLogoData | null;
   flow: RecurrenceFlow;
   status: BillStatus;
   badges: BillBadge[];
