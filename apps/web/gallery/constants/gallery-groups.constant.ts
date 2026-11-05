@@ -6,6 +6,7 @@ import { FEEDBACK_SECTIONS } from '#gallery/components/groups/feedback-group.com
 import { FORM_MODAL_SECTIONS } from '#gallery/components/groups/form-modal-group.component.tsx';
 import { FORMS_SECTIONS } from '#gallery/components/groups/forms-group.component.tsx';
 import { ICONS_SECTIONS } from '#gallery/components/groups/icons-group.component.tsx';
+import { LIST_ROWS_SECTIONS } from '#gallery/components/groups/list-rows-group.component.tsx';
 import { MONTH_SUMMARY_SECTIONS } from '#gallery/components/groups/month-summary-group.component.tsx';
 import { RECURRENCES_SECTIONS } from '#gallery/components/groups/recurrences-group.component.tsx';
 import { REVIEW_SECTIONS } from '#gallery/components/groups/review-group.component.tsx';
@@ -36,6 +37,10 @@ export const GALLERY_GROUPS: GalleryGroupDef[] = [
     sections: [...RECURRENCES_SECTIONS, ...RULES_SECTIONS],
   },
   { id: 'month-summary', title: 'Resumo do mês', sections: MONTH_SUMMARY_SECTIONS },
-  { id: 'settings', title: 'Configurações e categorias', sections: SETTINGS_SECTIONS },
+  {
+    id: 'settings',
+    title: 'Configurações e categorias',
+    sections: [...SETTINGS_SECTIONS, ...LIST_ROWS_SECTIONS],
+  },
   { id: 'shell', title: 'Casca', sections: SHELL_SECTIONS },
 ];

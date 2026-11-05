@@ -2,14 +2,14 @@ import {
   Button,
   CategoryIcon,
   Chip,
-  Collapse,
+  Icon,
+  ListRow,
   Money,
   OverflowMenu,
   type ChipTone,
   type IconName,
   type OverflowMenuItem,
 } from '@fincheck/ui';
-import { Button as AriaButton } from 'react-aria-components';
 
 import type { SubscriptionRowData } from '#/features/recurrences/subscription-list/types/subscription-list.type.ts';
 
@@ -40,71 +40,80 @@ function buildMenu(row: SubscriptionRowData): OverflowMenuItem[] {
 }
 
 /**
- * A subscription of the month (BR-REC-017). The row rule of the app: icon at the left; the name and
- * one line of detail, with at most two chips under them; the amount always at the right edge, in two
- * lines (the amount, then when it was or will be charged); the warning and its button in a strip
- * under the text, aligned with it. The text opens the recurrence; the "…" ends or deletes it.
+ * A subscription of the month (BR-REC-017) on the standard list row, the same as the recurrences:
+ * icon, the name (it opens the recurrence) with the state of the month as the badge (and "Encerrada"),
+ * the card and the day as the detail, the amount at the right end over when it was or will be
+ * charged, the "…" menu, and the warning with its button on the strip, in the "Precisa de você" tone.
  */
 export function SubscriptionRow({ row, first, onAction }: SubscriptionRowProps) {
   const chip = STATUS_CHIP[row.status];
+  const statusChip = (
+    <Chip key="status" tone={chip.tone} icon={chip.icon}>
+      {chip.label}
+    </Chip>
+  );
+  const classes = [
+    first ? null : 'border-t border-line',
+    row.pending ? 'pointer-events-none opacity-50' : null,
+  ].filter(Boolean);
 
   return (
-    <div
-      className={`${first ? '' : 'border-t border-line '}grid grid-cols-[auto_1fr_auto_auto] items-start gap-x-s12 py-s12 ${row.pending ? 'pointer-events-none opacity-50' : ''}`}
-    >
-      <CategoryIcon icon={row.icon} type="expense" />
-      <AriaButton
-        aria-label={`Abrir ${row.name}`}
-        onPress={() => onAction(row, 'open')}
-        className="focus-ring min-w-0 cursor-pointer rounded-input text-left"
-      >
-        <span className="block truncate text-body font-emphasis text-fg-primary">{row.name}</span>
-        <span className="block truncate text-label text-fg-secondary">{row.detail}</span>
-        <span className="mt-s8 flex flex-nowrap items-center gap-s8">
-          <Chip tone={chip.tone} icon={chip.icon}>
-            {chip.label}
-          </Chip>
-          {row.ended ? (
-            <Chip icon="close" tone="neutral">
-              Encerrada
-            </Chip>
-          ) : null}
-        </span>
-      </AriaButton>
-      <OverflowMenu
-        label={`Ações de ${row.name}`}
-        items={buildMenu(row)}
-        onAction={(key) => onAction(row, key as SubscriptionRowAction)}
-        className="-mt-s4"
-      />
-      <span className="flex flex-col items-end gap-s4 whitespace-nowrap">
-        <Money cents={row.amountCents} sign="minus" weight="plain" className="text-money-row" />
-        <span className="text-meta text-fg-secondary">{row.statusNote}</span>
-      </span>
-      <Collapse
-        isOpen={row.alert !== null}
-        trackClassName="col-start-2 col-end-5"
-        contentClassName="pt-s12"
-      >
-        {row.alert ? (
-          <div className="rounded-panel bg-caution-weak px-s12 py-s12">
-            <p className="text-label text-fg-primary">{row.alert.text}</p>
+    <ListRow
+      mark={<CategoryIcon icon={row.icon} type="expense" />}
+      name={row.name}
+      onOpen={() => onAction(row, 'open')}
+      openLabel={`Abrir ${row.name}`}
+      badges={
+        row.ended
+          ? [
+              statusChip,
+              <Chip key="ended" icon="close" tone="neutral">
+                Encerrada
+              </Chip>,
+            ]
+          : [statusChip]
+      }
+      detail={row.detail}
+      detailTitle={row.detail}
+      value={
+        <Money
+          cents={row.amountCents}
+          sign="minus"
+          signColumn
+          weight="plain"
+          className="text-money-row"
+        />
+      }
+      valueNote={row.statusNote}
+      menu={
+        <OverflowMenu
+          label={`Ações de ${row.name}`}
+          items={buildMenu(row)}
+          onAction={(key) => onAction(row, key as SubscriptionRowAction)}
+        />
+      }
+      actions={
+        row.alert ? (
+          <div className="flex w-full flex-col items-start gap-s8 rounded-input border border-caution/20 bg-caution-weak/45 px-s12 py-s12">
+            <p className="flex min-w-0 items-start gap-s8 text-label text-fg-primary">
+              <Icon name="warning" size="sm" className="mt-s4 shrink-0 text-caution" />
+              {row.alert.text}
+            </p>
             {row.alert.actionLabel ? (
-              <div className="mt-s8 flex items-center gap-s8">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onPress={() =>
-                    onAction(row, row.alert?.kind === 'missed' ? 'end' : 'update-value')
-                  }
-                >
-                  {row.alert.actionLabel}
-                </Button>
-              </div>
+              <Button
+                size="sm"
+                variant="secondary"
+                onPress={() => onAction(row, row.alert?.kind === 'missed' ? 'end' : 'update-value')}
+              >
+                {row.alert.actionLabel}
+              </Button>
             ) : null}
           </div>
-        ) : null}
-      </Collapse>
-    </div>
+        ) : null
+      }
+      actionsOpen={row.alert !== null}
+      as="div"
+      className={classes.join(' ') || undefined}
+    />
   );
 }

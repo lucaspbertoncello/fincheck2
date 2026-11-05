@@ -176,6 +176,14 @@ export const MANAGED_CATEGORIES: ManagedCategory[] = [
     lastUsedLabel: '3 out.',
   },
   {
+    id: 'mc-4',
+    name: 'Assinaturas de streaming, jogos e aplicativos de leitura',
+    icon: 'wifi',
+    transactionCount: 1,
+    ruleCount: 12,
+    lastUsedLabel: '28 ago., há 2 meses',
+  },
+  {
     id: 'mc-3',
     name: 'Academia',
     icon: 'gym',

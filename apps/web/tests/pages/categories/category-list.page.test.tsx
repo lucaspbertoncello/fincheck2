@@ -12,7 +12,7 @@ resetDatabaseBeforeEach();
 
 async function openCategories(url = '/categories', label = 'Categorias de despesa') {
   renderApp(url);
-  return screen.findByRole('table', { name: label });
+  return screen.findByRole('list', { name: label });
 }
 
 async function openTags() {
@@ -51,7 +51,7 @@ describe('CategoryListPage', () => {
     expect(within(tags).queryByText('presente')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Arquivadas (1)' })).toBeInTheDocument();
     expect(screen.queryByRole('searchbox', { name: 'Buscar categoria' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.queryByRole('list', { name: 'Categorias de despesa' })).not.toBeInTheDocument();
     expect(window.location.search).toContain('filter=tags');
   });
 
@@ -59,7 +59,7 @@ describe('CategoryListPage', () => {
     renderApp('/categories');
 
     expect(await screen.findByRole('status', { name: '' })).toBeInTheDocument();
-    expect(await screen.findByRole('table', { name: 'Categorias de despesa' })).toBeInTheDocument();
+    expect(await screen.findByRole('list', { name: 'Categorias de despesa' })).toBeInTheDocument();
   });
 
   it('switches to the income tab and keeps the choice in the URL', async () => {
@@ -67,7 +67,7 @@ describe('CategoryListPage', () => {
 
     fireEvent.click(screen.getByRole('radio', { name: /Receitas/ }));
 
-    const table = await screen.findByRole('table', { name: 'Categorias de receita' });
+    const table = await screen.findByRole('list', { name: 'Categorias de receita' });
     expect(within(table).getByText('Salário')).toBeInTheDocument();
     expect(within(table).queryByText('Delivery')).not.toBeInTheDocument();
     expect(window.location.search).toBe('?filter=income');
@@ -87,7 +87,7 @@ describe('CategoryListPage', () => {
   it('shows the archived categories with the note and brings one back with an undo toast', async () => {
     await openCategories('/categories?filter=archived', 'Categorias arquivadas');
 
-    const table = await screen.findByRole('table', { name: 'Categorias arquivadas' });
+    const table = await screen.findByRole('list', { name: 'Categorias arquivadas' });
     expect(within(table).getByText('Viagem de 2025')).toBeInTheDocument();
     expect(within(table).getByText(/^Despesa · \d+ transações? · /)).toBeInTheDocument();
     expect(screen.getByText(/Arquivadas saem da escolha de categoria/)).toBeInTheDocument();
@@ -345,7 +345,7 @@ describe('CategoryListPage', () => {
     server.resetHandlers();
     fireEvent.click(screen.getByRole('button', { name: 'Tentar de novo' }));
 
-    expect(await screen.findByRole('table', { name: 'Categorias de despesa' })).toBeInTheDocument();
+    expect(await screen.findByRole('list', { name: 'Categorias de despesa' })).toBeInTheDocument();
   });
 
   it('puts Categorias in the header with the Regras sub-tab', async () => {

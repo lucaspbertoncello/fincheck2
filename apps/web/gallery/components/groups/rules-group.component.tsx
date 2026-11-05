@@ -111,6 +111,12 @@ export const RULES_SECTIONS: GallerySectionDef[] = [
             <RuleRow rule={RULE_ROWS[1]!} onActiveChange={noop} onAction={noop} />
           </ul>
         </GalleryVariant>
+        <GalleryVariant caption="RuleRow a 375 (ativa e desligada)" width={375}>
+          <ul className="m-0 list-none p-0">
+            <RuleRow rule={RULE_ROWS[0]!} onActiveChange={noop} onAction={noop} />
+            <RuleRow rule={RULE_ROWS[1]!} onActiveChange={noop} onAction={noop} />
+          </ul>
+        </GalleryVariant>
         <GalleryVariant caption="RuleList" width={820}>
           <RuleListDemo rules={RULE_ROWS} />
         </GalleryVariant>

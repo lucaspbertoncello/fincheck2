@@ -68,14 +68,25 @@ describe('CategoryList', () => {
 
     expect(html.indexOf('Academia')).toBeLessThan(html.indexOf('Transporte'));
     expect(html).toContain('aria-label="Categorias de despesa"');
-    expect(html).toContain('Categoria, de A a Z');
-    expect(html).toContain('Último uso');
-    expect(html).toContain('221');
-    expect(html).toContain('1 regra');
-    expect(html).toContain('2 regras');
-    expect(html).toContain('aria-label="Nenhuma regra"');
-    expect(html).toContain('3 out.');
-    expect(html).toContain('1 transação');
+    expect(html).toContain('2 regras · último uso ontem');
+    expect(html).toContain('Sem regras · último uso 3 out.');
+    expect(html).toContain('>221<');
+    expect(html).toContain('>transações<');
+    expect(html).toContain('>transação<');
+  });
+
+  it('is a plain list of standard rows, not a table: the count is the value at the right end', () => {
+    const html = renderToStaticMarkup(
+      <CategoryList categories={CATEGORIES} label="Categorias" {...HANDLERS} />,
+    );
+
+    expect(html).not.toContain('role="table"');
+    expect(html).not.toContain('role="row"');
+    expect(html).not.toContain('role="columnheader"');
+    expect(html.match(/<li /g)).toHaveLength(3);
+    expect(html).toContain('col-start-3 row-start-1');
+    expect(html).toContain('aria-label="Abrir Academia"');
+    expect(html).toContain('truncate');
   });
 
   it('gives each row a named "…" menu', () => {
@@ -86,16 +97,17 @@ describe('CategoryList', () => {
     expect(html.match(/aria-haspopup="true"/g)).toHaveLength(3);
   });
 
-  it('draws the archived rows dashed and dimmed with "Desarquivar" and no header', () => {
+  it('draws the archived rows dashed and dimmed with "Desarquivar" on the strip', () => {
     const html = renderToStaticMarkup(
       <CategoryList categories={[ARCHIVED]} label="Arquivadas" {...HANDLERS} />,
     );
 
     expect(html).toContain('border-dashed');
-    expect(html).toContain('font-plain text-fg-secondary');
+    expect(html).toContain('text-fg-secondary');
+    expect(html).toContain('col-start-1 row-start-3');
+    expect(html).toContain('lg:col-start-2');
     expect(html).toContain('Despesa · 27 transações · usada até maio');
     expect(html).toContain('Desarquivar');
-    expect(html).not.toContain('Último uso');
     expect(html).not.toContain('aria-haspopup');
   });
 

@@ -1,5 +1,5 @@
 import type { Profile } from '@fincheck/shared/profile/profile/profile.type.ts';
-import { Button, Chip, Money } from '@fincheck/ui';
+import { CategoryIcon, Chip, ListRow, Money, OverflowMenu } from '@fincheck/ui';
 
 import { describeDateRule } from '#/features/recurrences/recurrence-list/utils/describe-date-rule.util.ts';
 import { EMPLOYMENT_REGIME_LABEL } from '#/features/profile/profile/constants/employment-regime-label.constant.ts';
@@ -10,42 +10,54 @@ type IncomeSourceRowProps = {
   onEdit: () => void;
 };
 
-/** One source of income: who pays, how, the amount and when it lands. Editing opens the recurrence. */
+/**
+ * One source of income on the standard list row: who pays, how, the amount at the right end ("igual
+ * ao último recebido" as its reference) and when it lands. The name and the "…" menu open the
+ * recurrence to edit.
+ */
 export function IncomeSourceRow({ source, onEdit }: IncomeSourceRowProps) {
   const details = [
     source.counterparty && source.counterparty !== source.name ? source.counterparty : null,
     describeDateRule(source.dateRule),
     source.nextExpectedOn ? `próximo: ${formatShortDay(source.nextExpectedOn)}` : null,
+    source.amountMode === 'last_received' ? 'igual ao último recebido' : null,
   ].filter((part): part is string => part !== null);
 
   return (
-    <li className="flex items-center justify-between gap-s16 border-t border-line py-s16 first:border-t-0 first:pt-0 max-lg:flex-wrap">
-      <div className="flex min-w-0 flex-col gap-s4">
-        <div className="flex items-center gap-s8">
-          <p className="truncate text-body font-emphasis text-fg-primary">{source.name}</p>
-          {source.employmentRegime ? (
-            <Chip tone="accent">{EMPLOYMENT_REGIME_LABEL[source.employmentRegime]}</Chip>
-          ) : null}
-        </div>
-        <p className="text-meta text-fg-secondary">{details.join(' · ')}</p>
-      </div>
-      <div className="flex items-center gap-s12">
-        <div className="flex flex-col items-end gap-s4">
-          <Money
-            cents={source.expectedAmountCents}
-            sign="none"
-            weight="plain"
-            tone="income"
-            className="text-money-row"
-          />
-          {source.amountMode === 'last_received' ? (
-            <span className="text-meta text-fg-secondary">igual ao último recebido</span>
-          ) : null}
-        </div>
-        <Button variant="tertiary" size="sm" icon="edit" onPress={onEdit}>
-          Editar
-        </Button>
-      </div>
-    </li>
+    <ListRow
+      mark={<CategoryIcon icon="salary" type="income" />}
+      name={source.name}
+      onOpen={onEdit}
+      openLabel={`Editar ${source.name}`}
+      badges={
+        source.employmentRegime
+          ? [
+              <Chip key="regime" tone="accent">
+                {EMPLOYMENT_REGIME_LABEL[source.employmentRegime]}
+              </Chip>,
+            ]
+          : undefined
+      }
+      detail={details.join(' · ')}
+      detailTitle={details.join(' · ')}
+      value={
+        <Money
+          cents={source.expectedAmountCents}
+          sign="none"
+          signColumn
+          weight="plain"
+          tone="income"
+          className="text-money-row"
+        />
+      }
+      className="border-t border-line first:border-t-0"
+      menu={
+        <OverflowMenu
+          label={`Ações de ${source.name}`}
+          items={[{ key: 'edit', label: 'Editar', icon: 'edit' }]}
+          onAction={onEdit}
+        />
+      }
+    />
   );
 }

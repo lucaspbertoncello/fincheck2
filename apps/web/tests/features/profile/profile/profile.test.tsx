@@ -50,9 +50,11 @@ describe('Perfil', () => {
     );
     expect(incomes.length).toBeGreaterThan(0);
     const income = incomes[0]!;
-    expect(await screen.findByText(income.name, { selector: 'p' })).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'Editar' }).length).toBeGreaterThanOrEqual(
-      incomes.length + 1,
+    expect(
+      await screen.findByRole('button', { name: `Editar ${income.name}` }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /^Ações de / }).length).toBeGreaterThanOrEqual(
+      incomes.length,
     );
   });
 
@@ -105,10 +107,9 @@ describe('Perfil: editar fonte', () => {
     const income = db.recurrences.find(
       (item) => item.kind === 'income' && !item.pausedAt && !item.archivedAt,
     )!;
-    await screen.findByText(income.name, { selector: 'p' });
 
-    // The first "Editar" is the profile's; the sources come after it.
-    await user.click(screen.getAllByRole('button', { name: 'Editar' })[1]!);
+    // The name of the source is the button that edits it (there is no "Editar" beside the amount).
+    await user.click(await screen.findByRole('button', { name: `Editar ${income.name}` }));
 
     await waitFor(() => expect(window.location.pathname).toBe('/recurrences'));
     expect(window.location.search).toContain('edit=');

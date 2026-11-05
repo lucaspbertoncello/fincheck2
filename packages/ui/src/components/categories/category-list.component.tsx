@@ -1,7 +1,6 @@
 import { Button } from 'react-aria-components';
 
 import { ArchivedCategoryRow } from '#/components/categories/archived-category-row.component.tsx';
-import { CATEGORY_COLUMNS_CLASS } from '#/components/categories/category-columns.constant.ts';
 import { CategoryRow } from '#/components/categories/category-row.component.tsx';
 import type { ManagedCategory } from '#/components/categories/managed-category.type.ts';
 import { PlusMark } from '#/components/categories/plus-mark.component.tsx';
@@ -27,9 +26,10 @@ type CategoryListProps = {
 };
 
 /**
- * Category management list (components.md 15): alphabetical, no values. Active rows carry
- * transactions, rules and last use plus the "…" menu (clicking the row opens the category page); archived rows are dashed, dimmed, with
- * "Desarquivar". The last row is "Nova categoria" in the accent color. Header only on the desktop.
+ * Category management list (components.md 15) of standard rows (10.0): alphabetical, no money.
+ * Active rows carry the transaction count at the right end, rules and last use as the detail and the
+ * "…" menu (the name opens the category page); archived rows are dashed, dimmed, with "Desarquivar"
+ * on the strip. The last row is "Nova categoria" in the accent color.
  */
 export function CategoryList({
   categories,
@@ -44,7 +44,6 @@ export function CategoryList({
   className,
 }: CategoryListProps) {
   const sorted = sortCategories(categories);
-  const hasActive = sorted.some((category) => !category.archived);
 
   return (
     <div className={cx('flex flex-col', className)}>
@@ -53,49 +52,21 @@ export function CategoryList({
           {emptyMessage}
         </p>
       ) : (
-        <div role="table" aria-label={label}>
-          {hasActive ? (
-            <div
-              role="row"
-              className={cx(
-                'border-b border-line pb-s8 text-meta text-fg-tertiary max-lg:flex',
-                CATEGORY_COLUMNS_CLASS,
-              )}
-            >
-              <span role="columnheader" className="lg:col-start-2">
-                <span className="lg:hidden">De A a Z</span>
-                <span className="max-lg:hidden">Categoria, de A a Z</span>
-              </span>
-              <span role="columnheader" className="text-right max-lg:hidden">
-                Transações
-              </span>
-              <span role="columnheader" className="max-lg:hidden">
-                Regras
-              </span>
-              <span role="columnheader" className="max-lg:hidden">
-                Último uso
-              </span>
-              <span role="columnheader" className="sr-only">
-                Ações
-              </span>
-            </div>
-          ) : null}
-          <ul role="rowgroup">
-            {sorted.map((category) =>
-              category.archived ? (
-                <ArchivedCategoryRow key={category.id} category={category} onRestore={onRestore} />
-              ) : (
-                <CategoryRow
-                  key={category.id}
-                  category={category}
-                  onEdit={onEdit}
-                  onOpen={onOpen}
-                  onArchive={onArchive}
-                />
-              ),
-            )}
-          </ul>
-        </div>
+        <ul aria-label={label} className="flex flex-col divide-y divide-line border-b border-line">
+          {sorted.map((category) =>
+            category.archived ? (
+              <ArchivedCategoryRow key={category.id} category={category} onRestore={onRestore} />
+            ) : (
+              <CategoryRow
+                key={category.id}
+                category={category}
+                onEdit={onEdit}
+                onOpen={onOpen}
+                onArchive={onArchive}
+              />
+            ),
+          )}
+        </ul>
       )}
       {onCreate ? (
         <Button

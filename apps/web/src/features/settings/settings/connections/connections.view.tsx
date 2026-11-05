@@ -114,22 +114,23 @@ export function ConnectionsView({
         >
           <ul className="flex flex-col">
             {items.map((item) => (
-              <li
+              <ConnectionRow
                 key={item.id}
-                className="flex flex-col gap-s16 border-t border-line py-s16 first:border-t-0 first:pt-0"
-              >
-                <ConnectionRow item={item} onDisconnect={() => onAskDisconnect(item.id)} />
-                {item.pendingMatches.length > 0 ? (
-                  <PendingMatches
-                    bankName={item.name}
-                    matches={item.pendingMatches}
-                    choices={choices}
-                    onChoose={onChoose}
-                    isSaving={isSavingMatches}
-                    onConfirm={() => onConfirmMatches(item.id)}
-                  />
-                ) : null}
-              </li>
+                item={item}
+                onDisconnect={() => onAskDisconnect(item.id)}
+                pending={
+                  item.pendingMatches.length > 0 ? (
+                    <PendingMatches
+                      bankName={item.name}
+                      matches={item.pendingMatches}
+                      choices={choices}
+                      onChoose={onChoose}
+                      isSaving={isSavingMatches}
+                      onConfirm={() => onConfirmMatches(item.id)}
+                    />
+                  ) : undefined
+                }
+              />
             ))}
           </ul>
           <Collapse

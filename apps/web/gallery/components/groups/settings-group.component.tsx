@@ -145,6 +145,16 @@ export const SETTINGS_SECTIONS: GallerySectionDef[] = [
             createLabel="Nova categoria"
           />
         </GalleryVariant>
+        <GalleryVariant caption="375" width={375}>
+          <CategoryList
+            categories={MANAGED_CATEGORIES}
+            label="Categorias de despesa"
+            onEdit={noop}
+            onArchive={noop}
+            onRestore={noop}
+            onCreate={noop}
+          />
+        </GalleryVariant>
         <GalleryVariant caption="vazia" width={900}>
           <CategoryList
             categories={[]}

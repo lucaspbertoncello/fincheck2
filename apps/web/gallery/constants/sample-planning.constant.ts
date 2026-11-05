@@ -135,6 +135,7 @@ export const TOTAL_ITEMS: TotalCardItem[] = [
 export const RULE_ROWS: RuleRowData[] = [
   {
     id: 'rule-1',
+    name: 'Delivery',
     icon: 'delivery',
     appliedCount: 38,
     active: true,
@@ -150,6 +151,7 @@ export const RULE_ROWS: RuleRowData[] = [
   },
   {
     id: 'rule-2',
+    name: 'Transporte',
     icon: 'car',
     appliedCount: 1,
     active: false,

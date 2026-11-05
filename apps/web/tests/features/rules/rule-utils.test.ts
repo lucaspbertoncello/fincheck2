@@ -124,6 +124,18 @@ describe('toRuleRow', () => {
     expect(row).toMatchObject({ id: 'r1', icon: 'delivery', appliedCount: 38, active: false });
   });
 
+  it('names the row after the category, or after what it matches when there is none', () => {
+    expect(toRuleRow(rule(), [DELIVERY], [TAG_DELIVERY]).name).toBe(DELIVERY.name);
+    expect(toRuleRow(rule({ categoryId: null }), [DELIVERY], [TAG_DELIVERY]).name).toBe('IFOOD');
+    expect(
+      toRuleRow(
+        rule({ categoryId: null, descriptionContains: null, counterpartyContains: 'TREETOOLS' }),
+        [],
+        [],
+      ).name,
+    ).toBe('Treetools');
+  });
+
   it('falls back to the tag icon for a rule without category', () => {
     expect(toRuleRow(rule({ categoryId: null }), [DELIVERY], [TAG_DELIVERY]).icon).toBe('tag');
   });

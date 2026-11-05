@@ -37,7 +37,7 @@ describe('RuleListPage', () => {
     expect(rowOf('IFOOD')).toHaveTextContent('Aplicada 2 vezes');
     expect(rowOf('POSTO')).toHaveTextContent('vai para Transporte');
     expect(rowOf('POSTO')).toHaveTextContent('Aplicada 1 vez');
-    expect(rowOf('FARMACIA')).toHaveTextContent('Desativada. Aplicada 0 vezes');
+    expect(rowOf('FARMACIA')).toHaveTextContent(/Desativada.*Aplicada 0 vezes/);
     expect(rowOf('FARMACIA')).toHaveTextContent('vai para Saúde');
     expect(screen.getByText('3 regras')).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 1, name: 'Categorias' })).toBeInTheDocument();
@@ -84,7 +84,7 @@ describe('RuleListPage', () => {
     fireEvent.click(within(rowOf('IFOOD')).getByRole('switch'));
 
     await waitFor(() => expect(enabledOf('IFOOD')).resolves.toBe(false));
-    expect(rowOf('IFOOD')).toHaveTextContent('Desativada.');
+    expect(rowOf('IFOOD')).toHaveTextContent('Desativada');
 
     fireEvent.click(within(rowOf('IFOOD')).getByRole('switch'));
     await waitFor(() => expect(enabledOf('IFOOD')).resolves.toBe(true));
@@ -127,7 +127,7 @@ describe('RuleListPage', () => {
   it('opens the transactions of a rule from "Aplicada N vezes"', async () => {
     await openRules();
 
-    fireEvent.click(within(rowOf('IFOOD')).getByRole('link', { name: 'Aplicada 2 vezes' }));
+    fireEvent.click(within(rowOf('IFOOD')).getByRole('button', { name: 'Aplicada 2 vezes' }));
 
     await waitFor(() => expect(window.location.pathname).toBe('/transactions'));
     expect(window.location.search).toContain('ruleId=');

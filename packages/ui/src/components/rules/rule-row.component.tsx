@@ -1,11 +1,12 @@
-import { Link } from 'react-aria-components';
-
+import { Button } from '#/components/buttons/index.ts';
+import { Chip } from '#/components/chips/index.ts';
 import { Switch } from '#/components/forms/index.ts';
 import { CategoryIcon } from '#/components/icons/index.ts';
+import { ListRow } from '#/components/list-row/index.ts';
 import { OverflowMenu, type OverflowMenuItem } from '#/components/menus/index.ts';
+import { buildRulePhraseText } from '#/components/rules/build-rule-phrase-text.util.ts';
 import { RulePhrase } from '#/components/rules/rule-phrase.component.tsx';
 import type { RuleAction, RuleRowData } from '#/components/rules/rule-phrase.type.ts';
-import { cx } from '#/utils/class-names.util.ts';
 
 const MENU_ITEMS: OverflowMenuItem[] = [
   { key: 'edit', label: 'Editar', icon: 'edit' },
@@ -27,51 +28,41 @@ function appliedLabel(count: number): string {
 }
 
 /**
- * Rule row (components.md 9.2): sentence at 15 with the tokens in 500, the "Aplicada N vezes"
- * link that opens the transactions, the on/off switch and the "…" menu. An off rule is at 60%. On
- * the phone the row breaks and the controls go below with the "Ativa" label.
+ * Rule row on the standard list row (components.md 9.2, 10.0): the category icon, the name (where
+ * the rule sends to, given by the caller), the sentence as the detail with its tokens in 500, the on/off switch at the
+ * right end and the "…" menu after it. "Aplicada N vezes", which opens the transactions, is the
+ * button of the strip. An off rule is at 60% and carries the "Desativada" badge.
  */
 export function RuleRow({ rule, onActiveChange, onAction, className }: RuleRowProps) {
+  const phraseText = buildRulePhraseText(rule.phrase);
+
   return (
-    <li
-      className={cx(
-        'grid grid-cols-[auto_1fr] items-center gap-x-s12 py-s16 lg:grid-cols-[auto_1fr_auto_auto]',
-        !rule.active && 'opacity-60',
-        className,
-      )}
-    >
-      <CategoryIcon icon={rule.icon} />
-      <div className="min-w-0">
-        <p className="text-list text-fg-primary">
-          <RulePhrase segments={rule.phrase} />
-        </p>
-        <p className="mt-s4 text-meta text-fg-secondary">
-          {rule.active ? null : 'Desativada. '}
-          <Link
-            onPress={() => onAction('view-transactions')}
-            className="focus-ring cursor-pointer text-brand underline underline-offset-2"
-          >
-            {appliedLabel(rule.appliedCount)}
-          </Link>
-        </p>
-      </div>
-      <div className="col-span-full flex items-center justify-between gap-s8 lg:contents">
-        <span className="text-list text-fg-primary lg:hidden" aria-hidden="true">
-          {rule.active ? 'Ativa' : 'Desativada'}
-        </span>
-        <div className="flex items-center gap-s4">
-          <Switch
-            isSelected={rule.active}
-            onChange={onActiveChange}
-            ariaLabel={rule.active ? 'Regra ativa' : 'Regra desativada'}
-          />
-          <OverflowMenu
-            label="Ações da regra"
-            items={MENU_ITEMS}
-            onAction={(key) => onAction(key as RuleAction)}
-          />
-        </div>
-      </div>
-    </li>
+    <ListRow
+      mark={<CategoryIcon icon={rule.icon} />}
+      name={rule.name}
+      badges={rule.active ? undefined : [<Chip key="off">Desativada</Chip>]}
+      detail={<RulePhrase segments={rule.phrase} />}
+      detailTitle={phraseText}
+      value={
+        <Switch
+          isSelected={rule.active}
+          onChange={onActiveChange}
+          ariaLabel={rule.active ? 'Regra ativa' : 'Regra desativada'}
+        />
+      }
+      menu={
+        <OverflowMenu
+          label="Ações da regra"
+          items={MENU_ITEMS}
+          onAction={(key) => onAction(key as RuleAction)}
+        />
+      }
+      actions={
+        <Button variant="tertiary" size="sm" onPress={() => onAction('view-transactions')}>
+          {appliedLabel(rule.appliedCount)}
+        </Button>
+      }
+      className={rule.active ? className : `opacity-60 ${className ?? ''}`}
+    />
   );
 }

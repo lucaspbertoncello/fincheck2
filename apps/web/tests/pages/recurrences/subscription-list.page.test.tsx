@@ -19,14 +19,14 @@ const LOAD_TIMEOUT = 4000;
 beforeEach(() => hideValuesStore.set(false));
 afterEach(() => hideValuesStore.set(false));
 
-// The button that opens a subscription is named "Abrir <name>"; its row is the closest grid.
+// The button that opens a subscription is named "Abrir <name>"; its row is the closest grid, inside the list item.
 async function findRow(name: string): Promise<HTMLElement> {
   const button = await screen.findByRole(
     'button',
     { name: `Abrir ${name}` },
     { timeout: LOAD_TIMEOUT },
   );
-  const row = button.parentElement;
+  const row = button.closest<HTMLElement>('[class*="grid-cols-"]');
   if (!row) throw new Error(`No row for ${name}`);
 
   return row;

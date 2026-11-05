@@ -108,4 +108,31 @@ describe('ListRow', () => {
     expect(html).not.toMatch(/<p[^>]*row-start-2[^>]*-col-end-1/);
     expect(html).toContain('col-start-3 row-start-2');
   });
+  it('folds the strip with the Collapse when `actionsOpen` is given, taking no room while closed', () => {
+    const open = render({ actions: <button type="button">Atualizar</button>, actionsOpen: true });
+    const closed = render({ actions: null, actionsOpen: false });
+
+    expect(open).toContain('grid-rows-[1fr]');
+    expect(open).toContain('-mt-s4');
+    expect(open).toContain('lg:col-start-2');
+    expect(open).toContain('Atualizar');
+    // the space under the strip lives inside the fold, not as a padding of the row
+    expect(open).not.toContain('pb-s16');
+    expect(closed).toContain('grid-rows-[0fr]');
+    expect(closed).toContain('inert');
+    expect(closed).not.toContain('Atualizar');
+  });
+
+  it('can be a div when the caller already wraps the row in an li', () => {
+    const html = renderToStaticMarkup(
+      <ul>
+        <li>
+          <ListRow as="div" mark={<span>M</span>} name="Streaming" />
+        </li>
+      </ul>,
+    );
+
+    expect(html).toMatch(/<li><div class="grid /);
+    expect(html.match(/<li/g)).toHaveLength(1);
+  });
 });

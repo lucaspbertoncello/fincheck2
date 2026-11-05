@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { Collapse } from '#/components/disclosure/collapse.component.tsx';
 import { cx } from '#/utils/class-names.util.ts';
 
 /** One or two badges: the standard row never carries a third. */
@@ -32,6 +33,17 @@ type ListRowProps = {
   menu?: ReactNode;
   /** The action strip: its own line under the text, left-aligned with it. */
   actions?: ReactNode;
+  /**
+   * Makes the strip fold: it opens and closes with the system `Collapse` and takes no room while
+   * closed (a warning that appears and goes away). Give it with `actions`, which may be `null` while
+   * closed (the strip keeps the last content until it has folded). Left out, the strip is static.
+   */
+  actionsOpen?: boolean;
+  /**
+   * The element of the row. An `li` by default; use `div` when the caller already wraps the row in
+   * its own `li` (a fold animation needs a wrapper, and an `li` inside an `li` is not a list).
+   */
+  as?: 'li' | 'div';
   className?: string;
 };
 
@@ -56,6 +68,8 @@ export function ListRow({
   valueExtra,
   menu,
   actions,
+  actionsOpen,
+  as: Element = 'li',
   className,
 }: ListRowProps) {
   const shownBadges = badges?.slice(0, 2);
@@ -65,12 +79,13 @@ export function ListRow({
   );
 
   const hasNote = Boolean(valueNote || valueExtra);
+  const foldingStrip = actionsOpen !== undefined;
 
   return (
-    <li
+    <Element
       className={cx(
         'grid grid-cols-[auto_minmax(0,1fr)_auto_auto] gap-y-s4 py-s12',
-        actions ? 'pb-s16' : undefined,
+        actions && !foldingStrip ? 'pb-s16' : undefined,
         className,
       )}
     >
@@ -125,11 +140,19 @@ export function ListRow({
       {menu ? (
         <div className="col-start-4 row-start-1 ml-s12 -mr-s8 -mt-s8 self-start">{menu}</div>
       ) : null}
-      {actions ? (
+      {foldingStrip ? (
+        <Collapse
+          isOpen={actionsOpen}
+          trackClassName="col-start-1 row-start-3 -col-end-1 -mt-s4 lg:col-start-2"
+          contentClassName="pt-s8 pb-s4"
+        >
+          <div className="flex flex-wrap items-center gap-s8">{actions}</div>
+        </Collapse>
+      ) : actions ? (
         <div className="col-start-1 row-start-3 mt-s4 -col-end-1 flex flex-wrap items-center gap-s8 lg:col-start-2">
           {actions}
         </div>
       ) : null}
-    </li>
+    </Element>
   );
 }

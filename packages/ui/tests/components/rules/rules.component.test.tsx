@@ -16,6 +16,7 @@ const noop = () => undefined;
 const rules: RuleRowData[] = [
   {
     id: 'r1',
+    name: 'Delivery',
     icon: 'delivery',
     active: true,
     appliedCount: 38,
@@ -29,6 +30,7 @@ const rules: RuleRowData[] = [
   },
   {
     id: 'r2',
+    name: 'VR',
     icon: 'cart',
     active: false,
     appliedCount: 1,
@@ -159,7 +161,7 @@ describe('RuleList', () => {
     expect(html).toContain('2 regras');
     expect(html).toContain('<strong class="font-emphasis">PEDIDOZAP</strong>');
     expect(html).toContain('Aplicada 38 vezes');
-    expect(html).toContain('Aplicada 1 vez<');
+    expect(html).toContain('Aplicada 1 vez</button>');
   });
 
   it('writes amounts of the sentence through Money', () => {
@@ -171,25 +173,41 @@ describe('RuleList', () => {
     expect(html).toContain('R$');
   });
 
-  it('fades the off rule and says it is off; the on one has no fade', () => {
+  it('fades the off rule and badges it as off; the on one has no fade', () => {
     const html = renderToStaticMarkup(
       <RuleList rules={rules} onActiveChange={noop} onAction={noop} />,
     );
 
     expect(html.match(/opacity-60/g)).toHaveLength(1);
-    expect(html).toContain('Desativada. ');
+    expect(html.match(/>Desativada</g)).toHaveLength(1);
     expect(html).toContain('aria-label="Regra ativa"');
     expect(html).toContain('aria-label="Regra desativada"');
   });
 
-  it('has the switch and the "…" menu in each row and the "Ativa" label for the phone', () => {
+  it('is the standard row: icon, destination as the name, the sentence as the detail', () => {
+    const html = renderToStaticMarkup(
+      <RuleList rules={rules} onActiveChange={noop} onAction={noop} />,
+    );
+
+    expect(html).toContain('title="Delivery"');
+    expect(html).toContain('title="VR"');
+    expect(html).toContain('line-clamp-2');
+    expect(html).toContain('lg:line-clamp-1');
+    expect(html).toContain('title="Sempre que a descrição contém PEDIDOZAP, vai para Delivery."');
+    // the sentence with an amount has no title: it would leak what the eye hides
+    expect(html).not.toContain('title="Sempre que vier Pix do tio');
+  });
+
+  it('puts the switch at the right end, then the "…" menu, and "Aplicada" on the strip', () => {
     const html = renderToStaticMarkup(
       <RuleList rules={rules} onActiveChange={noop} onAction={noop} />,
     );
 
     expect(html.match(/role="switch"/g)).toHaveLength(2);
     expect(html.match(/aria-label="Ações da regra"/g)).toHaveLength(2);
-    expect(html).toContain('>Ativa<');
+    expect(html.indexOf('role="switch"')).toBeLessThan(html.indexOf('aria-label="Ações da regra"'));
+    expect(html.match(/col-start-1 row-start-3/g)).toHaveLength(2);
+    expect(html).not.toContain('>Ativa<');
   });
 
   it('shows the empty message with no rules', () => {

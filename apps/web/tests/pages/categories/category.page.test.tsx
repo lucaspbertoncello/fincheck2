@@ -172,9 +172,9 @@ describe('Categorias → the category page', () => {
     const user = userEvent.setup();
     const id = await idOf('Mercado');
     renderApp('/categories');
-    const table = await screen.findByRole('table', { name: 'Categorias de despesa' });
+    const table = await screen.findByRole('list', { name: 'Categorias de despesa' });
 
-    await user.click(within(table).getByRole('button', { name: 'Mercado' }));
+    await user.click(within(table).getByRole('button', { name: 'Abrir Mercado' }));
 
     await waitFor(() => expect(window.location.pathname).toBe(`/categories/${id}`));
     expect(
@@ -185,7 +185,7 @@ describe('Categorias → the category page', () => {
   it('edits from the "…" menu of the row, not from the name', async () => {
     const user = userEvent.setup();
     renderApp('/categories');
-    const table = await screen.findByRole('table', { name: 'Categorias de despesa' });
+    const table = await screen.findByRole('list', { name: 'Categorias de despesa' });
 
     await user.click(within(table).getByRole('button', { name: 'Ações de Mercado' }));
     await user.click(await screen.findByRole('menuitem', { name: 'Editar' }));
