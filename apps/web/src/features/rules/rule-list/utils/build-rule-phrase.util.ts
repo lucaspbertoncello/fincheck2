@@ -3,6 +3,7 @@ import type { Rule } from '@fincheck/shared/categories/rule/rule.type.ts';
 import type { Tag } from '@fincheck/shared/categories/tag/tag.type.ts';
 import type { RulePhraseSegment } from '@fincheck/ui';
 
+import { titleCaseName } from '#/features/rules/rule-list/utils/title-case-name.util.ts';
 import { buildNameSegments } from '#/features/rules/rule-list/utils/build-name-segments.util.ts';
 
 function buildConditionSegments(rule: Rule.Dto): RulePhraseSegment[] {
@@ -22,7 +23,8 @@ function buildConditionSegments(rule: Rule.Dto): RulePhraseSegment[] {
 
 /**
  * The sentence of a rule: "Sempre que a descrição contém IFOOD, vai para Delivery com a tag
- * delivery." The contract has no sentence; the names come from the category and tag lists.
+ * delivery." or "Sempre que o Pix for de Treetools, vai para Salário."; with both text conditions
+ * both are in it. The contract has no sentence; the names come from the category and tag lists.
  */
 export function buildRulePhrase(
   rule: Rule.Dto,
@@ -34,11 +36,16 @@ export function buildRulePhrase(
     .map((id) => tags.find((tag) => tag.id === id)?.name)
     .filter((name): name is string => name !== undefined);
 
-  const segments: RulePhraseSegment[] = [
-    'Sempre que a descrição contém ',
-    { strong: rule.descriptionContains },
-    ...buildConditionSegments(rule),
-  ];
+  const segments: RulePhraseSegment[] = ['Sempre que '];
+  if (rule.descriptionContains !== null) {
+    segments.push('a descrição contém ', { strong: rule.descriptionContains });
+  }
+  if (rule.counterpartyContains !== null) {
+    segments.push(rule.descriptionContains !== null ? ' e o Pix for de ' : 'o Pix for de ', {
+      strong: titleCaseName(rule.counterpartyContains),
+    });
+  }
+  segments.push(...buildConditionSegments(rule));
 
   if (rule.categoryId) {
     segments.push(', vai para ', { strong: category?.name ?? 'uma categoria' });

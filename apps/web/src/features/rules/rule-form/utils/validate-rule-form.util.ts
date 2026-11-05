@@ -1,10 +1,15 @@
 import { createRuleRequestSchema } from '@fincheck/shared/categories/rule/rule.schema.ts';
 import type { Rule } from '@fincheck/shared/categories/rule/rule.type.ts';
 
-import type { RuleFormErrors } from '#/features/rules/rule-form/types/rule-form.type.ts';
+import type {
+  RuleFormErrors,
+  RuleTextMode,
+} from '#/features/rules/rule-form/types/rule-form.type.ts';
 
 type RuleFormValues = {
+  mode: RuleTextMode;
   description: string;
+  counterparty: string;
   accountId?: string | null;
   categoryId: string | null;
   tagIds: readonly string[];
@@ -16,7 +21,8 @@ type RuleFormResult =
 /** Checks the form with the request schema of the contract; the messages are the screen's, in pt-BR. */
 export function validateRuleForm(values: RuleFormValues): RuleFormResult {
   const parsed = createRuleRequestSchema.safeParse({
-    descriptionContains: values.description,
+    descriptionContains: values.mode === 'counterparty' ? undefined : values.description,
+    counterpartyContains: values.mode === 'description' ? undefined : values.counterparty,
     accountId: values.accountId ?? undefined,
     categoryId: values.categoryId ?? undefined,
     tagIds: values.tagIds.length > 0 ? [...values.tagIds] : undefined,
@@ -24,11 +30,22 @@ export function validateRuleForm(values: RuleFormValues): RuleFormResult {
   const errors: RuleFormErrors = {};
 
   if (!parsed.success) {
-    const issue = parsed.error.issues.find((item) => item.path[0] === 'descriptionContains');
-    errors.description =
-      issue?.code === 'too_big'
-        ? 'Use até 100 caracteres.'
-        : 'Escreva um trecho da descrição, com pelo menos 2 letras.';
+    const issueOf = (field: string) => parsed.error.issues.find((item) => item.path[0] === field);
+    const description = issueOf('descriptionContains');
+    const counterparty = issueOf('counterpartyContains');
+
+    if (description) {
+      errors.description =
+        description.code === 'too_big'
+          ? 'Use até 100 caracteres.'
+          : 'Escreva um trecho da descrição, com pelo menos 2 letras.';
+    }
+    if (counterparty) {
+      errors.counterparty =
+        counterparty.code === 'too_big'
+          ? 'Use até 80 caracteres.'
+          : 'Escreva o nome de quem mandou ou recebeu, com pelo menos 2 letras.';
+    }
   }
   if (values.categoryId === null && values.tagIds.length === 0) {
     errors.action = 'Escolha uma categoria ou ao menos uma tag.';

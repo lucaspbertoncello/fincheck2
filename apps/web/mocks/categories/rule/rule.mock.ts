@@ -68,7 +68,14 @@ export const ruleMock = [
     handleRoute({ body: updateRuleRequestSchema, response: ruleDtoSchema }, ({ params, body }) => {
       const rule = findRule(params['id'] ?? '');
       const next = {
-        descriptionContains: body.descriptionContains ?? rule.descriptionContains,
+        descriptionContains:
+          body.descriptionContains === undefined
+            ? rule.descriptionContains
+            : body.descriptionContains,
+        counterpartyContains:
+          body.counterpartyContains === undefined
+            ? rule.counterpartyContains
+            : body.counterpartyContains,
         kind: body.kind === undefined ? rule.kind : body.kind,
         accountId: body.accountId === undefined ? rule.accountId : body.accountId,
         amountMinCents:
@@ -78,6 +85,8 @@ export const ruleMock = [
         categoryId: body.categoryId === undefined ? rule.categoryId : body.categoryId,
         tagIds: body.tagIds ?? rule.tagIds,
       };
+      if (next.descriptionContains === null && next.counterpartyContains === null)
+        fail(400, 'VALIDATION_FAILED', 'Informe a descrição ou quem mandou ou recebeu');
       if (!next.categoryId && next.tagIds.length === 0)
         fail(422, 'RULE_ACTION_REQUIRED', 'Escolha uma categoria ou uma tag');
       if (body.categoryId) {
@@ -90,6 +99,7 @@ export const ruleMock = [
         (other) =>
           other.id !== rule.id &&
           other.descriptionContains === next.descriptionContains &&
+          other.counterpartyContains === next.counterpartyContains &&
           other.kind === next.kind &&
           other.accountId === next.accountId &&
           other.amountMinCents === next.amountMinCents &&

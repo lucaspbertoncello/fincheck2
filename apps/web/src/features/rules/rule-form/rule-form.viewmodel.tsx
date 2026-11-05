@@ -10,11 +10,13 @@ import type {
   RuleFormErrors,
   RuleFormOutcome,
   RuleFormTarget,
+  RuleTextMode,
   TagOption,
 } from '#/features/rules/rule-form/types/rule-form.type.ts';
 import { buildCategoryGroups } from '#/features/rules/rule-form/utils/build-category-groups.util.ts';
 import { buildPreviewBody } from '#/features/rules/rule-form/utils/build-preview-body.util.ts';
 import { buildRuleUpdateBody } from '#/features/rules/rule-form/utils/build-rule-update-body.util.ts';
+import { getRuleTextMode } from '#/features/rules/rule-form/utils/get-rule-text-mode.util.ts';
 import { validateRuleForm } from '#/features/rules/rule-form/utils/validate-rule-form.util.ts';
 import { buildHistoryLabel } from '#/features/rules/utils/build-history-label.util.ts';
 import { buildHistoryChanges } from '#/features/rules/utils/build-history-changes.util.ts';
@@ -38,7 +40,14 @@ type Options = {
 export function useRuleFormViewModel({ target, onClose, onSaved, onDelete }: Options) {
   const editing = target.mode === 'edit' ? target.rule : null;
 
+  const initialCounterparty = target.mode === 'create' ? (target.counterparty ?? '') : '';
+  const [textMode, setTextMode] = useState<RuleTextMode>(
+    editing ? getRuleTextMode(editing) : initialCounterparty ? 'counterparty' : 'description',
+  );
   const [description, setDescription] = useState(editing?.descriptionContains ?? '');
+  const [counterparty, setCounterparty] = useState(
+    editing?.counterpartyContains ?? initialCounterparty,
+  );
   const [accountId, setAccountId] = useState<string | null>(editing?.accountId ?? null);
   const [categoryId, setCategoryId] = useState<string | null>(editing?.categoryId ?? null);
   const [tagIds, setTagIds] = useState<string[]>(editing?.tagIds ?? []);
@@ -50,8 +59,16 @@ export function useRuleFormViewModel({ target, onClose, onSaved, onDelete }: Opt
   const formRef = useFocusFirstInvalid(focusToken);
 
   const debouncedDescription = useDebouncedValue(description, PREVIEW_DELAY_MS);
+  const debouncedCounterparty = useDebouncedValue(counterparty, PREVIEW_DELAY_MS);
   const previewBody = buildPreviewBody(
-    { description: debouncedDescription, accountId, categoryId, tagIds },
+    {
+      mode: textMode,
+      description: debouncedDescription,
+      counterparty: debouncedCounterparty,
+      accountId,
+      categoryId,
+      tagIds,
+    },
     editing,
   );
   const model = useRuleFormModel(previewBody);
@@ -84,14 +101,22 @@ export function useRuleFormViewModel({ target, onClose, onSaved, onDelete }: Opt
       let outcome: RuleFormOutcome | null;
 
       if (editing) {
-        const body = buildRuleUpdateBody(editing, { description, accountId, categoryId, tagIds });
+        const body = buildRuleUpdateBody(editing, {
+          mode: textMode,
+          description,
+          counterparty,
+          accountId,
+          categoryId,
+          tagIds,
+        });
         const changed = Object.keys(body).length > 0;
         const rule = changed ? await model.update.mutateAsync({ id: editing.id, body }) : editing;
         const applied = applyToHistory ? await model.apply.mutateAsync(rule.id) : null;
         outcome = changed || applied ? { rule, applied, created: false, categoryName } : null;
       } else {
         const result = await model.create.mutateAsync({
-          descriptionContains: description,
+          ...(textMode !== 'counterparty' ? { descriptionContains: description } : {}),
+          ...(textMode !== 'description' ? { counterpartyContains: counterparty } : {}),
           ...(accountId ? { accountId } : {}),
           ...(categoryId ? { categoryId } : {}),
           ...(tagIds.length > 0 ? { tagIds } : {}),
@@ -109,7 +134,14 @@ export function useRuleFormViewModel({ target, onClose, onSaved, onDelete }: Opt
   }
 
   function submit() {
-    const result = validateRuleForm({ description, accountId, categoryId, tagIds });
+    const result = validateRuleForm({
+      mode: textMode,
+      description,
+      counterparty,
+      accountId,
+      categoryId,
+      tagIds,
+    });
     if (!result.ok) {
       setErrors(result.errors);
       setFocusToken((token) => token + 1);
@@ -139,11 +171,15 @@ export function useRuleFormViewModel({ target, onClose, onSaved, onDelete }: Opt
     title: editing ? 'Editar regra' : 'Nova regra',
     subtitle: editing
       ? 'Editar não muda as transações que já passaram pela regra.'
-      : 'Quando a descrição bater, a transação ganha a categoria e as tags.',
+      : 'Quando a transação bater, ela ganha a categoria e as tags.',
     submitLabel: editing ? 'Salvar regra' : 'Criar regra',
 
+    textMode,
+    onTextModeChange: setTextMode,
     description,
     onDescriptionChange: setDescription,
+    counterparty,
+    onCounterpartyChange: setCounterparty,
     accountId,
     accounts: accountOptions,
     onAccountChange: setAccountId,

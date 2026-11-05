@@ -6,16 +6,23 @@ import { TokenPopover } from '#/features/rules/rule-form/components/token-popove
 import type {
   AccountOption,
   CategoryGroup,
+  RuleTextMode,
   TagOption,
 } from '#/features/rules/rule-form/types/rule-form.type.ts';
 
 const noop = () => undefined;
 
 type RuleSentenceProps = {
+  /** Which text conditions the sentence shows; the suggestion has only the description. */
+  mode?: RuleTextMode;
   description: string;
   /** Without it the text is fixed (a suggestion keeps its pattern). */
   onDescriptionChange?: (value: string) => void;
   descriptionInvalid?: boolean;
+  /** Who sent or received (Pix, TED); shown when `mode` has it. Without the handler it is fixed. */
+  counterparty?: string;
+  onCounterpartyChange?: (value: string) => void;
+  counterpartyInvalid?: boolean;
   /** Without `onAccountChange` the account blank is left out of the sentence. */
   accountId?: string | null;
   accounts?: AccountOption[];
@@ -34,9 +41,13 @@ type RuleSentenceProps = {
  * a tag [+ tag]": the text is typed in place; the other blanks are tokens that open a small picker.
  */
 export function RuleSentence({
+  mode = 'description',
   description,
   onDescriptionChange,
   descriptionInvalid = false,
+  counterparty = '',
+  onCounterpartyChange,
+  counterpartyInvalid = false,
   accountId = null,
   accounts = [],
   onAccountChange,
@@ -48,6 +59,8 @@ export function RuleSentence({
   onTagIdsChange,
 }: RuleSentenceProps) {
   const pattern = normalizeText(description);
+  const usesDescription = mode !== 'counterparty';
+  const usesCounterparty = mode !== 'description';
   const category = categoryGroups
     .flatMap((group) => group.options)
     .find((option) => option.id === categoryId);
@@ -58,20 +71,43 @@ export function RuleSentence({
   return (
     <div className="flex flex-wrap items-center gap-x-s8 gap-y-s12">
       <RuleSentenceText>Quando</RuleSentenceText>
-      <RuleToken kind="option">a descrição contém</RuleToken>
+      {usesDescription ? (
+        <>
+          <RuleToken kind="option">a descrição contém</RuleToken>
+          {onDescriptionChange ? (
+            <SentenceInput
+              label="Trecho da descrição"
+              value={description}
+              onChange={onDescriptionChange}
+              invalid={descriptionInvalid}
+              placeholder="ex.: mercado"
+              maxLength={100}
+            />
+          ) : (
+            <RuleToken kind="value">{pattern}</RuleToken>
+          )}
+        </>
+      ) : null}
 
-      {onDescriptionChange ? (
-        <SentenceInput
-          label="Trecho da descrição"
-          value={description}
-          onChange={onDescriptionChange}
-          invalid={descriptionInvalid}
-          placeholder="ex.: mercado"
-          maxLength={100}
-        />
-      ) : (
-        <RuleToken kind="value">{pattern}</RuleToken>
-      )}
+      {usesDescription && usesCounterparty ? <RuleSentenceText>e</RuleSentenceText> : null}
+
+      {usesCounterparty ? (
+        <>
+          <RuleToken kind="option">quem mandou ou recebeu contém</RuleToken>
+          {onCounterpartyChange ? (
+            <SentenceInput
+              label="Quem mandou ou recebeu"
+              value={counterparty}
+              onChange={onCounterpartyChange}
+              invalid={counterpartyInvalid}
+              placeholder="ex.: treetools"
+              maxLength={80}
+            />
+          ) : (
+            <RuleToken kind="value">{normalizeText(counterparty)}</RuleToken>
+          )}
+        </>
+      ) : null}
 
       {onAccountChange ? (
         <>

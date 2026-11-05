@@ -4,7 +4,8 @@ import { ruleMatches } from '#mocks/categories/rule/rule-matches.util.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
 
 interface RuleDefinition {
-  descriptionContains: string;
+  descriptionContains?: string | null | undefined;
+  counterpartyContains?: string | null | undefined;
   kind?: 'expense' | 'income' | null | undefined;
   accountId?: string | null | undefined;
   amountMinCents?: number | null | undefined;

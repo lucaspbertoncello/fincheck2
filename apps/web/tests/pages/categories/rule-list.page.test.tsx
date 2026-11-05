@@ -228,9 +228,7 @@ describe('RuleListPage', () => {
         expect(within(dialog).getByRole('textbox', { name: 'Trecho da descrição' })).toHaveFocus(),
       );
       expect(
-        within(dialog).getByText(
-          'Escreva um trecho da descrição para ver o que a regra pega no histórico.',
-        ),
+        within(dialog).getByText('Preencha a condição para ver o que a regra pega no histórico.'),
       ).toBeInTheDocument();
     });
 
@@ -311,6 +309,153 @@ describe('RuleListPage', () => {
         json as { items: { descriptionContains: string; accountId: string | null }[] }
       ).items.find((rule) => rule.descriptionContains === 'IFOOD' && rule.accountId !== null);
       expect(created).toBeDefined();
+    });
+
+    it('chooses the sender condition, previews it and creates a Pix rule with its sentence', async () => {
+      const user = userEvent.setup();
+      renderApp('/categories/rules?new=rule');
+      const dialog = await screen.findByRole('dialog', { name: 'Nova regra' });
+
+      await user.click(within(dialog).getByRole('radio', { name: 'Quem mandou ou recebeu' }));
+
+      expect(
+        within(dialog).queryByRole('textbox', { name: 'Trecho da descrição' }),
+      ).not.toBeInTheDocument();
+      await user.type(
+        within(dialog).getByRole('textbox', { name: 'Quem mandou ou recebeu' }),
+        'jose',
+      );
+      await user.click(within(dialog).getByRole('button', { name: 'Categoria da regra' }));
+      await user.click(await screen.findByRole('button', { name: 'Delivery' }));
+
+      expect(
+        await within(dialog).findByText(/Bate com \d+ transaç(ão|ões) do histórico/, undefined, {
+          timeout: 3000,
+        }),
+      ).toBeInTheDocument();
+
+      await user.click(within(dialog).getByRole('button', { name: 'Criar regra' }));
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      const { json } = await callApi('GET', '/rules');
+      expect(
+        (
+          json as {
+            items: { descriptionContains: string | null; counterpartyContains: string | null }[];
+          }
+        ).items,
+      ).toContainEqual(
+        expect.objectContaining({ descriptionContains: null, counterpartyContains: 'JOSE' }),
+      );
+      expect(await screen.findByText('Jose', { selector: 'strong' })).toHaveTextContent('Jose');
+      expect(screen.getByText('Jose', { selector: 'strong' }).closest('li')).toHaveTextContent(
+        'Sempre que o Pix for de Jose, vai para Delivery.',
+      );
+    });
+
+    it('offers the text conditions as whole-label chips for narrow screens and switches with them', async () => {
+      const user = userEvent.setup();
+      renderApp('/categories/rules?new=rule');
+      const dialog = await screen.findByRole('dialog', { name: 'Nova regra' });
+      const chips = within(dialog).getAllByRole('group', { name: 'Condição de texto da regra' })[0];
+
+      for (const label of ['Descrição', 'Quem mandou ou recebeu', 'Os dois'])
+        expect(
+          within(chips as HTMLElement).getByRole('button', { name: label }),
+        ).toBeInTheDocument();
+
+      await user.click(within(chips as HTMLElement).getByRole('button', { name: 'Os dois' }));
+
+      expect(
+        within(dialog).getByRole('textbox', { name: 'Quem mandou ou recebeu' }),
+      ).toBeInTheDocument();
+      expect(
+        within(dialog).getByRole('textbox', { name: 'Trecho da descrição' }),
+      ).toBeInTheDocument();
+    });
+
+    it('with both conditions asks for both texts and sends both', async () => {
+      const user = userEvent.setup();
+      renderApp('/categories/rules?new=rule');
+      const dialog = await screen.findByRole('dialog', { name: 'Nova regra' });
+
+      await user.click(within(dialog).getByRole('radio', { name: 'Os dois' }));
+      await user.type(within(dialog).getByRole('textbox', { name: 'Trecho da descrição' }), 'pix');
+      await user.type(within(dialog).getByRole('textbox', { name: 'Quem mandou ou recebeu' }), 'j');
+      await user.click(within(dialog).getByRole('button', { name: 'Criar regra' }));
+
+      expect(
+        await within(dialog).findByText(
+          'Escreva o nome de quem mandou ou recebeu, com pelo menos 2 letras.',
+        ),
+      ).toBeInTheDocument();
+      await waitFor(() =>
+        expect(
+          within(dialog).getByRole('textbox', { name: 'Quem mandou ou recebeu' }),
+        ).toHaveFocus(),
+      );
+
+      await user.type(
+        within(dialog).getByRole('textbox', { name: 'Quem mandou ou recebeu' }),
+        'ose',
+      );
+      await user.click(within(dialog).getByRole('button', { name: 'Categoria da regra' }));
+      await user.click(await screen.findByRole('button', { name: 'Delivery' }));
+      await user.click(within(dialog).getByRole('button', { name: 'Criar regra' }));
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      const { json } = await callApi('GET', '/rules');
+      expect((json as { items: unknown[] }).items).toContainEqual(
+        expect.objectContaining({ descriptionContains: 'PIX', counterpartyContains: 'JOSE' }),
+      );
+      expect(screen.getByText('PIX', { selector: 'strong' }).closest('li')).toHaveTextContent(
+        'Sempre que a descrição contém PIX e o Pix for de Jose, vai para Delivery.',
+      );
+    });
+
+    it('opens "Criar regra" from a Pix with the sender already filled in', async () => {
+      const { json } = await callApi('GET', '/transactions?limit=100');
+      const pix = (
+        json as { items: { id: string; bank: { counterparty: string | null } | null }[] }
+      ).items.find((item) => item.bank?.counterparty);
+      expect(pix).toBeDefined();
+
+      renderApp(`/categories/rules?new=rule&from=${pix?.id}`);
+      const dialog = await screen.findByRole('dialog', { name: 'Nova regra' });
+
+      expect(within(dialog).getByRole('radio', { name: 'Quem mandou ou recebeu' })).toBeChecked();
+      expect(within(dialog).getByRole('textbox', { name: 'Quem mandou ou recebeu' })).toHaveValue(
+        pix?.bank?.counterparty,
+      );
+    });
+
+    it('edits a rule that has both conditions and clears the sender when it goes back to the description', async () => {
+      const user = userEvent.setup();
+      const ifood = (
+        (await callApi('GET', '/rules')).json as {
+          items: { id: string; descriptionContains: string }[];
+        }
+      ).items.find((rule) => rule.descriptionContains === 'IFOOD');
+      await callApi('PATCH', `/rules/${ifood?.id}`, { counterpartyContains: 'loja' });
+
+      renderApp(`/categories/rules?edit=${ifood?.id}`);
+      const dialog = await screen.findByRole('dialog', { name: 'Editar regra' });
+
+      expect(within(dialog).getByRole('radio', { name: 'Os dois' })).toBeChecked();
+      expect(within(dialog).getByRole('textbox', { name: 'Quem mandou ou recebeu' })).toHaveValue(
+        'LOJA',
+      );
+
+      await user.click(within(dialog).getByRole('radio', { name: 'Descrição' }));
+      await user.click(within(dialog).getByRole('button', { name: 'Salvar regra' }));
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      const { json } = await callApi('GET', '/rules');
+      expect(
+        (json as { items: { id: string; counterpartyContains: string | null }[] }).items.find(
+          (rule) => rule.id === ifood?.id,
+        )?.counterpartyContains,
+      ).toBeNull();
     });
 
     it('shows the server message when the rule already exists', async () => {

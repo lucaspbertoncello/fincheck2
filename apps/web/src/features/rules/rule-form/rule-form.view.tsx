@@ -1,9 +1,12 @@
 import {
   Checkbox,
+  ChoiceChip,
   ConfirmDialog,
   FormModal,
   FormModalGroup,
+  SegmentedControl,
   type RulePreviewData,
+  type SegmentedOption,
 } from '@fincheck/ui';
 import type { ConfirmChange } from '@fincheck/ui';
 import type { RefObject } from 'react';
@@ -17,16 +20,27 @@ import type {
   AccountOption,
   CategoryGroup,
   RuleFormErrors,
+  RuleTextMode,
   TagOption,
 } from '#/features/rules/rule-form/types/rule-form.type.ts';
+
+const TEXT_MODE_OPTIONS: SegmentedOption[] = [
+  { key: 'description', label: 'Descrição' },
+  { key: 'counterparty', label: 'Quem mandou ou recebeu' },
+  { key: 'both', label: 'Os dois' },
+];
 
 type RuleFormViewProps = {
   formRef: RefObject<HTMLDivElement | null>;
   title: string;
   subtitle: string;
   submitLabel: string;
+  textMode: RuleTextMode;
+  onTextModeChange: (mode: RuleTextMode) => void;
   description: string;
   onDescriptionChange: (value: string) => void;
+  counterparty: string;
+  onCounterpartyChange: (value: string) => void;
   accountId: string | null;
   accounts: AccountOption[];
   onAccountChange: (accountId: string | null) => void;
@@ -73,8 +87,12 @@ export function RuleFormView({
   title,
   subtitle,
   submitLabel,
+  textMode,
+  onTextModeChange,
   description,
   onDescriptionChange,
+  counterparty,
+  onCounterpartyChange,
   accountId,
   accounts,
   onAccountChange,
@@ -113,11 +131,39 @@ export function RuleFormView({
       >
         <div ref={formRef} className="flex flex-col gap-s16 lg:gap-s24">
           <FormModalGroup label="A regra">
-            <div className="rounded-panel border border-line bg-glass p-s16">
+            <div className="flex flex-col gap-s16 rounded-panel border border-line bg-glass p-s16">
+              {/* Under 480 px the three labels do not fit a segmented control: chips, one line each. */}
+              <div className="max-[479px]:hidden">
+                <SegmentedControl
+                  label="Condição de texto da regra"
+                  options={TEXT_MODE_OPTIONS}
+                  value={textMode}
+                  onChange={(key) => onTextModeChange(key as RuleTextMode)}
+                />
+              </div>
+              <div
+                role="group"
+                aria-label="Condição de texto da regra"
+                className="flex flex-wrap gap-s8 min-[480px]:hidden"
+              >
+                {TEXT_MODE_OPTIONS.map((option) => (
+                  <ChoiceChip
+                    key={option.key}
+                    selected={textMode === option.key}
+                    onChange={() => onTextModeChange(option.key as RuleTextMode)}
+                  >
+                    {option.label}
+                  </ChoiceChip>
+                ))}
+              </div>
               <RuleSentence
+                mode={textMode}
                 description={description}
                 onDescriptionChange={onDescriptionChange}
                 descriptionInvalid={errors.description !== undefined}
+                counterparty={counterparty}
+                onCounterpartyChange={onCounterpartyChange}
+                counterpartyInvalid={errors.counterparty !== undefined}
                 accountId={accountId}
                 accounts={accounts}
                 onAccountChange={onAccountChange}
@@ -134,10 +180,20 @@ export function RuleFormView({
                 {errors.description}
               </p>
             ) : null}
-            {errors.action ? (
+            {errors.counterparty ? (
               <p
                 role="alert"
                 data-invalid-field={errors.description ? undefined : true}
+                tabIndex={-1}
+                className="text-meta text-alert"
+              >
+                {errors.counterparty}
+              </p>
+            ) : null}
+            {errors.action ? (
+              <p
+                role="alert"
+                data-invalid-field={errors.description || errors.counterparty ? undefined : true}
                 tabIndex={-1}
                 className="text-meta text-alert"
               >

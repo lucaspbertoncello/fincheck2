@@ -9,7 +9,8 @@ import { categoryKindSchema } from '../category/category.schema.ts';
 
 export const ruleDtoSchema = z.object({
   id: idSchema,
-  descriptionContains: z.string(),
+  descriptionContains: z.string().nullable(),
+  counterpartyContains: z.string().nullable(),
   kind: categoryKindSchema.nullable(),
   accountId: idSchema.nullable(),
   amountMinCents: nonNegativeCentsSchema.nullable(),
@@ -37,6 +38,22 @@ const descriptionContainsSchema = z
   .transform(normalizeText)
   .pipe(z.string().min(2).max(100));
 
+// Who sent or received (Pix, TED), normalized like the description (2 to 80 characters).
+const counterpartyContainsSchema = z
+  .string()
+  .transform(normalizeText)
+  .pipe(z.string().min(2).max(80));
+
+const hasTextCondition = (value: {
+  descriptionContains?: string | null | undefined;
+  counterpartyContains?: string | null | undefined;
+}) => value.descriptionContains != null || value.counterpartyContains != null;
+
+const textConditionIssue = {
+  message: 'Send descriptionContains or counterpartyContains',
+  path: ['descriptionContains'],
+};
+
 const amountRangeIsValid = (value: {
   amountMinCents?: number | null | undefined;
   amountMaxCents?: number | null | undefined;
@@ -52,7 +69,8 @@ const amountRangeIssue = {
 
 // Condition and action fields shared by the preview, create and update bodies.
 export const ruleConditionSchema = z.object({
-  descriptionContains: descriptionContainsSchema,
+  descriptionContains: descriptionContainsSchema.optional(),
+  counterpartyContains: counterpartyContainsSchema.optional(),
   kind: categoryKindSchema.optional(),
   accountId: idSchema.optional(),
   amountMinCents: nonNegativeCentsSchema.optional(),
@@ -61,10 +79,9 @@ export const ruleConditionSchema = z.object({
   tagIds: z.array(idSchema).max(10).optional(),
 });
 
-export const previewRuleRequestSchema = ruleConditionSchema.refine(
-  amountRangeIsValid,
-  amountRangeIssue,
-);
+export const previewRuleRequestSchema = ruleConditionSchema
+  .refine(hasTextCondition, textConditionIssue)
+  .refine(amountRangeIsValid, amountRangeIssue);
 
 export const rulePreviewSchema = z.object({
   matchCount: z.int().nonnegative(),
@@ -74,6 +91,7 @@ export const rulePreviewSchema = z.object({
 
 export const createRuleRequestSchema = ruleConditionSchema
   .extend({ applyToHistory: z.boolean().optional() })
+  .refine(hasTextCondition, textConditionIssue)
   .refine(amountRangeIsValid, amountRangeIssue);
 
 export const createRuleResultSchema = z.object({
@@ -85,7 +103,8 @@ export const createRuleResultSchema = z.object({
 
 export const updateRuleRequestSchema = z
   .strictObject({
-    descriptionContains: descriptionContainsSchema.optional(),
+    descriptionContains: descriptionContainsSchema.nullable().optional(),
+    counterpartyContains: counterpartyContainsSchema.nullable().optional(),
     kind: categoryKindSchema.nullable().optional(),
     accountId: idSchema.nullable().optional(),
     amountMinCents: nonNegativeCentsSchema.nullable().optional(),
@@ -97,6 +116,11 @@ export const updateRuleRequestSchema = z
   .refine((value) => Object.values(value).some((field) => field !== undefined), {
     message: 'Send at least one field',
   })
+  .refine(
+    // Clearing both would leave no text condition; clearing one is checked against the saved rule.
+    (value) => !(value.descriptionContains === null && value.counterpartyContains === null),
+    textConditionIssue,
+  )
   .refine(amountRangeIsValid, amountRangeIssue);
 
 export const applyRuleResultSchema = z.object({

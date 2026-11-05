@@ -10,7 +10,8 @@ import { NOW_ISO } from '#mocks/support/dates/mock-clock.store.ts';
 import { fail } from '#mocks/support/http/fail.util.ts';
 
 interface NewRule {
-  descriptionContains: string;
+  descriptionContains?: string | undefined;
+  counterpartyContains?: string | undefined;
   kind?: 'expense' | 'income' | undefined;
   accountId?: string | undefined;
   amountMinCents?: number | undefined;
@@ -39,7 +40,8 @@ export function createRule(database: MockState.Database, input: NewRule): Rule.C
   }
   const duplicate = database.rules.some(
     (rule) =>
-      rule.descriptionContains === input.descriptionContains &&
+      rule.descriptionContains === (input.descriptionContains ?? null) &&
+      rule.counterpartyContains === (input.counterpartyContains ?? null) &&
       rule.kind === (input.kind ?? null) &&
       rule.accountId === (input.accountId ?? null) &&
       rule.amountMinCents === (input.amountMinCents ?? null) &&
@@ -49,7 +51,8 @@ export function createRule(database: MockState.Database, input: NewRule): Rule.C
 
   const record: MockState.RuleRecord = {
     id: newId(),
-    descriptionContains: input.descriptionContains,
+    descriptionContains: input.descriptionContains ?? null,
+    counterpartyContains: input.counterpartyContains ?? null,
     kind: input.kind ?? null,
     accountId: input.accountId ?? null,
     amountMinCents: input.amountMinCents ?? null,

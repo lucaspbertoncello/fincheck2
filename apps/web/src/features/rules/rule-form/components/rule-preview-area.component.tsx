@@ -44,9 +44,5 @@ export function RulePreviewArea({ status, preview, onRetry }: RulePreviewAreaPro
     return <p className={BOX_CLASS}>Nenhuma transação do histórico bate com essa regra ainda.</p>;
   }
 
-  return (
-    <p className={BOX_CLASS}>
-      Escreva um trecho da descrição para ver o que a regra pega no histórico.
-    </p>
-  );
+  return <p className={BOX_CLASS}>Preencha a condição para ver o que a regra pega no histórico.</p>;
 }

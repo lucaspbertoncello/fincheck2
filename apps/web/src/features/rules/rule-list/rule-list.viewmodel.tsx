@@ -22,10 +22,10 @@ const UNDO_WINDOW_MS = 6000;
  * delete goes out.
  */
 export function useRuleListViewModel() {
-  const model = useRuleListModel();
+  const { search, update } = useScreenSearch(ruleListSearchSchema);
+  const model = useRuleListModel(search.from);
   const toast = useToast();
   const router = useRouter();
-  const { search, update } = useScreenSearch(ruleListSearchSchema);
   const outcome = useRuleOutcomeToasts();
   const deletion = useDeferredDeletion(UNDO_WINDOW_MS);
 
@@ -38,8 +38,14 @@ export function useRuleListViewModel() {
   const visibleRules = rules.filter((rule) => !deletion.pendingIds.includes(rule.id));
 
   const editing = search.edit ? rules.find((rule) => rule.id === search.edit) : undefined;
+  // "Criar regra" from a Pix: wait for the transaction (the modal starts from its first values),
+  // and open the plain modal if it cannot be read.
+  const waitingForTransaction = search.from !== undefined && model.fromTransaction.isPending;
+  const sender = model.fromTransaction.data?.bank?.counterparty ?? undefined;
   const ruleTarget: RuleFormTarget | null = search.new
-    ? { mode: 'create' }
+    ? waitingForTransaction
+      ? null
+      : { mode: 'create', ...(sender ? { counterparty: sender } : {}) }
     : editing
       ? { mode: 'edit', rule: editing }
       : null;
@@ -115,14 +121,14 @@ export function useRuleListViewModel() {
     ),
     onActiveChange: changeActive,
     onAction: handleAction,
-    onCreateRule: () => update({ new: 'rule', edit: undefined }),
+    onCreateRule: () => update({ new: 'rule', edit: undefined, from: undefined }),
 
     ruleForm: {
       target: ruleTarget,
-      onClose: () => update({ new: undefined, edit: undefined }),
+      onClose: () => update({ new: undefined, edit: undefined, from: undefined }),
       onSaved: outcome.announce,
       onDelete: (rule: Rule.Dto) => {
-        update({ new: undefined, edit: undefined });
+        update({ new: undefined, edit: undefined, from: undefined });
         remove(rule);
       },
     },

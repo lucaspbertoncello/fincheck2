@@ -3,6 +3,7 @@ import type { Rule } from '@fincheck/shared/categories/rule/rule.type.ts';
 import type { Tag } from '@fincheck/shared/categories/tag/tag.type.ts';
 import { describe, expect, it } from 'vitest';
 
+import { getRuleTextMode } from '#/features/rules/rule-form/utils/get-rule-text-mode.util.ts';
 import { buildCategoryGroups } from '#/features/rules/rule-form/utils/build-category-groups.util.ts';
 import { buildPreviewBody } from '#/features/rules/rule-form/utils/build-preview-body.util.ts';
 import { buildRuleUpdateBody } from '#/features/rules/rule-form/utils/build-rule-update-body.util.ts';
@@ -41,6 +42,7 @@ function rule(overrides: Partial<Rule.Dto> = {}): Rule.Dto {
   return {
     id: 'r1',
     descriptionContains: 'IFOOD',
+    counterpartyContains: null,
     kind: null,
     accountId: null,
     amountMinCents: null,
@@ -203,6 +205,8 @@ describe('buildHistoryChanges and buildHistoryLabel', () => {
 describe('validateRuleForm', () => {
   it('normalizes the text and accepts a category', () => {
     const result = validateRuleForm({
+      mode: 'description',
+      counterparty: '',
       description: ' ubér  trip ',
       categoryId: '0194f3a0-0000-7000-8000-000000000001',
       tagIds: [],
@@ -212,7 +216,15 @@ describe('validateRuleForm', () => {
   });
 
   it('asks for a text of 2 letters or more and for an action', () => {
-    expect(validateRuleForm({ description: 'u', categoryId: null, tagIds: [] })).toEqual({
+    expect(
+      validateRuleForm({
+        mode: 'description',
+        counterparty: '',
+        description: 'u',
+        categoryId: null,
+        tagIds: [],
+      }),
+    ).toEqual({
       ok: false,
       errors: {
         description: 'Escreva um trecho da descrição, com pelo menos 2 letras.',
@@ -224,6 +236,8 @@ describe('validateRuleForm', () => {
   it('accepts tags alone', () => {
     expect(
       validateRuleForm({
+        mode: 'description',
+        counterparty: '',
         description: 'ifood',
         categoryId: null,
         tagIds: ['0194f3a0-0000-7000-8000-000000000021'],
@@ -235,14 +249,31 @@ describe('validateRuleForm', () => {
 describe('buildPreviewBody', () => {
   it('waits for 2 characters after normalizing', () => {
     expect(
-      buildPreviewBody({ description: ' a ', accountId: null, categoryId: null, tagIds: [] }, null),
+      buildPreviewBody(
+        {
+          mode: 'description',
+          counterparty: '',
+          description: ' a ',
+          accountId: null,
+          categoryId: null,
+          tagIds: [],
+        },
+        null,
+      ),
     ).toBeNull();
   });
 
   it('sends the text with the category and tags', () => {
     expect(
       buildPreviewBody(
-        { description: 'ifood', accountId: null, categoryId: 'c1', tagIds: ['t1'] },
+        {
+          mode: 'description',
+          counterparty: '',
+          description: 'ifood',
+          accountId: null,
+          categoryId: 'c1',
+          tagIds: ['t1'],
+        },
         null,
       ),
     ).toEqual({ descriptionContains: 'ifood', categoryId: 'c1', tagIds: ['t1'] });
@@ -250,7 +281,14 @@ describe('buildPreviewBody', () => {
 
   it('carries the conditions the modal does not show when editing', () => {
     const body = buildPreviewBody(
-      { description: 'farmacia', accountId: 'a1', categoryId: null, tagIds: [] },
+      {
+        mode: 'description',
+        counterparty: '',
+        description: 'farmacia',
+        accountId: 'a1',
+        categoryId: null,
+        tagIds: [],
+      },
       rule({ kind: 'expense', accountId: 'a1', amountMaxCents: 3000 }),
     );
 
@@ -266,6 +304,8 @@ describe('buildPreviewBody', () => {
 describe('buildRuleUpdateBody', () => {
   it('sends nothing when nothing changed, in whatever order the tags are', () => {
     const body = buildRuleUpdateBody(rule({ tagIds: ['t1', 't2'] }), {
+      mode: 'description',
+      counterparty: '',
       description: 'ifood',
       accountId: null,
       categoryId: 'cat-delivery',
@@ -277,6 +317,8 @@ describe('buildRuleUpdateBody', () => {
 
   it('sends only the fields that changed, and null to take the category off', () => {
     const body = buildRuleUpdateBody(rule(), {
+      mode: 'description',
+      counterparty: '',
       description: 'ifood *loja',
       accountId: 'a1',
       categoryId: null,
@@ -343,5 +385,123 @@ describe('describeRuleError', () => {
     expect(describeRuleError(new Error('boom'))).toBe(
       'Não deu para salvar a regra agora. Tente de novo.',
     );
+  });
+});
+
+describe('rules with the sender condition', () => {
+  const categories = [DELIVERY, SALARY];
+  const tags = [TAG_DELIVERY, TAG_WORK];
+  const sender = rule({
+    descriptionContains: null,
+    counterpartyContains: 'TREETOOLS',
+    categoryId: 'cat-salary',
+    tagIds: [],
+  });
+
+  it('writes the Pix sentence for the sender alone', () => {
+    expect(plain(buildRulePhrase(sender, categories, tags))).toBe(
+      'Sempre que o Pix for de Treetools, vai para Salário.',
+    );
+  });
+
+  it('writes both conditions in the sentence', () => {
+    const both = rule({ counterpartyContains: 'RAFAEL SILVA', tagIds: [] });
+
+    expect(plain(buildRulePhrase(both, categories, tags))).toBe(
+      'Sempre que a descrição contém IFOOD e o Pix for de Rafael Silva, vai para Delivery.',
+    );
+  });
+
+  it('keeps the description-only sentence as it was', () => {
+    expect(plain(buildRulePhrase(rule({ tagIds: [] }), categories, tags))).toBe(
+      'Sempre que a descrição contém IFOOD, vai para Delivery.',
+    );
+  });
+
+  it('brings back only the conditions the rule has', () => {
+    expect(buildRecreateBody(sender)).toEqual({
+      counterpartyContains: 'TREETOOLS',
+      categoryId: 'cat-salary',
+    });
+  });
+
+  it('reads which text conditions a rule has', () => {
+    expect(getRuleTextMode(rule())).toBe('description');
+    expect(getRuleTextMode(sender)).toBe('counterparty');
+    expect(getRuleTextMode(rule({ counterpartyContains: 'RAFAEL' }))).toBe('both');
+  });
+
+  it('validates each mode on its own field', () => {
+    const base = { categoryId: '0194f3a0-0000-7000-8000-000000000001', tagIds: [] };
+
+    expect(
+      validateRuleForm({
+        ...base,
+        mode: 'counterparty',
+        description: '',
+        counterparty: ' treetools ',
+      }),
+    ).toMatchObject({ ok: true, body: { counterpartyContains: 'TREETOOLS' } });
+    expect(
+      validateRuleForm({ ...base, mode: 'counterparty', description: 'ifood', counterparty: 'a' }),
+    ).toEqual({
+      ok: false,
+      errors: {
+        counterparty: 'Escreva o nome de quem mandou ou recebeu, com pelo menos 2 letras.',
+      },
+    });
+    const both = validateRuleForm({
+      ...base,
+      mode: 'both',
+      description: 'ifood',
+      counterparty: '',
+    });
+    expect(both.ok).toBe(false);
+    expect(!both.ok && Object.keys(both.errors)).toEqual(['counterparty']);
+    expect(
+      validateRuleForm({ ...base, mode: 'both', description: 'ifood', counterparty: 'rafael' }),
+    ).toMatchObject({
+      ok: true,
+      body: { descriptionContains: 'IFOOD', counterpartyContains: 'RAFAEL' },
+    });
+  });
+
+  it('asks the preview only when every text the rule uses has 2 characters', () => {
+    const values = { accountId: null, categoryId: null, tagIds: [] };
+
+    expect(
+      buildPreviewBody(
+        { ...values, mode: 'counterparty', description: '', counterparty: 'tr' },
+        null,
+      ),
+    ).toEqual({ counterpartyContains: 'tr' });
+    expect(
+      buildPreviewBody({ ...values, mode: 'both', description: 'ifood', counterparty: 't' }, null),
+    ).toBeNull();
+    expect(
+      buildPreviewBody({ ...values, mode: 'both', description: 'ifood', counterparty: 'tr' }, null),
+    ).toEqual({ descriptionContains: 'ifood', counterpartyContains: 'tr' });
+  });
+
+  it('clears the condition the modal stopped using', () => {
+    const both = rule({ counterpartyContains: 'RAFAEL' });
+    const values = { accountId: null, categoryId: 'cat-delivery', tagIds: ['t1'] };
+
+    expect(
+      buildRuleUpdateBody(both, {
+        ...values,
+        mode: 'description',
+        description: 'ifood',
+        counterparty: 'rafael',
+      }),
+    ).toEqual({ counterpartyContains: null });
+    expect(
+      buildRuleUpdateBody(rule(), {
+        ...values,
+        mode: 'counterparty',
+        description: 'ifood',
+        counterparty: 'tree',
+      }),
+    ).toEqual({ descriptionContains: null, counterpartyContains: 'TREE' });
   });
 });

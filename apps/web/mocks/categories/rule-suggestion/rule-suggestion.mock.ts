@@ -40,7 +40,7 @@ function computeSuggestions(transactionIds: string[] | null): RuleSuggestion.Dto
       (rule) =>
         rule.enabled &&
         rule.categoryId === group.categoryId &&
-        group.pattern.includes(rule.descriptionContains),
+        (rule.descriptionContains === null || group.pattern.includes(rule.descriptionContains)),
     );
     const decided = db.ruleSuggestionDecisions.some(
       (item) => item.pattern === group.pattern && item.categoryId === group.categoryId,

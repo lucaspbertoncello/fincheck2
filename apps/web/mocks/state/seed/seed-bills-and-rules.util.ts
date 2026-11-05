@@ -221,6 +221,7 @@ export function seedBillsAndRules(database: MockState.Database, ids: SeedIds): v
     {
       id: rule.ifood,
       descriptionContains: 'IFOOD',
+      counterpartyContains: null,
       kind: 'expense',
       accountId: null,
       amountMinCents: null,
@@ -234,6 +235,7 @@ export function seedBillsAndRules(database: MockState.Database, ids: SeedIds): v
     {
       id: rule.posto,
       descriptionContains: 'POSTO',
+      counterpartyContains: null,
       kind: 'expense',
       accountId: null,
       amountMinCents: null,
@@ -247,6 +249,7 @@ export function seedBillsAndRules(database: MockState.Database, ids: SeedIds): v
     {
       id: rule.farmacia,
       descriptionContains: 'FARMACIA',
+      counterpartyContains: null,
       kind: null,
       accountId: null,
       amountMinCents: null,

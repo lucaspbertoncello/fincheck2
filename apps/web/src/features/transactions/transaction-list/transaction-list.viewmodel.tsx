@@ -119,7 +119,7 @@ export function TransactionListViewModel() {
     if (action === 'split') update({ split: id, edit: null });
     if (action === 'ignore') void rowActions.ignore(id);
     if (action === 'restore') void rowActions.bringBack(id);
-    if (action === 'create-rule') go('/categories/rules');
+    if (action === 'create-rule') go(`/categories/rules?new=rule&from=${id}`);
     if (action === 'create-recurrence') go('/recurrences');
   }
 

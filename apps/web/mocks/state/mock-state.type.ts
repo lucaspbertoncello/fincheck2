@@ -113,7 +113,8 @@ export namespace MockState {
 
   export interface RuleRecord {
     id: string;
-    descriptionContains: string;
+    descriptionContains: string | null;
+    counterpartyContains: string | null;
     kind: Category.Kind | null;
     accountId: string | null;
     amountMinCents: number | null;

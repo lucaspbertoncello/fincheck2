@@ -171,6 +171,45 @@ describe('rules routes', () => {
     expect((await callApi('DELETE', `/rules/${rule.id}`)).status).toBe(404);
   });
 
+  it('matches by the sender, needs both texts when there are two and refuses a duplicate', async () => {
+    const [category] = await categories('?kind=expense');
+    const count = async (body: object) =>
+      rulePreviewSchema.parse((await callApi('POST', '/rules/preview', body)).json).matchCount;
+
+    const bySender = await count({ counterpartyContains: 'jose' });
+    const byDescription = await count({ descriptionContains: 'pix' });
+    const both = await count({ descriptionContains: 'pix', counterpartyContains: 'jose' });
+    expect(bySender).toBeGreaterThan(0);
+    expect(both).toBeGreaterThan(0);
+    expect(both).toBeLessThanOrEqual(Math.min(bySender, byDescription));
+    expect(await count({ descriptionContains: 'zzzz', counterpartyContains: 'jose' })).toBe(0);
+    expect((await callApi('POST', '/rules/preview', { kind: 'expense' })).status).toBe(400);
+
+    const created = await callApi('POST', '/rules', {
+      counterpartyContains: ' jose ',
+      categoryId: category?.id,
+    });
+    expect(created.status).toBe(201);
+    const { rule } = createRuleResultSchema.parse(created.json);
+    expect(rule).toMatchObject({ descriptionContains: null, counterpartyContains: 'JOSE' });
+    expect(
+      (await callApi('POST', '/rules', { counterpartyContains: 'JOSE', categoryId: category?.id }))
+        .status,
+    ).toBe(409);
+    expect(
+      (
+        await callApi('POST', '/rules', {
+          descriptionContains: 'pix',
+          counterpartyContains: 'JOSE',
+          categoryId: category?.id,
+        })
+      ).status,
+    ).toBe(201);
+    expect(
+      (await callApi('PATCH', `/rules/${rule.id}`, { counterpartyContains: null })).status,
+    ).toBe(400);
+  });
+
   it('dismisses a suggestion for good', async () => {
     const read = async () =>
       listResponseSchema(ruleSuggestionDtoSchema).parse(
