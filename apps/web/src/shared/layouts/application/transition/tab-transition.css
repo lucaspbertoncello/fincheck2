@@ -1,6 +1,7 @@
 /* Tab change: glass plates (motion.md 1). The same plates run between the two sub-tabs of a tab,
-   with the segmented indicator (`segment-ind`) sliding instead of the tab one. Only the right container animates; the top bar and the
-   summary panel stay still as a static cut-out of `root`. Chrome and Edge 125+; elsewhere the
+   with the segmented indicator (`segment-ind`) sliding instead of the tab one, and between the
+   pages of Configurações, with the fill of the side menu (`settings-ind`). Only the right container
+   animates; the top bar and the summary panel stay still as a static cut-out of `root`. Chrome and Edge 125+; elsewhere the
    change happens without animation. Only transform and opacity move. */
 
 .tab-content {
@@ -18,7 +19,8 @@
 }
 
 ::view-transition-group(tab-ind),
-::view-transition-group(segment-ind) {
+::view-transition-group(segment-ind),
+::view-transition-group(settings-ind) {
   animation-duration: var(--duration-slide);
   animation-timing-function: var(--ease-standard);
 }
@@ -71,12 +73,14 @@ html:active-view-transition-type(reduce)::view-transition-new(content) {
 }
 
 html:active-view-transition-type(reduce)::view-transition-group(tab-ind),
-html:active-view-transition-type(reduce)::view-transition-group(segment-ind) {
+html:active-view-transition-type(reduce)::view-transition-group(segment-ind),
+html:active-view-transition-type(reduce)::view-transition-group(settings-ind) {
   animation: none;
 }
 
 html:active-view-transition-type(reduce)::view-transition-old(tab-ind),
-html:active-view-transition-type(reduce)::view-transition-old(segment-ind) {
+html:active-view-transition-type(reduce)::view-transition-old(segment-ind),
+html:active-view-transition-type(reduce)::view-transition-old(settings-ind) {
   animation: none;
   opacity: 0;
 }
@@ -88,13 +92,11 @@ html:active-view-transition-type(reduce)::view-transition-old(segment-ind) {
 }
 
 /* Entering or leaving Configurações (`edge`): the left column changes kind and resizes in the DOM
-   (`use-side-resize.hook.ts`), and the icons glide with it. A capsule captured at one height would
-   float away from them, so here it leaves the transition and simply fades in with its icon. */
-html:active-view-transition-type(edge) .tab-indicator {
+   (`use-side-resize.hook.ts`), and the icons glide with it. A capsule or menu fill captured at one
+   height would land where the icon was, not where it ends, so here they leave the transition:
+   the capsule is slid in the DOM by `use-rail-capsule-slide.hook.ts`, and the menu fill simply
+   comes in with the menu, which fades in as it is revealed. */
+html:active-view-transition-type(edge) .tab-indicator,
+html:active-view-transition-type(edge) [data-settings-ind] {
   view-transition-name: none;
-  animation: fade-in var(--duration-fast) var(--ease-standard) both;
-}
-
-html:active-view-transition-type(edge):active-view-transition-type(reduce) .tab-indicator {
-  animation: none;
 }

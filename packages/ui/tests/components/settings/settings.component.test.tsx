@@ -43,6 +43,19 @@ describe('SettingsNav', () => {
     expect(html).toContain('min-h-14');
   });
 
+  it('draws the active fill as its own sliding view-transition group, only on the active item', () => {
+    const html = renderToStaticMarkup(
+      <SettingsNav items={[...ITEMS]} activeKey="backup" label="Seções" />,
+    );
+
+    expect(html.match(/data-settings-ind/g)).toHaveLength(1);
+    expect(html).toContain('[view-transition-name:settings-ind]');
+    const none = renderToStaticMarkup(
+      <SettingsNav items={[...ITEMS]} activeKey="" label="Seções" />,
+    );
+    expect(none).not.toContain('data-settings-ind');
+  });
+
   it('does not repeat the page title (ui adjustment 13)', () => {
     const html = renderToStaticMarkup(
       <SettingsNav items={[...ITEMS]} activeKey="connections" label="Seções" />,

@@ -1,3 +1,4 @@
+import { SETTINGS_SECTION } from '#/features/settings/settings/constants/settings-sections.constant.ts';
 import { buildHref } from '#/shared/layouts/application/navigation/build-href.util.ts';
 import { buildNavigationItems } from '#/shared/layouts/application/navigation/build-navigation-items.util.ts';
 import { RailLink } from '#/shared/layouts/application/rail/rail-link.component.tsx';
@@ -19,7 +20,8 @@ function RailDivider() {
  * shell draws (rail + panel): the shell stretches it to the height of the panel, and the icons
  * are one group centered in that height, so it reads as "icons in the middle" whatever the panel
  * height. Top to bottom: the logo, the six tabs (the five and Perfil, below Categorias) with the
- * sliding capsule and Configurações, split by a hairline each. The "+" is not here: it floats at the bottom right
+ * sliding capsule and Configurações (it opens its first page, Conexões, straight away: the
+ * desktop has no list, and a redirect hop would break the page transition), split by a hairline each. The "+" is not here: it floats at the bottom right
  * of the window (see `ApplicationLayout`). Same surface as the panel (`glass`).
  */
 export function ApplicationRail({ screen, monthParam }: ApplicationRailProps) {
@@ -44,10 +46,11 @@ export function ApplicationRail({ screen, monthParam }: ApplicationRailProps) {
       ))}
       <RailDivider />
       <RailLink
-        href={buildHref('/settings', monthParam)}
+        href={buildHref(SETTINGS_SECTION.connections.path, monthParam)}
         label="Configurações"
         icon="settings"
         active={screen.key === 'settings'}
+        slides
         turnsOnHover
       />
     </nav>

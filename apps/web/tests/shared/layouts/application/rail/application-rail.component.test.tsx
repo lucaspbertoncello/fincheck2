@@ -91,15 +91,22 @@ describe('ApplicationRail', () => {
     );
   });
 
-  it('marks Configurações without a sliding capsule', async () => {
+  it('marks Configurações with the sliding capsule, like the tabs', async () => {
     renderDesktop('/settings/connections');
     await screen.findByRole('heading', { level: 1, name: 'Conexões' });
 
-    expect(within(rail()).getByRole('link', { name: 'Configurações' })).toHaveAttribute(
-      'aria-current',
-      'page',
-    );
-    expect(rail().querySelectorAll('.tab-indicator')).toHaveLength(0);
+    const link = within(rail()).getByRole('link', { name: 'Configurações' });
+    expect(link).toHaveAttribute('aria-current', 'page');
+    expect(rail().querySelectorAll('.tab-indicator')).toHaveLength(1);
+    expect(link.querySelector('.tab-indicator')).not.toBeNull();
+  });
+
+  it('opens Conexões straight from the rail: no redirect hop that would cut the page transition', async () => {
+    renderDesktop('/');
+    await screen.findByRole('heading', { level: 1, name: 'Visão geral' });
+
+    const link = within(rail()).getByRole('link', { name: 'Configurações' });
+    expect(link).toHaveAttribute('href', '/settings/connections');
   });
 
   it('keeps the month in every link and goes to the tab on click', async () => {

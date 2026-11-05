@@ -133,6 +133,20 @@ describe('getTabTransitionTypes', () => {
     expect(getTabTransitionTypes(change('/settings', '/settings'))).toBe(false);
   });
 
+  it('enters Conexões straight from the rail as one forward edge, and leaves any page as one back edge', () => {
+    // The rail opens /settings/connections directly (no /settings hop), so this is the whole entry.
+    expect(getTabTransitionTypes(change('/', '/settings/connections'))).toEqual([
+      'tab',
+      'fwd',
+      'edge',
+    ]);
+    expect(getTabTransitionTypes(change('/settings/appearance', '/categories'))).toEqual([
+      'tab',
+      'back',
+      'edge',
+    ]);
+  });
+
   it('slides between the Configurações pages in the order of their menu', () => {
     expect(getTabTransitionTypes(change('/settings/connections', '/settings/appearance'))).toEqual([
       'tab',

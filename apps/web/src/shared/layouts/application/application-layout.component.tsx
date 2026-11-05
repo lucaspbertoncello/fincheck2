@@ -9,6 +9,7 @@ import { useIsDesktop } from '#/shared/hooks/use-is-desktop.hook.ts';
 import { ApplicationBottomNav } from '#/shared/layouts/application/navigation/application-bottom-nav.component.tsx';
 import { navigateToHref } from '#/shared/layouts/application/navigation/navigate-to-href.util.ts';
 import { useActiveScreen } from '#/shared/layouts/application/navigation/use-active-screen.hook.ts';
+import { useRailCapsuleSlide } from '#/shared/layouts/application/rail/use-rail-capsule-slide.hook.ts';
 import { ApplicationRail } from '#/shared/layouts/application/rail/application-rail.component.tsx';
 import { PanelSlotContext } from '#/shared/layouts/application/panel/panel-slot.context.ts';
 import { useSideResize } from '#/shared/layouts/application/transition/use-side-resize.hook.ts';
@@ -30,7 +31,8 @@ import { ApplicationTopBar } from '#/shared/layouts/application/top-bar/applicat
  * through the TanStack router.
  *
  * When the left box changes kind (summary panel to the Configurações menu and back) the pair
- * animates its height (`useSideResize`, motion.md 1.4) instead of jumping.
+ * animates its height (`useSideResize`, motion.md 1.4) instead of jumping, and the rail's capsule
+ * glides to the new icon along with it (`useRailCapsuleSlide`).
  *
  * The "+" of the screen is ONE fixed button at the bottom right of the window, outside the rail
  * and the top bar: s24 from the right and bottom edges up to 1279 px, s32 from 1280 px (the same
@@ -54,6 +56,8 @@ export function ApplicationLayout() {
   useSplash();
   const pairRef = useRef<HTMLDivElement>(null);
   useSideResize(pairRef, screen.showsPanel);
+  // After the resize hook: the capsule is measured with the pair already pinned (see the hook).
+  useRailCapsuleSlide(pairRef, screen.showsPanel);
 
   const [panelSlot, setPanelSlot] = useState<HTMLElement | null>(null);
 
