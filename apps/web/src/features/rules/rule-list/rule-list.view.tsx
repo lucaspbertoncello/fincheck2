@@ -1,4 +1,4 @@
-import { Banner, Button, ConfirmDialog, ContentSkeleton, EmptyState, RuleList } from '@fincheck/ui';
+import { Banner, ConfirmDialog, ContentSkeleton, EmptyState, RuleList } from '@fincheck/ui';
 
 import { RuleForm } from '#/features/rules/rule-form/rule-form.component.tsx';
 import type { useRuleListViewModel } from '#/features/rules/rule-list/rule-list.viewmodel.tsx';
@@ -7,7 +7,7 @@ import { RuleSuggestions } from '#/features/rules/rule-suggestion/rule-suggestio
 type RuleListViewProps = ReturnType<typeof useRuleListViewModel>;
 
 /**
- * Categorias › Regras (screens.md): "Nova regra", the suggestion cards when there are any, and the
+ * Categorias › Regras (screens.md): the suggestion cards when there are any, and the
  * list of rules with the switch and the menu. Every state is here: skeleton, error with retry,
  * no rules yet, and the list.
  */
@@ -45,12 +45,6 @@ export function RuleListView({
           onAction={onDismissApplyNotice}
         />
       ) : null}
-
-      <div>
-        <Button icon="plus-circle" onPress={onCreateRule}>
-          Nova regra
-        </Button>
-      </div>
 
       <div className="flex flex-col gap-s24 lg:flex-row lg:items-start">
         <div className="flex min-w-0 flex-col gap-s16 empty:hidden lg:flex-1">

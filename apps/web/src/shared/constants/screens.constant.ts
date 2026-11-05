@@ -76,6 +76,7 @@ export const SCREENS: Record<ScreenKey, ScreenDefinition> = {
     plusLabel: 'Nova categoria',
     plusMode: 'direct',
     plusAction: 'new-category',
+    plusWhenFilter: { filter: 'tags', label: 'Nova tag', action: 'new-tag' },
     filtersByMonth: false,
     showsPanel: true,
     subNav: 'categories',

@@ -318,6 +318,19 @@ describe('ApplicationLayout', () => {
     expect(await screen.findByRole('dialog', { name: title })).toBeInTheDocument();
   });
 
+  it('the "+" of Categorias says "Nova tag" and opens it while the Tags part is active', async () => {
+    renderApp('/categories?filter=tags&month=2026-10');
+    await screen.findByRole('heading', { level: 1 });
+    expect(
+      within(floatingPlus()).queryByRole('button', { name: 'Nova categoria' }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(within(floatingPlus()).getByRole('button', { name: 'Nova tag' }));
+
+    await waitFor(() => expect(window.location.search).toContain('new=tag'));
+    expect(window.location.search).toContain('month=2026-10');
+    expect(await screen.findByRole('dialog', { name: 'Nova tag' })).toBeInTheDocument();
+  });
+
   it.each(['/', '/recurrences/bills', '/settings'])(
     'the "+" of %s opens the menu of everything that can be created',
     async (url) => {

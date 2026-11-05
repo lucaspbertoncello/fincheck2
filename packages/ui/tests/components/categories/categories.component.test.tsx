@@ -137,7 +137,7 @@ describe('CategoryFilter', () => {
         onSearchChange={noop}
         filter="income"
         onFilterChange={noop}
-        counts={{ expense: 12, income: 5, archived: 2 }}
+        counts={{ expense: 12, income: 5, archived: 2, tags: 3 }}
       />,
     );
 

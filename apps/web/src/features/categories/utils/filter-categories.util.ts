@@ -2,7 +2,9 @@ import type { Category } from '@fincheck/shared/categories/category/category.typ
 import { normalizeText } from '@fincheck/shared/common/text/normalize-text.util.ts';
 import type { CategoryFilterKey } from '@fincheck/ui';
 
-function belongsTo(category: Category.Dto, filter: CategoryFilterKey): boolean {
+type CategoryTab = Exclude<CategoryFilterKey, 'tags'>;
+
+function belongsTo(category: Category.Dto, filter: CategoryTab): boolean {
   if (filter === 'archived') return category.archivedAt !== null;
   return category.archivedAt === null && category.kind === filter;
 }
@@ -10,7 +12,7 @@ function belongsTo(category: Category.Dto, filter: CategoryFilterKey): boolean {
 /** The categories of one tab (Despesas, Receitas, Arquivadas), narrowed by the search text. */
 export function filterCategories(
   categories: readonly Category.Dto[],
-  filter: CategoryFilterKey,
+  filter: CategoryTab,
   search: string,
 ): Category.Dto[] {
   const needle = normalizeText(search);
@@ -24,7 +26,7 @@ export function filterCategories(
 /** The numbers on the tabs: "Despesas 12 | Receitas 5 | Arquivadas 2" (whole list, not the search). */
 export function countCategoriesByFilter(
   categories: readonly Category.Dto[],
-): Record<CategoryFilterKey, number> {
+): Record<CategoryTab, number> {
   return {
     expense: categories.filter((category) => belongsTo(category, 'expense')).length,
     income: categories.filter((category) => belongsTo(category, 'income')).length,

@@ -16,13 +16,15 @@ import { getBusinessToday } from '#/features/categories/utils/get-business-today
 import { toManagedCategory } from '#/features/categories/utils/to-managed-category.util.ts';
 import { toTagItem } from '#/features/categories/utils/to-tag-item.util.ts';
 
-const EMPTY_MESSAGES: Record<CategoryFilterKey, string> = {
+type CategoryTab = Exclude<CategoryFilterKey, 'tags'>;
+
+const EMPTY_MESSAGES: Record<CategoryTab, string> = {
   expense: 'Nenhuma categoria de despesa ainda.',
   income: 'Nenhuma categoria de receita ainda.',
   archived: 'Nenhuma categoria arquivada.',
 };
 
-const LIST_LABELS: Record<CategoryFilterKey, string> = {
+const LIST_LABELS: Record<CategoryTab, string> = {
   expense: 'Categorias de despesa',
   income: 'Categorias de receita',
   archived: 'Categorias arquivadas',
@@ -41,7 +43,7 @@ export function useCategoryListViewModel() {
   const [showArchivedTags, setShowArchivedTags] = useState(false);
   const [archiveTargetId, setArchiveTargetId] = useState<string | null>(null);
   const [archiveError, setArchiveError] = useState<string | null>(null);
-  const [tagTarget, setTagTarget] = useState<TagFormTarget | null>(null);
+  const [renamingTag, setRenamingTag] = useState<TagFormTarget | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const allCategories = model.categories.data?.items ?? [];
@@ -50,11 +52,16 @@ export function useCategoryListViewModel() {
   const filter = search.filter;
 
   const editing = search.edit ? allCategories.find((item) => item.id === search.edit) : undefined;
-  const categoryTarget: CategoryFormTarget | null = search.new
-    ? { mode: 'create', kind: filter === 'income' ? 'income' : 'expense' }
-    : editing
-      ? { mode: 'edit', category: editing }
-      : null;
+  const categoryTab: CategoryTab = filter === 'tags' ? 'expense' : filter;
+  const categoryTarget: CategoryFormTarget | null =
+    search.new === 'category'
+      ? { mode: 'create', kind: categoryTab === 'income' ? 'income' : 'expense' }
+      : editing
+        ? { mode: 'edit', category: editing }
+        : null;
+
+  // "Nova tag" from the "+" lives in the URL (`?new=tag`); "Renomear" is local.
+  const tagTarget: TagFormTarget | null = search.new === 'tag' ? { mode: 'create' } : renamingTag;
 
   const archiveTarget = allCategories.find((item) => item.id === archiveTargetId);
   const archivedTags = allTags.filter((tag) => tag.archivedAt !== null);
@@ -157,16 +164,18 @@ export function useCategoryListViewModel() {
       update({ filter: next === 'expense' ? undefined : next }),
     searchText,
     onSearchChange: setSearchText,
-    counts: countCategoriesByFilter(allCategories),
+    counts: {
+      ...countCategoriesByFilter(allCategories),
+      tags: allTags.length - archivedTags.length,
+    },
 
-    categories: filterCategories(allCategories, filter, searchText).map((category) =>
+    categories: filterCategories(allCategories, categoryTab, searchText).map((category) =>
       toManagedCategory(category, today),
     ),
-    listLabel: LIST_LABELS[filter],
-    emptyMessage: searchText ? 'Nenhuma categoria com esse nome.' : EMPTY_MESSAGES[filter],
+    listLabel: LIST_LABELS[categoryTab],
+    emptyMessage: searchText ? 'Nenhuma categoria com esse nome.' : EMPTY_MESSAGES[categoryTab],
     showsArchivedNote: filter === 'archived',
-    canCreate: filter !== 'archived',
-    onCreateCategory: () => update({ new: 'category', edit: undefined }),
+    showsTags: filter === 'tags',
     onEditCategory: (id: string) => update({ edit: id, new: undefined }),
     onRequestArchive,
     onRestoreCategory: restoreCategory,
@@ -176,8 +185,7 @@ export function useCategoryListViewModel() {
     archivedTagCount: archivedTags.length,
     showArchivedTags,
     onToggleArchivedTags: () => setShowArchivedTags((shown) => !shown),
-    onCreateTag: () => setTagTarget({ mode: 'create' }),
-    onRenameTag: (id: string) => withTag(id, (tag) => setTagTarget({ mode: 'rename', tag })),
+    onRenameTag: (id: string) => withTag(id, (tag) => setRenamingTag({ mode: 'rename', tag })),
     onArchiveTag,
     onRestoreTag: (id: string) => withTag(id, (tag) => moveTag(id, tag.name, 'restore')),
 
@@ -193,7 +201,10 @@ export function useCategoryListViewModel() {
     },
     tagForm: {
       target: tagTarget,
-      onClose: () => setTagTarget(null),
+      onClose: () => {
+        setRenamingTag(null);
+        if (search.new === 'tag') update({ new: undefined });
+      },
       onArchive: (id: string) => onArchiveTag(id),
     },
     archiveDialog: archiveTarget

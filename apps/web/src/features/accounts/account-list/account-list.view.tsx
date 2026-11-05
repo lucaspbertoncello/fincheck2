@@ -1,5 +1,4 @@
 import {
-  AddAccountCard,
   Banner,
   ContentSkeleton,
   EmptyState,
@@ -44,7 +43,7 @@ export type AccountListViewProps = {
   onAccountMenuAction: (accountId: string, key: string) => void;
 };
 
-/** Contas e cartões: sync strips, credit cards with invoices, accounts and "Conectar outra conta". */
+/** Contas e cartões: sync strips, credit cards with invoices, and accounts. */
 export function AccountListView({
   state,
   onRetry,
@@ -144,11 +143,6 @@ export function AccountListView({
                   onMenuAction={onAccountMenuAction}
                 />
               ))}
-              <AddAccountCard
-                title="Conectar outra conta"
-                subtitle="Banco do Brasil, Inter, Itaú, Caixa e outros 6"
-                onPress={onConnect}
-              />
             </div>
           </Section>
 

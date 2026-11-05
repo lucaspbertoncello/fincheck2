@@ -15,12 +15,17 @@ async function openCategories(url = '/categories', label = 'Categorias de despes
   return screen.findByRole('table', { name: label });
 }
 
+async function openTags() {
+  renderApp('/categories?filter=tags');
+  return screen.findByRole('list', { name: 'Tags' });
+}
+
 function typeInto(label: string, value: string, role: 'textbox' | 'searchbox' = 'textbox') {
   fireEvent.change(screen.getByRole(role, { name: label }), { target: { value } });
 }
 
 describe('CategoryListPage', () => {
-  it('lists the active expense categories with the counts on the tabs and the tags below', async () => {
+  it('lists the active expense categories with the counts on the tabs, the Tags filter and no create row', async () => {
     const table = await openCategories();
 
     expect(within(table).getByText('Delivery')).toBeInTheDocument();
@@ -30,10 +35,24 @@ describe('CategoryListPage', () => {
     expect(screen.getByRole('radio', { name: /Receitas 5/ })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: /Arquivadas 1/ })).toBeInTheDocument();
 
-    const tags = screen.getByRole('list', { name: 'Tags' });
+    expect(screen.getByRole('radio', { name: /Tags 3/ })).toBeInTheDocument();
+    expect(screen.queryByRole('list', { name: 'Tags' })).not.toBeInTheDocument();
+    // The only "Nova categoria" left is the "+" of the shell, not a row of the list.
+    expect(within(table).queryByText('Nova categoria')).not.toBeInTheDocument();
+  });
+
+  it('shows the tags when the Tags filter is chosen, without the category search', async () => {
+    await openCategories();
+
+    fireEvent.click(screen.getByRole('radio', { name: /Tags 3/ }));
+
+    const tags = await screen.findByRole('list', { name: 'Tags' });
     expect(within(tags).getByText('delivery')).toBeInTheDocument();
     expect(within(tags).queryByText('presente')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Arquivadas (1)' })).toBeInTheDocument();
+    expect(screen.queryByRole('searchbox', { name: 'Buscar categoria' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(window.location.search).toContain('filter=tags');
   });
 
   it('shows the skeleton first and then the list', async () => {
@@ -252,8 +271,7 @@ describe('CategoryListPage', () => {
 
   it('archives a tag from its rename modal, with the undo toast', async () => {
     const user = userEvent.setup();
-    await openCategories();
-    const tags = screen.getByRole('list', { name: 'Tags' });
+    const tags = await openTags();
 
     await user.click(within(tags).getByRole('button', { name: 'Ações da tag delivery' }));
     await user.click(await screen.findByRole('menuitem', { name: 'Renomear' }));
@@ -268,14 +286,13 @@ describe('CategoryListPage', () => {
   });
 
   it('creates, renames and archives a tag, with undo for the archive', async () => {
-    await openCategories();
-    const tags = screen.getByRole('list', { name: 'Tags' });
-
-    fireEvent.click(within(tags).getByRole('button', { name: 'Nova tag' }));
+    renderApp('/categories?filter=tags&new=tag');
     let dialog = await screen.findByRole('dialog', { name: 'Nova tag' });
     typeInto('Nome da tag', 'mercado-mensal');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Criar tag' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(window.location.search).not.toContain('new=');
+    const tags = await screen.findByRole('list', { name: 'Tags' });
     expect(await within(tags).findByText('mercado-mensal')).toBeInTheDocument();
 
     fireEvent.click(within(tags).getByRole('button', { name: 'Ações da tag mercado-mensal' }));
@@ -297,7 +314,7 @@ describe('CategoryListPage', () => {
   });
 
   it('shows the archived tags on demand', async () => {
-    await openCategories();
+    await openTags();
 
     fireEvent.click(screen.getByRole('button', { name: 'Arquivadas (1)' }));
 

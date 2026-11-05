@@ -24,6 +24,8 @@ export type ScreenDefinition = {
   plusMode: 'menu' | 'direct';
   /** Action key of a "direct" "+" (see PLUS_ACTION_PATHS). */
   plusAction?: string;
+  /** The "+" changes with a `filter` in the URL: Categorias with Tags active makes "Nova tag". */
+  plusWhenFilter?: { filter: string; label: string; action: string };
   /** True where the month filters something: Visão geral, Transações and Recorrentes. */
   filtersByMonth: boolean;
   /** True where the summary panel shows (every screen but Configurações). */

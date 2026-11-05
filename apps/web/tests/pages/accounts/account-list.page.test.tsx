@@ -40,7 +40,7 @@ describe('AccountListPage', () => {
     expect(within(carteira).getByRole('button', { name: 'Atualizar saldo' })).toBeInTheDocument();
     expect(within(nubank).queryByRole('button', { name: /saldo/ })).not.toBeInTheDocument();
 
-    expect(screen.getByRole('button', { name: /Conectar outra conta/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Conectar outra conta/ })).not.toBeInTheDocument();
   });
 
   it('flags a bank whose data is more than 36 hours old', async () => {

@@ -17,8 +17,8 @@ import { TagForm } from '#/features/categories/tag-form/tag-form.component.tsx';
 type CategoryListViewProps = ReturnType<typeof useCategoryListViewModel>;
 
 /**
- * Categorias › Categorias (screens.md): the filter and the search, the management list with its
- * "Nova categoria" row, then the tags. No amounts on this screen. Every state is here: skeleton,
+ * Categorias › Categorias (screens.md): the filter and the search, the management list, and the
+ * tags as the last filter. No amounts on this screen. Every state is here: skeleton,
  * error with retry, the empty lists and the list itself.
  */
 export function CategoryListView({
@@ -36,8 +36,7 @@ export function CategoryListView({
   listLabel,
   emptyMessage,
   showsArchivedNote,
-  canCreate,
-  onCreateCategory,
+  showsTags,
   onEditCategory,
   onRequestArchive,
   onRestoreCategory,
@@ -46,7 +45,6 @@ export function CategoryListView({
   archivedTagCount,
   showArchivedTags,
   onToggleArchivedTags,
-  onCreateTag,
   onRenameTag,
   onArchiveTag,
   onRestoreTag,
@@ -85,48 +83,53 @@ export function CategoryListView({
             filter={filter}
             onFilterChange={onFilterChange}
             counts={counts}
+            showSearch={!showsTags}
           />
-          <CategoryList
-            categories={categories}
-            label={listLabel}
-            emptyMessage={emptyMessage}
-            onEdit={onEditCategory}
-            onArchive={onRequestArchive}
-            onRestore={onRestoreCategory}
-            onCreate={canCreate ? onCreateCategory : undefined}
-          />
-          {showsArchivedNote ? (
+          {showsTags ? null : (
+            <CategoryList
+              categories={categories}
+              label={listLabel}
+              emptyMessage={emptyMessage}
+              onEdit={onEditCategory}
+              onArchive={onRequestArchive}
+              onRestore={onRestoreCategory}
+            />
+          )}
+          {showsArchivedNote && !showsTags ? (
             <p className="text-label text-fg-secondary">
               Arquivadas saem da escolha de categoria. As transações continuam nelas no histórico.
             </p>
           ) : null}
 
-          <Section
-            title="Tags"
-            action={
-              <>
-                <CountBadge count={activeTagCount} />
-                {archivedTagCount > 0 ? (
-                  <Button variant="tertiary" size="sm" onPress={onToggleArchivedTags}>
-                    {showArchivedTags ? 'Esconder arquivadas' : `Arquivadas (${archivedTagCount})`}
-                  </Button>
-                ) : null}
-              </>
-            }
-          >
-            <p className="text-label text-fg-secondary">
-              Número de transações com cada tag, em todo o histórico. Use o menu … de cada tag para
-              renomear ou arquivar.
-            </p>
-            <TagList
-              tags={tags}
-              label="Tags"
-              onRename={onRenameTag}
-              onArchive={onArchiveTag}
-              onRestore={onRestoreTag}
-              onCreate={onCreateTag}
-            />
-          </Section>
+          {showsTags ? (
+            <Section
+              title="Tags"
+              action={
+                <>
+                  <CountBadge count={activeTagCount} />
+                  {archivedTagCount > 0 ? (
+                    <Button variant="tertiary" size="sm" onPress={onToggleArchivedTags}>
+                      {showArchivedTags
+                        ? 'Esconder arquivadas'
+                        : `Arquivadas (${archivedTagCount})`}
+                    </Button>
+                  ) : null}
+                </>
+              }
+            >
+              <p className="text-label text-fg-secondary">
+                Número de transações com cada tag, em todo o histórico. Use o menu … de cada tag
+                para renomear ou arquivar.
+              </p>
+              <TagList
+                tags={tags}
+                label="Tags"
+                onRename={onRenameTag}
+                onArchive={onArchiveTag}
+                onRestore={onRestoreTag}
+              />
+            </Section>
+          ) : null}
         </>
       ) : null}
 

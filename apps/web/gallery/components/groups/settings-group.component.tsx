@@ -122,7 +122,7 @@ export const SETTINGS_SECTIONS: GallerySectionDef[] = [
               onSearchChange={(search) => set({ ...state, search })}
               filter={state.filter}
               onFilterChange={(filter) => set({ ...state, filter })}
-              counts={{ expense: 12, income: 5, archived: 2 }}
+              counts={{ expense: 12, income: 5, archived: 2, tags: 5 }}
             />
           </GalleryVariant>
         )}
