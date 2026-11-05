@@ -57,6 +57,7 @@ export const categoryBreakdownIncomeItemSchema = z.object({
   categoryId: idSchema.nullable(),
   receivedCents: centsSchema,
   expectedCents: centsSchema,
+  transactionCount: z.int().nonnegative(),
   pending: z.array(
     z.object({
       occurrenceId: idSchema,
@@ -73,6 +74,8 @@ export const categoryBreakdownDtoSchema = z.object({
   month: monthSchema.nullable(),
   // Where the comparison stops; null over all the history.
   comparedUntilOn: businessDateSchema.nullable(),
+  // First month with a transaction in the period asked; null with no transaction (the average of "Tudo").
+  firstMonth: monthSchema.nullable(),
   expenses: z.object({
     totalCents: centsSchema,
     previousTotalCents: centsSchema.nullable(),

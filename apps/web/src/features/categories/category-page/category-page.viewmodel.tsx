@@ -90,7 +90,6 @@ export function CategoryPageViewModel() {
           range,
           today,
           breakdown: model.breakdown.data,
-          trend: model.trend.data,
         })
       : null;
 

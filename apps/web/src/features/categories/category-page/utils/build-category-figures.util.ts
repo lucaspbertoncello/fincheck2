@@ -7,9 +7,8 @@ import type { PeriodRange } from '#/features/transactions/transaction-list/utils
 export type CategoryFigures = {
   /** What was spent (expense) or received (income) in the period. */
   totalCents: number;
-  /** Null where the contract has no count for the period (an income category outside the 12 months). */
-  transactionCount: number | null;
-  /** Null where the period has no length to divide by ("Tudo"). */
+  transactionCount: number;
+  /** Null only when the period has no transaction at all, so there is no month to divide by. */
   monthlyAverageCents: number | null;
 };
 
@@ -20,50 +19,41 @@ type FiguresInput = {
   range: PeriodRange;
   today: string;
   breakdown: CategoryBreakdown.Dto;
-  trend: CategoryBreakdown.Trend | undefined;
 };
 
-/** How many months the period counts for the average: the whole month, 12, or the year until this month. */
-function countMonths(period: TransactionPeriod, range: PeriodRange, today: string): number | null {
+/** Months between two `YYYY-MM`, both included. */
+function monthsBetween(first: string, last: string): number {
+  const [fy, fm] = first.split('-').map(Number);
+  const [ly, lm] = last.split('-').map(Number);
+  return (ly! - fy!) * 12 + (lm! - fm!) + 1;
+}
+
+/**
+ * How many months the period counts for the average: the whole month, 12, the year until this month,
+ * or, over all the history, from the first month with a transaction (`firstMonth`) to this month.
+ */
+function countMonths(input: FiguresInput): number | null {
+  const { period, range, today, breakdown } = input;
   if (period === 'month') return 1;
   if (period === '12m') return 12;
   if (period === 'year' && range.from) {
     return range.from.slice(0, 4) === today.slice(0, 4) ? Number(today.slice(5, 7)) : 12;
   }
-
-  return null;
-}
-
-/**
- * The count of an income category: the categories read has it for expenses only, so an income count
- * is summed from the 12 months of the trend, and only where the period lies inside them.
- */
-function countFromTrend(
-  trend: CategoryBreakdown.Trend | undefined,
-  range: PeriodRange,
-): number | null {
-  if (!trend || !range.from || !range.to) return null;
-  const first = trend.months[0]?.month;
-  if (!first || range.from.slice(0, 7) < first) return null;
-  const inRange = trend.months.filter(
-    (item) => item.month >= range.from!.slice(0, 7) && item.month <= range.to!.slice(0, 7),
-  );
-
-  return inRange.reduce((sum, item) => sum + item.transactionCount, 0);
+  return breakdown.firstMonth ? monthsBetween(breakdown.firstMonth, today.slice(0, 7)) : null;
 }
 
 /** The three figures at the top of the category page, from the categories of the period. */
 export function buildCategoryFigures(input: FiguresInput): CategoryFigures {
-  const { kind, categoryId, period, range, today, breakdown, trend } = input;
+  const { kind, categoryId, breakdown } = input;
   const expense = breakdown.expenses.items.find((item) => item.categoryId === categoryId);
   const income = breakdown.incomes.items.find((item) => item.categoryId === categoryId);
+  const item = kind === 'expense' ? expense : income;
   const totalCents = kind === 'expense' ? (expense?.spentCents ?? 0) : (income?.receivedCents ?? 0);
-  const months = countMonths(period, range, today);
+  const months = countMonths(input);
 
   return {
     totalCents,
-    transactionCount:
-      kind === 'expense' ? (expense?.transactionCount ?? 0) : countFromTrend(trend, range),
+    transactionCount: item?.transactionCount ?? 0,
     monthlyAverageCents: months === null ? null : Math.round(totalCents / months),
   };
 }

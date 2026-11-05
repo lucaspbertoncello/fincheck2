@@ -130,6 +130,7 @@ export const categoryBreakdownMock = [
             categoryId,
             receivedCents,
             expectedCents,
+            transactionCount: incomeLines.filter((line) => line.categoryId === categoryId).length,
             pending: mine
               .filter((item) => item.remainingCents > 0)
               .map((item) => ({
@@ -151,9 +152,14 @@ export const categoryBreakdownMock = [
               : competenceOn(db, tx) >= period.fromOn && competenceOn(db, tx) <= period.untilOn),
         );
 
+        const firstMonth =
+          [...current, ...incomeLines].map((line) => line.competenceOn.slice(0, 7)).sort()[0] ??
+          null;
+
         return {
           month: period.month,
           comparedUntilOn: period.comparedUntilOn,
+          firstMonth,
           expenses: {
             totalCents: total,
             previousTotalCents: previousTotal,

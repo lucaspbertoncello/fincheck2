@@ -36,6 +36,7 @@ function breakdown(
   return {
     month: '2026-10',
     comparedUntilOn: '2026-10-30',
+    firstMonth: '2026-10',
     expenses: { totalCents: 0, previousTotalCents: 0, items, topGrowth },
     review: { count: 0, totalCents: 0 },
     incomes: { receivedCents: 0, expectedCents: 0, items: [] },

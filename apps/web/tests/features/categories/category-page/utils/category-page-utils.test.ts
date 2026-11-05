@@ -50,6 +50,7 @@ describe('buildCategoryFigures', () => {
   const breakdown = {
     month: null,
     comparedUntilOn: null,
+    firstMonth: null,
     expenses: {
       totalCents: 90000,
       previousTotalCents: null,
@@ -71,17 +72,16 @@ describe('buildCategoryFigures', () => {
     incomes: {
       receivedCents: 500000,
       expectedCents: 500000,
-      items: [{ categoryId: 'b', receivedCents: 500000, expectedCents: 500000, pending: [] }],
+      items: [
+        {
+          categoryId: 'b',
+          receivedCents: 500000,
+          expectedCents: 500000,
+          transactionCount: 12,
+          pending: [],
+        },
+      ],
     },
-  };
-  const trend = {
-    categoryId: 'b',
-    kind: 'income' as const,
-    months: Array.from({ length: 12 }, (_, index) => ({
-      month: `${index < 2 ? 2025 : 2026}-${String(((index + 10) % 12) + 1).padStart(2, '0')}`,
-      totalCents: 0,
-      transactionCount: 1,
-    })),
   };
 
   it('takes an expense category from the categories of the period', () => {
@@ -92,7 +92,6 @@ describe('buildCategoryFigures', () => {
       range: { from: '2025-11-01', to: '2026-10-31' },
       today: TODAY,
       breakdown,
-      trend: undefined,
     });
 
     expect(figures).toEqual({ totalCents: 60000, transactionCount: 6, monthlyAverageCents: 5000 });
@@ -106,14 +105,13 @@ describe('buildCategoryFigures', () => {
       range: { from: '2026-10-01', to: '2026-10-31' },
       today: TODAY,
       breakdown,
-      trend: undefined,
     });
 
     expect(figures).toEqual({ totalCents: 0, transactionCount: 0, monthlyAverageCents: 0 });
   });
 
-  it('counts an income category from the trend inside the 12 months, and has no count outside', () => {
-    const base = { kind: 'income' as const, categoryId: 'b', today: TODAY, breakdown, trend };
+  it('counts an income category from the categories of the period, like an expense', () => {
+    const base = { kind: 'income' as const, categoryId: 'b', today: TODAY, breakdown };
 
     expect(
       buildCategoryFigures({
@@ -122,24 +120,25 @@ describe('buildCategoryFigures', () => {
         range: { from: '2025-11-01', to: '2026-10-31' },
       }).transactionCount,
     ).toBe(12);
-    expect(buildCategoryFigures({ ...base, period: 'all', range: {} }).transactionCount).toBeNull();
-    expect(
-      buildCategoryFigures({
-        ...base,
-        period: 'month',
-        range: { from: '2020-01-01', to: '2020-01-31' },
-      }).transactionCount,
-    ).toBeNull();
   });
 
-  it('averages "Este ano" over the months gone and has no average for "Tudo"', () => {
-    const base = { kind: 'income' as const, categoryId: 'b', today: TODAY, breakdown, trend };
+  it('averages "Este ano" over the months gone and "Tudo" from the first month with data', () => {
+    const base = { kind: 'income' as const, categoryId: 'b', today: TODAY, breakdown };
 
     expect(
       buildCategoryFigures({
         ...base,
         period: 'year',
         range: { from: '2026-01-01', to: '2026-12-31' },
+      }).monthlyAverageCents,
+    ).toBe(50000);
+    // firstMonth 2026-01 to today (2026-10): 10 months.
+    expect(
+      buildCategoryFigures({
+        ...base,
+        breakdown: { ...breakdown, firstMonth: '2026-01' },
+        period: 'all',
+        range: {},
       }).monthlyAverageCents,
     ).toBe(50000);
     expect(

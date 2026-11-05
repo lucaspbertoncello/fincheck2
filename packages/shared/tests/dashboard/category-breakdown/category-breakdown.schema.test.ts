@@ -34,6 +34,7 @@ describe('categoryBreakdownDtoSchema', () => {
   const allHistory = {
     month: null,
     comparedUntilOn: null,
+    firstMonth: '2025-11',
     expenses: {
       totalCents: 1000,
       previousTotalCents: null,
@@ -52,10 +53,39 @@ describe('categoryBreakdownDtoSchema', () => {
       topGrowth: null,
     },
     review: { count: 0, totalCents: 0 },
-    incomes: { receivedCents: 0, expectedCents: 0, items: [] },
+    incomes: {
+      receivedCents: 500,
+      expectedCents: 500,
+      items: [
+        {
+          categoryId: null,
+          receivedCents: 500,
+          expectedCents: 500,
+          transactionCount: 2,
+          pending: [],
+        },
+      ],
+    },
   };
 
   it('reads all the history: no month, no comparison, no variation', () => {
     expect(categoryBreakdownDtoSchema.safeParse(allHistory).success).toBe(true);
+  });
+
+  it('counts the income items and says the first month with data (null with none)', () => {
+    expect(categoryBreakdownDtoSchema.safeParse({ ...allHistory, firstMonth: null }).success).toBe(
+      true,
+    );
+    expect(
+      categoryBreakdownDtoSchema.safeParse({ ...allHistory, firstMonth: undefined }).success,
+    ).toBe(false);
+    const noCount = {
+      ...allHistory,
+      incomes: {
+        ...allHistory.incomes,
+        items: [{ ...allHistory.incomes.items[0], transactionCount: undefined }],
+      },
+    };
+    expect(categoryBreakdownDtoSchema.safeParse(noCount).success).toBe(false);
   });
 });
