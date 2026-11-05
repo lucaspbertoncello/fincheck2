@@ -6,6 +6,7 @@ import { buildSeedIds } from '#mocks/state/seed/build-seed-ids.util.ts';
 import { seedAccounts } from '#mocks/state/seed/seed-accounts.util.ts';
 import { seedBillsAndRules } from '#mocks/state/seed/seed-bills-and-rules.util.ts';
 import { seedCatalog } from '#mocks/state/seed/seed-catalog.util.ts';
+import { seedInvoiceShowcase } from '#mocks/state/seed/seed-invoice-showcase.util.ts';
 import { seedSpendHistory } from '#mocks/state/seed/seed-spend-history.util.ts';
 import { seedSubscriptions } from '#mocks/state/seed/seed-subscriptions.util.ts';
 import { seedRecurrences } from '#mocks/state/seed/seed-recurrences.util.ts';
@@ -43,6 +44,7 @@ export function buildSeedDatabase(): MockState.Database {
   // Last, so the ids of everything above stay the same.
   seedSpendHistory(database, ids);
   seedSubscriptions(database, ids);
+  seedInvoiceShowcase(database, ids);
 
   return database;
 }

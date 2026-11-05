@@ -10,8 +10,8 @@ import {
 } from '@fincheck/ui';
 
 import { CategoryForm } from '#/features/categories/category-form/category-form.component.tsx';
-import { CategoryPageFrame } from '#/features/categories/category-page/components/category-page-frame.component.tsx';
 import { CategorySummary } from '#/features/categories/category-page/components/category-summary.component.tsx';
+import { BackPageFrame } from '#/shared/components/page/back-page-frame.component.tsx';
 import type { CategoryPageViewProps } from '#/features/categories/category-page/types/category-page-view.type.ts';
 import { DayList } from '#/features/transactions/transaction-list/components/day-list.component.tsx';
 import { LoadMore } from '#/features/transactions/transaction-list/components/load-more.component.tsx';
@@ -30,10 +30,11 @@ export function CategoryPageView(props: CategoryPageViewProps) {
 
   if (status !== 'ready') {
     return (
-      <CategoryPageFrame
+      <BackPageFrame
         title={status === 'not-found' ? 'Categoria não encontrada' : 'Categoria'}
         description={status === 'not-found' ? 'Esse endereço não leva a uma categoria.' : ' '}
         backHref={props.backHref}
+        backLabel="Categorias"
       >
         {status === 'loading' ? <ContentSkeleton variant="sections" /> : null}
         {status === 'error' ? (
@@ -53,16 +54,17 @@ export function CategoryPageView(props: CategoryPageViewProps) {
             primaryAction={{ label: 'Voltar para Categorias', onPress: props.onBack }}
           />
         ) : null}
-      </CategoryPageFrame>
+      </BackPageFrame>
     );
   }
 
   return (
-    <CategoryPageFrame
+    <BackPageFrame
       title={props.name}
       description={props.description}
       backHref={props.backHref}
-      picker={props.picker}
+      backLabel="Categorias"
+      actions={props.picker}
     >
       <BannerSlot isOpen={Boolean(props.actionError)} gap="s16-s24">
         {props.actionError ? (
@@ -168,6 +170,6 @@ export function CategoryPageView(props: CategoryPageViewProps) {
           onConfirm={props.archiveDialog.onConfirm}
         />
       ) : null}
-    </CategoryPageFrame>
+    </BackPageFrame>
   );
 }

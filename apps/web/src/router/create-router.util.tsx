@@ -5,6 +5,7 @@ import { accountsRoute } from '#/router/routes/accounts.route.tsx';
 import { billsRoute } from '#/router/routes/bills.route.tsx';
 import { categoriesRoute } from '#/router/routes/categories.route.tsx';
 import { categoryRoute } from '#/router/routes/category.route.tsx';
+import { invoiceRoute } from '#/router/routes/invoice.route.tsx';
 import { overviewRoute } from '#/router/routes/overview.route.tsx';
 import { profileRoute } from '#/router/routes/profile.route.tsx';
 import { recurrencesRoute } from '#/router/routes/recurrences.route.tsx';
@@ -33,6 +34,7 @@ export function createAppRouter(queryClient: QueryClient) {
       accountsRoute,
       categoriesRoute,
       categoryRoute,
+      invoiceRoute,
       rulesRoute,
       profileRoute,
       settingsRoute.addChildren([

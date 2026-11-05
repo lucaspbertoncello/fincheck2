@@ -12,6 +12,7 @@ type BillAgendaSectionProps = {
   divider?: boolean;
   onRowAction: (key: string) => void;
   onRowEdit?: (billId: string) => void;
+  onRowOpenInvoice?: (target: { accountId: string; month: string }) => void;
 };
 
 /** A section of the agenda: header with its note and the rows as `BillRow`. Renders nothing when empty. */
@@ -23,6 +24,7 @@ export function BillAgendaSection({
   divider = true,
   onRowAction,
   onRowEdit,
+  onRowOpenInvoice,
 }: BillAgendaSectionProps) {
   if (rows.length === 0) return null;
 
@@ -47,6 +49,15 @@ export function BillAgendaSection({
             amountCents={row.amountCents}
             settledCents={row.settledCents}
             onAction={row.actionable ? () => onRowAction(row.key) : undefined}
+            secondaryAction={
+              onRowOpenInvoice && row.invoiceTarget
+                ? {
+                    label: 'Ver fatura',
+                    onPress: () =>
+                      onRowOpenInvoice(row.invoiceTarget as NonNullable<typeof row.invoiceTarget>),
+                  }
+                : undefined
+            }
             onEdit={
               onRowEdit && row.editBillId ? () => onRowEdit(row.editBillId as string) : undefined
             }

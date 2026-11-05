@@ -92,12 +92,15 @@ describe('Transações: the period (BR-TRX-007)', () => {
     renderApp(`${PAGE}&period=12m`);
 
     expect(await screen.findByRole('heading', { name: 'Outubro 2026' }, LONG_WAIT)).toBeVisible();
+    // October alone fills the first page (60 rows): the next page brings September.
+    fireEvent.click(await screen.findByRole('button', { name: 'Mostrar mais' }));
+    expect(await screen.findByRole('heading', { name: 'Setembro 2026' }, LONG_WAIT)).toBeVisible();
     const headings = screen
       .getAllByRole('heading', { level: 2 })
       .map((heading) => heading.textContent);
     expect(headings).toContain('Setembro 2026');
     expect(headings.indexOf('Outubro 2026')).toBeLessThan(headings.indexOf('Setembro 2026'));
-    expect(screen.getByText('CINEMARK')).toBeInTheDocument();
+    expect(screen.getAllByText('CINEMARK').length).toBeGreaterThan(0);
   });
 
   it('shows the totals of the period (despesas and receitas, no "fora da conta")', async () => {

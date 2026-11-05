@@ -18,6 +18,7 @@ export function BillListView({
   onDismissActionError,
   onRowAction,
   onRowEdit,
+  onRowOpenInvoice,
   onNewDebt,
 }: BillListViewProps) {
   if (status === 'loading') return <ContentSkeleton variant="list" />;
@@ -74,6 +75,7 @@ export function BillListView({
             divider={false}
             onRowAction={onRowAction}
             onRowEdit={onRowEdit}
+            onRowOpenInvoice={onRowOpenInvoice}
           />
           <BillAgendaSection
             title="Faturas abertas"
@@ -81,6 +83,7 @@ export function BillListView({
             rows={sections.openInvoices}
             onRowAction={onRowAction}
             onRowEdit={onRowEdit}
+            onRowOpenInvoice={onRowOpenInvoice}
           />
           <BillAgendaSection
             title="A receber"
@@ -88,6 +91,7 @@ export function BillListView({
             rows={sections.receivable}
             onRowAction={onRowAction}
             onRowEdit={onRowEdit}
+            onRowOpenInvoice={onRowOpenInvoice}
           />
           <BillAgendaSection
             title="Sem data"
@@ -95,6 +99,7 @@ export function BillListView({
             rows={sections.undated}
             onRowAction={onRowAction}
             onRowEdit={onRowEdit}
+            onRowOpenInvoice={onRowOpenInvoice}
           />
         </>
       )}
@@ -104,6 +109,7 @@ export function BillListView({
         rows={sections.settled}
         onRowAction={onRowAction}
         onRowEdit={onRowEdit}
+        onRowOpenInvoice={onRowOpenInvoice}
       />
     </div>
   );

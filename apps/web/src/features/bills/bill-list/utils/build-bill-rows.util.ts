@@ -62,6 +62,10 @@ export function buildBillRows(items: readonly Agenda.Item[], context: RowContext
         status !== 'settled' && item.badge === 'bill' && item.source.type === 'bill'
           ? (item.source.billId ?? undefined)
           : undefined,
+      invoiceTarget:
+        item.source.type === 'invoice' && item.source.accountId && item.source.month
+          ? { accountId: item.source.accountId, month: item.source.month }
+          : undefined,
     };
   });
 }

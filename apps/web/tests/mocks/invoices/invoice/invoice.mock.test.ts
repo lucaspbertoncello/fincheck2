@@ -31,7 +31,8 @@ describe('invoices routes', () => {
 
     const nubank = byName('Roxinho');
     expect(nubank?.status).toBe('open');
-    expect(nubank?.breakdown.installmentsCents).toBe(34_900);
+    // The notebook (3 of 10), the fridge (10 of 10), the course (6 of 6) and the chair (4 of 5).
+    expect(nubank?.breakdown.installmentsCents).toBe(34_900 + 28_990 + 19_900 + 21_990);
     // Plano celular (54,99) and Nuvem+ (19,90), the subscription that did not charge yet.
     expect(nubank?.breakdown.expectedRecurringCents).toBe(5499 + 1990);
     expect(nubank?.totalCents).toBe(nubank?.computedTotalCents);
@@ -63,6 +64,50 @@ describe('invoices routes', () => {
     expect(
       (await callApi('GET', '/cards/0194f3a0-0000-7000-8000-999999999999/invoices')).status,
     ).toBe(404);
+  });
+
+  it('gives the detail the composition by category, the previous total, the highlights and what the next invoice has', async () => {
+    const [first] = await openInvoices();
+    const nubank = (await openInvoices()).find((item) => item.invoice.status === 'open');
+    const id = nubank?.accountId ?? first?.accountId ?? '';
+    const month = nubank?.invoice.month ?? '';
+    const detail = invoiceDetailDtoSchema.parse(
+      (await callApi('GET', `/cards/${id}/invoices/${month}`)).json,
+    );
+
+    const transactions = detail.items.filter((item) => item.type === 'transaction');
+    expect(transactions.length).toBeGreaterThanOrEqual(30);
+    // Refunds take off: the breakdown plus the expected recurrences is the invoice total.
+    const breakdownTotal = detail.categoryBreakdown.reduce((sum, row) => sum + row.totalCents, 0);
+    const itemsTotal = transactions.reduce((sum, item) => sum - item.amountCents, 0);
+    expect(breakdownTotal).toBe(itemsTotal);
+    expect(detail.categoryBreakdown.map((row) => row.totalCents)).toEqual(
+      [...detail.categoryBreakdown.map((row) => row.totalCents)].sort((a, b) => b - a),
+    );
+    const shares = detail.categoryBreakdown.reduce((sum, row) => sum + row.sharePercent, 0);
+    expect(shares).toBeGreaterThan(99);
+    expect(shares).toBeLessThan(101);
+
+    expect(detail.previousTotalCents).not.toBeNull();
+    expect(detail.highlights.largestItem?.cents).toBe(
+      Math.max(...transactions.map((item) => -item.amountCents)),
+    );
+    expect(detail.highlights.endingInstallments.map((item) => item.title).sort()).toEqual([
+      'Curso de inglês',
+      'Geladeira Frost Free',
+    ]);
+    // The next invoice already has the chair (5 of 5) and the card subscriptions.
+    expect(detail.nextInvoiceCommittedCents).toBeGreaterThanOrEqual(21_990);
+  });
+
+  it('says there is no previous invoice before the first one', async () => {
+    const [first] = await openInvoices();
+    const detail = invoiceDetailDtoSchema.parse(
+      (await callApi('GET', `/cards/${first?.accountId}/invoices/2020-01`)).json,
+    );
+    expect(detail.previousTotalCents).toBeNull();
+    expect(detail.categoryBreakdown).toEqual([]);
+    expect(detail.highlights).toEqual({ largestItem: null, endingInstallments: [] });
   });
 
   it('corrects the value, pays in part and in full, then undoes the payment', async () => {

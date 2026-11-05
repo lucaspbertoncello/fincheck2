@@ -200,28 +200,7 @@ describe('Excluir conta, modal pattern', () => {
   });
 });
 
-describe('Fatura, modal pattern', () => {
-  it('registers a payment with the date shortcuts and the rest already in the amount', async () => {
-    const user = userEvent.setup();
-    await openAccounts();
-    await screen.findByRole('heading', { name: 'Cartões de crédito' });
-    await user.click((await screen.findAllByRole('button', { name: 'Ver fatura' }))[1]!);
-
-    const dialog = await screen.findByRole('dialog', { name: /Fatura de/ });
-    await user.click(await within(dialog).findByRole('button', { name: 'Registrar pagamento' }));
-
-    expect(within(dialog).getByRole('textbox', { name: 'Valor pago' })).toBeInTheDocument();
-    expect(within(dialog).getByRole('button', { name: 'Hoje', pressed: true })).toBeInTheDocument();
-
-    await user.click(within(dialog).getByRole('button', { name: 'Ontem' }));
-    await user.click(within(dialog).getByRole('button', { name: 'Salvar pagamento' }));
-
-    await waitFor(() =>
-      expect(db.invoices.flatMap((invoice) => invoice.payments).length).toBeGreaterThan(0),
-    );
-    expect(await within(dialog).findByText(/Pago em/)).toBeInTheDocument();
-  });
-
+describe('Fatura, corrigir valor', () => {
   it('compares the typed value with what the app calculated when correcting', async () => {
     const user = userEvent.setup();
     await openAccounts();

@@ -50,6 +50,21 @@ describe('BillListPage', () => {
     expect(within(rowOf('Você deve a Rafa')).getByText(/falta/)).toBeInTheDocument();
   });
 
+  it('opens the page of an invoice from its row, and the way back leads here', async () => {
+    renderApp(URL);
+    await findRow('Você deve a Rafa');
+    const section = screen.getByRole('heading', { name: 'Faturas abertas' }).closest('section')!;
+
+    fireEvent.click(within(section).getAllByRole('button', { name: 'Ver fatura' })[0]!);
+
+    expect(await screen.findByRole('heading', { level: 1, name: /Fatura de/ })).toBeInTheDocument();
+    expect(window.location.pathname).toMatch(/^\/cards\/[^/]+\/invoices\/\d{4}-\d{2}$/);
+    expect(screen.getByRole('link', { name: 'Voltar para A pagar e receber' })).toHaveAttribute(
+      'href',
+      `/recurrences/bills?month=${CURRENT_MONTH}`,
+    );
+  });
+
   it('opens the composition of the "A pagar" card', async () => {
     renderApp(URL);
     await findRow('Você deve a Rafa');
@@ -111,7 +126,8 @@ describe('BillListPage', () => {
     const row = found.closest('li');
     if (!row) throw new Error('No invoice row');
 
-    fireEvent.click(within(row).getByRole('button'));
+    // The row has the payment button and "Ver fatura": the payment one is the first.
+    fireEvent.click(within(row).getAllByRole('button')[0]!);
     const dialog = await screen.findByRole('dialog', { name: 'Vincular o pagamento?' });
     // the bank text of the transaction found is shown, not only its amount
     expect(within(dialog).getByText(/PAGAMENTO FATURA/)).toBeInTheDocument();

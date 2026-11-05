@@ -240,6 +240,37 @@ describe('BillRow', () => {
     expect(html).toContain('Registrar pagamento');
   });
 
+  it('puts a second button beside the payment one, and keeps it on a settled row', () => {
+    const open = renderToStaticMarkup(
+      <BillRow
+        name="Fatura Roxinho"
+        icon="card"
+        flow="expense"
+        status="open"
+        dueText="Vence 10/11"
+        amountCents={100000}
+        onAction={noop}
+        secondaryAction={{ label: 'Ver fatura', onPress: noop }}
+      />,
+    );
+    expect(open).toContain('Registrar pagamento');
+    expect(open).toContain('Ver fatura');
+
+    const settled = renderToStaticMarkup(
+      <BillRow
+        name="Fatura Roxinho"
+        icon="card"
+        flow="expense"
+        status="settled"
+        dueText="Paga em 05/11"
+        amountCents={100000}
+        secondaryAction={{ label: 'Ver fatura', onPress: noop }}
+      />,
+    );
+    expect(settled).not.toContain('Registrar pagamento');
+    expect(settled).toContain('Ver fatura');
+  });
+
   it('marks a late bill', () => {
     const html = renderToStaticMarkup(
       <BillRow

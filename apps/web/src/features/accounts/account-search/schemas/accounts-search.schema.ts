@@ -6,14 +6,13 @@ const textParam = z.string().min(1).max(100).optional().catch(undefined);
 /**
  * Search params of Contas e cartões: which modal, dialog or section is open lives in the URL.
  * `new=account` opens "Conectar conta" (the general "+" links here); the others carry the account
- * id and, where an invoice is meant, the closing month as `<accountId>:<YYYY-MM>`.
+ * id and, where an invoice is meant, the closing month as `<accountId>:<YYYY-MM>` ("Corrigir valor";
+ * "Ver fatura" is the page `/cards/:id/invoices/:month`).
  */
 export const accountsSearchSchema = z.object({
   new: z.literal('account').optional().catch(undefined),
   /** Card id: shows its future invoices in place of the cards. */
   future: textParam,
-  /** `<cardId>:<YYYY-MM>`: "Ver fatura". */
-  invoice: textParam,
   /** `<cardId>:<YYYY-MM>`: "Corrigir valor". */
   correct: textParam,
   /** Account id: "Ajustar saldo" or "Atualizar saldo". */

@@ -8,6 +8,13 @@ export type CaptureTarget = {
   kind: 'screen' | 'modal';
 };
 
+// The invoice page needs a card and a month. The mock ids are numbered in the order of the seed, so
+// the Nubank card ("Roxinho") and the Bradesco one are always these two; the months are the ones of
+// the frozen date below (22/10/2026): Nubank open in 2026-11 (it closes on the 3rd), paid in 2026-10,
+// with nothing in 2026-04; Bradesco closed in 2026-10 (it closed on the 18th).
+const NUBANK_CARD = '0194f3a0-0000-7000-8000-000000000026';
+const BRADESCO_CARD = '0194f3a0-0000-7000-8000-000000000027';
+
 export const SCREEN_TARGETS: CaptureTarget[] = [
   { name: 'overview', path: '/', kind: 'screen' },
   { name: 'transactions list', path: '/transactions', kind: 'screen' },
@@ -17,6 +24,26 @@ export const SCREEN_TARGETS: CaptureTarget[] = [
   { name: 'bills', path: '/recurrences/bills', kind: 'screen' },
   { name: 'subscriptions', path: '/recurrences/subscriptions', kind: 'screen' },
   { name: 'accounts', path: '/accounts', kind: 'screen' },
+  {
+    name: 'invoice open',
+    path: `/cards/${NUBANK_CARD}/invoices/2026-11?from=accounts`,
+    kind: 'screen',
+  },
+  {
+    name: 'invoice closed',
+    path: `/cards/${BRADESCO_CARD}/invoices/2026-10?from=accounts`,
+    kind: 'screen',
+  },
+  {
+    name: 'invoice paid',
+    path: `/cards/${NUBANK_CARD}/invoices/2026-10?from=accounts`,
+    kind: 'screen',
+  },
+  {
+    name: 'invoice empty',
+    path: `/cards/${NUBANK_CARD}/invoices/2026-04?from=accounts`,
+    kind: 'screen',
+  },
   { name: 'categories', path: '/categories', kind: 'screen' },
   { name: 'rules', path: '/categories/rules', kind: 'screen' },
   { name: 'profile', path: '/profile', kind: 'screen' },

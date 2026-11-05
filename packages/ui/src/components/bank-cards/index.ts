@@ -12,6 +12,7 @@ export type {
   BankThemeKey,
 } from '#/components/bank-cards/bank-theme.type.ts';
 export { InvoiceCard } from '#/components/bank-cards/invoice-card.component.tsx';
+export { InvoiceCycleBar } from '#/components/bank-cards/invoice-cycle-bar.component.tsx';
 export type {
   InvoiceInstallment,
   InvoiceStatus,

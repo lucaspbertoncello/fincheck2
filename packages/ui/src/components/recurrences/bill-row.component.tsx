@@ -32,6 +32,8 @@ type BillRowProps = {
   onAction?: () => void;
   /** Makes the name a real button that opens the bill to edit (Enter and Space work). Absent: plain text. */
   onEdit?: () => void;
+  /** A second, quieter button beside the main one ("Ver fatura"). It stays on a settled row. */
+  secondaryAction?: { label: string; onPress: () => void };
   className?: string;
 };
 
@@ -54,6 +56,7 @@ export function BillRow({
   actionLabel,
   onAction,
   onEdit,
+  secondaryAction,
   className,
 }: BillRowProps) {
   const settled = status === 'settled';
@@ -132,10 +135,19 @@ export function BillRow({
         ) : undefined
       }
       actions={
-        !settled && onAction ? (
-          <Button size="sm" variant="secondary" onPress={onAction}>
-            {label}
-          </Button>
+        (!settled && onAction) || secondaryAction ? (
+          <>
+            {!settled && onAction ? (
+              <Button size="sm" variant="secondary" onPress={onAction}>
+                {label}
+              </Button>
+            ) : null}
+            {secondaryAction ? (
+              <Button size="sm" variant="tertiary" onPress={secondaryAction.onPress}>
+                {secondaryAction.label}
+              </Button>
+            ) : null}
+          </>
         ) : undefined
       }
       className={cx(settled && 'text-fg-tertiary', className)}

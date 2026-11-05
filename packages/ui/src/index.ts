@@ -108,6 +108,7 @@ export {
   BankCardMini,
   BANK_THEMES,
   InvoiceCard,
+  InvoiceCycleBar,
   resolveBankThemeKey,
   type BankAvatarSize,
   type BankChipFinish,

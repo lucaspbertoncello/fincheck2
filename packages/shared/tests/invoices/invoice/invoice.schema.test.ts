@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  invoiceCategoryShareSchema,
+  invoiceDetailDtoSchema,
+  invoiceHighlightsSchema,
   invoiceItemSchema,
   invoicePaymentSuggestionSchema,
   listInvoicesQuerySchema,
@@ -75,6 +78,95 @@ describe('invoicePaymentSuggestionSchema', () => {
     expect(invoicePaymentSuggestionSchema.safeParse(suggestion).success).toBe(true);
     expect(
       invoicePaymentSuggestionSchema.safeParse({ ...suggestion, amountCents: 128490 }).success,
+    ).toBe(false);
+  });
+});
+
+const share = { categoryId: id, totalCents: 41_250, sharePercent: 28.4, itemCount: 6 };
+
+describe('invoiceCategoryShareSchema', () => {
+  it('takes a category or none, and money that is more than zero', () => {
+    expect(invoiceCategoryShareSchema.safeParse(share).success).toBe(true);
+    expect(invoiceCategoryShareSchema.safeParse({ ...share, categoryId: null }).success).toBe(true);
+    expect(invoiceCategoryShareSchema.safeParse({ ...share, totalCents: 0 }).success).toBe(false);
+    expect(invoiceCategoryShareSchema.safeParse({ ...share, sharePercent: 101 }).success).toBe(
+      false,
+    );
+    expect(invoiceCategoryShareSchema.safeParse({ ...share, itemCount: 0 }).success).toBe(false);
+  });
+});
+
+describe('invoiceHighlightsSchema', () => {
+  const ending = {
+    transactionId: id,
+    title: 'Geladeira',
+    cents: 28_990,
+    number: 10,
+    total: 10,
+  };
+
+  it('accepts no biggest purchase and no ending installment', () => {
+    expect(
+      invoiceHighlightsSchema.safeParse({ largestItem: null, endingInstallments: [] }).success,
+    ).toBe(true);
+  });
+
+  it('carries the biggest purchase and the installments that end here', () => {
+    expect(
+      invoiceHighlightsSchema.safeParse({
+        largestItem: { transactionId: id, title: 'Show', cents: 24_000 },
+        endingInstallments: [ending],
+      }).success,
+    ).toBe(true);
+    expect(
+      invoiceHighlightsSchema.safeParse({
+        largestItem: { transactionId: id, title: 'Show', cents: -1 },
+        endingInstallments: [],
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe('invoiceDetailDtoSchema', () => {
+  const dto = {
+    accountId: id,
+    month: '2026-10',
+    closesOn: '2026-10-30',
+    dueOn: '2026-11-06',
+    status: 'open',
+    breakdown: { purchasesCents: 1000, installmentsCents: 0, expectedRecurringCents: 0 },
+    computedTotalCents: 1000,
+    bankTotalCents: null,
+    totalOverrideCents: null,
+    overrideNote: null,
+    totalCents: 1000,
+    paidCents: 0,
+    presumedPaidCents: 0,
+    remainingCents: 1000,
+    payments: [],
+    paymentSuggestion: null,
+    isEditable: true,
+    items: [],
+    categoryBreakdown: [share],
+    previousTotalCents: null,
+    highlights: { largestItem: null, endingInstallments: [] },
+    nextInvoiceCommittedCents: 123_000,
+  };
+
+  it('has the breakdown, the previous total, the highlights and what the next invoice has', () => {
+    expect(invoiceDetailDtoSchema.safeParse(dto).success).toBe(true);
+    expect(invoiceDetailDtoSchema.safeParse({ ...dto, previousTotalCents: -500 }).success).toBe(
+      true,
+    );
+  });
+
+  it('refuses a detail that lacks the new fields', () => {
+    const rest = Object.fromEntries(
+      Object.entries(dto).filter(([key]) => key !== 'nextInvoiceCommittedCents'),
+    );
+    expect(invoiceDetailDtoSchema.safeParse(rest).success).toBe(false);
+    expect(
+      invoiceDetailDtoSchema.safeParse({ ...dto, nextInvoiceCommittedCents: -1 }).success,
     ).toBe(false);
   });
 });

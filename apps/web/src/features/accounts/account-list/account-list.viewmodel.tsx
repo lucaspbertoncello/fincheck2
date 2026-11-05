@@ -1,5 +1,6 @@
 import type { Account } from '@fincheck/shared/accounts/account/account.type.ts';
 import { useToast } from '@fincheck/ui';
+import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 
 import { useAccountsSearch } from '#/features/accounts/account-search/hooks/use-accounts-search.hook.ts';
@@ -23,6 +24,7 @@ export function AccountListViewModel() {
   const model = useAccountListModel();
   const { search, update } = useAccountsSearch();
   const toast = useToast();
+  const navigate = useNavigate();
   const [actionError, setActionError] = useState<string | null>(null);
   const now = new Date();
   const today = getTodayBusinessDate(now);
@@ -81,6 +83,15 @@ export function AccountListViewModel() {
         retrying: model.startRun.isPending && model.startRun.variables === item.id,
       };
     });
+
+  /** "Ver fatura": the page of the invoice, which leads back here. */
+  function openInvoice(cardId: string, month: string) {
+    void navigate({
+      to: '/cards/$accountId/invoices/$month',
+      params: { accountId: cardId, month },
+      search: { from: 'accounts' } as never,
+    });
+  }
 
   function handleRetryConnection(connectionId: string) {
     setActionError(null);
@@ -144,14 +155,12 @@ export function AccountListViewModel() {
           <FutureInvoicesViewModel
             cardId={search.future}
             onBack={() => update({ future: undefined })}
-            onViewInvoice={(month) =>
-              update({ future: undefined, invoice: `${search.future}:${month}` })
-            }
+            onViewInvoice={(month) => openInvoice(search.future ?? '', month)}
           />
         ) : undefined
       }
       onConnect={() => update({ new: 'account' })}
-      onViewInvoice={(cardId, month) => update({ invoice: `${cardId}:${month}` })}
+      onViewInvoice={openInvoice}
       onCorrectInvoice={(cardId, month) => update({ correct: `${cardId}:${month}` })}
       onOpenFuture={(cardId) => update({ future: cardId })}
       onCardMenuAction={handleMenuAction}

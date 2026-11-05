@@ -3,7 +3,6 @@ import { AdjustBalanceViewModel } from '#/features/accounts/adjust-balance/adjus
 import { ConnectAccountViewModel } from '#/features/accounts/connect-account/connect-account.viewmodel.tsx';
 import { DeleteAccountViewModel } from '#/features/accounts/delete-account/delete-account.viewmodel.tsx';
 import { CorrectInvoiceViewModel } from '#/features/invoices/correct-invoice/correct-invoice.viewmodel.tsx';
-import { InvoiceDetailViewModel } from '#/features/invoices/invoice-detail/invoice-detail.viewmodel.tsx';
 import { ScreenFrame } from '#/shared/components/page/screen-frame.component.tsx';
 import { SCREENS } from '#/shared/constants/screens.constant.ts';
 
@@ -15,7 +14,6 @@ export function AccountListPage() {
       <ConnectAccountViewModel />
       <AdjustBalanceViewModel />
       <DeleteAccountViewModel />
-      <InvoiceDetailViewModel />
       <CorrectInvoiceViewModel />
     </ScreenFrame>
   );

@@ -150,7 +150,8 @@ describe('TransactionListPage', () => {
 
   it('ignores a transaction and brings it back with "Desfazer"', async () => {
     renderApp(PAGE);
-    const before = (await screen.findAllByText('Ignorada', undefined, LONG_WAIT)).length;
+    await screen.findByText('CINEMARK', undefined, LONG_WAIT);
+    const before = screen.queryAllByText('Ignorada').length;
     await openRowMenu('CINEMARK', 'Ignorar');
 
     expect(
@@ -160,10 +161,13 @@ describe('TransactionListPage', () => {
         LONG_WAIT,
       ),
     ).toBeInTheDocument();
-    await waitFor(() => expect(screen.getAllByText('Ignorada')).toHaveLength(before + 1));
+    await waitFor(
+      () => expect(screen.getAllByText('Ignorada')).toHaveLength(before + 1),
+      LONG_WAIT,
+    );
 
     fireEvent.click(screen.getByText('Desfazer'));
-    await waitFor(() => expect(screen.getAllByText('Ignorada')).toHaveLength(before));
+    await waitFor(() => expect(screen.queryAllByText('Ignorada')).toHaveLength(before), LONG_WAIT);
   });
 
   it('edits a transaction in the modal (the same one as "Nova transação")', async () => {

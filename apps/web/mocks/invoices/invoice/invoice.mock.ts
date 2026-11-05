@@ -14,6 +14,7 @@ import {
 import { createInvoicePaymentRequestSchema } from '@fincheck/shared/invoices/invoice-payment/invoice-payment.schema.ts';
 import { http } from 'msw';
 
+import { buildInvoiceDetailExtras } from '#mocks/invoices/invoice/build-invoice-detail-extras.util.ts';
 import { computeInvoice } from '#mocks/invoices/invoice/compute-invoice.util.ts';
 import { ensureInvoiceRow } from '#mocks/invoices/invoice/ensure-invoice-row.util.ts';
 import { listOpenInvoices } from '#mocks/invoices/invoice/list-open-invoices.util.ts';
@@ -70,9 +71,10 @@ export const invoiceMock = [
   http.get(
     '/api/cards/:accountId/invoices/:month',
     handleRoute({ response: invoiceDetailDtoSchema }, ({ params }) => {
-      const { dto, items } = computeInvoice(db, accountOf(params), readMonth(params));
+      const month = readMonth(params);
+      const { dto, items } = computeInvoice(db, accountOf(params), month);
 
-      return { ...dto, items };
+      return { ...dto, items, ...buildInvoiceDetailExtras(db, accountOf(params), month, items) };
     }),
   ),
 

@@ -18,6 +18,8 @@ export type BillRowModel = {
   actionable: boolean;
   /** The id of a one-off bill that can be edited (tap the name); undefined on invoices, debts and recurrences. */
   editBillId: string | undefined;
+  /** The card and the closing month of an invoice row: "Ver fatura" opens its page. */
+  invoiceTarget: { accountId: string; month: string } | undefined;
 };
 
 /** A summary card ("A pagar", "A receber de amigos"). */
@@ -57,5 +59,6 @@ export type BillListViewProps = {
   onRowAction: (key: string) => void;
   /** Tap on the name of an editable bill: opens the edit modal. */
   onRowEdit: (billId: string) => void;
+  onRowOpenInvoice: (target: { accountId: string; month: string }) => void;
   onNewDebt: () => void;
 };

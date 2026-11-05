@@ -8,13 +8,13 @@ describe('accountsSearchSchema', () => {
       accountsSearchSchema.parse({
         new: 'account',
         future: 'card-1',
-        invoice: 'card-1:2026-10',
+        correct: 'card-1:2026-10',
         edit: 'card-2',
       }),
     ).toMatchObject({
       new: 'account',
       future: 'card-1',
-      invoice: 'card-1:2026-10',
+      correct: 'card-1:2026-10',
       edit: 'card-2',
     });
   });

@@ -1,5 +1,6 @@
 import type { Agenda } from '@fincheck/shared/dashboard/agenda/agenda.type.ts';
 import { type IconName, useToast } from '@fincheck/ui';
+import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 
 import { useAccounts } from '#/domain/accounts/account/hooks/use-accounts.hook.ts';
@@ -52,6 +53,7 @@ export function BillList() {
   const categories = useCategories({ status: 'all' });
   const accounts = useAccounts();
   const search = useBillSearch();
+  const navigate = useNavigate();
   const { showUndoToast } = useToast();
   const settleOccurrence = useSettleOccurrence();
   const unsettleOccurrence = useUnsettleOccurrence();
@@ -139,6 +141,13 @@ export function BillList() {
         onDismissActionError={() => setActionError(null)}
         onRowAction={(key) => void handleRowAction(key)}
         onRowEdit={search.openEditBill}
+        onRowOpenInvoice={({ accountId, month: invoiceMonth }) =>
+          void navigate({
+            to: '/cards/$accountId/invoices/$month',
+            params: { accountId, month: invoiceMonth },
+            search: { from: 'bills', month } as never,
+          })
+        }
         onNewDebt={() => search.openNewModal('debt')}
       />
       <BillFormModal />

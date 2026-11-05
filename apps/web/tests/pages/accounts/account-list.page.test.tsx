@@ -173,9 +173,10 @@ describe('AccountListPage', () => {
 
     press((await screen.findAllByRole('button', { name: 'Ver fatura' }))[0]!);
 
-    const dialog = await screen.findByRole('dialog', { name: /Fatura de/ });
-    expect(await within(dialog).findByText('Lançamentos')).toBeInTheDocument();
-    expect(within(dialog).getByText('Pagamentos')).toBeInTheDocument();
+    // "Ver fatura" is a page now: the address changes and the page names the invoice.
+    expect(await screen.findByRole('heading', { level: 1, name: /Fatura de/ })).toBeInTheDocument();
+    expect(window.location.pathname).toMatch(/^\/cards\/[^/]+\/invoices\/\d{4}-\d{2}$/);
+    expect(await screen.findByRole('heading', { name: 'Lançamentos' })).toBeInTheDocument();
   });
 
   it('corrects the invoice total and removes the correction', async () => {

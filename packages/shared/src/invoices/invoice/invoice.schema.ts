@@ -66,8 +66,39 @@ export const invoiceItemSchema = z.discriminatedUnion('type', [
   }),
 ]);
 
+// Where the money of the invoice went: one entry per category (null: no category), expenses only,
+// refunds taken off, biggest first (BR-INV-006).
+export const invoiceCategoryShareSchema = z.object({
+  categoryId: idSchema.nullable(),
+  totalCents: positiveCentsSchema,
+  sharePercent: z.number().min(0).max(100),
+  itemCount: z.int().min(1),
+});
+
+export const invoiceHighlightsSchema = z.object({
+  largestItem: z
+    .object({ transactionId: idSchema, title: z.string(), cents: positiveCentsSchema })
+    .nullable(),
+  // Installments whose last part is on this invoice (`number` = `total`).
+  endingInstallments: z.array(
+    z.object({
+      transactionId: idSchema,
+      title: z.string(),
+      cents: positiveCentsSchema,
+      number: z.int().min(2),
+      total: z.int().min(2),
+    }),
+  ),
+});
+
 export const invoiceDetailDtoSchema = invoiceDtoSchema.extend({
   items: z.array(invoiceItemSchema),
+  categoryBreakdown: z.array(invoiceCategoryShareSchema),
+  // The total of the invoice of the month before, same card; null when there is none.
+  previousTotalCents: centsSchema.nullable(),
+  highlights: invoiceHighlightsSchema,
+  // Installments and card recurrences already foreseen for the next invoice.
+  nextInvoiceCommittedCents: nonNegativeCentsSchema,
 });
 
 export const openInvoiceItemSchema = z.object({ accountId: idSchema, invoice: invoiceDtoSchema });

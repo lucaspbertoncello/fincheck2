@@ -1,6 +1,6 @@
 import { Button, Icon } from '@fincheck/ui';
 
-import type { InvoiceSuggestionData } from '#/features/invoices/invoice-detail/types/invoice-detail.type.ts';
+import type { InvoiceSuggestionData } from '#/features/invoices/invoice-page/types/invoice-page.type.ts';
 
 type PaymentSuggestionProps = {
   suggestion: InvoiceSuggestionData;
