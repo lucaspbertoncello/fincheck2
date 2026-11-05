@@ -138,6 +138,9 @@ export const updateTransactionRequestSchema = z
 export const listTransactionsQuerySchema = z
   .object({
     month: monthSchema.optional(),
+    // A free period, both ends included, read page by page (Transações: 12 meses, Este ano, Tudo).
+    from: businessDateSchema.optional(),
+    to: businessDateSchema.optional(),
     limit: z.coerce.number().int().min(1).max(500).optional(),
     cursor: z.string().min(1).optional(),
     accountId: idSchema.optional(),
@@ -152,6 +155,16 @@ export const listTransactionsQuerySchema = z
   .superRefine((value, context) => {
     if (value.month && (value.cursor !== undefined || value.limit !== undefined)) {
       context.addIssue({ code: 'custom', path: ['month'], message: 'month has no pagination' });
+    }
+    if (value.month && (value.from !== undefined || value.to !== undefined)) {
+      context.addIssue({
+        code: 'custom',
+        path: ['month'],
+        message: 'month does not combine with from or to',
+      });
+    }
+    if (value.from !== undefined && value.to !== undefined && value.from > value.to) {
+      context.addIssue({ code: 'custom', path: ['from'], message: 'from is after to' });
     }
     if (value.categoryId && value.uncategorized) {
       context.addIssue({

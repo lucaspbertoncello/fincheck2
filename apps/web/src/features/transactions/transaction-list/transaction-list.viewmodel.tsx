@@ -1,6 +1,6 @@
 import type { TransactionMenuKey } from '@fincheck/ui';
 import { useRouter } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { useByCategoryView } from '#/features/transactions/transaction-list/hooks/use-by-category-view.hook.ts';
 import { useConfirmation } from '#/features/transactions/transaction-list/hooks/use-confirmation.hook.ts';
@@ -9,6 +9,7 @@ import { useActionError } from '#/features/transactions/transaction-list/hooks/u
 import { useBulkActions } from '#/features/transactions/transaction-list/hooks/use-bulk-actions.hook.ts';
 import { useDebouncedSearchText } from '#/features/transactions/transaction-list/hooks/use-debounced-search-text.hook.ts';
 import { useSyncFailures } from '#/features/transactions/transaction-list/hooks/use-sync-failures.hook.ts';
+import { useEndOfList } from '#/features/transactions/transaction-list/hooks/use-end-of-list.hook.ts';
 import { useListWindow } from '#/features/transactions/transaction-list/hooks/use-list-window.hook.ts';
 import { useRowActions } from '#/features/transactions/transaction-list/hooks/use-row-actions.hook.ts';
 import { useRuleQuestion } from '#/features/transactions/transaction-list/hooks/use-rule-question.hook.ts';
@@ -25,11 +26,15 @@ import {
 } from '#/features/transactions/transaction-list/utils/build-list-query.util.ts';
 import { buildRowView } from '#/features/transactions/transaction-list/utils/build-row-view.util.ts';
 import { buildTransactionLookups } from '#/features/transactions/transaction-list/utils/build-transaction-lookups.util.ts';
+import { describeEmptyPeriod } from '#/features/transactions/transaction-list/utils/describe-period.util.ts';
+import { groupDaysByMonth } from '#/features/transactions/transaction-list/utils/group-days-by-month.util.ts';
+import { resolvePeriodRange } from '#/features/transactions/transaction-list/utils/resolve-period-range.util.ts';
 import { groupTransactionsByDay } from '#/features/transactions/transaction-list/utils/group-transactions-by-day.util.ts';
 import { rankCategoriesByUse } from '#/features/transactions/transaction-fields/utils/rank-categories-by-use.util.ts';
 import { formatDayChip } from '#/features/transactions/transaction-list/utils/format-day-chip.util.ts';
 import { takeRows } from '#/features/transactions/transaction-list/utils/take-rows.util.ts';
 import { toBusinessDate } from '#/features/transactions/transaction-list/utils/to-business-date.util.ts';
+import { countWord } from '#/features/transactions/transaction-list/utils/count-word.util.ts';
 import { buildHref } from '#/shared/layouts/application/navigation/build-href.util.ts';
 import { navigateToHref } from '#/shared/layouts/application/navigation/navigate-to-href.util.ts';
 import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
@@ -46,7 +51,11 @@ export function TransactionListViewModel() {
   const { month } = selectedMonth;
   const { search, update } = useTransactionListSearch();
   const [ruleQuestionIds, setRuleQuestionIds] = useState<string[]>([]);
-  const model = useTransactionListModel({ month, search, ruleQuestionIds });
+  const today = toBusinessDate(new Date());
+  // "Mês" is the month of the app; the wider periods read their own range (BR-TRX-007).
+  const isMonth = search.period === 'month';
+  const range = resolvePeriodRange(search.period, today);
+  const model = useTransactionListModel({ month, range, search, ruleQuestionIds });
   const error = useActionError();
   const syncFailures = useSyncFailures({ model, reportError: error.report });
   const selection = useTransactionSelection();
@@ -57,15 +66,28 @@ export function TransactionListViewModel() {
     model.categories.data?.items ?? [],
     model.tags.data?.items ?? [],
   );
-  const items = model.list.data?.items ?? [];
-  const today = toBusinessDate(new Date());
-  // `?day=` narrows the month already loaded to one day; the contract has no day filter.
-  const visibleItems = search.day ? items.filter((item) => item.occurredOn === search.day) : items;
+  const periodPages = model.periodList.data?.pages;
+  const periodItems = useMemo(
+    () => periodPages?.flatMap((page) => page.items) ?? [],
+    [periodPages],
+  );
+  const items = isMonth ? (model.list.data?.items ?? []) : periodItems;
+  // `?day=` narrows the month already loaded to one day (the contract has no day filter); a wider
+  // period is read page by page, so the day does not apply to it.
+  const dayOfMonth = isMonth ? search.day : undefined;
+  const visibleItems = dayOfMonth ? items.filter((item) => item.occurredOn === dayOfMonth) : items;
   const days = groupTransactionsByDay(visibleItems, today);
+  // The month shows a window of its list; a wider period asks the API for the next page instead.
   const paging = useListWindow(
-    visibleItems.length,
+    isMonth ? visibleItems.length : 0,
     `${month}|${search.day ?? ''}|${JSON.stringify(buildListQuery(month, search))}`,
   );
+  const periodEnd = useEndOfList({
+    hasMore: !isMonth && Boolean(model.periodList.hasNextPage),
+    loading: model.periodList.isFetchingNextPage,
+    pageCount: periodPages?.length ?? 0,
+    onLoadMore: () => void model.periodList.fetchNextPage(),
+  });
 
   const rowActions = useRowActions({
     model,
@@ -136,30 +158,68 @@ export function TransactionListViewModel() {
     model,
     lookups,
     month,
+    range,
     search,
     update,
     onReview: () => go('/transactions/review'),
   });
 
   const hasFilter = countActiveFilters(search) > 0 || search.type !== 'all' || Boolean(search.q);
-  const status: TransactionListViewProps['status'] = model.list.isError
+  const activeList = isMonth ? model.list : model.periodList;
+  const status: TransactionListViewProps['status'] = activeList.isError
     ? 'error'
-    : model.list.isSuccess
+    : activeList.isSuccess
       ? 'ready'
       : 'loading';
-  const categoryStatus: TransactionListViewProps['byCategoryStatus'] =
-    model.breakdown.isError || model.monthSummary.isError
-      ? 'error'
-      : byCategory.view
-        ? 'ready'
-        : 'loading';
+  const categoryFailed = isMonth
+    ? model.breakdown.isError || model.monthSummary.isError
+    : model.periodBreakdown.isError;
+  const categoryStatus: TransactionListViewProps['byCategoryStatus'] = categoryFailed
+    ? 'error'
+    : byCategory.view
+      ? 'ready'
+      : 'loading';
+
+  function buildDayView(day: (typeof days)[number]) {
+    return {
+      date: day.date,
+      title: day.title,
+      dateLabel: day.dateLabel,
+      count: day.count,
+      totalCents: day.totalCents,
+      rows: day.items.map((item) => buildRowView(item, lookups)),
+    };
+  }
+
+  function buildTotals(): TransactionListViewProps['totals'] {
+    if (isMonth) {
+      const summary = model.summary.data;
+      if (!summary) return null;
+
+      return {
+        label: 'Totais do mês',
+        expensesCents: summary.expensesCents,
+        incomesCents: summary.incomesCents,
+        outsideCents: summary.outsideCents,
+      };
+    }
+    const breakdown = model.periodBreakdown.data;
+    if (!breakdown) return null;
+
+    return {
+      label: 'Totais do período',
+      expensesCents: breakdown.expenses.totalCents,
+      incomesCents: breakdown.incomes.receivedCents,
+      outsideCents: null,
+    };
+  }
 
   const props: TransactionListViewProps = {
-    monthLabel: selectedMonth.monthLabel.toLowerCase(),
+    emptyTitle: describeEmptyPeriod(search.period, range, selectedMonth.monthLabel.toLowerCase()),
     status,
     onRetry: () => {
-      void model.list.refetch();
-      void model.breakdown.refetch();
+      void activeList.refetch();
+      void (isMonth ? model.breakdown : model.periodBreakdown).refetch();
       void model.monthSummary.refetch();
     },
     actionError: error.message ? { message: error.message, onClose: error.clear } : null,
@@ -177,24 +237,21 @@ export function TransactionListViewModel() {
       selectionCount: selection.selectedIds.size,
       onToggleSelection: selection.toggleMode,
     },
-    totals: model.summary.data
-      ? {
-          expensesCents: model.summary.data.expensesCents,
-          incomesCents: model.summary.data.incomesCents,
-          outsideCents: model.summary.data.outsideCents,
-        }
-      : null,
-    reviewCount: model.summary.data?.reviewCount ?? 0,
+    totals: buildTotals(),
+    reviewCount: isMonth
+      ? (model.summary.data?.reviewCount ?? 0)
+      : (model.periodBreakdown.data?.review.count ?? 0),
     onReview: () => go('/transactions/review'),
     ruleQuestion,
-    days: takeRows(days, paging.visibleCount).map((day) => ({
-      date: day.date,
-      title: day.title,
-      dateLabel: day.dateLabel,
-      count: day.count,
-      totalCents: day.totalCents,
-      rows: day.items.map((item) => buildRowView(item, lookups)),
-    })),
+    days: (isMonth ? takeRows(days, paging.visibleCount) : days).map(buildDayView),
+    months: isMonth
+      ? null
+      : groupDaysByMonth(days).map((month) => ({
+          key: month.key,
+          label: month.label,
+          countLabel: countWord(month.count, 'transação', 'transações'),
+          days: month.days.map(buildDayView),
+        })),
     emptyReason:
       items.length === 0
         ? hasFilter
@@ -203,16 +260,17 @@ export function TransactionListViewModel() {
         : visibleItems.length === 0
           ? 'day'
           : null,
-    dayFilter: search.day
-      ? { label: `Dia ${formatDayChip(search.day)}`, onClear: () => update({ day: null }) }
+    dayFilter: dayOfMonth
+      ? { label: `Dia ${formatDayChip(dayOfMonth)}`, onClear: () => update({ day: null }) }
       : null,
     syncFailures,
     onClearFilters: filters.clear,
     onConnectAccounts: () => go('/accounts'),
     onNewTransaction: () => update({ new: 'transaction' }),
-    hasMore: paging.hasMore,
-    onLoadMore: paging.loadMore,
-    watchEnd: paging.watchEnd,
+    hasMore: isMonth ? paging.hasMore : Boolean(model.periodList.hasNextPage),
+    loadingMore: !isMonth && model.periodList.isFetchingNextPage,
+    onLoadMore: isMonth ? paging.loadMore : () => void model.periodList.fetchNextPage(),
+    watchEnd: isMonth ? paging.watchEnd : periodEnd,
     byCategory: byCategory.view,
     byCategoryStatus: categoryStatus,
     byCategoryEmpty: byCategory.empty,

@@ -10,8 +10,15 @@ const textSchema = z
   .optional()
   .catch(undefined);
 
+/** The periods Transações reads: the month of the app, or a wider one that only this screen uses. */
+export const TRANSACTION_PERIODS = ['month', '12m', 'year', 'all'] as const;
+
+export type TransactionPeriod = (typeof TRANSACTION_PERIODS)[number];
+
 /** Everything the Transações screen keeps in the URL besides the month. */
 export const transactionListSearchSchema = z.object({
+  // "month" (the default) is the month of the app; the others do not touch it (BR-TRX-007).
+  period: z.enum(TRANSACTION_PERIODS).default('month').catch('month'),
   view: z.enum(['list', 'category']).default('list').catch('list'),
   type: z.enum(['all', 'expense', 'income']).default('all').catch('all'),
   q: textSchema,

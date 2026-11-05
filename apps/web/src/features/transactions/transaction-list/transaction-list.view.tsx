@@ -6,6 +6,7 @@ import {
   EmptyState,
   ReviewStrip,
   RuleSuggestionBanner,
+  Section,
   SelectionBar,
   SyncErrorBanner,
 } from '@fincheck/ui';
@@ -108,13 +109,17 @@ function RuleQuestion({ question }: { question: TransactionListViewProps['ruleQu
 type LoadMoreProps = {
   onWatchEnd: (node: HTMLDivElement | null) => void;
   onLoadMore: () => void;
+  loading: boolean;
 };
 
-/** End of a long month: reaching it loads the next page; the button does the same by hand. */
-function LoadMore({ onWatchEnd, onLoadMore }: LoadMoreProps) {
+/**
+ * End of a long list: reaching it loads the next page; the button does the same by hand. The
+ * button has a fixed width, so the spinner that shows while the page loads does not resize it.
+ */
+function LoadMore({ onWatchEnd, onLoadMore, loading }: LoadMoreProps) {
   return (
     <div ref={onWatchEnd} className="flex justify-center">
-      <Button variant="secondary" onPress={onLoadMore}>
+      <Button variant="secondary" onPress={onLoadMore} loading={loading} className="w-44">
         Mostrar mais
       </Button>
     </div>
@@ -133,7 +138,7 @@ function ListContent(props: TransactionListViewProps) {
       {props.emptyReason === 'month' ? (
         <EmptyState
           icon="list"
-          title={`Nenhuma transação em ${props.monthLabel} ainda`}
+          title={props.emptyTitle}
           description="Conecte suas contas para trazer o extrato, ou lance uma transação à mão."
           primaryAction={{ label: 'Conectar contas', onPress: props.onConnectAccounts }}
           secondaryAction={{ label: 'Lançar transação', onPress: props.onNewTransaction }}
@@ -158,14 +163,39 @@ function ListContent(props: TransactionListViewProps) {
 
       {days.length > 0 ? (
         <>
-          <DayList
-            days={days}
-            selectionActive={props.selectionActive}
-            selectedIds={props.selectedIds}
-            handlers={props.rowHandlers}
-          />
+          {props.months ? (
+            // A wider period: the days under their month, the month as the heading.
+            <div className="flex flex-col gap-s32">
+              {props.months.map((month, index) => (
+                <Section
+                  key={month.key}
+                  title={month.label}
+                  divider={index > 0}
+                  action={<span className="text-meta text-fg-secondary">{month.countLabel}</span>}
+                >
+                  <DayList
+                    days={month.days}
+                    selectionActive={props.selectionActive}
+                    selectedIds={props.selectedIds}
+                    handlers={props.rowHandlers}
+                  />
+                </Section>
+              ))}
+            </div>
+          ) : (
+            <DayList
+              days={days}
+              selectionActive={props.selectionActive}
+              selectedIds={props.selectedIds}
+              handlers={props.rowHandlers}
+            />
+          )}
           {props.hasMore ? (
-            <LoadMore onWatchEnd={props.watchEnd} onLoadMore={props.onLoadMore} />
+            <LoadMore
+              onWatchEnd={props.watchEnd}
+              onLoadMore={props.onLoadMore}
+              loading={props.loadingMore}
+            />
           ) : null}
         </>
       ) : null}

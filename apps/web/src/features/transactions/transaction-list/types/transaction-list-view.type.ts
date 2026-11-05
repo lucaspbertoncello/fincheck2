@@ -115,19 +115,42 @@ export type ListControlsView = {
 };
 
 export type MonthTotalsView = {
+  /** The accessible name of the block: "Totais do mês", "Totais do período". */
+  label: string;
   expensesCents: number;
   incomesCents: number;
-  outsideCents: number;
+  /** Null where the source has no such total (a wider period has only expenses and incomes). */
+  outsideCents: number | null;
+};
+
+/** The days of one month, under its heading (a wider period shows the list in months). */
+export type TransactionMonthView = {
+  key: string;
+  label: string;
+  /** "42 transações". */
+  countLabel: string;
+  days: TransactionDayView[];
 };
 
 export type ByCategoryView = {
   expenseCard: {
     spentCents: number;
-    previousSamePointCents: number;
-    previousTotalCents: number;
-    previousMonthLabel: string;
+    /** Null over all the history: nothing before it to compare with. */
+    comparison: {
+      previousSamePointCents: number;
+      previousTotalCents: number;
+      /** "setembro", "os 12 meses antes", "2025". */
+      previousLabel: string;
+    } | null;
   };
-  incomeCard: { receivedCents: number; expectedCents: number };
+  incomeCard: {
+    receivedCents: number;
+    /** Null out of the month: a period has no expected income. */
+    expectedCents: number | null;
+    /** The legend under the bar when there is no expected income. */
+    receivedLegend: string;
+    sourceCount: number;
+  };
   expenses: CategoryGroupData[];
   expensesTotalCents: number;
   incomes: CategoryGroupData[];
@@ -210,7 +233,8 @@ export type RuleQuestionView = {
 };
 
 export type TransactionListViewProps = {
-  monthLabel: string;
+  /** The title of the empty screen: "Nenhuma transação em outubro 2026 ainda". */
+  emptyTitle: string;
   status: 'loading' | 'error' | 'ready';
   onRetry: () => void;
   actionError: { message: string; onClose: () => void } | null;
@@ -222,6 +246,9 @@ export type TransactionListViewProps = {
   ruleQuestion: RuleQuestionView | null;
   /** The list view. */
   days: TransactionDayView[];
+  /** Out of the month, the same days under their month; null in the month. */
+  months: TransactionMonthView[] | null;
+  /** 'month': nothing in the month or period; 'day': nothing on the day of `?day=`. */
   emptyReason: 'month' | 'filtered' | 'day' | null;
   /** Set while `?day=` narrows the list to one day. */
   dayFilter: DayFilterView | null;
@@ -230,6 +257,8 @@ export type TransactionListViewProps = {
   onConnectAccounts: () => void;
   onNewTransaction: () => void;
   hasMore: boolean;
+  /** The next page of a period is on its way. */
+  loadingMore: boolean;
   onLoadMore: () => void;
   /** Callback ref of the element at the end of the list; reaching it loads the next page. */
   watchEnd: (node: HTMLDivElement | null) => void;

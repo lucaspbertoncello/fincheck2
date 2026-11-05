@@ -1,12 +1,16 @@
 import { ScreenFrame } from '#/shared/components/page/screen-frame.component.tsx';
 import { SCREENS } from '#/shared/constants/screens.constant.ts';
 import { TransactionCreationModals } from '#/features/transactions/transaction-creation/transaction-creation-modals.component.tsx';
+import { TransactionPeriodPicker } from '#/features/transactions/transaction-list/components/transaction-period-picker.component.tsx';
 import { TransactionListViewModel } from '#/features/transactions/transaction-list/transaction-list.viewmodel.tsx';
 
-/** Transações: the list (or the by-category view) and the creation modals the screen owns. */
+/**
+ * Transações: the list (or the by-category view) and the creation modals the screen owns. The
+ * header carries the month picker with the period menu (BR-TRX-007).
+ */
 export function TransactionListPage() {
   return (
-    <ScreenFrame screen={SCREENS.transactions}>
+    <ScreenFrame screen={SCREENS.transactions} picker={<TransactionPeriodPicker />}>
       <TransactionListViewModel />
       <TransactionCreationModals />
     </ScreenFrame>

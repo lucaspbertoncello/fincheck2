@@ -3,6 +3,9 @@ import {
   CategoryGroupList,
   ExpenseSummaryCard,
   IncomeSummaryCard,
+  Money,
+  MonthSummaryCard,
+  SummaryBar,
 } from '@fincheck/ui';
 
 import type { ByCategoryView } from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
@@ -11,6 +14,47 @@ import { UNCATEGORIZED_GROUP_ID } from '#/features/transactions/transaction-list
 type ByCategoryProps = {
   data: ByCategoryView;
 };
+
+/** Expenses over all the history: no period before, so no comparison and a plain bar. */
+function ExpenseCardWithoutComparison({ spentCents }: { spentCents: number }) {
+  return (
+    <MonthSummaryCard
+      icon="receipt"
+      label="Despesas"
+      value={<Money cents={spentCents} sign="none" />}
+      subtext="Sem período anterior para comparar"
+      bar={
+        <SummaryBar
+          segments={[{ percent: 100, tone: 'strong' }]}
+          label="Gasto em todo o histórico"
+        />
+      }
+      barLegend="Gasto em todo o histórico"
+    />
+  );
+}
+
+/** Income of a period: what came in, without the expected of the recurrences (they are by month). */
+function IncomeCardOfPeriod({
+  receivedCents,
+  sourceCount,
+  legend,
+}: {
+  receivedCents: number;
+  sourceCount: number;
+  legend: string;
+}) {
+  return (
+    <MonthSummaryCard
+      icon="trend"
+      label="Receitas"
+      value={<Money cents={receivedCents} sign="none" />}
+      subtext={sourceCount === 1 ? 'de 1 fonte' : `de ${sourceCount} fontes`}
+      bar={<SummaryBar segments={[{ percent: 100, tone: 'gain' }]} label={legend} />}
+      barLegend={legend}
+    />
+  );
+}
 
 /**
  * "Por categoria" (screens.md): the expense and income cards, then Despesas por categoria (each group
@@ -24,18 +68,30 @@ export function ByCategory({ data }: ByCategoryProps) {
     <div className="flex flex-col gap-s32">
       <div className="grid gap-s16 lg:grid-cols-2">
         {data.showExpenses ? (
-          <ExpenseSummaryCard
-            spentCents={expenseCard.spentCents}
-            previousSamePointCents={expenseCard.previousSamePointCents}
-            previousTotalCents={expenseCard.previousTotalCents}
-            previousMonthLabel={expenseCard.previousMonthLabel}
-          />
+          expenseCard.comparison ? (
+            <ExpenseSummaryCard
+              spentCents={expenseCard.spentCents}
+              previousSamePointCents={expenseCard.comparison.previousSamePointCents}
+              previousTotalCents={expenseCard.comparison.previousTotalCents}
+              previousMonthLabel={expenseCard.comparison.previousLabel}
+            />
+          ) : (
+            <ExpenseCardWithoutComparison spentCents={expenseCard.spentCents} />
+          )
         ) : null}
         {data.showIncomes ? (
-          <IncomeSummaryCard
-            receivedCents={incomeCard.receivedCents}
-            expectedCents={incomeCard.expectedCents}
-          />
+          incomeCard.expectedCents === null ? (
+            <IncomeCardOfPeriod
+              receivedCents={incomeCard.receivedCents}
+              sourceCount={incomeCard.sourceCount}
+              legend={incomeCard.receivedLegend}
+            />
+          ) : (
+            <IncomeSummaryCard
+              receivedCents={incomeCard.receivedCents}
+              expectedCents={incomeCard.expectedCents}
+            />
+          )
         ) : null}
       </div>
       {data.showExpenses && data.expenses.length > 0 ? (

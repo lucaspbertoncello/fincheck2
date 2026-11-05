@@ -39,7 +39,7 @@ function buildSlices(
   if (folded.length === 0) return kept;
 
   const spent = folded.reduce((sum, item) => sum + item.spentCents, 0);
-  const previous = folded.reduce((sum, item) => sum + item.previousSpentCents, 0);
+  const previous = folded.reduce((sum, item) => sum + (item.previousSpentCents ?? 0), 0);
   return [
     ...kept,
     {

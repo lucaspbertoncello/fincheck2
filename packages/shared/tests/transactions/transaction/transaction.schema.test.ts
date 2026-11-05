@@ -90,6 +90,29 @@ describe('listTransactionsQuerySchema', () => {
     );
   });
 
+  it('takes a free period with from and to, paginated, both ends included', () => {
+    expect(
+      listTransactionsQuerySchema.safeParse({ from: '2025-11-01', to: '2026-10-31', limit: '60' })
+        .success,
+    ).toBe(true);
+    expect(
+      listTransactionsQuerySchema.safeParse({ from: '2026-01-01', to: '2026-01-01' }).success,
+    ).toBe(true);
+    expect(listTransactionsQuerySchema.safeParse({ to: '2026-10-31', cursor: 'x' }).success).toBe(
+      true,
+    );
+  });
+
+  it('refuses from after to, a date that does not exist, and a period next to month', () => {
+    expect(
+      listTransactionsQuerySchema.safeParse({ from: '2026-11-01', to: '2026-10-31' }).success,
+    ).toBe(false);
+    expect(listTransactionsQuerySchema.safeParse({ from: '2026-02-30' }).success).toBe(false);
+    expect(
+      listTransactionsQuerySchema.safeParse({ month: '2026-10', from: '2026-10-01' }).success,
+    ).toBe(false);
+  });
+
   it('does not combine categoryId with uncategorized', () => {
     expect(
       listTransactionsQuerySchema.safeParse({ categoryId: id, uncategorized: 'true' }).success,

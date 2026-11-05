@@ -64,6 +64,88 @@ describe('transactions routes (reads)', () => {
     expect((await callApi('GET', `/transactions?month=${CURRENT_MONTH}&limit=5`)).status).toBe(400);
   });
 
+  describe('a free period (from and to), page by page', () => {
+    const FROM = '2026-09-01';
+    const TO = '2026-10-31';
+
+    async function pageOf(query: string) {
+      return listTransactionsResponseSchema.parse(
+        (await callApi('GET', `/transactions?${query}`)).json,
+      );
+    }
+
+    async function everything(query: string, limit = 25): Promise<Transaction.Dto[]> {
+      const items: Transaction.Dto[] = [];
+      let cursor: string | null = null;
+      do {
+        const page: Awaited<ReturnType<typeof pageOf>> = await pageOf(
+          `${query}&limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`,
+        );
+        items.push(...page.items);
+        cursor = page.nextCursor;
+      } while (cursor);
+
+      return items;
+    }
+
+    it('keeps only the transactions whose competence day is in the range, both ends included', async () => {
+      const items = await everything(`from=${FROM}&to=${TO}`);
+
+      expect(items.length).toBeGreaterThan(50);
+      expect(items.every((tx) => tx.competenceOn >= FROM && tx.competenceOn <= TO)).toBe(true);
+      expect(items.some((tx) => tx.competenceOn.startsWith('2026-09'))).toBe(true);
+      expect(items.some((tx) => tx.competenceOn.startsWith('2026-10'))).toBe(true);
+    });
+
+    it('is the two months put together: the same rows as reading each month', async () => {
+      const september = await pageOf('month=2026-09');
+      const october = await pageOf('month=2026-10');
+      const period = await everything(`from=${FROM}&to=${TO}`);
+
+      expect(new Set(period.map((tx) => tx.id))).toEqual(
+        new Set([...september.items, ...october.items].map((tx) => tx.id)),
+      );
+    });
+
+    it('pages with the cursor without repeating or losing a row, and ends with a null cursor', async () => {
+      const first = await pageOf(`from=${FROM}&to=${TO}&limit=20`);
+      expect(first.items).toHaveLength(20);
+      expect(first.nextCursor).not.toBeNull();
+
+      const all = await everything(`from=${FROM}&to=${TO}`, 20);
+      const ids = all.map((tx) => tx.id);
+      expect(new Set(ids).size).toBe(ids.length);
+      expect(ids.slice(0, 20)).toEqual(first.items.map((tx) => tx.id));
+      const days = all.map((tx) => tx.occurredOn);
+      expect(days).toEqual([...days].sort((a, b) => b.localeCompare(a)));
+    });
+
+    it('takes one end alone, and no range at all is the whole history', async () => {
+      const upTo = await everything(`to=${FROM}`);
+      const from = await everything(`from=${FROM}`);
+      const history = await everything('');
+
+      expect(upTo.every((tx) => tx.competenceOn <= FROM)).toBe(true);
+      expect(from.every((tx) => tx.competenceOn >= FROM)).toBe(true);
+      expect(history.length).toBeGreaterThan(upTo.length);
+      expect(history.length).toBeGreaterThan(from.length);
+    });
+
+    it('combines with the filters of the list', async () => {
+      const out = await everything(`from=${FROM}&to=${TO}&direction=out`);
+
+      expect(out.length).toBeGreaterThan(10);
+      expect(out.every((tx) => tx.amountCents < 0)).toBe(true);
+    });
+
+    it('refuses a period next to a month, and from after to', async () => {
+      expect(
+        (await callApi('GET', `/transactions?month=${CURRENT_MONTH}&from=${FROM}`)).status,
+      ).toBe(400);
+      expect((await callApi('GET', `/transactions?from=${TO}&to=${FROM}`)).status).toBe(400);
+    });
+  });
+
   it('summarizes the month, with the review line matching the queue', async () => {
     const summary = transactionSummaryDtoSchema.parse(
       (await callApi('GET', `/transactions/summary?month=${CURRENT_MONTH}`)).json,

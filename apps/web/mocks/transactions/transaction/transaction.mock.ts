@@ -77,6 +77,8 @@ export const transactionMock = [
         const search = query.search ? normalizeText(query.search) : null;
         const rows = db.transactions
           .filter((tx) => !query.month || competenceOn(db, tx).slice(0, 7) === query.month)
+          .filter((tx) => !query.from || competenceOn(db, tx) >= query.from)
+          .filter((tx) => !query.to || competenceOn(db, tx) <= query.to)
           .filter((tx) => !query.accountId || tx.accountId === query.accountId)
           .filter(
             (tx) =>

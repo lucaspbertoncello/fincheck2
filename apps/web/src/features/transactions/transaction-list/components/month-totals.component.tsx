@@ -26,10 +26,13 @@ type MonthTotalsProps = {
   totals: MonthTotalsView;
 };
 
-/** The month at a glance: Despesas, Receitas and what is out of the account (transfers, invoice payments). */
+/**
+ * The month at a glance: Despesas, Receitas and what is out of the account (transfers, invoice
+ * payments). A wider period has the first two only.
+ */
 export function MonthTotals({ totals }: MonthTotalsProps) {
   return (
-    <section aria-label="Totais do mês" className="flex flex-wrap gap-x-s48 gap-y-s16">
+    <section aria-label={totals.label} className="flex flex-wrap gap-x-s48 gap-y-s16">
       <Total icon="arrow-down-right" label="Despesas" cents={totals.expensesCents} sign="minus" />
       <Total
         icon="arrow-up-right"
@@ -38,7 +41,9 @@ export function MonthTotals({ totals }: MonthTotalsProps) {
         sign="plus"
         tone="income"
       />
-      <Total icon="transfer" label="Fora da conta" cents={totals.outsideCents} sign="none" />
+      {totals.outsideCents === null ? null : (
+        <Total icon="transfer" label="Fora da conta" cents={totals.outsideCents} sign="none" />
+      )}
     </section>
   );
 }

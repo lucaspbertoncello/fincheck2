@@ -117,7 +117,10 @@ export function useTransactionEditing({
     categories: buildCategoryOptions([...lookups.categories.values()], kind),
     counterparts: buildCounterpartOptions(
       transaction,
-      model.monthTransactions.data?.items ?? model.list.data?.items ?? [],
+      model.monthTransactions.data?.items ??
+        model.list.data?.items ??
+        model.periodList.data?.pages.flatMap((page) => page.items) ??
+        [],
       lookups,
     ),
     errors: mine?.errors ?? {},

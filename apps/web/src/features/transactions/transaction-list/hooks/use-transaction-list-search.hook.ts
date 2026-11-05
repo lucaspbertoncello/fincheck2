@@ -10,7 +10,7 @@ type SearchPatch = { [Key in keyof TransactionListSearch]?: TransactionListSearc
 /**
  * The screen state that lives in the URL (view, type, search, filters, open panel, creation modal),
  * read through the screen's own schema. `update` changes some keys and keeps the rest, including the
- * month; `null` or `undefined` removes a key. Default values stay out of the URL.
+ * month and the period of the screen; `null` or `undefined` removes a key. Default values stay out of the URL.
  */
 export function useTransactionListSearch() {
   const rawSearch = useSearch({ strict: false });
@@ -28,6 +28,7 @@ export function useTransactionListSearch() {
         }
         if (next['view'] === 'list') delete next['view'];
         if (next['type'] === 'all') delete next['type'];
+        if (next['period'] === 'month') delete next['period'];
         return next;
       }) as never,
     });
