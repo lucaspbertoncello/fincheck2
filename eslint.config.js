@@ -4,7 +4,8 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 // Rules from docs/naming-and-folders.md: layers and context ownership in apps/api, barrels only in
-// packages/ui, the MVVM View in apps/web, and the `#/` alias instead of relative imports in apps.
+// packages/ui, the MVVM View and feature boundaries in apps/web, packages/ui that only draws, and
+// the `#/` alias instead of relative imports in apps.
 
 const API_SOURCE = /apps[\\/]api[\\/]src[\\/](.+)$/;
 const MODULE_LAYERS = new Set(['domain', 'application', 'infra', 'http']);
@@ -86,6 +87,78 @@ const apiBoundaries = {
   },
 };
 
+const WEB_SOURCE = /apps[\\/]web[\\/]src[\\/](.+)$/;
+// Folders of a feature context (`features/<context>/<type>/`) that every screen of that context
+// shares. Any other folder under the context is a screen.
+const CONTEXT_TYPE_FOLDERS = new Set([
+  'components',
+  'hooks',
+  'constants',
+  'types',
+  'utils',
+  'schemas',
+  'stores',
+]);
+
+// A feature never reaches into another feature. Across contexts, nothing at all: what two contexts
+// use goes up to `shared/` (or `domain/` when it is a rule). Inside one context, a screen uses the
+// context folders (`hooks/`, `utils/`…) and may compose another screen only through a file at the
+// root of that screen (its viewmodel or entry component), never through its internals.
+// `shared/` and `domain/` never import a feature.
+const webBoundaries = {
+  meta: {
+    type: 'problem',
+    schema: [],
+    messages: {
+      context:
+        'Feature `{{from}}` cannot import from feature `{{to}}`; move what both use to `shared/` (or `domain/` for a rule).',
+      screen:
+        'Screen `{{from}}` cannot import the internals of screen `{{to}}`; move what both use to the context folders, or compose through a file at the root of `{{to}}`.',
+      layer:
+        '`{{from}}` cannot import a feature; features depend on `shared/` and `domain/`, not the reverse.',
+    },
+  },
+  create(context) {
+    const match = WEB_SOURCE.exec(context.filename);
+    if (!match) return {};
+    const [area, fromContext, fromScreen] = match[1].split(/[\\/]/);
+
+    return {
+      ImportDeclaration(node) {
+        const source = node.source.value;
+        if (!source.startsWith('#/features/')) return;
+        if (area === 'shared' || area === 'domain') {
+          context.report({ node, messageId: 'layer', data: { from: area } });
+          return;
+        }
+        if (area !== 'features') return;
+
+        const [toContext, toScreen, ...rest] = source.slice('#/features/'.length).split('/');
+        if (toContext !== fromContext) {
+          context.report({
+            node,
+            messageId: 'context',
+            data: { from: fromContext, to: toContext },
+          });
+          return;
+        }
+        const sameScreen = toScreen === fromScreen;
+        const contextFolder = CONTEXT_TYPE_FOLDERS.has(toScreen);
+        const screenRoot = rest.length === 1;
+        if (!sameScreen && !contextFolder && !screenRoot) {
+          context.report({
+            node,
+            messageId: 'screen',
+            data: { from: `${fromContext}/${fromScreen}`, to: `${toContext}/${toScreen}` },
+          });
+        }
+      },
+    };
+  },
+};
+
+const fincheck = { rules: { 'api-boundaries': apiBoundaries, 'web-boundaries': webBoundaries } };
+
 const RELATIVE_IMPORTS = {
   group: ['./*', '../*'],
   message: 'Use the `#/` alias instead of a relative import.',
@@ -144,7 +217,7 @@ export default tseslint.config(
   {
     files: ['apps/api/**/*.ts'],
     languageOptions: { globals: globals.node },
-    plugins: { fincheck: { rules: { 'api-boundaries': apiBoundaries } } },
+    plugins: { fincheck },
     rules: { 'fincheck/api-boundaries': 'error' },
   },
   {
@@ -162,8 +235,29 @@ export default tseslint.config(
   },
   {
     files: ['apps/web/src/**/*.{ts,tsx}'],
+    plugins: { fincheck },
     rules: {
       'no-restricted-imports': ['error', { patterns: [RELATIVE_IMPORTS, MOCKS_FROM_SOURCE] }],
+      // Warning until the structural cleanup removes the existing cases; then it becomes an error.
+      'fincheck/web-boundaries': 'warn',
+    },
+  },
+  {
+    // The design system only draws: no contract, no data cache, no router.
+    files: ['packages/ui/src/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@fincheck/shared', '@fincheck/shared/*', '@tanstack/*'],
+              message:
+                'packages/ui only draws: it receives data and texts ready by props, without the contract, cache or router.',
+            },
+          ],
+        },
+      ],
     },
   },
   {

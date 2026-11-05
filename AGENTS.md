@@ -54,6 +54,8 @@ O que a lint barra (regra em `eslint.config.js`):
 - **Barrel** (`export * from`, `export { } from`) fora do `packages/ui`.
 - **Import relativo** nos apps: sempre `#/` (ver "Imports" na regra de nomes).
 - **Web:** o `src/` não importa `mocks/`; a View (`*.view.tsx`) não importa `#/domain`, `#/router`, TanStack Router nem TanStack Query.
+- **Fronteiras do web** (`fincheck/web-boundaries`): uma feature não importa outra; dentro de uma feature, uma tela não importa o que está dentro de outra (só o arquivo da raiz dela); `shared/` e `domain/` não importam feature. Regra em "Reuso e fronteiras no front", na regra de nomes.
+- **O `packages/ui` só desenha:** não importa `@fincheck/shared` nem TanStack.
 
 ## Banco
 

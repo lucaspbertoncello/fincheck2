@@ -159,6 +159,16 @@ apps/web/
 - **A View não importa** `domain`, `router` nem a biblioteca de cache (a lint barra). Quem liga é o ViewModel.
 - **Sem dado fictício dentro do app.** O front constrói sobre o contrato aprovado, com as rotas simuladas de `mocks/`, derivadas dos esquemas do `packages/shared`, em paralelo à API. Nada em `src/` importa `mocks/`.
 
+### Reuso e fronteiras no front (05/11/2026)
+
+Regra de Lucas depois da auditoria do código: cópias entre telas, telas usando peças de outras por dentro e regra de negócio no `packages/ui`. A lint barra o que dá para barrar; o resto é conferido na revisão.
+
+1. **Procurar antes de criar.** Antes de criar componente, hook ou util, procurar no `packages/ui` (a porta `packages/ui/src/index.ts`), no `apps/web/src/shared/` e no `apps/web/src/domain/`. Existe e serve: usar. Existe quase igual: ajustar o que existe, sem criar outro. Nada de cópia.
+2. **Uma feature não importa arquivo de outra feature.** O que duas features usam sobe para `shared/` (ou para `domain/`, se for regra) no mesmo commit. Dentro de uma feature (`features/<contexto>/`), as telas dividem as pastas do contexto (`components/`, `hooks/`, `utils/`…) e uma tela só usa outra pelo arquivo da raiz dela (o viewmodel ou o componente de entrada), nunca pelo que está dentro. `shared/` e `domain/` não importam feature. A lint barra (`fincheck/web-boundaries`).
+3. **O `packages/ui` só desenha.** Sem regra de negócio, sem texto de erro de domínio, sem o contrato (`@fincheck/shared`), sem cache nem rota: recebe pronto por prop. A lint barra os imports.
+4. **Regra de dinheiro, data e sinal mora no `domain`:** `apps/web/src/domain/<contexto>/<assunto>/rules/`, uma regra por `.rule.ts`, com teste. Inclui sinal de receita e despesa, divisão de valor e "hoje" no fuso de São Paulo quando é regra; formato de exibição fica em `shared/utils/`.
+5. **Nada sem uso.** Sem export, arquivo, componente, tipo ou dependência que ninguém usa. Export que só o teste usa não é export: o teste passa pela porta pública. A esteira confere (`pnpm knip`).
+
 ### Pacote de interface (`packages/ui`) (exemplo)
 
 ```text
@@ -298,7 +308,7 @@ Etapa 0 (29/10/2026). A stack está no vault (`architecture/stack.md`); os coman
 | Monorepo                   | pnpm workspaces, sem orquestrador de tarefas.                                                                                                                   |
 | Sufixos do back (Hono)     | `.controller.ts` por rota (sem framework: recebe e devolve dado), `.route.ts` registra as rotas de um assunto no Hono, `.middleware.ts` roda antes da rota. Sem `.plugin.ts`, `.module`, `.pipe`, `.filter`. `.hook.ts` só no front. |
 | Camada de banco (Kysely)   | Sem `.table.ts`: cada tabela é um tipo (`<tabela>-table.type.ts`) no `infra/` do módulo dono, juntado em `src/database/database.type.ts`. Migração escrita à mão, nome na seção Sufixos. |
-| Lint e formatação          | ESLint + Prettier. A lint barra: a camada errada (`http` → `application` → `domain`; o domínio não importa Kysely, Hono, Zod nem `node:`), o `domain`, o `infra` e o `http` de outro módulo, barrel fora do `packages/ui`, import relativo nos apps, `mocks/` no `src/` do web e, na View, `domain`, `router` e as bibliotecas de rota e cache. |
+| Lint e formatação          | ESLint + Prettier. A lint barra: a camada errada (`http` → `application` → `domain`; o domínio não importa Kysely, Hono, Zod nem `node:`), o `domain`, o `infra` e o `http` de outro módulo, barrel fora do `packages/ui`, import relativo nos apps, `mocks/` no `src/` do web, na View, `domain`, `router` e as bibliotecas de rota e cache, uma feature do web importando outra por dentro, e o `packages/ui` importando o contrato, o cache ou a rota. |
 | Runtime e imports          | Node 26, que roda o TypeScript direto (só sintaxe apagável: sem `enum`, sem `namespace` com valor, sem propriedade no parâmetro do construtor). Imports na seção Imports. |
 
 **Ainda em aberto (marca †):** `.columns.tsx` (biblioteca de tabela) e `.store.ts` (estado no navegador). Fecham na primeira feature que precisar deles.
