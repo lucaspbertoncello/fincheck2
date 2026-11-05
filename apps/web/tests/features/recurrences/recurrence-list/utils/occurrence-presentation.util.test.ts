@@ -23,33 +23,86 @@ describe('describeDateRule', () => {
         day: 20,
         businessDayNumber: null,
         toleranceDays: null,
+        nonBusinessDayShift: 'none',
       }),
     ).toBe('Todo dia 20');
+    expect(
+      describeDateRule({
+        type: 'fixed_day',
+        day: 10,
+        businessDayNumber: null,
+        toleranceDays: null,
+        nonBusinessDayShift: 'after',
+      }),
+    ).toBe('Todo dia 10, ou o dia útil seguinte');
+    expect(
+      describeDateRule(
+        {
+          type: 'fixed_day',
+          day: 10,
+          businessDayNumber: null,
+          toleranceDays: null,
+          nonBusinessDayShift: 'before',
+        },
+        2,
+      ),
+    ).toBe('Todo dia 10, ou o dia útil anterior, em até 2 Pix');
     expect(
       describeDateRule({
         type: 'business_day',
         day: null,
         businessDayNumber: 5,
         toleranceDays: null,
+        nonBusinessDayShift: null,
       }),
     ).toBe('No 5º dia útil');
     expect(
-      describeDateRule({ type: 'around_day', day: 25, businessDayNumber: null, toleranceDays: 2 }),
+      describeDateRule({
+        type: 'around_day',
+        day: 25,
+        businessDayNumber: null,
+        toleranceDays: 2,
+        nonBusinessDayShift: null,
+      }),
     ).toBe('Perto do dia 25, até 2 dias antes ou depois');
     expect(
-      describeDateRule({ type: 'around_day', day: 10, businessDayNumber: null, toleranceDays: 1 }),
+      describeDateRule({
+        type: 'around_day',
+        day: 10,
+        businessDayNumber: null,
+        toleranceDays: 1,
+        nonBusinessDayShift: null,
+      }),
     ).toBe('Perto do dia 10, até 1 dia antes ou depois');
     expect(
-      describeDateRule({ type: 'around_day', day: 10, businessDayNumber: null, toleranceDays: 0 }),
+      describeDateRule({
+        type: 'around_day',
+        day: 10,
+        businessDayNumber: null,
+        toleranceDays: 0,
+        nonBusinessDayShift: null,
+      }),
     ).toBe('Perto do dia 10, sem folga');
     expect(
       describeDateRule(
-        { type: 'any_day', day: null, businessDayNumber: null, toleranceDays: null },
+        {
+          type: 'any_day',
+          day: null,
+          businessDayNumber: null,
+          toleranceDays: null,
+          nonBusinessDayShift: null,
+        },
         2,
       ),
     ).toBe('Em qualquer dia do mês, em até 2 Pix');
     expect(
-      describeDateRule({ type: 'any_day', day: 5, businessDayNumber: null, toleranceDays: null }),
+      describeDateRule({
+        type: 'any_day',
+        day: 5,
+        businessDayNumber: null,
+        toleranceDays: null,
+        nonBusinessDayShift: null,
+      }),
     ).toBe('Em qualquer dia do mês, geralmente no dia 5');
   });
 });

@@ -15,6 +15,7 @@ export const EMPTY_FORM_VALUES: RecurrenceFormValues = {
   day: DEFAULT_RULE_DAY,
   businessDayNumber: '',
   toleranceDays: '',
+  nonBusinessDayShift: 'none',
   maxPayments: '1',
   applyFrom: 'next_month',
 };

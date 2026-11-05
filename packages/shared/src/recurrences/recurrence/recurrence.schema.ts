@@ -12,6 +12,7 @@ import {
   DATE_RULE_TYPES,
   EMPLOYMENT_REGIMES,
   MAX_PAYMENTS_LIMITS,
+  NON_BUSINESS_DAY_SHIFTS,
   RECURRENCE_KINDS,
   TOLERANCE_DAYS_LIMITS,
 } from './recurrence.constant.ts';
@@ -19,11 +20,13 @@ import {
 export const recurrenceKindSchema = z.enum(RECURRENCE_KINDS);
 export const amountModeSchema = z.enum(AMOUNT_MODES);
 export const employmentRegimeSchema = z.enum(EMPLOYMENT_REGIMES);
+export const nonBusinessDayShiftSchema = z.enum(NON_BUSINESS_DAY_SHIFTS);
 export const applyFromSchema = z.enum(['next_month', 'current_month']);
 
 const maxPaymentsSchema = z.int().min(MAX_PAYMENTS_LIMITS.min).max(MAX_PAYMENTS_LIMITS.max);
 
-// The four fields are always in the answer, `null` in the ones the rule does not use.
+// The five fields are always in the answer, `null` in the ones the rule does not use. In the body a
+// missing `nonBusinessDayShift` is `null`, which `fixed_day` reads as `none` (the answer says `none`).
 export const dateRuleSchema = z
   .object({
     type: z.enum(DATE_RULE_TYPES),
@@ -40,6 +43,7 @@ export const dateRuleSchema = z
       .max(TOLERANCE_DAYS_LIMITS.max)
       .nullable()
       .default(null),
+    nonBusinessDayShift: nonBusinessDayShiftSchema.nullable().default(null),
   })
   .superRefine((rule, context) => {
     const requires = (field: 'day' | 'businessDayNumber' | 'toleranceDays') => {
@@ -47,7 +51,9 @@ export const dateRuleSchema = z
         context.addIssue({ code: 'custom', path: [field], message: `${rule.type} needs ${field}` });
       }
     };
-    const forbids = (field: 'day' | 'businessDayNumber' | 'toleranceDays') => {
+    const forbids = (
+      field: 'day' | 'businessDayNumber' | 'toleranceDays' | 'nonBusinessDayShift',
+    ) => {
       if (rule[field] !== null) {
         context.addIssue({
           code: 'custom',
@@ -67,15 +73,18 @@ export const dateRuleSchema = z
         requires('businessDayNumber');
         forbids('day');
         forbids('toleranceDays');
+        forbids('nonBusinessDayShift');
         break;
       case 'around_day':
         requires('day');
         requires('toleranceDays');
         forbids('businessDayNumber');
+        forbids('nonBusinessDayShift');
         break;
       case 'any_day':
         forbids('businessDayNumber');
         forbids('toleranceDays');
+        forbids('nonBusinessDayShift');
         break;
     }
   });

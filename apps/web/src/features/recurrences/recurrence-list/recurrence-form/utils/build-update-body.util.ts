@@ -8,7 +8,13 @@ import type {
 import { buildDateRule } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-date-rule.util.ts';
 import { mapFormIssues } from '#/features/recurrences/recurrence-list/recurrence-form/utils/map-form-issues.util.ts';
 
-const RULE_FIELDS = ['type', 'day', 'businessDayNumber', 'toleranceDays'] as const;
+const RULE_FIELDS = [
+  'type',
+  'day',
+  'businessDayNumber',
+  'toleranceDays',
+  'nonBusinessDayShift',
+] as const;
 
 /**
  * Builds the body of `PATCH /recurrences/:id` with only what changed: the API recopies a field

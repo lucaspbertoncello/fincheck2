@@ -1,3 +1,4 @@
+import { shiftToBusinessDay } from '@fincheck/shared/common/date/shift-to-business-day.util.ts';
 import type { Recurrence } from '@fincheck/shared/recurrences/recurrence/recurrence.type.ts';
 
 import { addDays } from '#mocks/support/dates/add-days.util.ts';
@@ -21,7 +22,9 @@ export function computeOccurrenceWindow(
 
   switch (rule.type) {
     case 'fixed_day': {
-      const expectedOn = dateInMonth(month, rule.day ?? 1);
+      const day = dateInMonth(month, rule.day ?? 1);
+      const shift = rule.nonBusinessDayShift ?? 'none';
+      const expectedOn = shift === 'none' ? day : shiftToBusinessDay(day, shift);
       return {
         expectedOn,
         windowStartOn: addDays(expectedOn, -3),

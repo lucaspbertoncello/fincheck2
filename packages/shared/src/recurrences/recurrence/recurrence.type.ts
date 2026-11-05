@@ -8,6 +8,7 @@ import type {
   dateRuleSchema,
   employmentRegimeSchema,
   listRecurrencesQuerySchema,
+  nonBusinessDayShiftSchema,
   previewRecurrenceRequestSchema,
   previewRecurrenceResponseSchema,
   recurrenceDetailDtoSchema,
@@ -29,6 +30,7 @@ export namespace Recurrence {
   export type EmploymentRegime = z.infer<typeof employmentRegimeSchema>;
   export type AmountMode = z.infer<typeof amountModeSchema>;
   export type DateRule = z.infer<typeof dateRuleSchema>;
+  export type NonBusinessDayShift = z.infer<typeof nonBusinessDayShiftSchema>;
   export type DateRuleType = DateRule['type'];
   export type ApplyFrom = z.infer<typeof applyFromSchema>;
   export type Params = z.infer<typeof recurrenceParamsSchema>;

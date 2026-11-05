@@ -7,6 +7,7 @@ const GLUED = /^[º,]/;
 
 /**
  * The date rule in Portuguese, written the same way as the sentence of the form: "Todo dia 20",
+ * "Todo dia 10, ou o dia útil seguinte",
  * "No 5º dia útil", "Perto do dia 25, até 2 dias antes ou depois", "Em qualquer dia do mês",
  * "Em qualquer dia do mês, geralmente no dia 5". With payments split in Pix: "..., em até 2 Pix".
  */
@@ -22,11 +23,14 @@ export function describeDateRule(rule: Recurrence.DateRule, maxPayments = 1): st
     }
     if (rule.type === 'any_day' && rule.day === null) return 'Em qualquer dia do mês';
 
-    return buildDateRulePhrase(rule.type, rule.toleranceDays).reduce((sentence, part) => {
-      const piece = part.kind === 'text' ? part.text : String(numbers[part.field] ?? '');
-      if (sentence === '') return piece;
-      return GLUED.test(piece) ? `${sentence}${piece}` : `${sentence} ${piece}`;
-    }, '');
+    return buildDateRulePhrase(rule.type, rule.toleranceDays, rule.nonBusinessDayShift).reduce(
+      (sentence, part) => {
+        const piece = part.kind === 'text' ? part.text : String(numbers[part.field] ?? '');
+        if (sentence === '') return piece;
+        return GLUED.test(piece) ? `${sentence}${piece}` : `${sentence} ${piece}`;
+      },
+      '',
+    );
   })();
 
   return maxPayments > 1 ? `${base}, em até ${maxPayments} Pix` : base;

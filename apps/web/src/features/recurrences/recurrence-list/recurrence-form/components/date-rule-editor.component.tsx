@@ -1,5 +1,9 @@
 import { useId } from 'react';
 
+import {
+  NonBusinessDayShift,
+  SHIFT_CAPTION,
+} from '#/features/recurrences/recurrence-list/recurrence-form/components/non-business-day-shift.component.tsx';
 import { RuleGroupHeading } from '#/features/recurrences/recurrence-list/recurrence-form/components/rule-group-heading.component.tsx';
 import { DateRulePreview } from '#/features/recurrences/recurrence-list/recurrence-form/components/date-rule-preview.component.tsx';
 import { DateRuleSentence } from '#/features/recurrences/recurrence-list/recurrence-form/components/date-rule-sentence.component.tsx';
@@ -15,7 +19,7 @@ import type {
 
 type RuleValues = Pick<
   RecurrenceFormValues,
-  'ruleType' | 'day' | 'businessDayNumber' | 'toleranceDays'
+  'ruleType' | 'day' | 'businessDayNumber' | 'toleranceDays' | 'nonBusinessDayShift'
 >;
 
 type DateRuleEditorProps = {
@@ -40,7 +44,7 @@ function pickError(values: RuleValues, errors: RecurrenceFormErrors): string | u
 
 /**
  * "Quando cai" in one block: the name of the rule, the rule written as a sentence with its numbers
- * inside, and the next dates it gives. Left: choose, then read and edit. Right: the proof. On the
+ * inside, the weekend and holiday choice of "Dia fixo", and the next dates it gives. Left: choose, then read and edit. Right: the proof. On the
  * phone the three stack in that order. Every part keeps its height whatever the rule is.
  */
 export function DateRuleEditor({
@@ -55,12 +59,29 @@ export function DateRuleEditor({
   return (
     <div className="grid grid-cols-1 gap-s16 @xl:grid-cols-[minmax(0,1fr)_13.5rem] @xl:gap-x-s24 @xl:gap-y-0">
       <section aria-labelledby={titleId} className="flex min-w-0 flex-col gap-s8">
-        <RuleGroupHeading id={titleId}>Quando cai</RuleGroupHeading>
+        <div className="flex items-baseline justify-between gap-s8">
+          <RuleGroupHeading id={titleId}>Quando cai</RuleGroupHeading>
+          <span
+            aria-hidden="true"
+            className={`hidden text-meta text-fg-secondary transition-opacity duration-(--duration-fast) ease-(--ease-standard) @xl:inline ${
+              values.ruleType === 'fixed_day' ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            {SHIFT_CAPTION}
+          </span>
+        </div>
         <DateRuleTypePicker
           value={values.ruleType}
           onChange={(ruleType) => onChange({ ruleType })}
         />
-        <DateRuleSentence values={values} errors={errors} onChange={onChange} />
+        <div className="relative flex flex-col gap-s8">
+          <DateRuleSentence values={values} errors={errors} onChange={onChange} />
+          <NonBusinessDayShift
+            ruleType={values.ruleType}
+            value={values.nonBusinessDayShift}
+            onChange={(nonBusinessDayShift) => onChange({ nonBusinessDayShift })}
+          />
+        </div>
       </section>
       <DateRulePreview
         status={previewStatus}

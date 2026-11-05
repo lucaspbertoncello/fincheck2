@@ -15,6 +15,8 @@ export type RecurrenceFormValues = {
   day: string;
   businessDayNumber: string;
   toleranceDays: string;
+  /** Only "Dia fixo" uses it: what happens when the day falls on a weekend or a holiday. */
+  nonBusinessDayShift: Recurrence.NonBusinessDayShift;
   maxPayments: string;
   applyFrom: Recurrence.ApplyFrom;
 };

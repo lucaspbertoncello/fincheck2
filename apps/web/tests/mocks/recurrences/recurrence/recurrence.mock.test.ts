@@ -224,3 +224,67 @@ describe('recurrences routes (changes)', () => {
     expect((await recurrences()).some((item) => item.id === recurrence.id)).toBe(false);
   });
 });
+
+describe('recurrences routes (weekend and holiday shift)', () => {
+  const rule = (shift?: 'none' | 'before' | 'after') => ({
+    type: 'fixed_day',
+    day: 10,
+    ...(shift ? { nonBusinessDayShift: shift } : {}),
+  });
+
+  it('answers none for the seeded fixed days and null for the other rules', async () => {
+    const items = await recurrences();
+    for (const item of items) {
+      expect(item.dateRule.nonBusinessDayShift).toBe(
+        item.dateRule.type === 'fixed_day' ? 'none' : null,
+      );
+    }
+  });
+
+  it('previews January 2027 on Monday 11/01 with "after" and Friday 08/01 with "before"', async () => {
+    const preview = async (shift?: 'none' | 'before' | 'after') =>
+      previewRecurrenceResponseSchema
+        .parse((await callApi('POST', '/recurrences/preview', { dateRule: rule(shift) })).json)
+        .occurrences.map((item) => item.expectedOn);
+
+    expect(await preview('after')).toEqual(['2026-11-10', '2026-12-10', '2027-01-11']);
+    expect(await preview('before')).toEqual(['2026-11-10', '2026-12-10', '2027-01-08']);
+    expect(await preview()).toEqual(['2026-11-10', '2026-12-10', '2027-01-10']);
+  });
+
+  it('saves the shift on create and on edit, and answers none when it is missing', async () => {
+    const created = createRecurrenceResponseSchema.parse(
+      (
+        await callApi('POST', '/recurrences', {
+          kind: 'expense',
+          name: 'Aluguel',
+          expectedAmountCents: 100_000,
+          dateRule: rule('after'),
+        })
+      ).json,
+    ).recurrence;
+    expect(created.dateRule.nonBusinessDayShift).toBe('after');
+
+    const edited = recurrenceDtoSchema.parse(
+      (await callApi('PATCH', `/recurrences/${created.id}`, { dateRule: rule('before') })).json,
+    );
+    expect(edited.dateRule.nonBusinessDayShift).toBe('before');
+
+    const withoutShift = recurrenceDtoSchema.parse(
+      (await callApi('PATCH', `/recurrences/${created.id}`, { dateRule: rule() })).json,
+    );
+    expect(withoutShift.dateRule.nonBusinessDayShift).toBe('none');
+
+    const detail = recurrenceDetailDtoSchema.parse(
+      (await callApi('GET', `/recurrences/${created.id}`)).json,
+    );
+    expect(detail.dateRule.nonBusinessDayShift).toBe('none');
+  });
+
+  it('refuses a shift on a rule that does not take one', async () => {
+    const answer = await callApi('POST', '/recurrences/preview', {
+      dateRule: { type: 'business_day', businessDayNumber: 5, nonBusinessDayShift: 'after' },
+    });
+    expect(answer.status).toBe(400);
+  });
+});

@@ -1,3 +1,4 @@
+import { buildShiftNote } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-shift-note.util.ts';
 import type { RecurrenceFormValues } from '#/features/recurrences/recurrence-list/recurrence-form/types/recurrence-form.type.ts';
 import type { PreviewDate } from '#/features/recurrences/recurrence-list/recurrence-form/types/preview-date.type.ts';
 
@@ -48,10 +49,25 @@ function describeMargin(expectedOn: string, startOn: string, endOn: string): str
   return `± ${before} ${before === 1 ? 'dia' : 'dias'}`;
 }
 
-/** The first three dates of the preview, with the weekday and, when the rule has a margin, the window. */
+/** The day of the rule in a month as the person wrote it, held at the last day of a short month. */
+function writtenDayOn(month: string, day: string): string | null {
+  const number = Number(day);
+  if (!Number.isInteger(number) || number < 1) return null;
+  const [year = 0, monthNumber = 1] = month.split('-').map(Number);
+  const lastDay = new Date(Date.UTC(year, monthNumber, 0)).getUTCDate();
+
+  return `${month}-${String(Math.min(number, lastDay)).padStart(2, '0')}`;
+}
+
+/**
+ * The first three dates of the preview, with the weekday and, when the rule has a margin, the
+ * window. `day` is the day typed in "Dia fixo": when the shown date is not that day, the rule moved
+ * it off a weekend or a holiday and the note says what it was ("era domingo") instead of the margin.
+ */
 export function buildPreviewDates(
   occurrences: readonly PreviewOccurrence[],
   ruleType: RecurrenceFormValues['ruleType'],
+  day = '',
 ): PreviewDate[] {
   const showsWindow = RULES_WITH_MARGIN.includes(ruleType);
   return occurrences.slice(0, MAX_DATES).map((item) => {
@@ -67,10 +83,13 @@ export function buildPreviewDates(
     }
 
     const date = toDate(item.expectedOn);
-    const note = showsWindow
+    const written = ruleType === 'fixed_day' ? writtenDayOn(item.month, day) : null;
+    const shiftNote = written && written !== item.expectedOn ? buildShiftNote(written) : null;
+    const margin = showsWindow
       ? describeMargin(item.expectedOn, item.windowStartOn, item.windowEndOn)
       : null;
-    const window = note
+    const note = shiftNote ?? margin;
+    const window = margin
       ? `, pode chegar de ${dayLong.format(toDate(item.windowStartOn))} a ${dayLong.format(toDate(item.windowEndOn))}`
       : '';
 
@@ -79,7 +98,7 @@ export function buildPreviewDates(
       weekday: clean(weekdayShort.format(date)),
       dayMonth: `${date.getUTCDate()} ${clean(monthShort.format(date))}`,
       note,
-      label: `${fullDate.format(date)}${window}`,
+      label: `${fullDate.format(date)}${shiftNote ? `, ${shiftNote}` : ''}${window}`,
     };
   });
 }

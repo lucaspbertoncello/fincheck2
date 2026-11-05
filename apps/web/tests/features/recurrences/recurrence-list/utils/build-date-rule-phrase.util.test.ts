@@ -25,4 +25,21 @@ describe('buildDateRulePhrase', () => {
     expect(last(1)).toEqual({ kind: 'text', text: 'dia antes ou depois' });
     expect(last(3)).toEqual({ kind: 'text', text: 'dias antes ou depois' });
   });
+
+  it('adds the weekend and holiday shift only to "Todo dia"', () => {
+    expect(buildDateRulePhrase('fixed_day', null, 'after').at(-1)).toEqual({
+      kind: 'text',
+      text: ', ou o dia útil seguinte',
+    });
+    expect(buildDateRulePhrase('fixed_day', null, 'before').at(-1)).toEqual({
+      kind: 'text',
+      text: ', ou o dia útil anterior',
+    });
+    expect(buildDateRulePhrase('fixed_day', null, 'none')).toEqual(
+      buildDateRulePhrase('fixed_day'),
+    );
+    expect(buildDateRulePhrase('business_day', null, 'after')).toEqual(
+      buildDateRulePhrase('business_day'),
+    );
+  });
 });

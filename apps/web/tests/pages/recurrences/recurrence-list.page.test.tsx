@@ -9,6 +9,7 @@ import { CURRENT_MONTH } from '#mocks/support/dates/mock-clock.store.ts';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
 import { makeOccurrenceLate } from '#tests/support/recurrences/occurrence/make-occurrence-late.util.ts';
 import { renderApp } from '#tests/support/app/render-app.util.tsx';
+import { callApi } from '#tests/support/mocks/call-api.util.ts';
 
 resetDatabaseBeforeEach();
 
@@ -365,6 +366,83 @@ describe('RecurrenceListPage', () => {
       ).toHaveLength(4);
     });
 
+    it('offers the weekend and holiday choice only to "Dia fixo", "No dia" chosen, and a hint in the others', async () => {
+      renderApp(`${URL}&new=recurrence`);
+      const dialog = await screen.findByRole('dialog', { name: 'Nova recorrência' });
+      const choice = () =>
+        within(dialog).queryByRole('radiogroup', { name: /fim de semana ou feriado/ });
+
+      expect(choice()).toBeInTheDocument();
+      expect(within(dialog).getByRole('radio', { name: 'No dia' })).toHaveAttribute(
+        'aria-checked',
+        'true',
+      );
+      expect(within(dialog).getByRole('radio', { name: 'Útil antes' })).toBeInTheDocument();
+      expect(within(dialog).getByRole('radio', { name: 'Útil depois' })).toBeInTheDocument();
+
+      await userEvent.click(within(dialog).getByRole('radio', { name: 'Dia útil' }));
+      expect(choice()).not.toBeInTheDocument();
+      expect(
+        within(dialog).getByText('Fim de semana e feriado nacional não contam como dia útil.'),
+      ).toBeInTheDocument();
+
+      await userEvent.click(within(dialog).getByRole('radio', { name: 'Dia fixo' }));
+      expect(choice()).toBeInTheDocument();
+    });
+
+    it('writes the shift in the sentence and in the next dates: Sunday 10/01/2027 shows on 11 jan', async () => {
+      renderApp(`${URL}&new=recurrence`);
+      const dialog = await screen.findByRole('dialog', { name: 'Nova recorrência' });
+
+      fireEvent.change(within(dialog).getByRole('textbox', { name: 'Dia do mês' }), {
+        target: { value: '10' },
+      });
+      await userEvent.click(within(dialog).getByRole('radio', { name: 'Útil depois' }));
+
+      expect(within(dialog).getByRole('group', { name: /^Regra: / })).toHaveAccessibleName(
+        'Regra: Todo dia 10, ou o dia útil seguinte',
+      );
+      const thirdDate = async () =>
+        within(await within(dialog).findByRole('list', { name: 'Próximas datas' })).getAllByRole(
+          'listitem',
+        )[2];
+      await waitFor(async () => {
+        expect(await thirdDate()).toHaveAccessibleName(/segunda-feira, 11 de janeiro, era domingo/);
+      });
+      expect(await thirdDate()).toHaveTextContent('seg, 11 jan');
+      expect(await thirdDate()).toHaveTextContent('era domingo');
+
+      await userEvent.click(within(dialog).getByRole('radio', { name: 'Útil antes' }));
+      await waitFor(async () => {
+        expect(await thirdDate()).toHaveAccessibleName(/sexta-feira, 8 de janeiro, era domingo/);
+      });
+    });
+
+    it('sends the shift when it saves', async () => {
+      renderApp(`${URL}&new=recurrence`);
+      const dialog = await screen.findByRole('dialog', { name: 'Nova recorrência' });
+
+      fireEvent.change(within(dialog).getByRole('textbox', { name: 'Nome' }), {
+        target: { value: 'Condomínio' },
+      });
+      fireEvent.change(within(dialog).getByRole('textbox', { name: 'Valor esperado' }), {
+        target: { value: '45000' },
+      });
+      fireEvent.change(within(dialog).getByRole('textbox', { name: 'Dia do mês' }), {
+        target: { value: '10' },
+      });
+      await userEvent.click(within(dialog).getByRole('radio', { name: 'Útil depois' }));
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Salvar recorrência' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+      const saved = (
+        (await callApi('GET', `/recurrences?month=${CURRENT_MONTH}`)).json as {
+          items: { name: string; dateRule: { nonBusinessDayShift: string | null } }[];
+        }
+      ).items.find((item) => item.name === 'Condomínio');
+      expect(saved?.dateRule.nonBusinessDayShift).toBe('after');
+    });
+
     it('shows the accounts as chips with the bank mark', async () => {
       renderApp(`${URL}&new=recurrence`);
       const dialog = await screen.findByRole('dialog', { name: 'Nova recorrência' });
@@ -418,6 +496,31 @@ describe('RecurrenceListPage', () => {
 
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
       expect(await expenses.findByText('Plano celular família')).toBeInTheDocument();
+    });
+
+    it('loads the saved shift of a fixed day', async () => {
+      const list = (await callApi('GET', `/recurrences?month=${CURRENT_MONTH}`)).json as {
+        items: { id: string; name: string; dateRule: Record<string, unknown> }[];
+      };
+      const plan = list.items.find((item) => item.name === 'Plano celular');
+      await callApi('PATCH', `/recurrences/${plan?.id}`, {
+        dateRule: { ...plan?.dateRule, nonBusinessDayShift: 'before' },
+      });
+
+      renderApp(URL);
+      const expenses = within(await screen.findByRole('region', { name: 'Despesas fixas' }));
+      fireEvent.click(await expenses.findByRole('button', { name: 'Ações de Plano celular' }));
+      fireEvent.click(await screen.findByRole('menuitem', { name: 'Editar' }));
+      expect(await screen.findByDisplayValue('Plano celular')).toBeInTheDocument();
+      const dialog = screen.getByRole('dialog', { name: 'Editar recorrência' });
+
+      expect(await within(dialog).findByRole('radio', { name: 'Útil antes' })).toHaveAttribute(
+        'aria-checked',
+        'true',
+      );
+      expect(within(dialog).getByRole('group', { name: /^Regra: / })).toHaveAccessibleName(
+        /, ou o dia útil anterior$/,
+      );
     });
 
     it('pauses from the modal and the recurrence moves to "Fora deste mês"', async () => {

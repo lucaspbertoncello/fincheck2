@@ -20,6 +20,7 @@ export function buildFormValues(recurrence: Recurrence.Dto): RecurrenceFormValue
     businessDayNumber:
       dateRule.businessDayNumber === null ? '' : String(dateRule.businessDayNumber),
     toleranceDays: dateRule.toleranceDays === null ? '' : String(dateRule.toleranceDays),
+    nonBusinessDayShift: dateRule.nonBusinessDayShift ?? 'none',
     maxPayments: String(recurrence.maxPayments),
     applyFrom: 'next_month',
   };

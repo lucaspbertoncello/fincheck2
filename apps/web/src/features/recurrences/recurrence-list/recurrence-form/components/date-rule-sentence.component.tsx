@@ -11,7 +11,7 @@ import { buildDateRule } from '#/features/recurrences/recurrence-list/recurrence
 
 type SentenceValues = Pick<
   RecurrenceFormValues,
-  'ruleType' | 'day' | 'businessDayNumber' | 'toleranceDays'
+  'ruleType' | 'day' | 'businessDayNumber' | 'toleranceDays' | 'nonBusinessDayShift'
 >;
 
 type DateRuleSentenceProps = {
@@ -35,7 +35,7 @@ const FIELD_ERROR_KEYS: Record<DateRulePhraseField, keyof RecurrenceFormErrors> 
   toleranceDays: 'toleranceDays',
 };
 
-/** Words that stick to the number before them ("5" + "º dia útil", "10" + ", até"). */
+/** Words that stick to the number before them ("5" + "º dia útil", "10" + ", até", "10" + ", ou o dia útil seguinte"). */
 const GLUED = /^[º,]/;
 
 /**
@@ -46,19 +46,28 @@ const GLUED = /^[º,]/;
  */
 export function DateRuleSentence({ values, errors, onChange }: DateRuleSentenceProps) {
   const tolerance = values.toleranceDays === '' ? null : Number(values.toleranceDays);
-  const parts = buildDateRulePhrase(values.ruleType, tolerance);
+  const parts = buildDateRulePhrase(
+    values.ruleType,
+    tolerance,
+    values.ruleType === 'fixed_day' ? values.nonBusinessDayShift : null,
+  );
   const spoken = describeDateRule(buildDateRule(values));
 
   return (
     <div
       role="group"
       aria-label={`Regra: ${spoken}`}
-      className="flex min-h-[6.25rem] flex-wrap content-center items-center gap-x-s8 gap-y-s4 rounded-input border border-line bg-subtle px-s12 text-label text-fg-primary @xl:h-12 @xl:min-h-0 @xl:flex-nowrap @xl:whitespace-nowrap"
+      className="flex min-h-[6.25rem] flex-wrap content-center items-center gap-x-s8 gap-y-s4 rounded-input border border-line bg-subtle px-s12 text-label text-fg-primary @xl:h-[3.25rem] @xl:min-h-0 @xl:flex-nowrap @xl:whitespace-nowrap"
     >
       {parts.map((part, index) => {
         if (part.kind === 'text') {
           return (
-            <span key={index} className={GLUED.test(part.text) ? '-ml-s4' : undefined}>
+            <span
+              key={index}
+              className={`${GLUED.test(part.text) ? '-ml-s4' : ''} ${
+                part.text.startsWith(', ou o dia útil') ? '@xl:hidden' : ''
+              }`}
+            >
               {part.text}
             </span>
           );

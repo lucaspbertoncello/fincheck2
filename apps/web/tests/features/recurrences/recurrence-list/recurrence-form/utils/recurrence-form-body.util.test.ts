@@ -20,10 +20,29 @@ describe('buildCreateBody', () => {
         kind: 'expense',
         name: 'Netflix',
         expectedAmountCents: 5_590,
-        dateRule: { type: 'fixed_day', day: 21, businessDayNumber: null, toleranceDays: null },
+        dateRule: {
+          type: 'fixed_day',
+          day: 21,
+          businessDayNumber: null,
+          toleranceDays: null,
+          nonBusinessDayShift: 'none',
+        },
         maxPayments: 1,
       },
     });
+  });
+
+  it('sends the weekend and holiday shift of a fixed day, and none for the other rules', () => {
+    const fixed = buildCreateBody({ ...filled, nonBusinessDayShift: 'after' });
+    const around = buildCreateBody({
+      ...filled,
+      ruleType: 'around_day',
+      toleranceDays: '2',
+      nonBusinessDayShift: 'after',
+    });
+
+    expect(fixed.status === 'ok' && fixed.body.dateRule.nonBusinessDayShift).toBe('after');
+    expect(around.status === 'ok' && around.body.dateRule.nonBusinessDayShift).toBeNull();
   });
 
   it('sends the extract name when it was typed', () => {
@@ -113,6 +132,55 @@ describe('buildUpdateBody', () => {
     expect(result.status === 'ok' && result.body).toMatchObject({
       matchText: null,
       dateRule: { type: 'business_day', day: null, businessDayNumber: 5, toleranceDays: null },
+    });
+  });
+});
+
+describe('weekend and holiday shift when editing', () => {
+  it('loads the saved shift, and "none" when the saved rule has none', () => {
+    const shifted = createTestRecurrence({
+      dateRule: {
+        type: 'fixed_day',
+        day: 10,
+        businessDayNumber: null,
+        toleranceDays: null,
+        nonBusinessDayShift: 'after',
+      },
+    });
+    const around = createTestRecurrence({
+      dateRule: {
+        type: 'around_day',
+        day: 25,
+        businessDayNumber: null,
+        toleranceDays: 2,
+        nonBusinessDayShift: null,
+      },
+    });
+
+    expect(buildFormValues(shifted).nonBusinessDayShift).toBe('after');
+    expect(buildFormValues(around).nonBusinessDayShift).toBe('none');
+    expect(buildUpdateBody(buildFormValues(around), around)).toEqual({ status: 'unchanged' });
+  });
+
+  it('sends the whole rule when only the shift changes', () => {
+    const saved = createTestRecurrence();
+    const result = buildUpdateBody(
+      { ...buildFormValues(saved), nonBusinessDayShift: 'before' },
+      saved,
+    );
+
+    expect(result).toEqual({
+      status: 'ok',
+      body: {
+        dateRule: {
+          type: 'fixed_day',
+          day: 25,
+          businessDayNumber: null,
+          toleranceDays: null,
+          nonBusinessDayShift: 'before',
+        },
+        applyFrom: 'next_month',
+      },
     });
   });
 });

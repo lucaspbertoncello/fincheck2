@@ -20,6 +20,7 @@ import { findAccount } from '#mocks/accounts/account/find-account.util.ts';
 import { findCategory } from '#mocks/categories/category/find-category.util.ts';
 import { computeOccurrenceWindow } from '#mocks/recurrences/occurrence/compute-occurrence-window.util.ts';
 import { ensureOccurrences } from '#mocks/recurrences/occurrence/ensure-occurrences.util.ts';
+import { normalizeDateRule } from '#mocks/recurrences/recurrence/normalize-date-rule.util.ts';
 import { listMonthOccurrences } from '#mocks/recurrences/occurrence/list-month-occurrences.util.ts';
 import { presentOccurrence } from '#mocks/recurrences/occurrence/present-occurrence.util.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
@@ -58,7 +59,7 @@ function monthOccurrence(recurrenceId: string, month: string) {
 
 function assertRegimeForIncome(kind: string, regime: string | null | undefined) {
   if (regime && kind !== 'income')
-    fail(422, 'RECURRENCE_REGIME_ONLY_FOR_INCOME', 'O regime só vale para receita');
+    fail(422, 'RECURRENCE_REGIME_ONLY_FOR_INCOME', 'O regime sï¿½ vale para receita');
 }
 
 function assertCategoryKind(categoryId: string, kind: string) {
@@ -107,7 +108,7 @@ export const recurrenceMock = [
         let month =
           body.startsMonth && body.startsMonth > CURRENT_MONTH ? body.startsMonth : CURRENT_MONTH;
         while (occurrences.length < 3) {
-          const window = computeOccurrenceWindow(body.dateRule, month);
+          const window = computeOccurrenceWindow(normalizeDateRule(body.dateRule), month);
           if (window.windowEndOn >= TODAY) occurrences.push({ month, ...window });
           month = addMonths(month, 1);
         }
@@ -200,7 +201,7 @@ export const recurrenceMock = [
           accountId: body.accountId ?? null,
           method: body.method ?? null,
           categoryId: body.categoryId ?? null,
-          dateRule: body.dateRule,
+          dateRule: normalizeDateRule(body.dateRule),
           maxPayments: body.maxPayments ?? 1,
           startsMonth: body.startsMonth ?? linkedMonth ?? CURRENT_MONTH,
           pausedAt: null,
@@ -274,6 +275,7 @@ export const recurrenceMock = [
         };
         Object.assign(record, {
           ...changes,
+          ...(changes.dateRule ? { dateRule: normalizeDateRule(changes.dateRule) } : {}),
           matchText:
             changes.matchText === undefined
               ? record.matchText

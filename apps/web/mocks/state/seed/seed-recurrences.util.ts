@@ -19,6 +19,7 @@ const rule = (type: DateRule['type'], extra: Partial<DateRule> = {}): DateRule =
   day: null,
   businessDayNumber: null,
   toleranceDays: null,
+  nonBusinessDayShift: type === 'fixed_day' ? 'none' : null,
   ...extra,
 });
 

@@ -7,12 +7,44 @@ import {
 } from '#/recurrences/recurrence/recurrence.schema.ts';
 
 describe('dateRuleSchema', () => {
+  it('fixed_day takes the weekend and holiday shift, and only fixed_day', () => {
+    for (const shift of ['none', 'before', 'after'] as const) {
+      expect(
+        dateRuleSchema.parse({ type: 'fixed_day', day: 10, nonBusinessDayShift: shift })
+          .nonBusinessDayShift,
+      ).toBe(shift);
+    }
+    expect(
+      dateRuleSchema.safeParse({ type: 'fixed_day', day: 10, nonBusinessDayShift: 'later' })
+        .success,
+    ).toBe(false);
+    expect(
+      dateRuleSchema.safeParse({
+        type: 'business_day',
+        businessDayNumber: 5,
+        nonBusinessDayShift: 'after',
+      }).success,
+    ).toBe(false);
+    expect(
+      dateRuleSchema.safeParse({
+        type: 'around_day',
+        day: 25,
+        toleranceDays: 2,
+        nonBusinessDayShift: 'none',
+      }).success,
+    ).toBe(false);
+    expect(
+      dateRuleSchema.safeParse({ type: 'any_day', day: 5, nonBusinessDayShift: 'before' }).success,
+    ).toBe(false);
+  });
+
   it('fills the unused fields with null', () => {
     expect(dateRuleSchema.parse({ type: 'fixed_day', day: 15 })).toEqual({
       type: 'fixed_day',
       day: 15,
       businessDayNumber: null,
       toleranceDays: null,
+      nonBusinessDayShift: null,
     });
   });
 
