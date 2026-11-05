@@ -116,8 +116,9 @@ describe('transactions routes (reads)', () => {
       const ids = all.map((tx) => tx.id);
       expect(new Set(ids).size).toBe(ids.length);
       expect(ids.slice(0, 20)).toEqual(first.items.map((tx) => tx.id));
-      const days = all.map((tx) => tx.occurredOn);
-      expect(days).toEqual([...days].sort((a, b) => b.localeCompare(a)));
+      // Contract: competence first (newest), then the day it happened (newest).
+      const keys = all.map((tx) => `${tx.competenceOn}|${tx.occurredOn}`);
+      expect(keys).toEqual([...keys].sort((a, b) => b.localeCompare(a)));
     });
 
     it('takes one end alone, and no range at all is the whole history', async () => {

@@ -106,8 +106,11 @@ export const transactionMock = [
                 `${tx.description} ${tx.bank?.description ?? ''} ${tx.bank?.counterparty ?? ''}`,
               ).includes(search),
           )
+          // In a month the list keeps the bank order; in a period and in the history the contract
+          // orders by competence first, so a later page never lands above what is on screen.
           .sort(
             (a, b) =>
+              (query.month ? 0 : competenceOn(db, b).localeCompare(competenceOn(db, a))) ||
               b.occurredOn.localeCompare(a.occurredOn) ||
               b.createdAt.localeCompare(a.createdAt) ||
               b.id.localeCompare(a.id),
