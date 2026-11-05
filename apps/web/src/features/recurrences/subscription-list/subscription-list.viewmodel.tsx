@@ -214,7 +214,7 @@ export function SubscriptionListViewModel() {
     <SubscriptionListView
       state={state}
       onRetry={() => void model.subscriptions.refetch()}
-      onCreate={search.openNew}
+      onCreate={search.openNewSubscription}
       actionError={actionError}
       summary={{
         monthlyTotalCents: summary?.monthlyTotalCents ?? 0,

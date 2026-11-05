@@ -27,6 +27,7 @@ import { buildFormValues } from '#/features/recurrences/recurrence-list/recurren
 import { buildHistoryNote } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-history-note.util.ts';
 import { buildUpdateBody } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-update-body.util.ts';
 import { buildPreviewDates } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-preview-dates.util.ts';
+import { resolveRecurrenceMethod } from '#/features/recurrences/recurrence-list/recurrence-form/utils/resolve-recurrence-method.util.ts';
 import { applyRuleDefaults } from '#/features/recurrences/recurrence-list/recurrence-form/utils/apply-rule-defaults.util.ts';
 import { isApiError } from '#/shared/api/api.error.ts';
 import { useHideValues } from '#/shared/hooks/use-hide-values.hook.ts';
@@ -35,9 +36,11 @@ import { buildAccountChoices } from '#/shared/utils/build-account-choices.util.t
 type SessionProps = {
   /** Present when editing: the saved recurrence with its history. */
   saved?: Recurrence.DetailDto;
+  /** "subscription": a new one that opens as an expense on the first credit card (BR-REC-017). */
+  preset?: 'subscription';
 };
 
-function RecurrenceFormSession({ saved }: SessionProps) {
+function RecurrenceFormSession({ saved, preset }: SessionProps) {
   const { closeModals } = useRecurrenceListSearch();
   const { isHidden } = useHideValues();
   const { showUndoToast } = useToast();
@@ -46,6 +49,7 @@ function RecurrenceFormSession({ saved }: SessionProps) {
   const [values, setValues] = useState<RecurrenceFormValues>(() =>
     saved ? buildFormValues(saved) : EMPTY_FORM_VALUES,
   );
+  const [cardPicked, setCardPicked] = useState(false);
   const [errors, setErrors] = useState<RecurrenceFormErrors>({});
   const [attempt, setAttempt] = useState(0);
   const [formError, setFormError] = useState<string | null>(null);
@@ -53,6 +57,16 @@ function RecurrenceFormSession({ saved }: SessionProps) {
 
   const categoriesQuery = useRecurrenceFormCategories(values.kind);
   const accountsQuery = useRecurrenceFormAccounts();
+  const accountItems = accountsQuery.data?.items ?? [];
+  // The "+" of Assinaturas: once the accounts arrive, the first credit card comes chosen.
+  const firstCardId = accountItems.find((account) => account.type === 'credit_card')?.id ?? null;
+  if (preset === 'subscription' && !cardPicked && firstCardId !== null) {
+    setCardPicked(true);
+    setValues((current) =>
+      current.accountId === null ? { ...current, accountId: firstCardId } : current,
+    );
+  }
+  const method = resolveRecurrenceMethod(values.accountId, accountItems);
   const dateRule = buildDateRule(values);
   const ruleComplete = dateRuleSchema.safeParse(dateRule).success;
   const preview = useRecurrenceRulePreview(dateRule, ruleComplete);
@@ -66,6 +80,10 @@ function RecurrenceFormSession({ saved }: SessionProps) {
   function handleChange(patch: Partial<RecurrenceFormValues>) {
     setValues((current) => {
       const next = { ...current, ...patch };
+      // Income never falls on a credit card: switching to it drops a card that was chosen.
+      if (patch.kind === 'income' && resolveRecurrenceMethod(next.accountId, accountItems)) {
+        next.accountId = null;
+      }
       // A new rule type opens complete: its numbers come filled with the example of its card.
       return patch.ruleType ? { ...next, ...applyRuleDefaults(next) } : next;
     });
@@ -91,7 +109,7 @@ function RecurrenceFormSession({ saved }: SessionProps) {
 
   async function handleSubmit() {
     if (saved) {
-      const result = buildUpdateBody(values, saved);
+      const result = buildUpdateBody(values, saved, method);
       if (result.status === 'unchanged') return closeModals();
       if (result.status === 'invalid') return reject(result.errors);
       await attemptTask(async () => {
@@ -101,7 +119,7 @@ function RecurrenceFormSession({ saved }: SessionProps) {
       return;
     }
 
-    const result = buildCreateBody(values);
+    const result = buildCreateBody(values, method);
     if (result.status === 'invalid') return reject(result.errors);
     if (result.status === 'ok') {
       await attemptTask(async () => {
@@ -143,8 +161,9 @@ function RecurrenceFormSession({ saved }: SessionProps) {
       name: category.name,
       icon: mapCategoryIcon(category.icon),
     }));
+  // An expense can fall on a credit card (its occurrence enters the projected invoice); income cannot.
   const accounts = buildAccountChoices(
-    (accountsQuery.data?.items ?? []).filter((account) => account.type !== 'credit_card'),
+    accountItems.filter((account) => values.kind === 'expense' || account.type !== 'credit_card'),
   );
   const saving = actions.create.isPending || actions.update.isPending;
 
@@ -195,6 +214,9 @@ export function RecurrenceFormViewModel() {
 
     return <RecurrenceFormSession key={editId} saved={source.data} />;
   }
+
+  if (creating === 'subscription')
+    return <RecurrenceFormSession key="new-subscription" preset="subscription" />;
 
   return creating ? <RecurrenceFormSession key="new" /> : null;
 }

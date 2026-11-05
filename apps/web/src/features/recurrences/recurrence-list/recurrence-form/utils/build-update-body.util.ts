@@ -24,6 +24,8 @@ const RULE_FIELDS = [
 export function buildUpdateBody(
   values: RecurrenceFormValues,
   saved: Recurrence.Dto,
+  /** `credit` when the chosen account is a credit card (`resolveRecurrenceMethod`). */
+  method?: 'credit',
 ): BuildBodyResult<Recurrence.UpdateRequest> {
   const draft: Record<string, unknown> = {};
   const name = values.name.trim();
@@ -42,7 +44,12 @@ export function buildUpdateBody(
   if (matchText !== (saved.matchText ?? ''))
     draft['matchText'] = matchText === '' ? null : matchText;
   if (values.categoryId !== saved.categoryId) draft['categoryId'] = values.categoryId;
-  if (values.accountId !== saved.accountId) draft['accountId'] = values.accountId;
+  if (values.accountId !== saved.accountId) {
+    draft['accountId'] = values.accountId;
+    // Moving onto a card makes it a card expense; moving off a card drops the `credit` method.
+    if (method === 'credit') draft['method'] = 'credit';
+    else if (saved.method === 'credit') draft['method'] = null;
+  }
   const regime = values.kind === 'income' ? values.employmentRegime : '';
   if (regime !== (saved.employmentRegime ?? '')) {
     draft['employmentRegime'] = regime === '' ? null : regime;

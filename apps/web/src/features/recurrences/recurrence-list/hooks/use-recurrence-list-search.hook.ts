@@ -29,6 +29,7 @@ export function useRecurrenceListSearch() {
     ...search,
     selectDay: (day: string) => update({ day }, true),
     openNew: () => update({ new: 'recurrence' }),
+    openNewSubscription: () => update({ new: 'subscription' }),
     openEdit: (recurrenceId: string) => update({ edit: recurrenceId }),
     openLink: (occurrenceId: string) => update({ link: occurrenceId }),
     openExpected: (occurrenceId: string) => update({ expected: occurrenceId }),

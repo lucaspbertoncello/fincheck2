@@ -10,6 +10,8 @@ export const PLUS_ACTION_PATHS: Record<string, string> = {
   'new-bill': '/recurrences/bills?new=bill',
   'new-debt': '/recurrences/bills?new=debt',
   'new-recurrence': '/recurrences?new=recurrence',
+  // Nova recorrência already as an expense on the card, without leaving the Assinaturas tab.
+  'new-subscription': '/recurrences/subscriptions?new=subscription',
   'connect-account': '/accounts?new=account',
   'new-category': '/categories?new=category',
   'new-tag': '/categories?filter=tags&new=tag',

@@ -11,6 +11,8 @@ import { mapFormIssues } from '#/features/recurrences/recurrence-list/recurrence
 /** Validates the form with the request schema of `POST /recurrences` and builds the body. */
 export function buildCreateBody(
   values: RecurrenceFormValues,
+  /** `credit` when the chosen account is a credit card (`resolveRecurrenceMethod`). */
+  method?: 'credit',
 ): BuildBodyResult<Recurrence.CreateRequest> {
   const counterparty = values.counterparty.trim();
   const matchText = values.matchText.trim();
@@ -28,6 +30,7 @@ export function buildCreateBody(
         : undefined,
     categoryId: values.categoryId ?? undefined,
     accountId: values.accountId ?? undefined,
+    method,
     dateRule: buildDateRule(values),
     maxPayments: maxPayments === '' ? undefined : Number(maxPayments),
   });

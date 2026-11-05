@@ -249,8 +249,13 @@ describe('SubscriptionListPage', () => {
       expect(await screen.findByText('Nenhuma assinatura ainda')).toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: 'Cadastrar assinatura' }));
 
-      expect(await screen.findByRole('dialog', { name: 'Nova recorrência' })).toBeInTheDocument();
-      expect(window.location.search).toContain('new=recurrence');
+      const dialog = await screen.findByRole('dialog', { name: 'Nova recorrência' });
+      expect(window.location.search).toContain('new=subscription');
+      // Already an expense on the card: the first credit card of the list comes chosen.
+      expect(within(dialog).getByRole('radio', { name: 'Despesa' })).toBeChecked();
+      await waitFor(() =>
+        expect(within(dialog).getByRole('radio', { name: /Bradesco Black/ })).toBeChecked(),
+      );
     });
 
     it('shows the error and tries again', async () => {
