@@ -54,8 +54,11 @@
   /* Polish 1: focus ring of fields and controls (same green as the accent; 6:1 on the field) */
   --color-focus-ring: oklch(0.48 0.1 168);   /* #006f53 */
   --color-sheet-handle: oklch(0.25 0.03 180 / 0.22);   /* #1026223a */
-  --color-scrollbar-thumb: oklch(0.25 0.03 180 / 0.28);   /* #10262248 */
-  --color-scrollbar-thumb-hover: oklch(0.25 0.03 180 / 0.5);   /* #10262280 */
+  /* Polish 5: the thumb is a soft brand gradient, stronger on hover (Firefox paints the solid end) */
+  --color-scrollbar-thumb: oklch(0.6 0.1 168);   /* #2a957a */
+  --color-scrollbar-thumb-end: oklch(0.76 0.09 168);   /* #7ccaae */
+  --color-scrollbar-thumb-hover: oklch(0.5 0.11 168);   /* #00775a */
+  --color-scrollbar-thumb-hover-end: oklch(0.66 0.11 168);   /* #43ac8b */
   /* Polish 1: spend map levels (heatmap 1..4); level 1 is 3.2:1 or more on the card, level 0 is the subtle surface */
   --color-heatmap-1: oklch(0.62 0.11 168);   /* #2f9b79 */
   --color-heatmap-2: oklch(0.56 0.11 168);   /* #108968 */
@@ -159,7 +162,7 @@
   --size-modal-form: 760px;
   --size-sheet-handle-width: 36px;
   --size-sheet-handle-height: 4px;
-  --size-scrollbar: 10px;
+  --size-scrollbar: 8px;
   --duration-instant: 130ms;
   --duration-fast: 160ms;
   --duration-pop: 180ms;
@@ -232,8 +235,10 @@
   --color-logo-back: #24604d;
   --color-focus-ring: oklch(0.78 0.12 168);   /* #5dd0a9 */
   --color-sheet-handle: oklch(1 0 0 / 0.24);   /* #ffffff3d */
-  --color-scrollbar-thumb: oklch(1 0 0 / 0.22);   /* #ffffff38 */
-  --color-scrollbar-thumb-hover: oklch(1 0 0 / 0.42);   /* #ffffff6b */
+  --color-scrollbar-thumb: oklch(0.5 0.06 168);   /* #3d7565 */
+  --color-scrollbar-thumb-end: oklch(0.62 0.06 168);   /* #5f9584 */
+  --color-scrollbar-thumb-hover: oklch(0.6 0.07 168);   /* #56927f */
+  --color-scrollbar-thumb-hover-end: oklch(0.72 0.07 168);   /* #7bb29f */
   --color-heatmap-1: oklch(0.56 0.1 168);   /* #268769 */
   --color-heatmap-2: oklch(0.64 0.12 168);   /* #25a37e */
   --color-heatmap-3: oklch(0.72 0.13 168);   /* #37be95 */

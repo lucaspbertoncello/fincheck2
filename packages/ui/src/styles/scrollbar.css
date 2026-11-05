@@ -1,5 +1,5 @@
-/* System scrollbar (components.md "Scrollbar"): thin, invisible track, a thumb in a weak text tone
-   that grows on hover. Applies to the whole app, in both themes, through the thumb tokens.
+/* System scrollbar (components.md "Scrollbar"): thin, invisible track, a rounded thumb in a soft
+   brand gradient (like a progress bar), stronger and 2 px wider on hover; less chroma in the dark. Applies to the whole app, in both themes, through the thumb tokens.
    Chromium and Safari: the ::-webkit-scrollbar pseudo-elements. Firefox: scrollbar-width and
    scrollbar-color. The two never meet: Chromium ignores the pseudo-elements once scrollbar-color
    is set, so the standard properties live behind a feature query. */
@@ -21,18 +21,26 @@
   background: transparent;
 }
 
-/* The 3 px transparent border shrinks the thumb to 4 px; on hover the border drops to 1 px (8 px). */
+/* The 1 px transparent border keeps the thumb at 6 px off the edge; on hover it drops to 0 (8 px). */
 ::-webkit-scrollbar-thumb {
-  border: 3px solid transparent;
+  border: 1px solid transparent;
   border-radius: var(--radius-pill);
-  background-color: var(--color-scrollbar-thumb);
-  background-clip: content-box;
+  background-image: linear-gradient(
+    180deg,
+    var(--color-scrollbar-thumb),
+    var(--color-scrollbar-thumb-end)
+  );
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover,
 ::-webkit-scrollbar-thumb:active {
-  border-width: 1px;
-  background-color: var(--color-scrollbar-thumb-hover);
+  border-width: 0;
+  background-image: linear-gradient(
+    180deg,
+    var(--color-scrollbar-thumb-hover),
+    var(--color-scrollbar-thumb-hover-end)
+  );
 }
 
 /* The gutter stays even when the page is short and has no scrollbar, so centred columns do not

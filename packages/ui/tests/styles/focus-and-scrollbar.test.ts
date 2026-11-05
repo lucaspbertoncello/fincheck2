@@ -90,8 +90,17 @@ describe('system scrollbar', () => {
   it('styles Chromium and Safari with the webkit pseudo-elements and a hover that grows', () => {
     expect(scrollbar).toContain('::-webkit-scrollbar-thumb');
     expect(scrollbar).toContain('::-webkit-scrollbar-thumb:hover');
-    expect(scrollbar).toContain('border: 3px solid transparent');
-    expect(scrollbar).toContain('border-width: 1px');
+    expect(scrollbar).toContain('border: 1px solid transparent');
+    expect(scrollbar).toContain('border-width: 0');
+  });
+
+  it('paints the thumb as a brand gradient, a stronger one on hover', () => {
+    expect(block(scrollbar, '::-webkit-scrollbar-thumb')).toMatch(
+      /linear-gradient\([^)]*var\(--color-scrollbar-thumb\),\s*var\(--color-scrollbar-thumb-end\)/,
+    );
+    expect(scrollbar).toMatch(
+      /var\(--color-scrollbar-thumb-hover\),\s*var\(--color-scrollbar-thumb-hover-end\)/,
+    );
   });
 
   it('keeps the track invisible', () => {
