@@ -1,10 +1,6 @@
-import { Button, ChoiceChip, Modal, SegmentedControl, Switch } from '@fincheck/ui';
+import { Button, ChoiceChip, Modal, Switch } from '@fincheck/ui';
 
-import { TYPE_OPTIONS } from '#/features/transactions/transaction-list/constants/list-control-options.constant.ts';
-import type {
-  FiltersView,
-  ListTypeFilter,
-} from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
+import type { FiltersView } from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
 
 type FiltersModalProps = {
   filters: FiltersView;
@@ -38,7 +34,7 @@ function ChipGroup({ label, items, value, onChange }: ChipGroupProps) {
   );
 }
 
-/** "Filtros": type (the only place for it on the phone), account, category, tag and "sem categoria". */
+/** "Filtros": account, category, tag and "sem categoria". */
 export function FiltersModal({ filters }: FiltersModalProps) {
   return (
     <Modal
@@ -56,15 +52,6 @@ export function FiltersModal({ filters }: FiltersModalProps) {
       }
       actions={<Button onPress={() => filters.onOpenChange(false)}>Ver resultado</Button>}
     >
-      <div className="flex flex-col gap-s8 lg:hidden">
-        <span className="text-label text-fg-secondary">Tipo</span>
-        <SegmentedControl
-          label="Tipo de transação"
-          options={TYPE_OPTIONS}
-          value={filters.type}
-          onChange={(key) => filters.onTypeChange(key as ListTypeFilter)}
-        />
-      </div>
       <ChipGroup
         label="Conta"
         items={filters.accounts}

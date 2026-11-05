@@ -137,6 +137,32 @@ describe('SegmentedControl', () => {
     expect(html).toContain('Receitas');
     expect(html.match(/data-selected="true"/g)).toHaveLength(1);
   });
+
+  it('direction mode: equal segments, a dot per option and the tone of the chosen one', () => {
+    const toned = [
+      { key: 'all', label: 'Todas', tone: 'neutral' as const },
+      { key: 'expense', label: 'Despesas', tone: 'loss' as const },
+      { key: 'income', label: 'Receitas', tone: 'gain' as const },
+    ];
+    const html = renderToStaticMarkup(
+      <SegmentedControl direction options={toned} value="income" onChange={noop} label="Tipo" />,
+    );
+
+    expect(html.match(/flex-1/g)).toHaveLength(3);
+    expect(html.match(/-rotate-8/g)).toHaveLength(3);
+    expect(html).toContain('data-tone="gain"');
+    expect(html).toContain('w-full');
+    expect(html).not.toContain('lg:inline-flex');
+  });
+
+  it('without direction it keeps the white pill and no dots', () => {
+    const html = renderToStaticMarkup(
+      <SegmentedControl options={options} value="all" onChange={noop} label="Tipo" />,
+    );
+
+    expect(html).toContain('data-tone="neutral"');
+    expect(html).not.toContain('-rotate-8');
+  });
 });
 
 describe('Switch', () => {

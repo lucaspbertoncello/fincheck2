@@ -105,9 +105,8 @@ export type ListControlsView = {
   onTypeChange: (type: ListTypeFilter) => void;
   searchText: string;
   onSearchTextChange: (text: string) => void;
-  /** Filters of the "Filtros" panel that are on, and whether the type is not "Todas". */
+  /** Filters of the "Filtros" panel that are on,. */
   activeFilterCount: number;
-  typeActive: boolean;
   onOpenFilters: () => void;
   selectionActive: boolean;
   selectionCount: number;
@@ -166,8 +165,6 @@ export type ByCategoryView = {
 export type FiltersView = {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  type: ListTypeFilter;
-  onTypeChange: (type: ListTypeFilter) => void;
   accounts: { id: string; name: string }[];
   accountId: string | undefined;
   onAccountChange: (id: string | undefined) => void;

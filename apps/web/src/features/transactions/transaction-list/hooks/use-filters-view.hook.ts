@@ -24,7 +24,6 @@ export function useFiltersView({ lookups, search, update }: FiltersViewArgs) {
       tag: null,
       uncategorized: null,
       ruleId: null,
-      type: 'all',
       q: null,
     });
   }
@@ -32,8 +31,6 @@ export function useFiltersView({ lookups, search, update }: FiltersViewArgs) {
   const view: FiltersView = {
     isOpen,
     onOpenChange: setIsOpen,
-    type: search.type,
-    onTypeChange: (type) => update({ type }),
     accounts: [...lookups.accounts.values()]
       .filter((account) => account.archivedAt === null)
       .map((account) => ({ id: account.id, name: account.name })),
@@ -52,7 +49,7 @@ export function useFiltersView({ lookups, search, update }: FiltersViewArgs) {
     onTagChange: (id) => update({ tag: id ?? null }),
     uncategorized: search.uncategorized ?? false,
     onUncategorizedChange: (value) => update({ uncategorized: value || null }),
-    canClear: countActiveFilters(search) > 0 || search.type !== 'all',
+    canClear: countActiveFilters(search) > 0,
     onClear: clear,
   };
 

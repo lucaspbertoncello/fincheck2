@@ -231,7 +231,6 @@ export function TransactionListViewModel() {
       searchText: searchBox.text,
       onSearchTextChange: searchBox.setText,
       activeFilterCount: countActiveFilters(search),
-      typeActive: search.type !== 'all',
       onOpenFilters: filters.open,
       selectionActive: selection.active,
       selectionCount: selection.selectedIds.size,

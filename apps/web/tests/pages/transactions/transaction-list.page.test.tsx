@@ -69,16 +69,56 @@ describe('TransactionListPage', () => {
     expect(screen.getByText('CINEMARK')).toBeInTheDocument();
   });
 
-  it('filters by type from the Filtros panel (the type control of the phone)', async () => {
+  it('has the direction control on its own row, with the three states and Todas checked', async () => {
     renderApp(PAGE);
     await screen.findByText('CINEMARK', undefined, LONG_WAIT);
 
+    const group = screen.getByRole('radiogroup', { name: 'Tipo de transação' });
+    const radios = within(group).getAllByRole('radio');
+    expect(radios.map((radio) => radio.textContent)).toEqual(['Todas', 'Despesas', 'Receitas']);
+    expect(within(group).getByRole('radio', { name: 'Todas' })).toBeChecked();
+    expect(within(group).getByRole('radio', { name: 'Despesas' })).not.toBeChecked();
+    expect(within(group).getByRole('radio', { name: 'Receitas' })).not.toBeChecked();
+    // Fixed equal segments: the slide never resizes them.
+    expect(radios.every((radio) => radio.className.includes('flex-1'))).toBe(true);
+    // Not part of the "Filtros" panel anymore.
     fireEvent.click(screen.getByRole('button', { name: 'Filtros' }));
     const dialog = await screen.findByRole('dialog', { name: 'Filtros' });
-    fireEvent.click(within(dialog).getByRole('radio', { name: 'Receitas' }));
+    expect(within(dialog).queryByRole('radiogroup')).not.toBeInTheDocument();
+  });
 
+  it('switches to Receitas and back: the list and the URL follow, with the tone on the slide', async () => {
+    renderApp(PAGE);
+    await screen.findByText('CINEMARK', undefined, LONG_WAIT);
+    const group = screen.getByRole('radiogroup', { name: 'Tipo de transação' });
+
+    fireEvent.click(within(group).getByRole('radio', { name: 'Receitas' }));
     await waitFor(() => expect(window.location.search).toContain('type=income'));
     await waitFor(() => expect(screen.queryByText('CINEMARK')).not.toBeInTheDocument());
+    expect(within(group).getByRole('radio', { name: 'Receitas' })).toBeChecked();
+    expect(group.querySelector('[data-tone="gain"]')).not.toBeNull();
+
+    fireEvent.click(within(group).getByRole('radio', { name: 'Despesas' }));
+    await waitFor(() => expect(window.location.search).toContain('type=expense'));
+    expect(await screen.findByText('CINEMARK', undefined, LONG_WAIT)).toBeInTheDocument();
+    expect(within(group).getByRole('radio', { name: 'Despesas' })).toBeChecked();
+    expect(group.querySelector('[data-tone="loss"]')).not.toBeNull();
+
+    fireEvent.click(within(group).getByRole('radio', { name: 'Todas' }));
+    await waitFor(() => expect(window.location.search).not.toContain('type='));
+    expect(within(group).getByRole('radio', { name: 'Todas' })).toBeChecked();
+    expect(group.querySelector('[data-tone="neutral"]')).not.toBeNull();
+  });
+
+  it('keeps the direction in Por categoria', async () => {
+    renderApp(`${PAGE}&type=expense`);
+    await screen.findByText('CINEMARK', undefined, LONG_WAIT);
+
+    fireEvent.click(screen.getByRole('radio', { name: /Por categoria/ }));
+    await waitFor(() => expect(window.location.search).toContain('view=category'));
+    const group = screen.getByRole('radiogroup', { name: 'Tipo de transação' });
+    expect(within(group).getByRole('radio', { name: 'Despesas' })).toBeChecked();
+    expect(window.location.search).toContain('type=expense');
   });
 
   it('shows the empty month with its actions and the error with "Tentar de novo"', async () => {

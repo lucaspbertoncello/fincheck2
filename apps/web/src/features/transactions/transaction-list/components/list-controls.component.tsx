@@ -15,68 +15,69 @@ type ListControlsProps = {
 };
 
 /**
- * The controls over the list. Desktop, one row: Lista | Por categoria, Todas | Despesas | Receitas,
- * search, "Filtros" and "Selecionar". Phone (ui adjustments 8 and 14), two strips: search with the
- * "Filtros" and "Selecionar" buttons (same width, 44 tall, "Selecionar" with its text), then
- * Lista | Por categoria; the type filter lives inside "Filtros" there.
+ * The controls over the list, in two tiers. First the main control, on its own row: Todas |
+ * Despesas | Receitas (the direction of the money, with the tone of the new-transaction form),
+ * full width on the phone and a fixed 28 rem on the desktop, so it never reads as one more filter.
+ * Then the tools row: Lista | Por categoria, search, "Filtros" and "Selecionar" (phone, ui
+ * adjustments 8 and 14: search with the two buttons, same width, 44 tall, then Lista | Por
+ * categoria).
  */
 export function ListControls({ controls }: ListControlsProps) {
-  const phoneFilterCount = controls.activeFilterCount + (controls.typeActive ? 1 : 0);
   const showSelection = controls.view === 'list';
 
   return (
-    <div className="flex flex-col gap-s12 lg:flex-row lg:flex-wrap lg:items-center">
+    <div className="flex flex-col gap-s16">
       <SegmentedControl
-        label="Visão das transações"
-        options={VIEW_OPTIONS}
-        value={controls.view}
-        onChange={(key) => controls.onViewChange(key as ListViewMode)}
-        className="order-2 lg:order-1"
-      />
-      <SegmentedControl
+        direction
         label="Tipo de transação"
         options={TYPE_OPTIONS}
         value={controls.type}
         onChange={(key) => controls.onTypeChange(key as ListTypeFilter)}
-        className="order-3 hidden lg:order-2 lg:inline-flex"
+        className="lg:w-[28rem]"
       />
-      <div className="order-1 grid grid-cols-2 gap-s12 lg:order-3 lg:flex lg:min-w-60 lg:flex-1 lg:items-center lg:gap-s8">
-        <SearchField
-          label="Buscar"
-          value={controls.searchText}
-          onChange={controls.onSearchTextChange}
-          className="col-span-2 lg:flex-1"
+      <div className="flex flex-col gap-s12 lg:flex-row lg:flex-wrap lg:items-center">
+        <SegmentedControl
+          label="Visão das transações"
+          options={VIEW_OPTIONS}
+          value={controls.view}
+          onChange={(key) => controls.onViewChange(key as ListViewMode)}
+          className="order-2 lg:order-1"
         />
-        <Button
-          variant="secondary"
-          icon="filter"
-          onPress={controls.onOpenFilters}
-          fullWidth
-          // Desktop: icon only, like the design; the label stays for screen readers.
-          className={[
-            showSelection ? '' : 'col-span-2 lg:col-auto',
-            'lg:w-ctl-touch lg:px-0',
-            controls.activeFilterCount > 0 ? 'lg:border-brand lg:text-brand' : '',
-          ].join(' ')}
-        >
-          <span className="lg:sr-only">
-            Filtros
-            {phoneFilterCount > 0 ? (
-              <span className="tabular-nums lg:hidden"> · {phoneFilterCount}</span>
-            ) : null}
-            {controls.activeFilterCount > 0 ? (
-              <span className="hidden tabular-nums lg:inline"> · {controls.activeFilterCount}</span>
-            ) : null}
-          </span>
-        </Button>
-        {showSelection ? (
-          <SelectionToggle
-            active={controls.selectionActive}
-            count={controls.selectionCount}
-            onToggle={controls.onToggleSelection}
-            className="w-full lg:w-auto"
+        <div className="order-1 grid grid-cols-2 gap-s12 lg:order-2 lg:flex lg:min-w-60 lg:flex-1 lg:items-center lg:gap-s8">
+          <SearchField
+            label="Buscar"
+            value={controls.searchText}
+            onChange={controls.onSearchTextChange}
+            className="col-span-2 lg:flex-1"
           />
-        ) : null}
+          <Button
+            variant="secondary"
+            icon="filter"
+            onPress={controls.onOpenFilters}
+            fullWidth
+            // Desktop: icon only, like the design; the label stays for screen readers.
+            className={[
+              showSelection ? '' : 'col-span-2 lg:col-auto',
+              'lg:w-ctl-touch lg:px-0',
+              controls.activeFilterCount > 0 ? 'lg:border-brand lg:text-brand' : '',
+            ].join(' ')}
+          >
+            <span className="lg:sr-only">
+              Filtros
+              {controls.activeFilterCount > 0 ? (
+                <span className="tabular-nums"> · {controls.activeFilterCount}</span>
+              ) : null}
+            </span>
+          </Button>
+          {showSelection ? (
+            <SelectionToggle
+              active={controls.selectionActive}
+              count={controls.selectionCount}
+              onToggle={controls.onToggleSelection}
+              className="w-full lg:w-auto"
+            />
+          ) : null}
+        </div>
       </div>
     </div>
   );
