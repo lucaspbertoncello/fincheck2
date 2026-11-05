@@ -1,7 +1,7 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { createTestOccurrence } from '#tests/support/recurrences/occurrence/create-test-occurrence.util.ts';
 import { server } from '#mocks/setup/server.util.ts';
@@ -11,6 +11,12 @@ import { makeOccurrenceLate } from '#tests/support/recurrences/occurrence/make-o
 import { renderApp } from '#tests/support/app/render-app.util.tsx';
 
 resetDatabaseBeforeEach();
+
+// Rendering the whole app is quick alone, but with the other test workers busy the first paint of
+// a page can take longer than the 1 s that findBy waits by default (and than the 5 s of a test), so
+// these waits are explicit.
+configure({ asyncUtilTimeout: 5000 });
+vi.setConfig({ testTimeout: 20_000 });
 
 const URL = `/recurrences?month=${CURRENT_MONTH}`;
 

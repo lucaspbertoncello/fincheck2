@@ -6,6 +6,8 @@ export const dashboardKeys = {
   monthSummary: (month: string) => ['dashboard', 'month-summary', month] as const,
   spendingCurve: (month: string) => ['dashboard', 'spending-curve', month] as const,
   categoryBreakdown: (month: string) => ['dashboard', 'category-breakdown', month] as const,
+  categoryTrend: (categoryId: string, until: string | null) =>
+    ['dashboard', 'category-trend', categoryId, until] as const,
   // A free period, or all the history (both ends null).
   categoryBreakdownPeriod: (from: string | null, to: string | null) =>
     ['dashboard', 'category-breakdown', 'period', from, to] as const,

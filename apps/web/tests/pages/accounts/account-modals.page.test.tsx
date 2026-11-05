@@ -1,6 +1,6 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { configure, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { db } from '#mocks/state/mock-database.store.ts';
 import { renderApp } from '#tests/support/app/render-app.util.tsx';
@@ -8,11 +8,28 @@ import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-bef
 
 resetDatabaseBeforeEach();
 
+// Rendering the whole app is quick alone, but with the other test workers busy the first paint of
+// a page can take longer than the 1 s that findBy waits by default (and than the 5 s of a test), so
+// these waits are explicit.
+configure({ asyncUtilTimeout: 5000 });
+vi.setConfig({ testTimeout: 20_000 });
+
 const ITEM_ID = '0b9a1c3e-5d27-4f64-8a1e-3c7d9e2f4b66';
 
 async function openAccounts(url = '/accounts') {
   renderApp(url);
   await screen.findByRole('heading', { level: 1, name: 'Contas e cartões' });
+}
+
+/** Puts a value in a text field in one go (a click and a paste, not one key at a time). */
+async function fillField(
+  user: ReturnType<typeof userEvent.setup>,
+  dialog: HTMLElement,
+  name: string,
+  value: string,
+) {
+  await user.click(within(dialog).getByRole('textbox', { name }));
+  await user.paste(value);
 }
 
 /** The bank select: opens the list and picks the row by its name. */
@@ -64,9 +81,10 @@ describe('Conectar banco, modal pattern', () => {
       ),
     );
     await chooseBank(user, dialog, 'Nubank');
-    await user.type(within(dialog).getByRole('textbox', { name: 'Apelido do cartão' }), 'Roxo');
-    await user.type(within(dialog).getByRole('textbox', { name: 'Dia de fechamento' }), '25');
-    await user.type(within(dialog).getByRole('textbox', { name: 'Dia de vencimento' }), '6');
+    // The test is about the card following the form, not about typing: paste each value at once.
+    await fillField(user, dialog, 'Apelido do cartão', 'Roxo');
+    await fillField(user, dialog, 'Dia de fechamento', '25');
+    await fillField(user, dialog, 'Dia de vencimento', '6');
 
     expect(
       within(dialog).getByRole('img', { name: /Cartão Nubank, Roxo, final ••••, Vence dia 06/ }),

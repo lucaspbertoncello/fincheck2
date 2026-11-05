@@ -16,15 +16,17 @@ const MENU_ITEMS = [
 type CategoryRowProps = {
   category: ManagedCategory;
   onEdit: (id: string) => void;
+  /** Opens the category page; without it the name edits. */
+  onOpen?: (id: string) => void;
   onArchive: (id: string) => void;
 };
 
 /**
  * Row of an active category: 40 px icon, name, transactions, rules, last use and the "…" menu.
- * On the phone the name button covers the whole row (tap to edit), the counts go under the name
+ * On the phone the name button covers the whole row (tap to open), the counts go under the name
  * and the last use stays at the right.
  */
-export function CategoryRow({ category, onEdit, onArchive }: CategoryRowProps) {
+export function CategoryRow({ category, onEdit, onOpen, onArchive }: CategoryRowProps) {
   const { id, name, icon, transactionCount, ruleCount, lastUsedLabel } = category;
 
   return (
@@ -41,7 +43,7 @@ export function CategoryRow({ category, onEdit, onArchive }: CategoryRowProps) {
       </div>
       <div role="cell" className="flex min-w-0 flex-1 flex-col">
         <Button
-          onPress={() => onEdit(id)}
+          onPress={() => (onOpen ?? onEdit)(id)}
           className="focus-ring cursor-pointer truncate rounded-tiny text-left text-body font-emphasis text-fg-primary max-lg:after:absolute max-lg:after:inset-0 max-lg:after:content-['']"
         >
           {name}

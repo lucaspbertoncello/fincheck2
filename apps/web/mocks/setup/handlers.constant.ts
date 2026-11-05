@@ -7,6 +7,7 @@ import { ruleSuggestionMock } from '#mocks/categories/rule-suggestion/rule-sugge
 import { tagMock } from '#mocks/categories/tag/tag.mock.ts';
 import { agendaMock } from '#mocks/dashboard/agenda/agenda.mock.ts';
 import { categoryBreakdownMock } from '#mocks/dashboard/category-breakdown/category-breakdown.mock.ts';
+import { categoryTrendMock } from '#mocks/dashboard/category-trend/category-trend.mock.ts';
 import { freeBalanceMock } from '#mocks/dashboard/free-balance/free-balance.mock.ts';
 import { monthSummaryMock } from '#mocks/dashboard/month-summary/month-summary.mock.ts';
 import { spendingCurveMock } from '#mocks/dashboard/spending-curve/spending-curve.mock.ts';
@@ -41,6 +42,7 @@ export const handlers = [
   ...monthSummaryMock,
   ...spendingCurveMock,
   ...categoryBreakdownMock,
+  ...categoryTrendMock,
   ...spendHeatmapMock,
   ...timelineMock,
   ...agendaMock,

@@ -1,5 +1,6 @@
 import type { CategoryFilterKey } from '@fincheck/ui';
 import { useToast } from '@fincheck/ui';
+import { useRouter } from '@tanstack/react-router';
 import { useState } from 'react';
 
 import { useCategoryListModel } from '#/features/categories/category-list/category-list.model.ts';
@@ -15,6 +16,9 @@ import {
 import { getBusinessToday } from '#/features/categories/utils/get-business-today.util.ts';
 import { toManagedCategory } from '#/features/categories/utils/to-managed-category.util.ts';
 import { toTagItem } from '#/features/categories/utils/to-tag-item.util.ts';
+import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
+import { buildHref } from '#/shared/layouts/application/navigation/build-href.util.ts';
+import { navigateToHref } from '#/shared/layouts/application/navigation/navigate-to-href.util.ts';
 
 type CategoryTab = Exclude<CategoryFilterKey, 'tags'>;
 
@@ -37,6 +41,8 @@ const LIST_LABELS: Record<CategoryTab, string> = {
 export function useCategoryListViewModel() {
   const model = useCategoryListModel();
   const toast = useToast();
+  const router = useRouter();
+  const { month } = useSelectedMonth();
   const { search, update } = useScreenSearch(categoryListSearchSchema);
 
   const [searchText, setSearchText] = useState('');
@@ -176,6 +182,8 @@ export function useCategoryListViewModel() {
     emptyMessage: searchText ? 'Nenhuma categoria com esse nome.' : EMPTY_MESSAGES[categoryTab],
     showsArchivedNote: filter === 'archived',
     showsTags: filter === 'tags',
+    // The name and the row open the category page (BR-CAT-010); "Editar" is in the "…" menu.
+    onOpenCategory: (id: string) => navigateToHref(router, buildHref(`/categories/${id}`, month)),
     onEditCategory: (id: string) => update({ edit: id, new: undefined }),
     onRequestArchive,
     onRestoreCategory: restoreCategory,

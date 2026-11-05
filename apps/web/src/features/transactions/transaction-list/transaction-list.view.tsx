@@ -1,6 +1,5 @@
 import {
   Banner,
-  Button,
   ConfirmDialog,
   ContentSkeleton,
   EmptyState,
@@ -16,6 +15,7 @@ import { ByCategory } from '#/features/transactions/transaction-list/components/
 import { DayFilterChip } from '#/features/transactions/transaction-list/components/day-filter-chip.component.tsx';
 import { DayList } from '#/features/transactions/transaction-list/components/day-list.component.tsx';
 import { FiltersModal } from '#/features/transactions/transaction-list/components/filters-modal.component.tsx';
+import { LoadMore } from '#/features/transactions/transaction-list/components/load-more.component.tsx';
 import { ListControls } from '#/features/transactions/transaction-list/components/list-controls.component.tsx';
 import { MonthTotals } from '#/features/transactions/transaction-list/components/month-totals.component.tsx';
 import { TransactionEditModal } from '#/features/transactions/transaction-list/components/transaction-edit-modal.component.tsx';
@@ -102,26 +102,6 @@ function RuleQuestion({ question }: { question: TransactionListViewProps['ruleQu
         onDismiss={question.onDismiss}
       />
       {question.error ? <span className="text-label text-loss">{question.error}</span> : null}
-    </div>
-  );
-}
-
-type LoadMoreProps = {
-  onWatchEnd: (node: HTMLDivElement | null) => void;
-  onLoadMore: () => void;
-  loading: boolean;
-};
-
-/**
- * End of a long list: reaching it loads the next page; the button does the same by hand. The
- * button has a fixed width, so the spinner that shows while the page loads does not resize it.
- */
-function LoadMore({ onWatchEnd, onLoadMore, loading }: LoadMoreProps) {
-  return (
-    <div ref={onWatchEnd} className="flex justify-center">
-      <Button variant="secondary" onPress={onLoadMore} loading={loading} className="w-44">
-        Mostrar mais
-      </Button>
     </div>
   );
 }

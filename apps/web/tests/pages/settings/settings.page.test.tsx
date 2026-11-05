@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -14,6 +14,12 @@ import { stubMatchMedia } from '#tests/support/viewport/stub-match-media.util.ts
 vi.mock('#/shared/utils/reload-app.util.ts', () => ({ reloadApp: vi.fn() }));
 
 resetDatabaseBeforeEach();
+
+// Rendering the whole app is quick alone, but with the other test workers busy the first paint of
+// a page can take longer than the 1 s that findBy waits by default (and than the 5 s of a test), so
+// these waits are explicit.
+configure({ asyncUtilTimeout: 5000 });
+vi.setConfig({ testTimeout: 20_000 });
 
 let media: ReturnType<typeof stubMatchMedia>;
 

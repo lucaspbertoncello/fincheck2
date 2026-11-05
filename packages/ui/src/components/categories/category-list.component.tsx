@@ -12,7 +12,10 @@ type CategoryListProps = {
   categories: ManagedCategory[];
   /** Accessible name of the list ("Categorias de despesa"). */
   label: string;
+  /** The "Editar" of the menu: opens the editor. */
   onEdit: (id: string) => void;
+  /** Click on the name or the row: opens the category page. Without it the name edits, as before. */
+  onOpen?: (id: string) => void;
   onArchive: (id: string) => void;
   onRestore: (id: string) => void;
   /** Shows the "Nova categoria" row at the end when given. */
@@ -25,13 +28,14 @@ type CategoryListProps = {
 
 /**
  * Category management list (components.md 15): alphabetical, no values. Active rows carry
- * transactions, rules and last use plus the "…" menu; archived rows are dashed, dimmed, with
+ * transactions, rules and last use plus the "…" menu (clicking the row opens the category page); archived rows are dashed, dimmed, with
  * "Desarquivar". The last row is "Nova categoria" in the accent color. Header only on the desktop.
  */
 export function CategoryList({
   categories,
   label,
   onEdit,
+  onOpen,
   onArchive,
   onRestore,
   onCreate,
@@ -85,6 +89,7 @@ export function CategoryList({
                   key={category.id}
                   category={category}
                   onEdit={onEdit}
+                  onOpen={onOpen}
                   onArchive={onArchive}
                 />
               ),

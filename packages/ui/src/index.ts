@@ -134,7 +134,9 @@ export { Section } from '#/components/sections/index.ts';
 export {
   AccountSparkline,
   CategoryDonut,
+  MonthBarsChart,
   MonthSpendChart,
+  type MonthBar,
   type ChartPoint,
   type DonutSlice,
 } from '#/components/charts/index.ts';

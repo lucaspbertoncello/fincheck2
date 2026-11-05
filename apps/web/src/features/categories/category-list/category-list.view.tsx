@@ -17,8 +17,8 @@ import { TagForm } from '#/features/categories/tag-form/tag-form.component.tsx';
 type CategoryListViewProps = ReturnType<typeof useCategoryListViewModel>;
 
 /**
- * Categorias › Categorias (screens.md): the filter and the search, the management list, and the
- * tags as the last filter. No amounts on this screen. Every state is here: skeleton,
+ * Categorias › Categorias (screens.md): the filter and the search, the management list (the name
+ * opens the category page, "Editar" is in the menu), and the tags as the last filter. No amounts on this screen. Every state is here: skeleton,
  * error with retry, the empty lists and the list itself.
  */
 export function CategoryListView({
@@ -37,6 +37,7 @@ export function CategoryListView({
   emptyMessage,
   showsArchivedNote,
   showsTags,
+  onOpenCategory,
   onEditCategory,
   onRequestArchive,
   onRestoreCategory,
@@ -90,6 +91,7 @@ export function CategoryListView({
               categories={categories}
               label={listLabel}
               emptyMessage={emptyMessage}
+              onOpen={onOpenCategory}
               onEdit={onEditCategory}
               onArchive={onRequestArchive}
               onRestore={onRestoreCategory}
