@@ -161,3 +161,22 @@ describe('FreeBalancePanel', () => {
     expect(render(undefined, false, 'compact')).toContain('aria-busy="true"');
   });
 });
+
+describe('FreeBalancePanel rows', () => {
+  it('draws the accounts as standard rows: name 16, detail truncated with a title, amount with the sign column', () => {
+    const html = render(DATA);
+
+    expect(html).toContain('grid-cols-[auto_minmax(0,1fr)_auto_auto]');
+    expect(html).toContain('title="Sincronizado há 12 min"');
+    expect(html).toContain('w-sign-col');
+    expect(html).toContain('py-s8!');
+    expect(html).toContain('text-body font-emphasis');
+  });
+
+  it('truncates the subtitle of the receivable and payable lines with a title', () => {
+    const html = render(DATA);
+
+    expect(html).toContain('title="Maxxy e mais 2"');
+    expect(html).toContain('truncate text-label text-fg-secondary');
+  });
+});

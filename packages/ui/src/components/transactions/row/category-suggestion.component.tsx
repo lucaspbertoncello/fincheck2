@@ -22,7 +22,7 @@ export function CategorySuggestion({
     <div
       className={cx(
         'mb-s16 flex flex-wrap items-center gap-s8 text-label text-fg-secondary',
-        selectionMode ? 'ml-23' : 'ml-15',
+        selectionMode ? 'ml-22 lg:ml-23' : 'ml-12 lg:ml-13',
       )}
     >
       <span>Parece</span>

@@ -54,9 +54,11 @@ function LineRow({
           <span className={ROW}>
             <RowIcon icon={icon} tone={tone} />
             <span className="flex min-w-0 flex-col">
-              <span className="truncate text-list font-emphasis text-fg-primary">{line.label}</span>
+              <span className="truncate text-body font-emphasis text-fg-primary">{line.label}</span>
               {line.subtitle ? (
-                <span className="truncate text-meta text-fg-secondary">{line.subtitle}</span>
+                <span className="truncate text-label text-fg-secondary" title={line.subtitle}>
+                  {line.subtitle}
+                </span>
               ) : null}
             </span>
             <span className="flex items-center gap-s4">
@@ -131,10 +133,10 @@ export function BalanceComposition({ data }: BalanceCompositionProps) {
         <span className="row-span-2">
           <RowIcon icon="coins" tone="bg-brand-weak text-brand" />
         </span>
-        <span className="col-span-2 text-list font-emphasis whitespace-nowrap text-fg-primary">
+        <span className="col-span-2 text-body font-emphasis whitespace-nowrap text-fg-primary">
           {PANEL_LABELS.leftover}
         </span>
-        <span className="text-meta whitespace-nowrap text-fg-secondary">
+        <span className="text-label whitespace-nowrap text-fg-secondary">
           ≈{' '}
           <Money
             cents={data.perDayCents}

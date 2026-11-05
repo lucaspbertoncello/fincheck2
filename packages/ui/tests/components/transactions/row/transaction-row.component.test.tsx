@@ -44,11 +44,58 @@ describe('TransactionRow', () => {
     expect(html).toContain('data-type="expense"');
   });
 
-  it('lets the name break in two lines on the phone and one on the desktop (adjustment 12)', () => {
-    const html = row({ name: 'MOCOTO RESTAURANTE E LANCHONETE DO CENTRO' });
+  it('keeps the name on one line with its full text in the title (standard row)', () => {
+    const name = 'MOCOTO RESTAURANTE E LANCHONETE DO CENTRO';
+    const html = row({ name });
 
-    expect(html).toContain('line-clamp-2');
-    expect(html).toContain('lg:line-clamp-1');
+    expect(html).toContain('truncate');
+    expect(html).toContain(`title="${name}"`);
+    expect(html).not.toContain('line-clamp-2 text-body');
+  });
+
+  it('is the standard list row: icon, text, amount with the sign column, menu column, no own height', () => {
+    const html = row();
+
+    expect(html).toContain('grid-cols-[auto_minmax(0,1fr)_auto_auto]');
+    expect(html).toContain('py-s12');
+    expect(html).not.toContain('min-h-18');
+    expect(html).toContain('w-sign-col');
+    expect(html).toContain('col-start-4');
+    expect(html.indexOf('data-type="expense"')).toBeLessThan(html.indexOf('Padaria Estrela'));
+    expect(html.indexOf('Padaria Estrela')).toBeLessThan(html.indexOf('45,90'));
+    expect(html.indexOf('45,90')).toBeLessThan(html.indexOf('Ações de Padaria Estrela'));
+  });
+
+  it('writes category and account on one detail line, with the full text in the title', () => {
+    const html = row();
+
+    expect(html).toContain('title="Restaurantes · Nubank, crédito"');
+    expect(html).toContain('text-label text-fg-secondary');
+  });
+
+  it('shows at most two chips and moves the rest to the detail line', () => {
+    const html = row({
+      pending: true,
+      toReview: true,
+      edited: true,
+      installment: { number: 3, total: 10 },
+      tags: ['delivery'],
+    });
+    const chipCount = (html.match(/rounded-capsule font-plain whitespace-nowrap/g) ?? []).length;
+
+    expect(html).toContain('Pendente');
+    expect(html).toContain('Para revisar');
+    expect(html).toContain(
+      'title="Restaurantes · Nubank, crédito · Editada · Parcela 3 de 10 · #delivery"',
+    );
+    expect(chipCount).toBe(2);
+  });
+
+  it('keeps the title off the detail line when the overflow carries money', () => {
+    const html = row({ pending: true, toReview: true, debtPaidCents: 15000, debtPerson: 'Rafa' });
+
+    expect(html).toContain('Abateu');
+    expect(html).not.toContain('title="Restaurantes');
   });
 
   it('shows income with "+" in the income color and a green type badge', () => {

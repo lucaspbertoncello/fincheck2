@@ -92,6 +92,22 @@ export const ROW_SAMPLES: { caption: string; row: TransactionRowData }[] = [
     },
   },
   {
+    caption:
+      'Nome longo (uma linha, trunca) e muita coisa para dizer (dois selos, o resto no detalhe)',
+    row: {
+      ...BASE_ROW,
+      id: 'trx-long',
+      name: 'MOCOTO RESTAURANTE E LANCHONETE DO CENTRO COMERCIAL DE SAO PAULO LTDA',
+      amountCents: -1234567,
+      categoryName: 'Restaurantes',
+      accountLabel: 'Bradesco Black, crédito',
+      pending: true,
+      bankChanged: true,
+      installment: { number: 3, total: 10 },
+      tags: ['trabalho'],
+    },
+  },
+  {
     caption: 'Sem categoria',
     row: {
       ...BASE_ROW,

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { Icon } from '#/components/icons/icon.component.tsx';
+import { ListRow } from '#/components/list-row/index.ts';
 import { Money } from '#/components/money/money.component.tsx';
 
 type PanelListRowProps = {
@@ -12,21 +13,31 @@ type PanelListRowProps = {
   cents: number;
 };
 
-/** Row of the panel lists: mark, name, subtitle and the amount at the right; no divider between rows. */
+/**
+ * Row of the panel lists: the standard `ListRow` (mark, name, detail, tabular amount with the sign
+ * column at the right) with the panel's tighter vertical padding so the panel keeps its size; no
+ * divider between rows.
+ */
 export function PanelListRow({ mark, name, subtitle, warn = false, cents }: PanelListRowProps) {
   return (
-    <li className="flex items-center gap-s12 py-s8 [@media(max-height:700px)]:py-s4">
-      {mark}
-      <span className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-list font-emphasis text-fg-primary">{name}</span>
-        <span
-          className={`flex items-center gap-s4 text-meta ${warn ? 'text-caution' : 'text-fg-secondary'}`}
-        >
-          {warn ? <Icon name="warning" size="xs" /> : null}
-          <span className="truncate">{subtitle}</span>
-        </span>
-      </span>
-      <Money cents={cents} sign="none" weight="plain" className="text-body" />
-    </li>
+    <ListRow
+      className="py-s8! [@media(max-height:700px)]:py-s4!"
+      mark={mark}
+      name={name}
+      detail={
+        warn ? (
+          <span className="inline-flex max-w-full items-center gap-s4 align-top text-caution">
+            <Icon name="warning" size="xs" />
+            <span className="truncate">{subtitle}</span>
+          </span>
+        ) : (
+          subtitle
+        )
+      }
+      detailTitle={subtitle}
+      value={
+        <Money cents={cents} sign="none" signColumn weight="plain" className="text-money-row" />
+      }
+    />
   );
 }

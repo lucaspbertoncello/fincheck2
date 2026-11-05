@@ -6,7 +6,7 @@ type TransactionDetailBoxProps = {
   children: ReactNode;
   /** "warn" is the amber box ("O banco mudou o valor..."). */
   tone?: 'neutral' | 'warn';
-  /** Selection mode shifts the box right (92 instead of 60) to stay aligned with the text. */
+  /** Selection mode shifts the box right (88 instead of 48 on the phone) to stay aligned with the text. */
   selectionMode?: boolean;
   className?: string;
 };
@@ -25,7 +25,7 @@ export function TransactionDetailBox({
     <div
       className={cx(
         'mb-s16 rounded-panel px-s16 py-s12 text-label text-fg-primary',
-        selectionMode ? 'ml-23' : 'ml-15',
+        selectionMode ? 'ml-22 lg:ml-23' : 'ml-12 lg:ml-13',
         tone === 'warn' ? 'bg-caution-weak' : 'bg-subtle',
         className,
       )}

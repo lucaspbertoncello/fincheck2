@@ -1,5 +1,5 @@
 import type { Timeline } from '@fincheck/shared/dashboard/timeline/timeline.type.ts';
-import { CategoryIcon, Money, type IconName } from '@fincheck/ui';
+import { CategoryIcon, ListRow, Money, type IconName } from '@fincheck/ui';
 
 type DayItemsProps = {
   items: readonly Timeline.Item[];
@@ -18,29 +18,33 @@ function describeState(item: Timeline.Item): string {
   return 'Esperado';
 }
 
-/** What goes in and out on the chosen day: icon, name, state and the amount with its sign. */
+/** What goes in and out on the chosen day: standard rows, the state as the detail and the signed amount. */
 export function DayItems({ items }: DayItemsProps) {
   return (
-    <ul className="m-0 flex list-none flex-col p-0">
+    <ul className="m-0 flex list-none flex-col divide-y divide-line p-0">
       {items.map((item) => (
-        <li
+        <ListRow
           key={item.key}
-          className="flex items-center gap-s12 border-t border-line py-s12 first:border-t-0"
-        >
-          <CategoryIcon
-            icon={SOURCE_ICON[item.source.type]}
-            type={item.flow === 'in' ? 'income' : 'expense'}
-          />
-          <span className="flex min-w-0 flex-1 flex-col">
-            <span className="truncate text-list text-fg-primary">{item.title}</span>
-            <span className="text-meta text-fg-secondary">{describeState(item)}</span>
-          </span>
-          {item.flow === 'in' ? (
-            <Money cents={item.amountCents} sign="plus" tone="income" className="text-money-row" />
-          ) : (
-            <Money cents={item.amountCents} sign="minus" className="text-money-row" />
-          )}
-        </li>
+          mark={
+            <CategoryIcon
+              icon={SOURCE_ICON[item.source.type]}
+              type={item.flow === 'in' ? 'income' : 'expense'}
+            />
+          }
+          name={item.title}
+          detail={describeState(item)}
+          detailTitle={describeState(item)}
+          value={
+            <Money
+              cents={item.amountCents}
+              sign={item.flow === 'in' ? 'plus' : 'minus'}
+              signColumn
+              weight="plain"
+              tone={item.flow === 'in' ? 'income' : 'inherit'}
+              className="text-money-row"
+            />
+          }
+        />
       ))}
     </ul>
   );
