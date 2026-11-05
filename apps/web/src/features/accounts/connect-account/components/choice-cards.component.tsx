@@ -18,6 +18,8 @@ type ChoiceCardsProps<T extends string> = {
   columns: 2 | 4;
   /** The cards cannot change (an account keeps its type after it is created). */
   isDisabled?: boolean;
+  /** The cards say it themselves: the label stays for the screen reader and takes no room. */
+  hideLabel?: boolean;
 };
 
 /** Two columns hold the label beside the icon; four are narrow, so the icon sits over the label. */
@@ -43,6 +45,7 @@ export function ChoiceCards<T extends string>({
   onChange,
   columns,
   isDisabled,
+  hideLabel = false,
 }: ChoiceCardsProps<T>) {
   return (
     <RadioGroup
@@ -51,7 +54,7 @@ export function ChoiceCards<T extends string>({
       isDisabled={isDisabled}
       className="@container flex flex-col gap-s4"
     >
-      <Label className="text-label text-fg-secondary">{label}</Label>
+      <Label className={hideLabel ? 'sr-only' : 'text-label text-fg-secondary'}>{label}</Label>
       <div className={`grid gap-s8 ${COLUMNS[columns]}`}>
         {options.map((option) => (
           <Radio

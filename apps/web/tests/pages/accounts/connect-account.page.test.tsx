@@ -30,6 +30,46 @@ describe('Conectar conta (?new=account)', () => {
     expect(dialog.textContent).not.toMatch(/Pluggy/i);
   });
 
+  it('fits a 720 px screen: the choice label is only spoken, the texts are one line, the progress is in the footer', async () => {
+    const dialog = await openConnectModal();
+    await within(dialog).findByRole('textbox', { name: 'Código da conexão' });
+
+    const choiceLabel = within(dialog).getByText('Como adicionar');
+    expect(choiceLabel).toHaveClass('sr-only');
+    expect(within(dialog).getByText('Com saldo e transações.')).toBeInTheDocument();
+    expect(within(dialog).queryByRole('status')).not.toBeInTheDocument();
+
+    fireEvent.change(within(dialog).getByRole('textbox', { name: 'Código da conexão' }), {
+      target: { value: ITEM_ID },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Conectar banco' }));
+    const form = dialog.querySelector('form') as HTMLFormElement;
+    const footer = form.querySelector('footer') as HTMLElement;
+    expect(
+      await within(footer).findByText('Conectando ao banco e buscando contas e cartões...'),
+    ).toBeInTheDocument();
+  });
+
+  it('caps the height of the create region by a fixed value and by the screen, so it never outgrows the modal', async () => {
+    const dialog = await openConnectModal();
+    await within(dialog).findByRole('textbox', { name: 'Código da conexão' });
+
+    const region = within(dialog).getByRole('radiogroup', { name: 'Como adicionar' }).parentElement;
+    expect(region?.className).toContain('lg:min-h-[min(28rem,calc(100dvh-17rem))]');
+  });
+
+  it('puts the bank and the name of the manual account on one row, above the preview', async () => {
+    const dialog = await openConnectModal();
+    fireEvent.click(within(dialog).getByRole('radio', { name: 'Conta manual' }));
+
+    const name = await within(dialog).findByRole('textbox', { name: 'Nome da conta' });
+    const bank = within(dialog).getByRole('button', { name: /Banco/ });
+    const row = name.closest('.grid');
+    expect(row).not.toBeNull();
+    expect(row).toContainElement(bank);
+    expect(within(dialog).getByRole('textbox', { name: 'Saldo inicial' })).toBeInTheDocument();
+  });
+
   it('keeps the other variant out of the accessibility tree but in the layout, so the modal keeps its size', async () => {
     const dialog = await openConnectModal();
     await within(dialog).findByRole('textbox', { name: 'Código da conexão' });

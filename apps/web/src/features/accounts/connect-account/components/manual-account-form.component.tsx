@@ -108,8 +108,8 @@ export function ManualAccountForm({
         columns={4}
         isDisabled={isEditing}
       />
-      {isWallet ? null : (
-        <div className="grid grid-cols-1 gap-s16 @sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-s16 @sm:grid-cols-2">
+        {isWallet ? null : (
           <BankSelect
             label="Banco"
             options={institutionOptions}
@@ -118,34 +118,32 @@ export function ManualAccountForm({
             error={errors['institutionCode']}
             isDisabled={isBankLocked}
           />
-          {form.institutionCode === 'other' ? (
-            <TextField
-              label="Nome do banco"
-              value={form.institutionName}
-              onChange={(value) => onFieldChange('institutionName', value)}
-              error={errors['institutionName']}
-              maxLength={60}
-              autoComplete="off"
-            />
-          ) : null}
-        </div>
-      )}
-      <FormModalSplit aside={preview}>
-        <FormModalGroup label={isCard ? 'O cartão' : 'A conta'}>
+        )}
+        {!isWallet && form.institutionCode === 'other' ? (
           <TextField
-            label={isCard ? 'Apelido do cartão' : 'Nome da conta'}
-            value={form.name}
-            onChange={(value) => onFieldChange('name', value)}
-            error={errors['name']}
-            placeholder={isCard ? 'Ex.: Roxinho' : 'Ex.: Conta do dia a dia'}
+            label="Nome do banco"
+            value={form.institutionName}
+            onChange={(value) => onFieldChange('institutionName', value)}
+            error={errors['institutionName']}
             maxLength={60}
             autoComplete="off"
           />
-        </FormModalGroup>
-
+        ) : null}
+        <TextField
+          label={isCard ? 'Apelido do cartão' : 'Nome da conta'}
+          value={form.name}
+          onChange={(value) => onFieldChange('name', value)}
+          error={errors['name']}
+          placeholder={isCard ? 'Ex.: Roxinho' : 'Ex.: Conta do dia a dia'}
+          maxLength={60}
+          autoComplete="off"
+          className={isWallet ? '@sm:col-span-2' : undefined}
+        />
+      </div>
+      <FormModalSplit aside={preview}>
         {isCard ? (
           <>
-            <FormModalGroup label="Fatura">
+            <FormModalGroup>
               <div className="grid grid-cols-2 gap-s12">
                 <TextField
                   label="Dia de fechamento"
@@ -209,7 +207,6 @@ export function ManualAccountForm({
               cents={form.initialBalanceCents}
               onChange={(cents) => onFieldChange('initialBalanceCents', cents)}
               error={errors['initialBalanceCents']}
-              description="O saldo de hoje. Depois você ajusta quando quiser."
             />
           </FormModalGroup>
         )}

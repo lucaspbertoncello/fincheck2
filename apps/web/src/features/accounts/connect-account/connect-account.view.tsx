@@ -108,8 +108,12 @@ function resolveTexts(
   };
 }
 
-/** Same height for every create variant on a wide screen, capped so a short screen scrolls instead. */
-const CREATE_REGION_CLASS = 'lg:min-h-[min(39.5rem,calc(100dvh-16rem))]';
+/**
+ * Same height for every create variant on a wide screen. Two caps: 28 rem (the tallest variant,
+ * and less than the body of the largest modal, so a tall screen never scrolls) and the screen
+ * height minus the modal's chrome (so a short screen does not grow the body).
+ */
+const CREATE_REGION_CLASS = 'lg:min-h-[min(28rem,calc(100dvh-17rem))]';
 
 /**
  * "Conectar banco" / "Nova conta manual" / "Editar conta": a bank through the Open Finance (its
@@ -151,6 +155,14 @@ export function ConnectAccountView({
   const texts = resolveTexts(isEditing, isConnected, mode, form.type);
   const isOpenFinance = !isEditing && mode === 'open-finance';
   const waitingKeys = isOpenFinance && !isConnected && (!isConfigured || isLoadingSettings);
+
+  /** In the footer, beside the buttons: it takes no room from the body, which has none to spare. */
+  const submitHint =
+    isOpenFinance && isSubmitting
+      ? 'Conectando ao banco e buscando contas e cartões...'
+      : waitingKeys && !isLoadingSettings
+        ? 'Salve as chaves do Open Finance em Configurações para conectar um banco.'
+        : undefined;
 
   const problem: OpenFinanceProblemContent | null = !isConfigured
     ? {
@@ -196,11 +208,7 @@ export function ConnectAccountView({
       onSubmit={isConnected ? onClose : onSubmit}
       isSubmitting={isSubmitting}
       submitDisabled={editState !== 'ready' || waitingKeys}
-      submitHint={
-        waitingKeys && !isLoadingSettings
-          ? 'Salve as chaves do Open Finance em Configurações para conectar um banco.'
-          : undefined
-      }
+      submitHint={submitHint}
       error={isOpenFinance ? undefined : (submitError ?? undefined)}
       destructive={isEditing ? { label: 'Excluir', onPress: onDelete } : undefined}
       initialFocus="input[type=text]"
@@ -220,6 +228,7 @@ export function ConnectAccountView({
                 value={mode}
                 onChange={onModeChange}
                 columns={2}
+                hideLabel
                 isDisabled={isSubmitting}
               />
             )}

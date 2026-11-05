@@ -4,12 +4,12 @@ const OUTCOMES: readonly { icon: IconName; title: string; text: string }[] = [
   {
     icon: 'card',
     title: 'Contas e cartões do banco, juntos',
-    text: 'Com saldo e transações. Aparecem em Contas e cartões.',
+    text: 'Com saldo e transações.',
   },
   {
     icon: 'sync',
     title: 'Atualiza sozinho',
-    text: 'Algumas vezes por dia. A tela mostra a hora da última atualização.',
+    text: 'Várias vezes ao dia, com a hora na tela.',
   },
   {
     icon: 'history',
@@ -19,11 +19,14 @@ const OUTCOMES: readonly { icon: IconName; title: string; text: string }[] = [
   {
     icon: 'warning',
     title: 'Fatura aberta do cartão',
-    text: 'Pode só aparecer depois que o banco a fechar.',
+    text: 'Só aparece depois que o banco a fechar.',
   },
 ];
 
-/** What the person gets by connecting a bank, and what to expect after it: the answer to "o que acontece?". */
+/**
+ * What the person gets by connecting a bank, and what to expect after it: the answer to "o que
+ * acontece?". Every text is one line of the half column, so the list is never taller than the steps.
+ */
 export function OpenFinanceOutcome() {
   return (
     <FormModalGroup label="O que acontece depois">

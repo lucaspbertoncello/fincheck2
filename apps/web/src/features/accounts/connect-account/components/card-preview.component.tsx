@@ -20,12 +20,14 @@ export function CardPreview({
   const due = dueDay.trim() === '' ? '--' : dueDay.padStart(2, '0');
 
   return (
-    <BankCard
-      theme={resolveBankThemeKey(institutionCode)}
-      bankName={bankName || undefined}
-      nickname={nickname.trim() || 'Seu cartão'}
-      last4={last4.padEnd(4, '•')}
-      dueLabel={`Vence dia ${due}`}
-    />
+    <div className="w-full max-w-56">
+      <BankCard
+        theme={resolveBankThemeKey(institutionCode)}
+        bankName={bankName || undefined}
+        nickname={nickname.trim() || 'Seu cartão'}
+        last4={last4.padEnd(4, '•')}
+        dueLabel={`Vence dia ${due}`}
+      />
+    </div>
   );
 }

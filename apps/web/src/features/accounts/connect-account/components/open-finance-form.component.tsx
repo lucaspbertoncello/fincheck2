@@ -32,7 +32,7 @@ type OpenFinanceFormProps = {
   code: string;
   onCodeChange: (value: string) => void;
   error?: string;
-  /** The connect is running: the field waits and a line says what is happening. */
+  /** The connect is running: the field waits (the footer says what is happening). */
   isConnecting: boolean;
   /** No keys, or the connect failed: replaces the steps with the reason and the ways out. */
   problem: OpenFinanceProblemContent | null;
@@ -48,19 +48,19 @@ function buildSteps(code: string): StepItem[] {
     {
       key: 'connect',
       title: 'Conecte seu banco no Open Finance',
-      description: 'No site do Open Finance, com o login do banco.',
+      description: 'Com o login do banco.',
       status: started ? 'done' : 'current',
     },
     {
       key: 'copy',
       title: 'Copie o código da conexão',
-      description: '36 letras e números (o ID do item), na página do banco conectado.',
+      description: '36 letras e números, no banco conectado.',
       status: started ? 'done' : 'todo',
     },
     {
       key: 'paste',
       title: 'Cole o código aqui',
-      description: 'O fincheck busca as contas e os cartões desse banco.',
+      description: 'Busca as contas e os cartões do banco.',
       status: done ? 'done' : started ? 'current' : 'todo',
     },
   ];
@@ -112,18 +112,6 @@ export function OpenFinanceForm({
                 isDisabled={isConnecting}
                 autoFocus={isActive}
               />
-              <p
-                role="status"
-                aria-live="polite"
-                className="flex min-h-5 items-center gap-s8 text-meta text-fg-secondary"
-              >
-                {isConnecting ? (
-                  <>
-                    <Icon name="sync" size="sm" className="animate-spin" />
-                    Conectando ao banco e buscando contas e cartões...
-                  </>
-                ) : null}
-              </p>
             </FormModalGroup>
           ),
           problem: problem ? <OpenFinanceProblem {...problem} onUseManual={onUseManual} /> : null,
