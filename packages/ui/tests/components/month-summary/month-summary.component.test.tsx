@@ -127,7 +127,7 @@ describe('ResultSummaryCard', () => {
 });
 
 describe('linked cards', () => {
-  it('makes the label a link that stretches over the whole card, with no white hover', () => {
+  it('makes the label a link that stretches over the whole card, with no hover effect', () => {
     const html = renderToStaticMarkup(
       <IncomeSummaryCard receivedCents={1} expectedCents={2} href="/recurrences?month=2026-10" />,
     );
@@ -135,16 +135,24 @@ describe('linked cards', () => {
     expect(html).toContain('<a ');
     expect(html).toContain('href="/recurrences?month=2026-10"');
     expect(html).toContain('after:absolute');
-    expect(html).toContain('hover:bg-subtle');
     expect(html).toContain('has-[[data-focus-visible]]:outline-2');
-    expect(html).not.toContain('hover:bg-glass');
+    expect(html).toContain('cursor-pointer');
+    expect(html).not.toContain('hover:');
   });
 
   it('stays a plain card without href', () => {
     const html = renderToStaticMarkup(<IncomeSummaryCard receivedCents={1} expectedCents={2} />);
 
     expect(html).not.toContain('<a ');
-    expect(html).not.toContain('hover:bg-subtle');
+    expect(html).not.toContain('cursor-pointer');
+  });
+
+  it('gives every card the surface box at rest, with no border', () => {
+    const html = renderToStaticMarkup(<IncomeSummaryCard receivedCents={1} expectedCents={2} />);
+
+    expect(html).toContain('bg-subtle');
+    expect(html).toContain('rounded-panel');
+    expect(html).not.toContain('border-line');
   });
 });
 
@@ -172,6 +180,8 @@ describe('MonthSummaryCards', () => {
     expect(html.match(/<article/g)).toHaveLength(3);
     expect(html).toContain('snap-x');
     expect(html).toContain('h-full');
+    expect(html).toContain('lg:gap-s16');
+    expect(html).not.toContain('before:bg-line');
   });
 
   it('hides the values with the eye on, badges included', () => {

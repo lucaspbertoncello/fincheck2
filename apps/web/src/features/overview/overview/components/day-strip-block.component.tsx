@@ -28,6 +28,8 @@ export function DayStripBlock({
     <DayStripSection
       title="Até o fim do mês"
       variant="projection"
+      // On the desktop it sits right under the summary cards, which are boxes now: no rule between.
+      className="lg:border-t-0"
       mode={mode}
       onModeChange={onModeChange}
       days={data.days}

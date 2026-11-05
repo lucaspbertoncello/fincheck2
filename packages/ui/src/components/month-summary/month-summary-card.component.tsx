@@ -23,15 +23,19 @@ type MonthSummaryCardProps = {
   className?: string;
 };
 
-/** The card is one link: the label carries it and stretches over the box. Focus rings the card. */
+/**
+ * The card is one link: the label carries it and stretches over the box. Focus rings the card.
+ * No hover effect: the box already has its background at rest (polish 11, Lucas).
+ */
 const LINKED_CLASS =
-  'cursor-pointer hover:bg-subtle has-[[data-focus-visible]]:outline-2 has-[[data-focus-visible]]:outline-offset-2 has-[[data-focus-visible]]:outline-(--color-focus-ring) motion-reduce:transition-none';
+  'cursor-pointer has-[[data-focus-visible]]:outline-2 has-[[data-focus-visible]]:outline-offset-2 has-[[data-focus-visible]]:outline-(--color-focus-ring)';
 
 /**
  * Frame of the three month summary cards (components.md 3.2): round icon and label, badge, value,
  * subtext and bar with legend. The label never truncates: below 272 px of card the icon gives its
  * room back, and if the badge still does not fit it drops under the label. The bar block is pushed to the bottom, so the three cards of the
- * grid keep the same height whatever the subtext does.
+ * grid keep the same height whatever the subtext does. The box has the surface background at rest,
+ * on every width (no border, no hover).
  */
 export function MonthSummaryCard({
   icon,
@@ -48,8 +52,7 @@ export function MonthSummaryCard({
     <article
       aria-label={label}
       className={cx(
-        '@container/card relative flex h-full w-full flex-col gap-s8 rounded-panel p-s16 transition-colors duration-(--duration-fast)',
-        'max-lg:border max-lg:border-line max-lg:bg-glass',
+        '@container/card relative flex h-full w-full flex-col gap-s8 rounded-panel bg-subtle p-s16 lg:p-s24',
         href && LINKED_CLASS,
         className,
       )}
