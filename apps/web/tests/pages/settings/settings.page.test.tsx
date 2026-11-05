@@ -306,7 +306,7 @@ describe('SettingsPage', () => {
       expect(screen.getByText('Deu certo')).toBeInTheDocument();
       expect(screen.getByText('Próximo backup')).toBeInTheDocument();
       expect(screen.getByText(/Um por dia, os últimos 30 ficam guardados/)).toBeInTheDocument();
-      const path = screen.getByText('D:\\Backups\\Fincheck');
+      const path = screen.getByText('D:\\Backups\\fincheck');
       expect(path).toHaveClass('font-plain', 'tabular-nums');
       expect(path).not.toHaveClass('font-mono');
     });
@@ -360,12 +360,12 @@ describe('SettingsPage', () => {
 
       await user.click(await screen.findByRole('button', { name: 'Trocar pasta' }));
       const field = screen.getByLabelText('Caminho da pasta');
-      expect(field).toHaveValue('D:\\Backups\\Fincheck');
+      expect(field).toHaveValue('D:\\Backups\\fincheck');
       await user.clear(field);
-      await user.type(field, 'E:\\Copias\\Fincheck');
+      await user.type(field, 'E:\\Copias\\fincheck');
       await user.click(screen.getByRole('button', { name: 'Usar esta pasta' }));
 
-      expect(await screen.findByText('E:\\Copias\\Fincheck')).toBeInTheDocument();
+      expect(await screen.findByText('E:\\Copias\\fincheck')).toBeInTheDocument();
       expect(screen.queryByLabelText('Caminho da pasta')).not.toBeInTheDocument();
     });
 

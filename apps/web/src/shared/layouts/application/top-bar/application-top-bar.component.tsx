@@ -17,7 +17,7 @@ export function ApplicationTopBar({ screen, monthParam }: ApplicationTopBarProps
       logo={
         <Link
           href={buildHref('/', monthParam)}
-          aria-label="Fincheck, Visão geral"
+          aria-label="fincheck, Visão geral"
           className="shrink-0 rounded-input outline-none"
         >
           <span data-logo-slot className="block">

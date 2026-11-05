@@ -39,7 +39,7 @@ describe('ApplicationRail', () => {
       .getAllByRole('link')
       .map((link) => link.getAttribute('aria-label') ?? link.textContent);
     expect(names).toEqual([
-      'Fincheck, Visão geral',
+      'fincheck, Visão geral',
       'Visão geral',
       'Transações',
       'Recorrentes',

@@ -12,10 +12,10 @@ type RailLogoProps = {
  */
 export function RailLogo({ homeHref }: RailLogoProps) {
   return (
-    <Tooltip label="Fincheck, Visão geral">
+    <Tooltip label="fincheck, Visão geral">
       <Link
         href={homeHref}
-        aria-label="Fincheck, Visão geral"
+        aria-label="fincheck, Visão geral"
         className="grid size-ctl-tab shrink-0 place-items-center rounded-capsule outline-none focus-ring"
       >
         <span className="block w-7 overflow-hidden [clip-path:inset(0)] [contain:paint]">

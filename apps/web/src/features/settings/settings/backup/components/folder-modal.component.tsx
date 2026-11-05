@@ -41,7 +41,7 @@ export function FolderModal({
           onChange={onDraftChange}
           error={error ?? undefined}
           description="A pasta precisa existir e aceitar gravação."
-          placeholder="D:\Backups\Fincheck"
+          placeholder="D:\Backups\fincheck"
           autoComplete="off"
           maxLength={260}
         />

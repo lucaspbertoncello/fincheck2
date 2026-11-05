@@ -8,7 +8,7 @@ const FOLDER_REASON: Record<string, string> = {
 
 const FILE_REASON: Record<string, string> = {
   corrupt: 'O arquivo está corrompido.',
-  not_fincheck: 'Esse arquivo não é um banco do Fincheck.',
+  not_fincheck: 'Esse arquivo não é um banco do fincheck.',
   newer_version: 'Esse backup vem de uma versão mais nova do app.',
 };
 

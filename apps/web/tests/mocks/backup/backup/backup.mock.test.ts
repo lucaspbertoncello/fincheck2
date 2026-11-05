@@ -23,7 +23,7 @@ describe('backup routes', () => {
   it('shows the folder, the last backup and the next one', async () => {
     const current = await status();
     expect(current).toMatchObject({
-      folderPath: 'D:\\Backups\\Fincheck',
+      folderPath: 'D:\\Backups\\fincheck',
       keepCount: 30,
       running: false,
       lastError: null,

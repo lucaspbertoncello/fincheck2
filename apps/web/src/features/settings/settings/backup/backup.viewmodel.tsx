@@ -15,7 +15,7 @@ import { getActionErrorMessage } from '#/features/settings/settings/utils/get-ac
 import { reloadApp } from '#/shared/utils/reload-app.util.ts';
 
 const FOLDER_FORMAT_ERROR =
-  'Use o caminho completo da pasta, como D:\\Backups\\Fincheck ou \\\\servidor\\backups.';
+  'Use o caminho completo da pasta, como D:\\Backups\\fincheck ou \\\\servidor\\backups.';
 
 /** How many backups the list shows before "Mostrar todos". */
 const SHORT_LIST_COUNT = 5;

@@ -60,7 +60,7 @@ function buildSteps(code: string): StepItem[] {
     {
       key: 'paste',
       title: 'Cole o código aqui',
-      description: 'O Fincheck busca as contas e os cartões desse banco.',
+      description: 'O fincheck busca as contas e os cartões desse banco.',
       status: done ? 'done' : started ? 'current' : 'todo',
     },
   ];

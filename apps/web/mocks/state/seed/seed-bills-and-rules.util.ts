@@ -276,7 +276,7 @@ export function seedBillsAndRules(database: MockState.Database, ids: SeedIds): v
     };
   });
   database.backup = {
-    folderPath: 'D:\\Backups\\Fincheck',
+    folderPath: 'D:\\Backups\\fincheck',
     files: backupFiles,
     running: false,
     lastError: null,
