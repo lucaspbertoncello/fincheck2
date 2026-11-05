@@ -61,9 +61,11 @@ export function ModalFrame({
           'transition-[transform,opacity] duration-(--duration-base) ease-(--ease-standard)',
           'data-[entering]:translate-y-full data-[entering]:opacity-0 data-[exiting]:translate-y-full data-[exiting]:opacity-0',
           'lg:data-[entering]:translate-y-0 lg:data-[entering]:scale-96 lg:data-[exiting]:translate-y-0 lg:data-[exiting]:scale-96',
+          // Desktop: 32 above and below the box, so the form modal fits a 1280 x 720 window
+          // (656 tall) without scrolling (polish 11).
           tall
-            ? 'max-h-[calc(100dvh-var(--space-48)-var(--space-24))] lg:max-h-[calc(100dvh-var(--space-64)-var(--space-32))]'
-            : 'max-h-[calc(100dvh-var(--space-64)-var(--space-32))]',
+            ? 'max-h-[calc(100dvh-var(--space-48)-var(--space-24))] lg:max-h-[calc(100dvh-var(--space-64))]'
+            : 'max-h-[calc(100dvh-var(--space-64)-var(--space-32))] lg:max-h-[calc(100dvh-var(--space-64))]',
           MODAL_SIZE_CLASS[size],
           className,
         )}

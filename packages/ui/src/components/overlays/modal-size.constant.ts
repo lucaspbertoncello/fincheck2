@@ -4,7 +4,7 @@
  * the body shows, not the box: the body scrolls inside, header and footer stay. The width is
  * 480 / 520 / 640 / 760 on the desktop (the phone sheet is always screen minus 32). The height is
  * fixed too (the same on the phone sheet) and is cut by the `max-h` of `ModalFrame` when the
- * screen is shorter, so a 1280 x 720 window shows the form at 624.
+ * screen is shorter, so a 1280 x 720 window shows the form at 656 (screen minus 64), with no scroll.
  */
 export const MODAL_SIZE_CLASS = {
   default: 'h-[32rem] lg:max-w-120',
