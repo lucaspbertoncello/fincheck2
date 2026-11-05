@@ -44,7 +44,7 @@ export function OverflowMenu({ label, items, onAction, className }: OverflowMenu
       <Popover
         placement="bottom end"
         offset={4}
-        className="popover-enter w-60 rounded-panel border border-line bg-menu shadow-(--shadow-menu) backdrop-blur-(--blur-popover) lg:w-56"
+        className="popover-enter w-max min-w-56 max-w-[calc(100vw-2rem)] rounded-panel border border-line bg-menu shadow-(--shadow-menu) backdrop-blur-(--blur-popover)"
       >
         <Menu
           aria-label={label}
@@ -61,7 +61,7 @@ export function OverflowMenu({ label, items, onAction, className }: OverflowMenu
                 textValue={item.label}
                 isDisabled={item.isDisabled}
                 className={cx(
-                  'flex min-h-ctl-touch cursor-pointer items-center gap-s12 rounded-input px-s12 text-list outline-none',
+                  'flex min-h-ctl-touch cursor-pointer items-center gap-s12 rounded-input px-s12 text-list whitespace-nowrap outline-none',
                   'data-[disabled]:cursor-default data-[disabled]:opacity-50 data-[focused]:bg-subtle data-[hovered]:bg-subtle',
                   item.danger ? 'text-loss' : 'text-fg-primary',
                 )}

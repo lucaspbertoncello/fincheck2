@@ -5,6 +5,7 @@ import { useState } from 'react';
 
 import { useScreenSearch } from '#/features/categories/hooks/use-screen-search.hook.ts';
 import { useDeferredDeletion } from '#/features/rules/hooks/use-deferred-deletion.hook.ts';
+import { useApplyExisting } from '#/features/rules/rule-list/hooks/use-apply-existing.hook.ts';
 import { useRuleOutcomeToasts } from '#/features/rules/hooks/use-rule-outcome-toasts.hook.ts';
 import type { RuleFormTarget } from '#/features/rules/rule-form/types/rule-form.type.ts';
 import { useRuleListModel } from '#/features/rules/rule-list/rule-list.model.ts';
@@ -28,6 +29,12 @@ export function useRuleListViewModel() {
   const router = useRouter();
   const outcome = useRuleOutcomeToasts();
   const deletion = useDeferredDeletion(UNDO_WINDOW_MS);
+
+  const applyExisting = useApplyExisting({
+    categories: model.categories.data?.items ?? [],
+    tags: model.tags.data?.items ?? [],
+    announce: outcome.announce,
+  });
 
   const [overrides, setOverrides] = useState<Record<string, boolean>>({});
   const [actionError, setActionError] = useState<string | null>(null);
@@ -98,6 +105,7 @@ export function useRuleListViewModel() {
     if (!rule) return;
 
     if (action === 'edit') update({ edit: id, new: undefined });
+    else if (action === 'apply') applyExisting.begin(rule);
     else if (action === 'view-transactions') navigateToHref(router, `/transactions?ruleId=${id}`);
     else remove(rule);
   }
@@ -110,11 +118,15 @@ export function useRuleListViewModel() {
       void model.categories.refetch();
       void model.tags.refetch();
     },
-    actionError: actionError ?? outcome.undoError,
+    actionError: actionError ?? outcome.undoError ?? applyExisting.error,
     onDismissActionError: () => {
       setActionError(null);
       outcome.clearUndoError();
+      applyExisting.dismissError();
     },
+    applyNotice: applyExisting.notice,
+    onDismissApplyNotice: applyExisting.dismissNotice,
+    applyDialog: applyExisting.dialog,
 
     rows: visibleRules.map((rule) =>
       toRuleRow(rule, categories, tags, overrides[rule.id] ?? rule.enabled),

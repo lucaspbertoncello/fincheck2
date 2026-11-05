@@ -18,4 +18,4 @@ export type RuleRowData = {
 };
 
 /** What the "…" menu of a rule asks for. */
-export type RuleAction = 'edit' | 'view-transactions' | 'delete';
+export type RuleAction = 'edit' | 'view-transactions' | 'apply' | 'delete';

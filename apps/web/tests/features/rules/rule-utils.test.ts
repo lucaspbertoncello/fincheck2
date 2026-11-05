@@ -8,6 +8,8 @@ import { buildCategoryGroups } from '#/features/rules/rule-form/utils/build-cate
 import { buildPreviewBody } from '#/features/rules/rule-form/utils/build-preview-body.util.ts';
 import { buildRuleUpdateBody } from '#/features/rules/rule-form/utils/build-rule-update-body.util.ts';
 import { validateRuleForm } from '#/features/rules/rule-form/utils/validate-rule-form.util.ts';
+import { buildRulePreviewBody } from '#/features/rules/rule-list/utils/build-rule-preview-body.util.ts';
+import { describeNothingToApply } from '#/features/rules/rule-list/utils/describe-nothing-to-apply.util.ts';
 import { buildRecreateBody } from '#/features/rules/rule-list/utils/build-recreate-body.util.ts';
 import { buildRulePhrase } from '#/features/rules/rule-list/utils/build-rule-phrase.util.ts';
 import { toRuleRow } from '#/features/rules/rule-list/utils/to-rule-row.util.ts';
@@ -180,7 +182,7 @@ describe('buildHistoryChanges and buildHistoryLabel', () => {
 
     expect(changes).toEqual([
       '2 transações vão para Delivery.',
-      'IFOOD *PIZZARIA: Sem categoria para Delivery',
+      'IFOOD *PIZZARIA: Sem categoria → Delivery',
       'Edições feitas à mão não mudam.',
     ]);
   });
@@ -193,7 +195,7 @@ describe('buildHistoryChanges and buildHistoryLabel', () => {
       examples: [],
     });
 
-    expect(first?.text).toBe('1 transação vai ganhar as tags da regra.');
+    expect(first?.text).toBe('1 transação ganha as tags da regra.');
   });
 
   it('writes the checkbox label in the singular and the plural', () => {
@@ -503,5 +505,77 @@ describe('rules with the sender condition', () => {
         counterparty: 'tree',
       }),
     ).toEqual({ descriptionContains: null, counterpartyContains: 'TREE' });
+  });
+});
+
+describe('buildHistoryChanges says what really changes', () => {
+  const nameOf = (id: string | null) =>
+    id === 'cat-delivery' ? 'Delivery' : id === 'cat-mercado' ? 'Mercado' : 'Sem categoria';
+  const example = (fromCategoryId: string | null) => ({
+    transactionId: 'x1',
+    description: 'IFOOD *RESTAURANTE',
+    occurredOn: '2026-10-18',
+    amountCents: -3140,
+    fromCategoryId,
+    toCategoryId: 'cat-delivery',
+  });
+  const texts = (fromCategoryId: string | null, tagNames: string[]) =>
+    buildHistoryChanges({
+      willChangeCount: 5,
+      categoryName: 'Delivery',
+      tagNames,
+      nameOf,
+      examples: [example(fromCategoryId)],
+    }).map((change) => change.text);
+
+  it('only the tag when the transactions are already in the category', () => {
+    expect(texts('cat-delivery', ['delivery'])).toEqual([
+      '5 transações passam a ter a categoria Delivery e a tag delivery.',
+      'IFOOD *RESTAURANTE: ganha a tag delivery',
+      'Edições feitas à mão não mudam.',
+    ]);
+  });
+
+  it('only the category when the rule has no tags', () => {
+    expect(texts('cat-mercado', [])).toEqual([
+      '5 transações vão para Delivery.',
+      'IFOOD *RESTAURANTE: Mercado → Delivery',
+      'Edições feitas à mão não mudam.',
+    ]);
+  });
+
+  it('both when the category moves and the rule adds a tag', () => {
+    expect(texts('cat-mercado', ['delivery'])[1]).toBe(
+      'IFOOD *RESTAURANTE: Mercado → Delivery, ganha a tag delivery',
+    );
+  });
+});
+
+describe('apply to the existing transactions helpers', () => {
+  it('builds the preview body from the conditions and actions of the saved rule', () => {
+    expect(
+      buildRulePreviewBody(
+        rule({ descriptionContains: null, counterpartyContains: 'TREETOOLS', kind: 'income' }),
+      ),
+    ).toEqual({
+      counterpartyContains: 'TREETOOLS',
+      kind: 'income',
+      categoryId: 'cat-delivery',
+      tagIds: ['t1'],
+    });
+  });
+
+  it('says why nothing changes, by what the preview found', () => {
+    const none = { matchCount: 0, willChangeCount: 0, examples: [] };
+
+    expect(describeNothingToApply(none)).toBe(
+      'Nenhuma transação do histórico bate com essa regra.',
+    );
+    expect(describeNothingToApply({ ...none, matchCount: 4 })).toMatch(
+      /^As 4 transações que a regra pega já estão certas/,
+    );
+    expect(describeNothingToApply({ ...none, matchCount: 1 })).toMatch(
+      /^A transação que a regra pega já está certa/,
+    );
   });
 });

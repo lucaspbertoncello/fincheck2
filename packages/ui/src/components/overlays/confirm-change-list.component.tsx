@@ -9,8 +9,11 @@ type ConfirmChangeListProps = {
 export function ConfirmChangeList({ changes }: ConfirmChangeListProps) {
   return (
     <ul className="flex flex-col gap-s8 rounded-input bg-subtle p-s16">
-      {changes.map((change) => (
-        <li key={change.text} className="flex items-start gap-s12 text-label text-fg-primary">
+      {changes.map((change, index) => (
+        <li
+          key={`${index}-${change.text}`}
+          className="flex items-start gap-s12 text-label text-fg-primary"
+        >
           <Icon name={change.icon ?? 'check'} size="sm" className="mt-s4 text-fg-secondary" />
           {change.text}
         </li>

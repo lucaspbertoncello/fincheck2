@@ -1,4 +1,4 @@
-import { Banner, Button, ContentSkeleton, EmptyState, RuleList } from '@fincheck/ui';
+import { Banner, Button, ConfirmDialog, ContentSkeleton, EmptyState, RuleList } from '@fincheck/ui';
 
 import { RuleForm } from '#/features/rules/rule-form/rule-form.component.tsx';
 import type { useRuleListViewModel } from '#/features/rules/rule-list/rule-list.viewmodel.tsx';
@@ -17,6 +17,9 @@ export function RuleListView({
   onRetry,
   actionError,
   onDismissActionError,
+  applyNotice,
+  onDismissApplyNotice,
+  applyDialog,
   rows,
   onActiveChange,
   onAction,
@@ -31,6 +34,15 @@ export function RuleListView({
           title={actionError}
           actionLabel="Fechar"
           onAction={onDismissActionError}
+        />
+      ) : null}
+
+      {applyNotice ? (
+        <Banner
+          variant="suggestion"
+          title={applyNotice}
+          actionLabel="Entendi"
+          onAction={onDismissApplyNotice}
         />
       ) : null}
 
@@ -72,6 +84,20 @@ export function RuleListView({
           ) : null}
         </div>
       </div>
+
+      {applyDialog ? (
+        <ConfirmDialog
+          isOpen
+          onOpenChange={(open) => !open && applyDialog.onCancel()}
+          title={applyDialog.title}
+          description={applyDialog.description}
+          icon="magic"
+          changes={applyDialog.changes}
+          confirmLabel={applyDialog.confirmLabel}
+          loading={applyDialog.isSaving}
+          onConfirm={applyDialog.onConfirm}
+        />
+      ) : null}
 
       <RuleForm
         target={ruleForm.target}

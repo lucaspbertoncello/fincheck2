@@ -179,6 +179,25 @@ export function seedTransactions(database: MockState.Database, ids: SeedIds): vo
     counterparty: 'CURSOFIT EDUCACAO',
   });
 
+  // Pix from a made-up employer in past months, for "Aplicar nas transações existentes" with a rule
+  // like "Pix de Treetools → Salário": two without a category and one under another income
+  // category (the rule would move them), and one Lucas put under Outras receitas by hand (it stays).
+  const treetools = (month: number, day: number, categoryId?: string, bySetBy?: 'rule') =>
+    push({
+      accountId: acc.brConta,
+      method: 'pix',
+      description: 'PIX RECEBIDO TREETOOLS',
+      amountCents: 520_000,
+      occurredOn: dateInMonth(addMonths(CURRENT_MONTH, -month), day),
+      counterparty: 'TREETOOLS TECNOLOGIA LTDA',
+      ...(categoryId ? { categoryId } : {}),
+      ...(bySetBy ? { categorySource: bySetBy } : {}),
+    });
+  treetools(2, 5);
+  treetools(3, 5);
+  treetools(4, 5, cat.freelance, 'rule');
+  treetools(5, 6, cat.outrasReceitas);
+
   // Wallet (manual).
   push({
     accountId: acc.carteira,

@@ -146,7 +146,7 @@ export function useRuleSuggestionViewModel() {
             categoryName: nameOf(confirming.categoryId),
             nameOf,
           }),
-          confirmLabel: `Recategorizar ${confirming.willChangeCount}`,
+          confirmLabel: `Aplicar em ${confirming.willChangeCount}`,
           loading: busyKey === keyOf(confirming),
           onConfirm: () => void accept(confirming),
           onCancel: () => setConfirmingKey(null),

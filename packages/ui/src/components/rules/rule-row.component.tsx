@@ -10,6 +10,7 @@ import { cx } from '#/utils/class-names.util.ts';
 const MENU_ITEMS: OverflowMenuItem[] = [
   { key: 'edit', label: 'Editar', icon: 'edit' },
   { key: 'view-transactions', label: 'Ver transações', icon: 'list' },
+  { key: 'apply', label: 'Aplicar nas transações existentes', icon: 'magic' },
   { key: 'delete', label: 'Excluir', icon: 'trash', danger: true, separatorBefore: true },
 ];
 

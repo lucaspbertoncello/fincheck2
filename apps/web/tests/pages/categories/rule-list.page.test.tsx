@@ -166,7 +166,7 @@ describe('RuleListPage', () => {
         name: 'Aplicar a regra no histórico?',
       });
       expect(within(dialog).getByText(/1 transação vai para Transporte/)).toBeInTheDocument();
-      fireEvent.click(within(dialog).getByRole('button', { name: 'Recategorizar 1' }));
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Aplicar em 1' }));
 
       expect(await screen.findByText('1 transação foi para Transporte.')).toBeInTheDocument();
       expect(await screen.findByText('UBER *TRIP', { selector: 'strong' })).toBeInTheDocument();
@@ -198,6 +198,92 @@ describe('RuleListPage', () => {
           screen.queryByText('NOTEBOOK AERO 14', { selector: 'strong' }),
         ).not.toBeInTheDocument(),
       );
+    });
+  });
+
+  describe('apply to the existing transactions', () => {
+    async function createSalaryRule() {
+      const categories = (await callApi('GET', '/categories?kind=income')).json as {
+        items: { id: string; name: string }[];
+      };
+      const salary = categories.items.find((item) => item.name === 'Salário');
+      await callApi('POST', '/rules', {
+        counterpartyContains: 'treetools',
+        categoryId: salary?.id,
+      });
+
+      return salary?.id;
+    }
+
+    async function categoriesOfTreetools(): Promise<(string | null)[]> {
+      const { json } = await callApi('GET', '/transactions?search=treetools');
+      return (json as { items: { description: string; categoryId: string | null }[] }).items
+        .filter((item) => item.description === 'PIX RECEBIDO TREETOOLS')
+        .map((item) => item.categoryId);
+    }
+
+    async function openApply(strongText: string) {
+      renderApp('/categories/rules');
+      await screen.findByText(strongText, { selector: 'strong' });
+      fireEvent.click(within(rowOf(strongText)).getByRole('button', { name: 'Ações da regra' }));
+      fireEvent.click(
+        await screen.findByRole('menuitem', { name: 'Aplicar nas transações existentes' }),
+      );
+    }
+
+    it('shows what would change with examples, applies on confirm and undoes from the toast', async () => {
+      const salaryId = await createSalaryRule();
+      expect((await categoriesOfTreetools()).filter((id) => id === salaryId)).toHaveLength(0);
+
+      await openApply('Treetools');
+
+      const dialog = await screen.findByRole('dialog', {
+        name: 'Aplicar a regra nas transações existentes?',
+      });
+      expect(within(dialog).getByText(/Muda 3 transações/)).toBeInTheDocument();
+      expect(within(dialog).getAllByText(/PIX RECEBIDO TREETOOLS: .* → Salário/)).toHaveLength(3);
+      expect(within(dialog).getByText('Edições feitas à mão não mudam.')).toBeInTheDocument();
+
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Aplicar em 3' }));
+
+      expect(await screen.findByText('3 transações foram para Salário.')).toBeInTheDocument();
+      expect((await categoriesOfTreetools()).filter((id) => id === salaryId)).toHaveLength(3);
+
+      fireEvent.click(await screen.findByText('Desfazer'));
+      await waitFor(async () =>
+        expect((await categoriesOfTreetools()).filter((id) => id === salaryId)).toHaveLength(0),
+      );
+    });
+
+    it('says why nothing changes and offers no confirmation when everything is already right', async () => {
+      await createSalaryRule();
+      await openApply('Treetools');
+      fireEvent.click(await screen.findByRole('button', { name: 'Aplicar em 3' }));
+      await screen.findByText('3 transações foram para Salário.');
+
+      fireEvent.click(within(rowOf('Treetools')).getByRole('button', { name: 'Ações da regra' }));
+      fireEvent.click(
+        await screen.findByRole('menuitem', { name: 'Aplicar nas transações existentes' }),
+      );
+
+      expect(
+        await screen.findByText(
+          /já estão certas, ou foram categorizadas à mão, por recorrência ou pela conta/,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Aplicar em/ })).not.toBeInTheDocument();
+    });
+
+    it('says when no transaction matches and when the rule is off', async () => {
+      await callApi('POST', '/rules', { descriptionContains: 'zzzz nada', tagIds: [] });
+      await openApply('FARMACIA');
+
+      expect(
+        await screen.findByText(
+          'A regra está desligada. Ligue-a para aplicar nas transações existentes.',
+        ),
+      ).toBeInTheDocument();
     });
   });
 

@@ -154,7 +154,10 @@ describe('transactions routes (changes)', () => {
       (await callApi('GET', '/categories')).json,
     ).items;
     const target = categories.find((category) => category.kind === 'expense')?.id;
-    const ids = queue.items.slice(0, 2).map((item) => item.transaction.id);
+    const ids = queue.items
+      .filter((item) => item.transaction.nature === 'expense')
+      .slice(0, 2)
+      .map((item) => item.transaction.id);
 
     const done = bulkTransactionsResultSchema.parse(
       (
