@@ -20,7 +20,7 @@ import { buildInvoiceSuggestion } from '#/features/invoices/invoice-page/utils/b
 import { buildInvoiceSummary } from '#/features/invoices/invoice-page/utils/build-invoice-summary.util.ts';
 import { filterInvoiceItems } from '#/features/invoices/invoice-page/utils/filter-invoice-items.util.ts';
 import { resolveInvoiceNeighbors } from '#/features/invoices/invoice-page/utils/resolve-invoice-neighbors.util.ts';
-import { getTodayBusinessDate } from '#/features/invoices/invoice-summary/utils/get-today-business-date.util.ts';
+import { getBusinessDate } from '#/shared/utils/date/get-business-date.util.ts';
 import { buildHref } from '#/shared/layouts/application/navigation/build-href.util.ts';
 import { navigateToHref } from '#/shared/layouts/application/navigation/navigate-to-href.util.ts';
 import { useActiveScreen } from '#/shared/layouts/application/navigation/use-active-screen.hook.ts';
@@ -48,12 +48,12 @@ function InvoicePageContent({ accountId, month }: ContentProps) {
   const [categoryKey, setCategoryKey] = useState<string | null>(null);
   const [registering, setRegistering] = useState(false);
   const [typedCents, setTypedCents] = useState<number | null>(null);
-  const [paidOn, setPaidOn] = useState(() => getTodayBusinessDate(new Date()));
+  const [paidOn, setPaidOn] = useState(() => getBusinessDate(new Date()));
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const today = getTodayBusinessDate(new Date());
+  const today = getBusinessDate(new Date());
   const { invoice } = model;
   const target = { accountId, month };
   const back = BACK[origin];

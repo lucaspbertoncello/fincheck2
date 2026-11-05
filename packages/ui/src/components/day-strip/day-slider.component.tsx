@@ -2,7 +2,8 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { type KeyboardEvent, useId, useState } from 'react';
 import { Button } from 'react-aria-components';
 
-import { dayLongLabel, shiftBusinessDate } from '#/components/day-strip/day-date.util.ts';
+import { dayLongLabel } from '#/components/day-strip/day-long-label.util.ts';
+import { shiftBusinessDate } from '#/components/day-strip/shift-business-date.util.ts';
 import type { DayStripDay } from '#/components/day-strip/day-strip.type.ts';
 import { ProjectionFigures } from '#/components/day-strip/projection-figures.component.tsx';
 import { Icon } from '#/components/icons/icon.component.tsx';

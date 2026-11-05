@@ -12,7 +12,8 @@ import {
 } from '@fincheck/ui';
 import { useRef } from 'react';
 
-import { useFocusFirstInvalid } from '#/features/accounts/form-focus/hooks/use-focus-first-invalid.hook.ts';
+import { INVALID_FIELD_SELECTOR } from '#/shared/constants/form/invalid-field-selector.constant.ts';
+import { useFocusFirstInvalid } from '#/shared/hooks/form/use-focus-first-invalid.hook.ts';
 
 type AdjustBalanceViewProps = {
   isOpen: boolean;
@@ -100,7 +101,11 @@ export function AdjustBalanceView({
   onSubmit,
 }: AdjustBalanceViewProps) {
   const content = useRef<HTMLDivElement>(null);
-  useFocusFirstInvalid(content, failedAttempts);
+  useFocusFirstInvalid({
+    attempt: failedAttempts,
+    selector: INVALID_FIELD_SELECTOR,
+    scope: content,
+  });
 
   return (
     <FormModal

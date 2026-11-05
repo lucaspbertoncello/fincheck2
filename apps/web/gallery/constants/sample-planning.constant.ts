@@ -1,5 +1,4 @@
 import type {
-  DateRuleOption,
   DayMarker,
   DayStripDay,
   NavItem,
@@ -117,13 +116,6 @@ export const REVIEW_QUEUE: ReviewQueueItemData[] = [
       otherLabel: 'Outra receita',
     },
   },
-];
-
-export const DATE_RULE_OPTIONS: DateRuleOption[] = [
-  { key: 'fixed', label: 'Dia fixo', hint: 'Todo dia 20', icon: 'calendar' },
-  { key: 'business', label: 'Dia útil', hint: 'Até o 5º dia útil', icon: 'list' },
-  { key: 'around', label: 'Por volta do dia', hint: 'Por volta do dia 25', icon: 'clock' },
-  { key: 'any', label: 'Qualquer dia', hint: 'Sem data certa', icon: 'repeat' },
 ];
 
 export const TOTAL_ITEMS: TotalCardItem[] = [

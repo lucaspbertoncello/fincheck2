@@ -12,7 +12,7 @@ import {
   CHIP_CLASS,
   CHIP_GHOST_CLASS,
   CHIP_ON_CLASS,
-} from '#/features/bills/constants/chip-class.constant.ts';
+} from '#/shared/constants/chip/chip-class.constant.ts';
 
 /** How many categories show as chips before "Outras…". */
 const SHORTCUTS = 5;

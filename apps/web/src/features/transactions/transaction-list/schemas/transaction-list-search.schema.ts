@@ -11,7 +11,7 @@ const textSchema = z
   .catch(undefined);
 
 /** The periods Transações reads: the month of the app, or a wider one that only this screen uses. */
-export const TRANSACTION_PERIODS = ['month', '12m', 'year', 'all'] as const;
+const TRANSACTION_PERIODS = ['month', '12m', 'year', 'all'] as const;
 
 export type TransactionPeriod = (typeof TRANSACTION_PERIODS)[number];
 

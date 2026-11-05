@@ -1,10 +1,8 @@
 import {
   AccountCard,
-  AddAccountCard,
   BANK_THEMES,
   BankAvatar,
   BankCard,
-  BankCardMini,
   Button,
   InvoiceCard,
   resolveBankThemeKey,
@@ -55,19 +53,6 @@ export const BANK_CARDS_SECTIONS: GallerySectionDef[] = [
     ),
   },
   {
-    id: 'bank-card-mini',
-    title: 'BankCardMini',
-    content: (
-      <div className="flex flex-wrap gap-s12">
-        {THEME_KEYS.map((key) => (
-          <GalleryVariant key={key} caption={key}>
-            <BankCardMini theme={key} />
-          </GalleryVariant>
-        ))}
-      </div>
-    ),
-  },
-  {
     id: 'bank-avatar',
     title: 'BankAvatar',
     content: (
@@ -102,7 +87,7 @@ export const BANK_CARDS_SECTIONS: GallerySectionDef[] = [
   },
   {
     id: 'account-card',
-    title: 'AccountCard e AddAccountCard',
+    title: 'AccountCard',
     content: (
       <>
         <GalleryVariant caption="ok" width={380}>
@@ -149,13 +134,6 @@ export const BANK_CARDS_SECTIONS: GallerySectionDef[] = [
             statusLabel="Saldo manual"
             actionLabel="Ajustar saldo"
             onAction={noop}
-          />
-        </GalleryVariant>
-        <GalleryVariant caption="AddAccountCard" width={380}>
-          <AddAccountCard
-            title="Conectar outra conta"
-            subtitle="Banco do Brasil, Inter, Itaú, Caixa e outros 6"
-            onPress={noop}
           />
         </GalleryVariant>
       </>

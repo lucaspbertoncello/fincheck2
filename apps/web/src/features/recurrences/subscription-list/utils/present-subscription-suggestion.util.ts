@@ -3,7 +3,7 @@ import type { Subscription } from '@fincheck/shared/recurrences/subscription/sub
 import { recognizeService } from '#/domain/recurrences/service-logo/rules/recognize-service.rule.ts';
 import type { SubscriptionSuggestionData } from '#/features/recurrences/subscription-list/types/subscription-list.type.ts';
 import { formatMoneyText } from '#/features/recurrences/subscription-list/utils/format-money-text.util.ts';
-import { formatShortDate } from '#/features/recurrences/subscription-list/utils/format-short-date.util.ts';
+import { formatShortDate } from '#/shared/utils/date/format-short-date.util.ts';
 import { formatSuggestionName } from '#/features/recurrences/subscription-list/utils/format-suggestion-name.util.ts';
 
 /** A suggestion as the banner says it: "Parece uma assinatura: Podcast Plus, R$ 19,90". */

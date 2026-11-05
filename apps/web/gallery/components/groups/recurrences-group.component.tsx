@@ -6,7 +6,6 @@ import {
   ListRow,
   Money,
   OverflowMenu,
-  DateRulePicker,
   ExpectedValueUpdate,
   NeedsAttentionStrip,
   PartialBar,
@@ -19,10 +18,9 @@ import {
   type RecurrenceStatus,
 } from '@fincheck/ui';
 
-import { DATE_RULE_OPTIONS, TOTAL_ITEMS } from '#gallery/constants/sample-planning.constant.ts';
+import { TOTAL_ITEMS } from '#gallery/constants/sample-planning.constant.ts';
 import type { GallerySectionDef } from '#gallery/types/gallery-group.type.ts';
 import { GalleryVariant } from '#gallery/components/shell/gallery-variant.component.tsx';
-import { State } from '#gallery/components/shell/state.component.tsx';
 
 const noop = () => undefined;
 
@@ -342,36 +340,6 @@ export const RECURRENCES_SECTIONS: GallerySectionDef[] = [
             caption="3 contas, até 31/10 e faturas abertas"
             items={TOTAL_ITEMS}
             totalLabel="Total a pagar"
-          />
-        </GalleryVariant>
-      </>
-    ),
-  },
-  {
-    id: 'date-rule-picker',
-    title: 'DateRulePicker',
-    content: (
-      <>
-        <State initial="fixed">
-          {(value, set) => (
-            <GalleryVariant caption="com prévia das próximas datas" width={520}>
-              <DateRulePicker
-                label="Regra de data"
-                options={DATE_RULE_OPTIONS}
-                value={value}
-                onChange={set}
-                preview={['qui, 20/11', 'dom, 20/12', 'qua, 20/01']}
-                previewLabel="Próximas datas"
-              />
-            </GalleryVariant>
-          )}
-        </State>
-        <GalleryVariant caption="sem prévia, segunda opção" width={520}>
-          <DateRulePicker
-            label="Regra de data"
-            options={DATE_RULE_OPTIONS}
-            value="business"
-            onChange={noop}
           />
         </GalleryVariant>
       </>

@@ -3,11 +3,12 @@ import type { CategoryBreakdown } from '@fincheck/shared/dashboard/category-brea
 import { VariationBadge, type DonutSlice } from '@fincheck/ui';
 
 import type { CategoriesData } from '#/features/overview/overview/overview.model.ts';
-import { monthName, monthShortName } from '#/features/overview/overview/utils/month-name.util.ts';
+import { monthName } from '#/features/overview/overview/utils/month-name.util.ts';
+import { monthShortName } from '#/features/overview/overview/utils/month-short-name.util.ts';
 import { shiftMonthKey } from '#/shared/utils/shift-month-key.util.ts';
 
 /** The donut paints four categories; the rest folds into "Outros" (contract: the grouping is the front's). */
-export const DONUT_CATEGORY_LIMIT = 4;
+const DONUT_CATEGORY_LIMIT = 4;
 
 const NO_CATEGORY = 'Sem categoria';
 

@@ -1,6 +1,6 @@
 import { Button, RulePreview, Skeleton, type RulePreviewData } from '@fincheck/ui';
 
-export type RulePreviewStatus = 'idle' | 'loading' | 'error' | 'empty' | 'ready';
+import type { RulePreviewStatus } from '#/features/rules/rule-form/types/rule-preview-status.type.ts';
 
 type RulePreviewAreaProps = {
   status: RulePreviewStatus;

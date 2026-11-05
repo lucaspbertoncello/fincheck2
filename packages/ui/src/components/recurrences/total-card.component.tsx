@@ -5,14 +5,7 @@ import { Collapse } from '#/components/disclosure/index.ts';
 import { Icon } from '#/components/icons/index.ts';
 import { Money } from '#/components/money/index.ts';
 import { cx } from '#/utils/class-names.util.ts';
-
-export type TotalCardItem = {
-  key: string;
-  label: string;
-  /** Under the label: "vence 25/10". */
-  note?: string;
-  cents: number;
-};
+import type { TotalCardItem } from '#/components/recurrences/total-card.type.ts';
 
 type TotalCardProps = {
   /** "A pagar", "Receitas esperadas em outubro". */

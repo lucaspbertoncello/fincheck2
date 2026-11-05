@@ -24,12 +24,6 @@ export type TransactionEditField = 'description' | 'amount' | 'date' | 'category
 /** Error message per field, shown right under it. */
 export type TransactionEditErrors = Partial<Record<TransactionEditField, string>>;
 
-/** A transaction that can be the other leg of a transfer ("Pix para Bradesco, 20 out., R$ 500,00"). */
-export type CounterpartOption = {
-  id: string;
-  label: string;
-};
-
 /** The bank's version of an edited transaction, kept to "Restaurar original" (BR-TRX-004). */
 export type OriginalFromBank = {
   description: string;

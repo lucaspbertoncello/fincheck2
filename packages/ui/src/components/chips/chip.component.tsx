@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Icon } from '#/components/icons/icon.component.tsx';
 import type { IconName } from '#/components/icons/icon-markup.constant.ts';
 import { cx } from '#/utils/class-names.util.ts';
+import type { ChipTone } from '#/components/chips/chip.type.ts';
 
 const TONE_CLASS = {
   neutral: 'bg-subtle text-fg-secondary',
@@ -13,9 +14,7 @@ const TONE_CLASS = {
   dashed: 'border border-dashed border-fg-tertiary text-fg-secondary',
   /** "# delivery": no fill, 1 px border. */
   tag: 'border border-line text-fg-secondary',
-} as const;
-
-export type ChipTone = keyof typeof TONE_CLASS;
+} as const satisfies Record<ChipTone, unknown>;
 
 type ChipProps = {
   children: ReactNode;

@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { buildBalanceCurve } from '#/components/bank-cards/balance-curve.util.ts';
-import { AccountCard, AddAccountCard } from '#/components/bank-cards/index.ts';
+import { AccountCard } from '#/components/bank-cards/index.ts';
 
 const BASE = {
   theme: 'nubank',
@@ -75,17 +75,6 @@ describe('AccountCard', () => {
     );
     expect(html).toContain('h-12');
     expect(html).not.toContain('stroke-brand');
-  });
-});
-
-describe('AddAccountCard', () => {
-  it('draws the dashed card with title and subtitle', () => {
-    const html = renderToStaticMarkup(
-      <AddAccountCard title="Conectar outra conta" subtitle="Banco do Brasil, Inter e outros 7" />,
-    );
-    expect(html).toContain('border-dashed');
-    expect(html).toContain('Conectar outra conta');
-    expect(html).toContain('Banco do Brasil, Inter e outros 7');
   });
 });
 

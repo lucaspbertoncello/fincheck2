@@ -4,6 +4,7 @@ import { Button } from 'react-aria-components';
 import { Icon } from '#/components/icons/index.ts';
 import type { IconName } from '#/components/icons/index.ts';
 import { cx } from '#/utils/class-names.util.ts';
+import type { RuleTokenKind } from '#/components/rules/rule-token.type.ts';
 
 const KIND_CLASS = {
   /** The operator ("a descrição contém"): subtle fill with border. */
@@ -14,14 +15,12 @@ const KIND_CLASS = {
   category: 'bg-brand-weak font-emphasis text-brand',
   /** An empty slot ("+ tag"): dashed. */
   empty: 'border border-dashed border-fg-tertiary text-fg-secondary',
-} as const;
+} as const satisfies Record<RuleTokenKind, unknown>;
 
 const TRAILING_ICON: Record<'dropdown' | 'edit', IconName> = {
   dropdown: 'chevron-down',
   edit: 'edit',
 };
-
-export type RuleTokenKind = keyof typeof KIND_CLASS;
 
 type RuleTokenProps = {
   kind?: RuleTokenKind;

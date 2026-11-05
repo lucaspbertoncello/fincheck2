@@ -9,5 +9,3 @@ export const categoryListSearchSchema = z.object({
   new: z.enum(['category', 'tag']).optional().catch(undefined),
   edit: z.string().min(1).optional().catch(undefined),
 });
-
-export type CategoryListSearch = z.infer<typeof categoryListSearchSchema>;

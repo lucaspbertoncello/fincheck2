@@ -1,11 +1,6 @@
 import { Money } from '#/components/money/money.component.tsx';
 import { Skeleton } from '#/components/states/skeleton.component.tsx';
-
-export type RemainingLineData = {
-  daysLeft: number;
-  incomeCents: number;
-  expenseCents: number;
-};
+import type { RemainingLineData } from '#/components/page/remaining-line.type.ts';
 
 type RemainingLineProps = {
   /** Without data the line shows a skeleton of the same height. */

@@ -1,3 +1,4 @@
+import type { PeriodRange } from '#/features/transactions/transaction-list/types/period-range.type.ts';
 import { useAccounts } from '#/domain/accounts/account/hooks/use-accounts.hook.ts';
 import { useAcceptRuleSuggestion } from '#/domain/categories/rule-suggestion/hooks/use-accept-rule-suggestion.hook.ts';
 import { useDismissRuleSuggestion } from '#/domain/categories/rule-suggestion/hooks/use-dismiss-rule-suggestion.hook.ts';
@@ -24,11 +25,8 @@ import { useUnignoreTransaction } from '#/domain/transactions/transaction/hooks/
 import { useUnsplitTransaction } from '#/domain/transactions/transaction/hooks/use-unsplit-transaction.hook.ts';
 import { useUpdateTransaction } from '#/domain/transactions/transaction/hooks/use-update-transaction.hook.ts';
 import type { TransactionListSearch } from '#/features/transactions/transaction-list/schemas/transaction-list-search.schema.ts';
-import {
-  buildListQuery,
-  buildPeriodListQuery,
-} from '#/features/transactions/transaction-list/utils/build-list-query.util.ts';
-import type { PeriodRange } from '#/features/transactions/transaction-list/utils/resolve-period-range.util.ts';
+import { buildListQuery } from '#/features/transactions/transaction-list/utils/build-list-query.util.ts';
+import { buildPeriodListQuery } from '#/features/transactions/transaction-list/utils/build-period-list-query.util.ts';
 
 type ModelArgs = {
   month: string;

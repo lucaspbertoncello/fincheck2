@@ -2,7 +2,7 @@ import type { Transaction } from '@fincheck/shared/transactions/transaction/tran
 import type { ChoiceOption } from '@fincheck/ui';
 
 import type { TransactionLookups } from '#/features/transactions/transaction-list/types/transaction-lookups.type.ts';
-import { formatShortDate } from '#/features/transactions/transaction-list/utils/format-day-heading.util.ts';
+import { formatDayShortMonth } from '#/features/transactions/transaction-list/utils/format-day-short-month.util.ts';
 import { formatMoney } from '#/shared/utils/format-money.util.ts';
 
 const MAX_OPTIONS = 6;
@@ -33,6 +33,6 @@ export function buildCounterpartOptions(
     .map((candidate) => ({
       key: candidate.id,
       label: candidate.description,
-      hint: `${lookups.accounts.get(candidate.accountId)?.name ?? 'Outra conta'} · ${formatShortDate(candidate.occurredOn)} · ${formatMoney(Math.abs(candidate.amountCents))}`,
+      hint: `${lookups.accounts.get(candidate.accountId)?.name ?? 'Outra conta'} · ${formatDayShortMonth(candidate.occurredOn)} · ${formatMoney(Math.abs(candidate.amountCents))}`,
     }));
 }

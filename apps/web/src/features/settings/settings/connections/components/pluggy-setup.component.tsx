@@ -1,6 +1,7 @@
 import { Button, Steps, TextField, type StepItem } from '@fincheck/ui';
 import { Link } from 'react-aria-components';
 
+import type { PluggySetupProps } from '#/features/settings/settings/connections/types/pluggy-setup-props.type.ts';
 import { MEU_PLUGGY_URL } from '#/features/settings/settings/connections/constants/meu-pluggy-url.constant.ts';
 
 const SETUP_STEPS: StepItem[] = [
@@ -19,16 +20,6 @@ const SETUP_STEPS: StepItem[] = [
   { key: 'banks', status: 'todo', title: 'Conecte os bancos' },
   { key: 'history', status: 'todo', title: 'Busque o histórico' },
 ];
-
-export type PluggySetupProps = {
-  clientId: string;
-  clientSecret: string;
-  errors: { clientId?: string; clientSecret?: string };
-  isSaving: boolean;
-  onClientIdChange: (value: string) => void;
-  onClientSecretChange: (value: string) => void;
-  onSubmit: () => void;
-};
 
 /** First configuration of the Open Finance: the four steps and the form of the two keys. */
 export function PluggySetup({

@@ -2,12 +2,7 @@ import { Button } from '#/components/buttons/index.ts';
 import { Icon } from '#/components/icons/icon.component.tsx';
 import type { IconName } from '#/components/icons/icon-markup.constant.ts';
 import { cx } from '#/utils/class-names.util.ts';
-
-export type EmptyStateAction = {
-  label: string;
-  onPress: () => void;
-  icon?: IconName;
-};
+import type { EmptyStateAction } from '#/components/states/empty-state.type.ts';
 
 type EmptyStateProps = {
   /** 48 px icon in the secondary text color. */

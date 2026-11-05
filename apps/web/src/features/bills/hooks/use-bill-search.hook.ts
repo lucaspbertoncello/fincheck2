@@ -1,6 +1,6 @@
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
-export type NewBillModal = 'bill' | 'debt';
+type NewBillModal = 'bill' | 'debt';
 
 type BillSearch = { month?: string; new?: string; pay?: string; edit?: string };
 

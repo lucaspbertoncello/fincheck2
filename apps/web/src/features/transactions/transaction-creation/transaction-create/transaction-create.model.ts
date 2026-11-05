@@ -18,5 +18,3 @@ export function useTransactionCreateModel() {
     deleteTransaction: useDeleteTransaction(),
   };
 }
-
-export type TransactionCreateModel = ReturnType<typeof useTransactionCreateModel>;

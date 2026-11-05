@@ -1,4 +1,5 @@
-import { Chip, type ChipTone } from '#/components/chips/chip.component.tsx';
+import { Chip } from '#/components/chips/chip.component.tsx';
+import type { ChipTone } from '#/components/chips/chip.type.ts';
 
 const CHIP_TONE: Record<'accent' | 'neutral' | 'income' | 'warn', ChipTone> = {
   accent: 'accent',

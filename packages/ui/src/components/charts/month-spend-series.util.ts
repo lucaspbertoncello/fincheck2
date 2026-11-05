@@ -1,12 +1,5 @@
 import type { ChartPoint } from '#/components/charts/chart-point.type.ts';
-
-export type MonthSpendRow = {
-  day: number;
-  /** Cumulative spend of the current month; null after today. */
-  current: number | null;
-  /** Cumulative spend of the previous month. */
-  previous: number;
-};
+import type { MonthSpendRow } from '#/components/charts/month-spend-row.type.ts';
 
 type BuildRowsInput = {
   current: readonly ChartPoint[];

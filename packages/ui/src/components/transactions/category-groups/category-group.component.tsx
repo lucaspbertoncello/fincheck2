@@ -9,7 +9,7 @@ import { CategoryIcon } from '#/components/icons/index.ts';
 import { Money } from '#/components/money/index.ts';
 import { CategoryGroupItems } from '#/components/transactions/category-groups/category-group-items.component.tsx';
 import type { CategoryGroupData } from '#/components/transactions/category-groups/category-group.type.ts';
-import { countLabel } from '#/components/transactions/list/count-label.util.ts';
+import { countLabel } from '#/utils/count-label.util.ts';
 import { cx } from '#/utils/class-names.util.ts';
 
 const percentFormat = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 });

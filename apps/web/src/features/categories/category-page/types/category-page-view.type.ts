@@ -22,7 +22,7 @@ export type CategoryFiguresView = {
   monthlyAverageCents: number | null;
 };
 
-export type CategoryTrendView = {
+type CategoryTrendView = {
   title: string;
   valueLabel: string;
   bars: MonthBar[];
@@ -30,7 +30,7 @@ export type CategoryTrendView = {
   emptyMessage: string;
 };
 
-export type CategoryEmptyView = {
+type CategoryEmptyView = {
   title: string;
   description: string;
   /** Only where a wider period would show something else. */

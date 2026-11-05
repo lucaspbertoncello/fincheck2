@@ -1,6 +1,6 @@
 import { type ReactNode, useId } from 'react';
 
-import { countLabel } from '#/components/transactions/list/count-label.util.ts';
+import { countLabel } from '#/utils/count-label.util.ts';
 import { GroupHeader } from '#/components/transactions/list/group-header.component.tsx';
 import { cx } from '#/utils/class-names.util.ts';
 

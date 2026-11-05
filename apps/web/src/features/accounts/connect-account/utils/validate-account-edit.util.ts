@@ -6,7 +6,7 @@ import type {
 } from '#/features/accounts/connect-account/types/connect-account.type.ts';
 import { validateManualAccount } from '#/features/accounts/connect-account/utils/validate-manual-account.util.ts';
 
-export type AccountEditValidation =
+type AccountEditValidation =
   { ok: true; body: Account.UpdateRequest } | { ok: false; errors: FormErrors };
 
 function toDay(text: string): number {

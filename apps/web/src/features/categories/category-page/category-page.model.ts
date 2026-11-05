@@ -1,3 +1,4 @@
+import type { PeriodRange } from '#/features/transactions/transaction-list/types/period-range.type.ts';
 import { useAccounts } from '#/domain/accounts/account/hooks/use-accounts.hook.ts';
 import { useArchiveCategory } from '#/domain/categories/category/hooks/use-archive-category.hook.ts';
 import { useCategories } from '#/domain/categories/category/hooks/use-categories.hook.ts';
@@ -12,7 +13,6 @@ import { useInfiniteTransactions } from '#/domain/transactions/transaction/hooks
 import { useResolveBankChange } from '#/domain/transactions/transaction/hooks/use-resolve-bank-change.hook.ts';
 import { useUnignoreTransaction } from '#/domain/transactions/transaction/hooks/use-unignore-transaction.hook.ts';
 import { PERIOD_PAGE_SIZE } from '#/features/transactions/transaction-list/constants/period-options.constant.ts';
-import type { PeriodRange } from '#/features/transactions/transaction-list/utils/resolve-period-range.util.ts';
 
 type ModelArgs = {
   categoryId: string;

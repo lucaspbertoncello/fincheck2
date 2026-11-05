@@ -1,8 +1,6 @@
+import type { PeriodRange } from '#/features/transactions/transaction-list/types/period-range.type.ts';
 import type { TransactionPeriod } from '#/features/transactions/transaction-list/schemas/transaction-list-search.schema.ts';
 import { shiftMonthKey } from '#/shared/utils/shift-month-key.util.ts';
-
-/** The ends of a period, both included (`YYYY-MM-DD`); empty for the month and for all the history. */
-export type PeriodRange = { from?: string; to?: string };
 
 function lastDayOf(monthKey: string): string {
   const [year = 0, month = 1] = monthKey.split('-').map(Number);

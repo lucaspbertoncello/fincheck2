@@ -6,12 +6,10 @@ export type {
   RulePhraseSegment,
   RuleRowData,
 } from '#/components/rules/rule-phrase.type.ts';
-export {
-  RulePreview,
-  type RulePreviewData,
-  type RulePreviewMatch,
-} from '#/components/rules/rule-preview.component.tsx';
+export { RulePreview } from '#/components/rules/rule-preview.component.tsx';
+export type { RulePreviewData, RulePreviewMatch } from '#/components/rules/rule-preview.type.ts';
 export { RuleRow } from '#/components/rules/rule-row.component.tsx';
 export { RuleSentenceText } from '#/components/rules/rule-sentence-text.component.tsx';
 export { RuleSuggestionBanner } from '#/components/rules/rule-suggestion-banner.component.tsx';
-export { RuleToken, type RuleTokenKind } from '#/components/rules/rule-token.component.tsx';
+export { RuleToken } from '#/components/rules/rule-token.component.tsx';
+export type { RuleTokenKind } from '#/components/rules/rule-token.type.ts';

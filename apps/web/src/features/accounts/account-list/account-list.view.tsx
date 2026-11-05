@@ -21,7 +21,7 @@ import type {
 
 const GRID_CLASS = 'grid grid-cols-1 items-start gap-s16 lg:grid-cols-2 lg:gap-s24';
 
-export type AccountListViewProps = {
+type AccountListViewProps = {
   state: 'loading' | 'error' | 'empty' | 'ready';
   onRetry: () => void;
   progress: readonly HistoryProgressData[];

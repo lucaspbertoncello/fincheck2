@@ -1,7 +1,7 @@
 import type { Rule } from '@fincheck/shared/categories/rule/rule.type.ts';
 import type { RulePreviewData } from '@fincheck/ui';
 
-import { formatShortDate } from '#/features/rules/utils/format-short-date.util.ts';
+import { formatShortDate } from '#/shared/utils/date/format-short-date.util.ts';
 
 type PreviewSource = Pick<Rule.Preview, 'matchCount' | 'willChangeCount' | 'examples'>;
 

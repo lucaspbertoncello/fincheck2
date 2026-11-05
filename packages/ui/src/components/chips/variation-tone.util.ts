@@ -1,7 +1,7 @@
-/** A variation only gets color from this magnitude (in percent) up (ui adjustment 4). */
-export const VARIATION_COLOR_THRESHOLD = 10;
+import type { VariationTone } from '#/components/chips/variation-tone.type.ts';
 
-export type VariationTone = 'neutral' | 'bad' | 'good';
+/** A variation only gets color from this magnitude (in percent) up (ui adjustment 4). */
+const VARIATION_COLOR_THRESHOLD = 10;
 
 /**
  * Color of a variation badge. Under 10% (either way) it stays neutral; from 10% a rise is "bad"

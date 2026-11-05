@@ -1,11 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { transactionListSearchSchema } from '#/features/transactions/transaction-list/schemas/transaction-list-search.schema.ts';
-import {
-  buildListQuery,
-  buildPeriodListQuery,
-  countActiveFilters,
-} from '#/features/transactions/transaction-list/utils/build-list-query.util.ts';
+import { buildListQuery } from '#/features/transactions/transaction-list/utils/build-list-query.util.ts';
+import { countActiveFilters } from '#/features/transactions/transaction-list/utils/count-active-filters.util.ts';
+import { buildPeriodListQuery } from '#/features/transactions/transaction-list/utils/build-period-list-query.util.ts';
 
 describe('transaction list search and query', () => {
   it('defaults to the list view of every type, in the month', () => {

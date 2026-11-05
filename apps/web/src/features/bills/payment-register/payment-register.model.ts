@@ -17,6 +17,8 @@ export type PaymentRegisterViewProps = {
   errors: { amountCents?: string; paidOn?: string };
   /** What is left to pay or receive. */
   remainingCents: number;
+  /** Half of what is left, for the "Metade" shortcut. */
+  halfCents: number;
   /** Bills only: the recent transactions that could be the Pix. Null for an invoice. */
   candidates: {
     options: PaymentCandidateOption[];

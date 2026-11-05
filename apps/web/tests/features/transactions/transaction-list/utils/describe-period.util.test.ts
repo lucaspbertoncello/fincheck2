@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  describeEmptyPeriod,
-  describePreviousPeriod,
-  describeReceivedIn,
-} from '#/features/transactions/transaction-list/utils/describe-period.util.ts';
+import { describeReceivedIn } from '#/features/transactions/transaction-list/utils/describe-received-in.util.ts';
+import { describeEmptyPeriod } from '#/features/transactions/transaction-list/utils/describe-empty-period.util.ts';
+import { describePreviousPeriod } from '#/features/transactions/transaction-list/utils/describe-previous-period.util.ts';
 import { resolvePeriodRange } from '#/features/transactions/transaction-list/utils/resolve-period-range.util.ts';
 
 describe('words of a period', () => {

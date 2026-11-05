@@ -10,11 +10,9 @@ import {
   HEATMAP_LEVEL_CLASS,
   HEATMAP_WEEKDAY_LABELS,
 } from '#/components/heatmap/heatmap-level.constant.ts';
-import {
-  isHeatmapKey,
-  moveHeatmapFocus,
-  type HeatmapPosition,
-} from '#/components/heatmap/move-heatmap-focus.util.ts';
+import { moveHeatmapFocus } from '#/components/heatmap/move-heatmap-focus.util.ts';
+import { isHeatmapKey } from '#/components/heatmap/is-heatmap-key.util.ts';
+import { type HeatmapPosition } from '#/components/heatmap/heatmap-position.type.ts';
 import type {
   SpendHeatmapDay,
   SpendHeatmapGrid,

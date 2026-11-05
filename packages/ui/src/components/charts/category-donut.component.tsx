@@ -4,7 +4,7 @@ import { Pie, PieChart, Sector, type PieSectorShapeProps } from 'recharts';
 import { CategoryDonutLegend } from '#/components/charts/category-donut-legend.component.tsx';
 import { ChartDataTable } from '#/components/charts/chart-data-table.component.tsx';
 import type { DonutSlice, PaintedSlice } from '#/components/charts/donut-slice.type.ts';
-import { formatChartMoneyForReader } from '#/components/charts/format-chart-money.util.ts';
+import { formatChartMoneyForReader } from '#/components/charts/format-chart-money-for-reader.util.ts';
 import { paintSlices } from '#/components/charts/paint-slices.util.ts';
 import { useMoneyHidden } from '#/components/money/money-visibility.context.ts';
 

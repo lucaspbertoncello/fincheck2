@@ -10,12 +10,7 @@ import {
   SEGMENTED_TRACK_CLASS,
 } from '#/components/forms/segmented-classes.constant.ts';
 import { cx } from '#/utils/class-names.util.ts';
-
-export type SegmentedNavItem = {
-  key: string;
-  label: string;
-  href: string;
-};
+import type { SegmentedNavItem } from '#/components/navigation/segmented-nav.type.ts';
 
 type SegmentedNavProps = {
   items: SegmentedNavItem[];

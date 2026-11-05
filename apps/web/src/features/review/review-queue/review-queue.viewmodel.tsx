@@ -14,20 +14,18 @@ import {
   ReviewQueueView,
   type ReviewQueueViewProps,
 } from '#/features/review/review-queue/review-queue.view.tsx';
+import { getTransactionDirection } from '#/domain/transactions/transaction/rules/get-transaction-direction.rule.ts';
 import { buildAmbiguity } from '#/features/review/review-queue/utils/build-ambiguity.util.ts';
 import { buildTransactionDetail } from '#/features/review/review-queue/utils/build-transaction-detail.util.ts';
 import { countRuleCatches } from '#/domain/transactions/review-queue/rules/count-rule-catches.rule.ts';
 import { orderQueue } from '#/domain/transactions/review-queue/rules/order-queue.rule.ts';
 import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
-import { hasApiErrorCode, isApiError } from '#/shared/api/api.error.ts';
+import { hasApiErrorCode } from '#/shared/api/api.error.ts';
+import { getApiErrorMessage } from '#/shared/api/get-api-error-message.util.ts';
 import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
 
 const LISTED_IN_QUEUE = 8;
 const MIN_PATTERN_LENGTH = 2;
-
-function messageOf(error: unknown, fallback: string): string {
-  return isApiError(error) ? error.message : fallback;
-}
 
 /** The queue of the selected month. A new month starts a new visit (progress, skips, history). */
 export function ReviewQueueViewModel() {
@@ -62,7 +60,7 @@ function ReviewVisit({ month }: { month: string }) {
   const reopened = cursor === null ? null : (reviewed[cursor] ?? null);
   const currentItem = reopened?.item ?? ordered[0] ?? null;
   const transaction = currentItem?.transaction ?? null;
-  const kind = transaction && transaction.amountCents > 0 ? 'income' : 'expense';
+  const kind = transaction ? getTransactionDirection(transaction.amountCents) : 'expense';
 
   // What the card starts with; the draft only exists once the person changes something.
   const initialDraft: ReviewDraft | null =
@@ -154,7 +152,7 @@ function ReviewVisit({ month }: { month: string }) {
       );
       setCursor(null);
     } catch (error) {
-      setActionError(messageOf(error, 'Não deu para desfazer. Tente de novo.'));
+      setActionError(getApiErrorMessage(error, 'Não deu para desfazer. Tente de novo.'));
     }
   }
 
@@ -172,7 +170,7 @@ function ReviewVisit({ month }: { month: string }) {
       });
     } catch (error) {
       setSaving(false);
-      setActionError(messageOf(error, 'Não deu para salvar. Tente de novo.'));
+      setActionError(getApiErrorMessage(error, 'Não deu para salvar. Tente de novo.'));
       return;
     }
 
@@ -201,7 +199,7 @@ function ReviewVisit({ month }: { month: string }) {
         // The same rule already exists: the goal of the checkbox is met. Anything else is told.
         if (!hasApiErrorCode(error, 'RULE_DUPLICATE')) {
           setActionError(
-            `A transação foi salva, mas a regra não: ${messageOf(error, 'tente criá-la pela tela Regras.')}`,
+            `A transação foi salva, mas a regra não: ${getApiErrorMessage(error, 'tente criá-la pela tela Regras.')}`,
           );
         }
       }
@@ -256,13 +254,13 @@ function ReviewVisit({ month }: { month: string }) {
           model.unlinkPayment
             .mutateAsync({ id: occurrenceId, paymentId: payment.id })
             .catch((error: unknown) =>
-              setActionError(messageOf(error, 'Não deu para desfazer. Tente de novo.')),
+              setActionError(getApiErrorMessage(error, 'Não deu para desfazer. Tente de novo.')),
             );
         },
         withIcon: true,
       });
     } catch (error) {
-      setActionError(messageOf(error, 'Não deu para ligar o Pix. Tente de novo.'));
+      setActionError(getApiErrorMessage(error, 'Não deu para ligar o Pix. Tente de novo.'));
     }
   }
 
@@ -288,14 +286,14 @@ function ReviewVisit({ month }: { month: string }) {
               if (previous.length > 0) await model.restoreBulk.mutateAsync({ items: previous });
               await model.deleteRule.mutateAsync(created.rule.id);
             } catch (error) {
-              setActionError(messageOf(error, 'Não deu para desfazer. Tente de novo.'));
+              setActionError(getApiErrorMessage(error, 'Não deu para desfazer. Tente de novo.'));
             }
           })();
         },
         withIcon: true,
       });
     } catch (error) {
-      setActionError(messageOf(error, 'Não deu para criar a regra. Tente de novo.'));
+      setActionError(getApiErrorMessage(error, 'Não deu para criar a regra. Tente de novo.'));
     }
   }
 
@@ -304,7 +302,7 @@ function ReviewVisit({ month }: { month: string }) {
     model.dismissSuggestion
       .mutateAsync({ pattern: firstSuggestion.pattern, categoryId: firstSuggestion.categoryId })
       .catch((error: unknown) =>
-        setActionError(messageOf(error, 'Não deu para dispensar. Tente de novo.')),
+        setActionError(getApiErrorMessage(error, 'Não deu para dispensar. Tente de novo.')),
       );
   }
 
@@ -372,7 +370,7 @@ function ReviewVisit({ month }: { month: string }) {
         name: item.transaction.description,
         detail: buildTransactionDetail(item.transaction, accountName(item.transaction.accountId)),
         amountCents: item.transaction.amountCents,
-        kind: item.transaction.amountCents > 0 ? 'income' : 'expense',
+        kind: getTransactionDirection(item.transaction.amountCents),
         icon: queueIcon(item.categorySuggestions[0]?.categoryId),
         ambiguity: buildAmbiguity(item),
       }))}

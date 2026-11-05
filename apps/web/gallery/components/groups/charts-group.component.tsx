@@ -1,5 +1,4 @@
 import {
-  AccountSparkline,
   CategoryDonut,
   MonthSpendChart,
   SpendHeatmap,
@@ -14,11 +13,8 @@ import {
   SPEND_PREVIOUS,
 } from '#gallery/constants/sample-summary.constant.ts';
 import { SAMPLE_HEATMAP_DAYS } from '#gallery/constants/sample-heatmap.constant.ts';
-import { BALANCE_CURVE } from '#gallery/constants/sample-bank.constant.ts';
 import type { GallerySectionDef } from '#gallery/types/gallery-group.type.ts';
 import { GalleryVariant } from '#gallery/components/shell/gallery-variant.component.tsx';
-
-const SPARK_POINTS = BALANCE_CURVE.map((cents, index) => ({ day: index + 1, cents }));
 
 const BADGED_SLICES: DonutSlice[] = DONUT_SLICES.map((slice, index) =>
   index < 3 && !slice.isOther
@@ -113,30 +109,6 @@ export const CHARTS_SECTIONS: GallerySectionDef[] = [
             centerLabel="Gasto"
             centerTitle="Delivery"
           />
-        </GalleryVariant>
-      </>
-    ),
-  },
-  {
-    id: 'account-sparkline',
-    title: 'AccountSparkline',
-    content: (
-      <>
-        <GalleryVariant caption="48 px (padrão)" width={320}>
-          <AccountSparkline
-            points={SPARK_POINTS}
-            label="Saldo do Banco Aurora nos últimos 30 dias"
-          />
-        </GalleryVariant>
-        <GalleryVariant caption="96 px" width={320}>
-          <AccountSparkline
-            points={SPARK_POINTS}
-            label="Saldo do Banco Aurora nos últimos 30 dias"
-            height={96}
-          />
-        </GalleryVariant>
-        <GalleryVariant caption="poucos pontos" width={320}>
-          <AccountSparkline points={SPARK_POINTS.slice(0, 3)} label="Saldo recente" />
         </GalleryVariant>
       </>
     ),

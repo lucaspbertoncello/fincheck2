@@ -1,6 +1,7 @@
 import type { Category } from '@fincheck/shared/categories/category/category.type.ts';
 import type { Invoice } from '@fincheck/shared/invoices/invoice/invoice.type.ts';
 
+import { getTransactionDirection } from '#/domain/transactions/transaction/rules/get-transaction-direction.rule.ts';
 import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 import { recognizeService } from '#/domain/recurrences/service-logo/rules/recognize-service.rule.ts';
 import type {
@@ -9,7 +10,7 @@ import type {
   InvoiceItemRowData,
   InvoiceSortKey,
 } from '#/features/invoices/invoice-page/types/invoice-page.type.ts';
-import { formatShortDate } from '#/features/invoices/invoice-summary/utils/format-short-date.util.ts';
+import { formatShortDate } from '#/shared/utils/date/format-short-date.util.ts';
 import { formatDayHeading } from '#/features/transactions/transaction-list/utils/format-day-heading.util.ts';
 
 const UNDATED_KEY = 'undated';
@@ -49,7 +50,7 @@ function buildRow(
   }
 
   const category = item.categoryId ? categories.get(item.categoryId) : undefined;
-  const isRefund = item.amountCents > 0;
+  const isRefund = getTransactionDirection(item.amountCents) === 'income';
   const badges: InvoiceItemBadgeData[] = [];
   if (isRefund) badges.push({ label: 'Estorno', description: 'Estorno de compra', tone: 'ok' });
   if (item.installment) {

@@ -1,8 +1,7 @@
 export { AccountCard } from '#/components/bank-cards/account-card.component.tsx';
-export { AddAccountCard } from '#/components/bank-cards/add-account-card.component.tsx';
-export { BankAvatar, type BankAvatarSize } from '#/components/bank-cards/bank-avatar.component.tsx';
+export { BankAvatar } from '#/components/bank-cards/bank-avatar.component.tsx';
+export type { BankAvatarSize } from '#/components/bank-cards/bank-avatar.type.ts';
 export { BankCard } from '#/components/bank-cards/bank-card.component.tsx';
-export { BankCardMini } from '#/components/bank-cards/bank-card-mini.component.tsx';
 export { BANK_THEMES } from '#/components/bank-cards/bank-themes.constant.ts';
 export type {
   BankChipFinish,

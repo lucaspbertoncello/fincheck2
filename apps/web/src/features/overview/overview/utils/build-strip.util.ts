@@ -1,6 +1,6 @@
 import type { Timeline } from '@fincheck/shared/dashboard/timeline/timeline.type.ts';
 
-import type { StripData, StripDay } from '#/features/overview/overview/overview.model.ts';
+import type { StripData } from '#/features/overview/overview/overview.model.ts';
 
 /** What comes in or goes out on a day, in cents. */
 function sumByFlow(items: readonly Timeline.Item[], flow: Timeline.Item['flow']): number {
@@ -29,9 +29,4 @@ export function buildStrip(timeline: Timeline.Dto): StripData {
     overdue: timeline.overdue,
     undated: timeline.undated,
   };
-}
-
-/** The day the strip opens on: the first with something happening, otherwise the first one. */
-export function pickDefaultDate(days: readonly StripDay[]): string {
-  return (days.find((day) => day.items.length > 0) ?? days[0])?.date ?? '';
 }

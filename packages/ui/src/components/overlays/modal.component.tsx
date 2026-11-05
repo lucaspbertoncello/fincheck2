@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 
 import { ModalActions } from '#/components/overlays/modal-actions.component.tsx';
-import { ModalFrame, type ModalFrameProps } from '#/components/overlays/modal-frame.component.tsx';
+import { ModalFrame } from '#/components/overlays/modal-frame.component.tsx';
+import type { ModalFrameProps } from '#/components/overlays/modal-frame.type.ts';
 import { ModalHeader } from '#/components/overlays/modal-header.component.tsx';
 
 type ModalProps = Pick<

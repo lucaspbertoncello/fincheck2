@@ -2,7 +2,7 @@ import type { Rule } from '@fincheck/shared/categories/rule/rule.type.ts';
 import type { ReviewQueue } from '@fincheck/shared/transactions/review-queue/review-queue.type.ts';
 
 /** What the history rule changed when it was created, the payload that undoes it. */
-export type RuleHistoryPrevious = NonNullable<Rule.CreateResult['applied']>['previous'];
+type RuleHistoryPrevious = NonNullable<Rule.CreateResult['applied']>['previous'];
 
 /** A transaction saved in this visit: what "Voltar à anterior" reopens and "Desfazer" reverts. */
 export type ReviewedEntry = {

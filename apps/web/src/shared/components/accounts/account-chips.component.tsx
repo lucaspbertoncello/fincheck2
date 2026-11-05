@@ -1,11 +1,7 @@
 import { BankAvatar, SelectField } from '@fincheck/ui';
-import type { BankThemeKey, ChoiceOption } from '@fincheck/ui';
 import { FieldError, Label, Radio, RadioGroup } from 'react-aria-components';
 
-export type AccountChipOption = ChoiceOption & {
-  /** The bank mark of the chip; "wallet" is the wallet icon. */
-  theme: BankThemeKey | 'wallet';
-};
+import type { AccountChipOption } from '#/shared/types/account/account-chip-option.type.ts';
 
 type AccountChipsProps = {
   label: string;

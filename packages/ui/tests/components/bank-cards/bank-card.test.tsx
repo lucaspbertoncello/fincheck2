@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { BANK_THEMES, BankAvatar, BankCard, BankCardMini } from '#/components/bank-cards/index.ts';
+import { BANK_THEMES, BankAvatar, BankCard } from '#/components/bank-cards/index.ts';
 import type { BankThemeKey } from '#/components/bank-cards/index.ts';
 
 const KEYS = Object.keys(BANK_THEMES) as BankThemeKey[];
@@ -92,13 +92,7 @@ describe('BankCard', () => {
   });
 });
 
-describe('BankCardMini and BankAvatar', () => {
-  it('draws the mini card in the gradient of the theme, hidden from screen readers', () => {
-    const html = renderToStaticMarkup(<BankCardMini theme="nubank" />);
-    expect(html).toContain('aria-hidden="true"');
-    expect(html).toContain('#880FD6');
-  });
-
+describe('BankAvatar', () => {
   it('draws the bank mark in a circle, the wallet as an icon and the fallback as an initial', () => {
     expect(renderToStaticMarkup(<BankAvatar theme="nubank" />)).toContain('<svg');
     expect(renderToStaticMarkup(<BankAvatar theme="wallet" />)).toContain('<svg');

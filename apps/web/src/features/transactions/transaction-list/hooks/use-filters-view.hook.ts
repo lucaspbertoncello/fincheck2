@@ -4,7 +4,7 @@ import type { useTransactionListSearch } from '#/features/transactions/transacti
 import type { FiltersView } from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
 import type { TransactionLookups } from '#/features/transactions/transaction-list/types/transaction-lookups.type.ts';
 import { buildCategoryOptions } from '#/features/transactions/transaction-list/utils/build-category-options.util.ts';
-import { countActiveFilters } from '#/features/transactions/transaction-list/utils/build-list-query.util.ts';
+import { countActiveFilters } from '#/features/transactions/transaction-list/utils/count-active-filters.util.ts';
 
 type FiltersViewArgs = {
   lookups: TransactionLookups;

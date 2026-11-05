@@ -12,10 +12,8 @@ import { BillFormModal } from '#/features/bills/bill-form/bill-form.viewmodel.ts
 import { BillListView } from '#/features/bills/bill-list/bill-list.view.tsx';
 import type { BillSectionsModel } from '#/features/bills/bill-list/bill-list.model.ts';
 import { buildBillRows } from '#/features/bills/bill-list/utils/build-bill-rows.util.ts';
-import {
-  buildFriendsModel,
-  buildPayableModel,
-} from '#/features/bills/bill-list/utils/build-total-model.util.ts';
+import { buildFriendsModel } from '#/features/bills/bill-list/utils/build-friends-model.util.ts';
+import { buildPayableModel } from '#/features/bills/bill-list/utils/build-payable-model.util.ts';
 import { describeInvoicesNote } from '#/features/bills/bill-list/utils/describe-invoices-note.util.ts';
 import { getEndOfMonth } from '#/features/bills/bill-list/utils/get-end-of-month.util.ts';
 import { resolvePaymentTarget } from '#/domain/bills/bill/rules/resolve-payment-target.rule.ts';
@@ -27,7 +25,7 @@ import { InvoiceLinkDialog } from '#/features/bills/invoice-link/invoice-link.vi
 import { PaymentRegisterDialog } from '#/features/bills/payment-register/payment-register.viewmodel.tsx';
 import { describeApiError } from '#/features/bills/utils/describe-api-error.util.ts';
 import { formatDayMonth } from '#/features/bills/utils/format-day-month.util.ts';
-import { getBusinessToday } from '#/features/bills/utils/get-business-today.util.ts';
+import { getBusinessDate } from '#/shared/utils/date/get-business-date.util.ts';
 import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
 
@@ -73,7 +71,7 @@ export function BillList() {
       account.institutionName ?? account.name,
     ]),
   );
-  const context = { today: getBusinessToday(), categoryIcons, accountNames };
+  const context = { today: getBusinessDate(), categoryIcons, accountNames };
   const endOfMonth = getEndOfMonth(month);
 
   async function markOccurrencePaid(item: Agenda.Item, occurrenceId: string) {

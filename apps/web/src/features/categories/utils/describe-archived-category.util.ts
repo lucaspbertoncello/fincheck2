@@ -1,7 +1,7 @@
 import type { Category } from '@fincheck/shared/categories/category/category.type.ts';
 
 import { CATEGORY_KIND_LABELS } from '#/features/categories/constants/category-kind-labels.constant.ts';
-import { MONTH_NAMES } from '#/features/categories/constants/month-names.constant.ts';
+import { MONTH_NAMES } from '#/shared/constants/date/month-names.constant.ts';
 
 /** "Despesa · 27 transações · usada até maio" for the archived rows. */
 export function describeArchivedCategory(category: Category.Dto): string {

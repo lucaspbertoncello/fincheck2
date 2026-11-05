@@ -1,4 +1,4 @@
-import { weekStartOf } from '#/components/day-strip/day-date.util.ts';
+import { weekStartOf } from '#/components/day-strip/week-start-of.util.ts';
 import type { DayStripDay, WeekSummary } from '#/components/day-strip/day-strip.type.ts';
 
 /**

@@ -1,13 +1,11 @@
 import { Banner, BannerSlot, ConfirmDialog, Section, TotalCard } from '@fincheck/ui';
 
+import type { SubscriptionRowAction } from '#/features/recurrences/subscription-list/types/subscription-row-action.type.ts';
 import { Reveal } from '#/features/recurrences/subscription-list/components/reveal.component.tsx';
 import { SubscriptionListEmpty } from '#/features/recurrences/subscription-list/components/states/subscription-list-empty.component.tsx';
 import { SubscriptionListError } from '#/features/recurrences/subscription-list/components/states/subscription-list-error.component.tsx';
 import { SubscriptionListLoading } from '#/features/recurrences/subscription-list/components/states/subscription-list-loading.component.tsx';
-import {
-  SubscriptionRow,
-  type SubscriptionRowAction,
-} from '#/features/recurrences/subscription-list/components/subscription-row.component.tsx';
+import { SubscriptionRow } from '#/features/recurrences/subscription-list/components/subscription-row.component.tsx';
 import { SubscriptionSuggestion } from '#/features/recurrences/subscription-list/components/subscription-suggestion.component.tsx';
 import { RecurrenceFormViewModel } from '#/features/recurrences/recurrence-list/recurrence-form/recurrence-form.viewmodel.tsx';
 import type {

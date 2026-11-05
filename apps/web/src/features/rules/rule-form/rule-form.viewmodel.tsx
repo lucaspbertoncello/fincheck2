@@ -1,8 +1,9 @@
 import type { Rule } from '@fincheck/shared/categories/rule/rule.type.ts';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
-import { useFocusFirstInvalid } from '#/features/categories/hooks/use-focus-first-invalid.hook.ts';
-import type { RulePreviewStatus } from '#/features/rules/rule-form/components/rule-preview-area.component.tsx';
+import type { RulePreviewStatus } from '#/features/rules/rule-form/types/rule-preview-status.type.ts';
+import { INVALID_FIELD_OR_STAND_IN_SELECTOR } from '#/shared/constants/form/invalid-field-selector.constant.ts';
+import { useFocusFirstInvalid } from '#/shared/hooks/form/use-focus-first-invalid.hook.ts';
 import { useDebouncedValue } from '#/features/rules/hooks/use-debounced-value.hook.ts';
 import { useRuleFormModel } from '#/features/rules/rule-form/rule-form.model.ts';
 import type {
@@ -56,7 +57,12 @@ export function useRuleFormViewModel({ target, onClose, onSaved, onDelete }: Opt
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [focusToken, setFocusToken] = useState(0);
-  const formRef = useFocusFirstInvalid(focusToken);
+  const formRef = useRef<HTMLDivElement>(null);
+  useFocusFirstInvalid({
+    attempt: focusToken,
+    selector: INVALID_FIELD_OR_STAND_IN_SELECTOR,
+    scope: formRef,
+  });
 
   const debouncedDescription = useDebouncedValue(description, PREVIEW_DELAY_MS);
   const debouncedCounterparty = useDebouncedValue(counterparty, PREVIEW_DELAY_MS);

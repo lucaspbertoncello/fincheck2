@@ -1,23 +1,9 @@
+import type { PeriodRange } from '#/features/transactions/transaction-list/types/period-range.type.ts';
 import type { TransactionPeriod } from '#/features/transactions/transaction-list/schemas/transaction-list-search.schema.ts';
-import type { PeriodRange } from '#/features/transactions/transaction-list/utils/resolve-period-range.util.ts';
-
-const SHORT_MONTHS = [
-  'jan',
-  'fev',
-  'mar',
-  'abr',
-  'mai',
-  'jun',
-  'jul',
-  'ago',
-  'set',
-  'out',
-  'nov',
-  'dez',
-] as const;
+import { MONTH_SHORT_NAMES } from '#/shared/constants/date/month-names.constant.ts';
 
 function monthYear(date: string): string {
-  return `${SHORT_MONTHS[Number(date.slice(5, 7)) - 1]} ${date.slice(0, 4)}`;
+  return `${MONTH_SHORT_NAMES[Number(date.slice(5, 7)) - 1]} ${date.slice(0, 4)}`;
 }
 
 /**

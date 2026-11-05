@@ -1,4 +1,4 @@
-import { countLabel } from '#/components/categories/count-label.util.ts';
+import { countLabel } from '#/utils/count-label.util.ts';
 import type { ManagedCategory } from '#/components/categories/managed-category.type.ts';
 import { CategoryIcon } from '#/components/icons/category-icon.component.tsx';
 import { ListRow } from '#/components/list-row/index.ts';

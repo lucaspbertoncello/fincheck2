@@ -1,5 +1,5 @@
+import type { AccountChipOption } from '#/shared/types/account/account-chip-option.type.ts';
 import { AccountChips } from '#/shared/components/accounts/account-chips.component.tsx';
-import type { AccountChipOption } from '#/shared/components/accounts/account-chips.component.tsx';
 
 type AccountChoiceFieldProps = {
   label?: string;

@@ -1,6 +1,6 @@
 import type { ServiceLogoSlug } from '@fincheck/ui';
 
-export type ServicePattern = {
+type ServicePattern = {
   /** The name of the service as the screen says it. */
   name: string;
   /** The logo file (Simple Icons), or `null` when there is none: the circle writes the initial. */

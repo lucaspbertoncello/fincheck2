@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
-import { useFocusFirstInvalid } from '#/features/categories/hooks/use-focus-first-invalid.hook.ts';
+import { INVALID_FIELD_OR_STAND_IN_SELECTOR } from '#/shared/constants/form/invalid-field-selector.constant.ts';
+import { useFocusFirstInvalid } from '#/shared/hooks/form/use-focus-first-invalid.hook.ts';
 import { useTagFormModel } from '#/features/categories/tag-form/tag-form.model.ts';
 import type { TagFormTarget } from '#/features/categories/tag-form/types/tag-form.type.ts';
 import { validateTagName } from '#/features/categories/tag-form/utils/validate-tag-name.util.ts';
@@ -22,7 +23,12 @@ export function useTagFormViewModel({ target, onClose, onArchive }: Options) {
   const [error, setError] = useState<string | undefined>(undefined);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [focusToken, setFocusToken] = useState(0);
-  const formRef = useFocusFirstInvalid(focusToken);
+  const formRef = useRef<HTMLDivElement>(null);
+  useFocusFirstInvalid({
+    attempt: focusToken,
+    selector: INVALID_FIELD_OR_STAND_IN_SELECTOR,
+    scope: formRef,
+  });
 
   async function submit() {
     setSubmitError(null);

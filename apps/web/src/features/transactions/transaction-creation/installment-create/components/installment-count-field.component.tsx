@@ -3,10 +3,7 @@ import { useState } from 'react';
 import { Button as AriaButton, ToggleButton } from 'react-aria-components';
 
 import { INSTALLMENT_COUNT_PRESETS } from '#/features/transactions/transaction-creation/installment-create/constants/installment-count-presets.constant.ts';
-import {
-  QUICK_CHIP_CLASS,
-  QUICK_CHIP_ON_CLASS,
-} from '#/features/transactions/transaction-fields/constants/quick-chip-class.constant.ts';
+import { CHIP_CLASS, CHIP_ON_CLASS } from '#/shared/constants/chip/chip-class.constant.ts';
 
 type InstallmentCountFieldProps = {
   /** Text of the count, so it can be empty while typing. */
@@ -38,7 +35,7 @@ export function InstallmentCountField({ countText, onChange, error }: Installmen
                 setCustom(false);
                 onChange(String(count));
               }}
-              className={`${QUICK_CHIP_CLASS} tabular-nums ${selected ? QUICK_CHIP_ON_CLASS : ''}`}
+              className={`${CHIP_CLASS} tabular-nums ${selected ? CHIP_ON_CLASS : ''}`}
             >
               {count}×
             </ToggleButton>
@@ -51,7 +48,7 @@ export function InstallmentCountField({ countText, onChange, error }: Installmen
             if (!custom) onChange('');
             setCustom(true);
           }}
-          className={`${QUICK_CHIP_CLASS} ${custom ? QUICK_CHIP_ON_CLASS : 'border-dashed'}`}
+          className={`${CHIP_CLASS} ${custom ? CHIP_ON_CLASS : 'border-dashed'}`}
         >
           Outro
         </AriaButton>

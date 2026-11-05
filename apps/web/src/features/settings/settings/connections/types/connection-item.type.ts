@@ -1,6 +1,6 @@
 import type { BankThemeKey } from '@fincheck/ui';
 
-export type PendingMatchChoice = {
+type PendingMatchChoice = {
   /** The account the person can pick: its id, and the line that describes it. */
   accountId: string;
   label: string;

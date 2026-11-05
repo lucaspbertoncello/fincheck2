@@ -14,18 +14,14 @@ import { buildExpenseCaption } from '#/features/recurrences/recurrence-list/util
 import { buildIncomeCaption } from '#/features/recurrences/recurrence-list/utils/build-income-caption.util.ts';
 import { buildOccurrenceChips } from '#/features/recurrences/recurrence-list/utils/build-occurrence-chips.util.ts';
 import { buildOccurrenceDays } from '#/features/recurrences/recurrence-list/utils/build-occurrence-days.util.ts';
-import { getTodayKey } from '#/features/recurrences/recurrence-list/utils/get-today-key.util.ts';
+import { getBusinessDate } from '#/shared/utils/date/get-business-date.util.ts';
 import { presentIdleRecurrence } from '#/features/recurrences/recurrence-list/utils/present-idle-recurrence.util.ts';
 import { presentOccurrenceRow } from '#/features/recurrences/recurrence-list/utils/present-occurrence-row.util.ts';
-import { isApiError } from '#/shared/api/api.error.ts';
+import { getApiErrorMessage } from '#/shared/api/get-api-error-message.util.ts';
 import { useHideValues } from '#/shared/hooks/use-hide-values.hook.ts';
 import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
 
 type DeleteTarget = { recurrenceId: string; name: string };
-
-function describeFailure(error: unknown): string {
-  return isApiError(error) ? error.message : 'Tente de novo em instantes.';
-}
 
 /** Connects the Recorrências screen: month and URL state, the data of the month and the actions. */
 export function RecurrenceListViewModel() {
@@ -39,7 +35,7 @@ export function RecurrenceListViewModel() {
   const [actionError, setActionError] = useState<ActionErrorData | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
 
-  const today = getTodayKey();
+  const today = getBusinessDate();
 
   async function run(key: string, failure: string, task: () => Promise<void>) {
     setPendingKey(key);
@@ -48,7 +44,7 @@ export function RecurrenceListViewModel() {
       await task();
     } catch (error) {
       setActionError({
-        message: `${failure} ${describeFailure(error)}`,
+        message: `${failure} ${getApiErrorMessage(error, 'Tente de novo em instantes.')}`,
         onRetry: () => void run(key, failure, task),
       });
     } finally {

@@ -1,11 +1,11 @@
 import type { CategoryOption } from '@fincheck/ui';
 
-import type { AccountChipOption } from '#/shared/components/accounts/account-chips.component.tsx';
-
 import type {
   TransactionCreateErrors,
   TransactionCreateValues,
 } from '#/features/transactions/transaction-creation/transaction-create/types/transaction-create-form.type.ts';
+
+import type { AccountChipOption } from '#/shared/types/account/account-chip-option.type.ts';
 
 export type TransactionCreateViewProps = {
   isOpen: boolean;

@@ -1,11 +1,4 @@
-import type {
-  CategoryGroupData,
-  CategoryOption,
-  CounterpartOption,
-  SplitPart,
-  TransactionEditValues,
-  TransactionRowData,
-} from '@fincheck/ui';
+import type { CategoryGroupData, CategoryOption, TransactionRowData } from '@fincheck/ui';
 
 export const SAMPLE_CATEGORIES: CategoryOption[] = [
   { id: 'cat-food', name: 'Restaurantes', icon: 'food' },
@@ -14,26 +7,6 @@ export const SAMPLE_CATEGORIES: CategoryOption[] = [
   { id: 'cat-transport', name: 'Transporte', icon: 'car' },
   { id: 'cat-health', name: 'Saúde', icon: 'health' },
   { id: 'cat-fun', name: 'Lazer', icon: 'fun' },
-];
-
-export const SAMPLE_COUNTERPARTS: CounterpartOption[] = [
-  { id: 'cp-1', label: 'Pix para Rio Azul, 20 out., R$ 500,00' },
-  { id: 'cp-2', label: 'TED recebida Vale Verde, 21 out., R$ 500,00' },
-];
-
-export const SAMPLE_EDIT_VALUES: TransactionEditValues = {
-  description: 'Mocoto Restaurante',
-  amountCents: 8790,
-  date: '2026-10-19',
-  categoryId: 'cat-food',
-  tags: ['almoço', 'trabalho'],
-  nature: 'expense',
-  counterpartId: null,
-};
-
-export const SAMPLE_SPLIT_PARTS: SplitPart[] = [
-  { id: 'part-1', categoryId: 'cat-market', amountCents: 14000 },
-  { id: 'part-2', categoryId: 'cat-health', amountCents: 6800 },
 ];
 
 const BASE_ROW: TransactionRowData = {

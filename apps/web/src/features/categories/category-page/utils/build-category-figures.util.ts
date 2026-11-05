@@ -1,10 +1,10 @@
 import type { CategoryBreakdown } from '@fincheck/shared/dashboard/category-breakdown/category-breakdown.type.ts';
 import type { Category } from '@fincheck/shared/categories/category/category.type.ts';
 
+import type { PeriodRange } from '#/features/transactions/transaction-list/types/period-range.type.ts';
 import type { TransactionPeriod } from '#/features/transactions/transaction-list/schemas/transaction-list-search.schema.ts';
-import type { PeriodRange } from '#/features/transactions/transaction-list/utils/resolve-period-range.util.ts';
 
-export type CategoryFigures = {
+type CategoryFigures = {
   /** What was spent (expense) or received (income) in the period. */
   totalCents: number;
   transactionCount: number;

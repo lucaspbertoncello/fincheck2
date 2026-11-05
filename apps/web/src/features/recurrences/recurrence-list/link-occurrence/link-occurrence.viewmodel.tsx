@@ -5,8 +5,8 @@ import { useRecurrenceListSearch } from '#/features/recurrences/recurrence-list/
 import { useLinkOccurrenceModel } from '#/features/recurrences/recurrence-list/link-occurrence/link-occurrence.model.ts';
 import { LinkOccurrenceView } from '#/features/recurrences/recurrence-list/link-occurrence/link-occurrence.view.tsx';
 import type { LinkCandidateData } from '#/features/recurrences/recurrence-list/link-occurrence/types/link-candidate.type.ts';
-import { formatShortDate } from '#/features/recurrences/recurrence-list/utils/format-short-date.util.ts';
-import { isApiError } from '#/shared/api/api.error.ts';
+import { formatShortDate } from '#/shared/utils/date/format-short-date.util.ts';
+import { getApiErrorMessage } from '#/shared/api/get-api-error-message.util.ts';
 import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
 
 /** "Vincular transação" (`?link=<occurrenceId>`): picks the transaction that paid the occurrence. */
@@ -51,7 +51,7 @@ export function LinkOccurrenceViewModel() {
         },
       });
     } catch (error) {
-      setLinkError(isApiError(error) ? error.message : 'Tente de novo em instantes.');
+      setLinkError(getApiErrorMessage(error, 'Tente de novo em instantes.'));
     } finally {
       setLinking(false);
     }

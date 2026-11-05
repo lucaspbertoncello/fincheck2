@@ -3,8 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it } from 'vitest';
 
+import type { AccountChipOption } from '#/shared/types/account/account-chip-option.type.ts';
 import { AccountChips } from '#/shared/components/accounts/account-chips.component.tsx';
-import type { AccountChipOption } from '#/shared/components/accounts/account-chips.component.tsx';
 
 const ACCOUNTS: AccountChipOption[] = [
   { key: 'a', label: 'Nubank', theme: 'nubank' },

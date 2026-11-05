@@ -5,7 +5,7 @@ import { useTransactionListSearch } from '#/features/transactions/transaction-li
 import type { TransactionPeriod } from '#/features/transactions/transaction-list/schemas/transaction-list-search.schema.ts';
 import { formatPeriodRange } from '#/features/transactions/transaction-list/utils/format-period-range.util.ts';
 import { resolvePeriodRange } from '#/features/transactions/transaction-list/utils/resolve-period-range.util.ts';
-import { toBusinessDate } from '#/features/transactions/transaction-list/utils/to-business-date.util.ts';
+import { getBusinessDate } from '#/shared/utils/date/get-business-date.util.ts';
 import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
 
 /**
@@ -16,7 +16,7 @@ import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
 export function TransactionPeriodPicker() {
   const month = useSelectedMonth();
   const { search, update } = useTransactionListSearch();
-  const range = resolvePeriodRange(search.period, toBusinessDate(new Date()));
+  const range = resolvePeriodRange(search.period, getBusinessDate(new Date()));
 
   return (
     <MonthPicker

@@ -2,10 +2,7 @@ import { CategoryPicker, Collapse, FieldSet, Icon, type CategoryOption } from '@
 import { useState } from 'react';
 import { Button as AriaButton, ToggleButton } from 'react-aria-components';
 
-import {
-  QUICK_CHIP_CLASS,
-  QUICK_CHIP_ON_CLASS,
-} from '#/features/transactions/transaction-fields/constants/quick-chip-class.constant.ts';
+import { CHIP_CLASS, CHIP_ON_CLASS } from '#/shared/constants/chip/chip-class.constant.ts';
 
 /** Shortcuts shown before "Outras…". More than this and the rest hide behind the search. */
 const SHORTCUTS = 5;
@@ -58,7 +55,7 @@ export function CategoryChipsField({
                 setSearching(false);
                 onChange(selected ? null : category.id);
               }}
-              className={selected ? `${QUICK_CHIP_CLASS} ${QUICK_CHIP_ON_CLASS}` : QUICK_CHIP_CLASS}
+              className={selected ? `${CHIP_CLASS} ${CHIP_ON_CLASS}` : CHIP_CLASS}
             >
               <Icon name={category.icon} size="md" />
               {category.name}
@@ -69,7 +66,7 @@ export function CategoryChipsField({
           <AriaButton
             aria-expanded={searching}
             onPress={() => setSearching((current) => !current)}
-            className={`${QUICK_CHIP_CLASS} border-dashed ${searching ? 'bg-subtle' : ''}`}
+            className={`${CHIP_CLASS} border-dashed ${searching ? 'bg-subtle' : ''}`}
           >
             <Icon name="search" size="md" />
             Outras…

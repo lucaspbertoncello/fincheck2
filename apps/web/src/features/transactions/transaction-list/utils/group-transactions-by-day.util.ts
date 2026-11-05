@@ -1,7 +1,7 @@
 import type { Transaction } from '@fincheck/shared/transactions/transaction/transaction.type.ts';
 
 import type { TransactionDay } from '#/features/transactions/transaction-list/types/transaction-day.type.ts';
-import { isCountingNature } from '#/features/transactions/transaction-list/utils/build-transaction-row.util.ts';
+import { isCountingNature } from '#/features/transactions/transaction-list/utils/is-counting-nature.util.ts';
 import { formatDayHeading } from '#/features/transactions/transaction-list/utils/format-day-heading.util.ts';
 
 /** Groups the transactions (already newest first) by their competence day, keeping the order. */

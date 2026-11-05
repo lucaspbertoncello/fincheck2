@@ -10,5 +10,3 @@ export const ruleListSearchSchema = z.object({
   edit: z.string().min(1).optional().catch(undefined),
   from: z.string().min(1).optional().catch(undefined),
 });
-
-export type RuleListSearch = z.infer<typeof ruleListSearchSchema>;

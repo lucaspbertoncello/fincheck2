@@ -1,6 +1,6 @@
 import type { Agenda } from '@fincheck/shared/dashboard/agenda/agenda.type.ts';
 
-import { daysBetween } from '#/features/bills/utils/days-between.util.ts';
+import { daysBetween } from '#/shared/utils/date/days-between.util.ts';
 import { formatDayMonth } from '#/features/bills/utils/format-day-month.util.ts';
 
 function inDays(count: number): string {

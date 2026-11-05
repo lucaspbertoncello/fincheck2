@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { Button } from 'react-aria-components';
 
 import { Icon } from '#/components/icons/icon.component.tsx';
-import { PeriodMenu, type PeriodMenuProps } from '#/components/page/period-menu.component.tsx';
+import { PeriodMenu } from '#/components/page/period-menu.component.tsx';
+import type { PeriodMenuProps } from '#/components/page/period-menu.type.ts';
 import { cx } from '#/utils/class-names.util.ts';
 
 type MonthPickerPeriod = PeriodMenuProps & {

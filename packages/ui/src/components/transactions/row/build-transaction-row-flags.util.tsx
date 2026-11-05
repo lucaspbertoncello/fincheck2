@@ -5,7 +5,7 @@ import { Money } from '#/components/money/index.ts';
 import type { TransactionRowData } from '#/components/transactions/row/transaction-row.type.ts';
 
 /** One piece of metadata of a row: the chip it becomes and the plain text it turns into when the chips are over. */
-export type TransactionRowFlag = {
+type TransactionRowFlag = {
   key: string;
   chip: ReactNode;
   /** What the detail line writes when the chips are over. */

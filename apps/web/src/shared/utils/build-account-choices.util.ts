@@ -1,7 +1,7 @@
 import type { Account } from '@fincheck/shared/accounts/account/account.type.ts';
 import { resolveBankThemeKey } from '@fincheck/ui';
 
-import type { AccountChipOption } from '#/shared/components/accounts/account-chips.component.tsx';
+import type { AccountChipOption } from '#/shared/types/account/account-chip-option.type.ts';
 
 const ICON_BY_TYPE = {
   checking: 'wallet',

@@ -2,12 +2,9 @@ import type { Category } from '@fincheck/shared/categories/category/category.typ
 import { describe, expect, it } from 'vitest';
 
 import { describeArchivedCategory } from '#/features/categories/utils/describe-archived-category.util.ts';
-import {
-  countCategoriesByFilter,
-  filterCategories,
-} from '#/features/categories/utils/filter-categories.util.ts';
+import { filterCategories } from '#/features/categories/utils/filter-categories.util.ts';
+import { countCategoriesByFilter } from '#/features/categories/utils/count-categories-by-filter.util.ts';
 import { formatLastUsed } from '#/features/categories/utils/format-last-used.util.ts';
-import { getBusinessToday } from '#/features/categories/utils/get-business-today.util.ts';
 import { toManagedCategory } from '#/features/categories/utils/to-managed-category.util.ts';
 
 function category(overrides: Partial<Category.Dto>): Category.Dto {
@@ -112,11 +109,5 @@ describe('toManagedCategory', () => {
 
     expect(row.archived).toBe(true);
     expect(row.archivedNote).toContain('Despesa');
-  });
-});
-
-describe('getBusinessToday', () => {
-  it('uses the São Paulo day, not the UTC one', () => {
-    expect(getBusinessToday(new Date('2026-10-23T01:30:00.000Z'))).toBe('2026-10-22');
   });
 });

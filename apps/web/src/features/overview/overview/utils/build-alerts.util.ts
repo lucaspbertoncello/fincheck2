@@ -3,7 +3,7 @@ import type { MonthSummary } from '@fincheck/shared/dashboard/month-summary/mont
 import type { OverviewAlert } from '#/features/overview/overview/overview.model.ts';
 
 /** The exception line shows at most this many alerts; the first ones are the most urgent. */
-export const MAX_ALERTS = 2;
+const MAX_ALERTS = 2;
 
 function describeDaysLate(daysLate: number | null): string {
   if (!daysLate) return '';

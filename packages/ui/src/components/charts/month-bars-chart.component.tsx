@@ -1,10 +1,11 @@
 import { Bar, BarChart, CartesianGrid, Cell, Tooltip, XAxis, YAxis } from 'recharts';
 
 import { ChartDataTable } from '#/components/charts/chart-data-table.component.tsx';
-import { formatChartMoneyForReader } from '#/components/charts/format-chart-money.util.ts';
+import { formatChartMoneyForReader } from '#/components/charts/format-chart-money-for-reader.util.ts';
 import type { MonthBar } from '#/components/charts/month-bars-chart.type.ts';
 import { MonthBarsTooltipCard } from '#/components/charts/month-bars-tooltip.component.tsx';
-import { formatAxisCents, niceYAxis } from '#/components/charts/month-spend-axis.util.ts';
+import { formatAxisCents } from '#/components/charts/format-axis-cents.util.ts';
+import { niceYAxis } from '#/components/charts/nice-y-axis.util.ts';
 import { useMoneyHidden } from '#/components/money/money-visibility.context.ts';
 
 const AXIS_TICK = { fontSize: 12, fill: 'var(--color-text-secondary)' } as const;

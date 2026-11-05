@@ -21,7 +21,8 @@ import {
   NO_CATEGORY_ID,
   useCategoryOptions,
 } from '#/features/bills/hooks/use-category-options.hook.ts';
-import { useFocusFirstInvalid } from '#/features/bills/hooks/use-focus-first-invalid.hook.ts';
+import { INVALID_FIELD_OR_DATE_SEGMENT_SELECTOR } from '#/shared/constants/form/invalid-field-selector.constant.ts';
+import { useFocusFirstInvalid } from '#/shared/hooks/form/use-focus-first-invalid.hook.ts';
 import { collectFieldErrors } from '#/features/bills/utils/collect-field-errors.util.ts';
 import { describeApiError } from '#/features/bills/utils/describe-api-error.util.ts';
 import { formatDayMonth } from '#/features/bills/utils/format-day-month.util.ts';
@@ -53,7 +54,11 @@ function BillForm({ bill, onClose }: BillFormProps) {
   const [errors, setErrors] = useState<BillFormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
-  useFocusFirstInvalid(attempt);
+  useFocusFirstInvalid({
+    attempt,
+    selector: INVALID_FIELD_OR_DATE_SEGMENT_SELECTOR,
+    scope: 'dialog',
+  });
 
   const { showUndoToast } = useToast();
   const createBill = useCreateBill();

@@ -1,5 +1,5 @@
-import { MONTH_ABBREVIATIONS } from '#/features/categories/constants/month-names.constant.ts';
-import { daysBetweenDates } from '#/features/categories/utils/days-between-dates.util.ts';
+import { MONTH_ABBREVIATIONS } from '#/shared/constants/date/month-names.constant.ts';
+import { daysBetween } from '#/shared/utils/date/days-between.util.ts';
 
 const RECENT_DAYS = 31;
 
@@ -10,7 +10,7 @@ const RECENT_DAYS = 31;
 export function formatLastUsed(lastUsedOn: string | null, today: string): string {
   if (!lastUsedOn) return '—';
 
-  const days = daysBetweenDates(lastUsedOn, today);
+  const days = daysBetween(lastUsedOn, today);
   if (days <= 0) return 'hoje';
   if (days === 1) return 'ontem';
 

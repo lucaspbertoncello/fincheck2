@@ -1,8 +1,7 @@
 import { motion } from 'motion/react';
 
 import { cx } from '#/utils/class-names.util.ts';
-
-export type SegmentedTone = 'neutral' | 'loss' | 'gain';
+import type { SegmentedTone } from '#/components/forms/segmented-indicator.type.ts';
 
 const TONE_CLASS: Record<SegmentedTone, string> = {
   neutral: 'bg-(--color-surface-segment-indicator) shadow-(--shadow-indicator)',

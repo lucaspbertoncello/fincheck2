@@ -1,7 +1,7 @@
 import type { Occurrence } from '@fincheck/shared/recurrences/occurrence/occurrence.type.ts';
 
 import { formatMoneyNote } from '#/features/recurrences/recurrence-list/utils/format-money-note.util.ts';
-import { formatShortDate } from '#/features/recurrences/recurrence-list/utils/format-short-date.util.ts';
+import { formatShortDate } from '#/shared/utils/date/format-short-date.util.ts';
 
 const CLOSING = 'Mudar o valor não altera o que já foi confirmado.';
 

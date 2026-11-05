@@ -1,10 +1,9 @@
 import { Skeleton } from '#/components/states/skeleton.component.tsx';
 import { cx } from '#/utils/class-names.util.ts';
+import type { ContentSkeletonVariant } from '#/components/states/content-skeleton.type.ts';
 
 const ROW_KEYS = ['a', 'b', 'c', 'd', 'e', 'f'] as const;
 const DAY_KEYS = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 'd9', 'd10'] as const;
-
-export type ContentSkeletonVariant = 'overview' | 'list' | 'cards' | 'sections';
 
 type ContentSkeletonProps = {
   variant: ContentSkeletonVariant;

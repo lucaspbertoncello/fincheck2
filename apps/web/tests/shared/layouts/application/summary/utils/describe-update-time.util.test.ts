@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  describeDataAge,
-  describeUpdateTime,
-} from '#/shared/layouts/application/summary/utils/describe-update-time.util.ts';
+import { describeUpdateTime } from '#/shared/layouts/application/summary/utils/describe-update-time.util.ts';
+import { describeDataAge } from '#/shared/layouts/application/summary/utils/describe-data-age.util.ts';
 
 const NOW = new Date('2026-10-30T15:00:00-03:00');
 

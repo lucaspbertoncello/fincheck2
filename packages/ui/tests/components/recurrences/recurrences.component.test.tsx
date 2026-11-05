@@ -5,7 +5,6 @@ import { MoneyVisibilityContext } from '#/components/money/index.ts';
 import {
   BillRow,
   buildRecurrenceMenu,
-  DateRulePicker,
   ExpectedValueUpdate,
   NeedsAttentionStrip,
   RecurrenceList,
@@ -438,54 +437,5 @@ describe('TotalCard', () => {
     expect(html).not.toContain('Academia Corpo');
     const controls = /aria-controls="([^"]+)"/.exec(html)?.[1];
     expect(html).toContain(`id="${controls}"`);
-  });
-});
-
-describe('DateRulePicker', () => {
-  const options = [
-    { key: 'fixed', label: 'Dia fixo', hint: 'Todo dia 20', icon: 'calendar' as const },
-    { key: 'business', label: 'Dia útil', icon: 'calendar-mark' as const },
-    { key: 'around', label: 'Por volta do dia' },
-    { key: 'any', label: 'Qualquer dia' },
-  ];
-
-  it('draws the 4 cards in a 2-column grid with the chosen one checked', () => {
-    const html = renderToStaticMarkup(
-      <DateRulePicker
-        options={options}
-        value="business"
-        onChange={noop}
-        label="Regra de data"
-        preview={['sex, 06/11', 'ter, 08/12']}
-      />,
-    );
-
-    expect(html).toContain('role="radiogroup"');
-    expect(html).toContain('grid-cols-2');
-    expect(html).toContain('Dia fixo');
-    expect(html).toContain('Todo dia 20');
-    expect(html).toContain('Qualquer dia');
-    expect(html.match(/type="radio"/g)).toHaveLength(4);
-    expect(html.match(/checked=""/g)).toHaveLength(1);
-  });
-
-  it('shows the preview dates the caller computed, and none without them', () => {
-    const withPreview = renderToStaticMarkup(
-      <DateRulePicker
-        options={options}
-        value="fixed"
-        onChange={noop}
-        label="Regra de data"
-        preview={['sex, 20/11']}
-      />,
-    );
-
-    expect(withPreview).toContain('Próximas datas');
-    expect(withPreview).toContain('sex, 20/11');
-    expect(
-      renderToStaticMarkup(
-        <DateRulePicker options={options} value="fixed" onChange={noop} label="Regra de data" />,
-      ),
-    ).not.toContain('Próximas datas');
   });
 });

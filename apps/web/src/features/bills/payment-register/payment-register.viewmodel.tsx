@@ -7,13 +7,15 @@ import { useCreateBillPayment } from '#/domain/bills/bill-payment/hooks/use-crea
 import { useDeleteBillPayment } from '#/domain/bills/bill-payment/hooks/use-delete-bill-payment.hook.ts';
 import { useCreateInvoicePayment } from '#/domain/invoices/invoice-payment/hooks/use-create-invoice-payment.hook.ts';
 import { useDeleteInvoicePayment } from '#/domain/invoices/invoice-payment/hooks/use-delete-invoice-payment.hook.ts';
+import { splitInHalf } from '#/domain/bills/bill/rules/split-in-half.rule.ts';
 import { resolvePaymentTarget } from '#/domain/bills/bill/rules/resolve-payment-target.rule.ts';
-import { useFocusFirstInvalid } from '#/features/bills/hooks/use-focus-first-invalid.hook.ts';
+import { INVALID_FIELD_OR_DATE_SEGMENT_SELECTOR } from '#/shared/constants/form/invalid-field-selector.constant.ts';
+import { useFocusFirstInvalid } from '#/shared/hooks/form/use-focus-first-invalid.hook.ts';
 import { PaymentRegisterView } from '#/features/bills/payment-register/payment-register.view.tsx';
 import { validatePayment } from '#/features/bills/payment-register/utils/validate-payment.util.ts';
 import { buildCandidateOptions } from '#/features/bills/utils/build-candidate-options.util.ts';
 import { describeApiError } from '#/features/bills/utils/describe-api-error.util.ts';
-import { getBusinessToday } from '#/features/bills/utils/get-business-today.util.ts';
+import { getBusinessDate } from '#/shared/utils/date/get-business-date.util.ts';
 
 type PaymentRegisterFormProps = {
   item: Agenda.Item;
@@ -28,7 +30,7 @@ function PaymentRegisterForm({ item, onClose }: PaymentRegisterFormProps) {
   const flow = item.flow === 'in' ? 'income' : 'expense';
 
   const [amountCents, setAmountCents] = useState(item.remainingCents || remainingCents);
-  const [paidOn, setPaidOn] = useState(getBusinessToday());
+  const [paidOn, setPaidOn] = useState(getBusinessDate());
   const [transactionId, setTransactionId] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ amountCents?: string; paidOn?: string }>({});
   const [attempt, setAttempt] = useState(0);
@@ -45,7 +47,11 @@ function PaymentRegisterForm({ item, onClose }: PaymentRegisterFormProps) {
   const deleteInvoicePayment = useDeleteInvoicePayment();
   const isSaving = createBillPayment.isPending || createInvoicePayment.isPending;
 
-  useFocusFirstInvalid(attempt);
+  useFocusFirstInvalid({
+    attempt,
+    selector: INVALID_FIELD_OR_DATE_SEGMENT_SELECTOR,
+    scope: 'dialog',
+  });
 
   function selectCandidate(next: string | null) {
     setTransactionId(next);
@@ -122,10 +128,11 @@ function PaymentRegisterForm({ item, onClose }: PaymentRegisterFormProps) {
       amountCents={amountCents}
       onAmountChange={setAmountCents}
       paidOn={paidOn}
-      today={getBusinessToday()}
+      today={getBusinessDate()}
       onPaidOnChange={setPaidOn}
       errors={errors}
       remainingCents={remainingCents}
+      halfCents={splitInHalf(remainingCents)}
       candidates={
         kind === 'bill'
           ? {

@@ -1,6 +1,6 @@
 import type { Invoice } from '@fincheck/shared/invoices/invoice/invoice.type.ts';
 
-import { formatShortDate } from '#/features/invoices/invoice-summary/utils/format-short-date.util.ts';
+import { formatShortDate } from '#/shared/utils/date/format-short-date.util.ts';
 
 const DAY_MS = 86_400_000;
 

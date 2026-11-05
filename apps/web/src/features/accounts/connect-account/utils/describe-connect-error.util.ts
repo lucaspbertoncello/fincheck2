@@ -10,9 +10,6 @@ const MESSAGES: Record<string, string> = {
   SYNC_CONNECTION_ALREADY_EXISTS: 'Esse banco já está conectado.',
 };
 
-/** The errors that trying again does not fix: the keys have to be saved or changed in Configurações. */
-const SETTINGS_CODES = new Set(['SYNC_NOT_CONFIGURED', 'SYNC_CREDENTIALS_INVALID']);
-
 /** What to tell the person when connecting a bank or creating an account failed. */
 export function describeConnectError(error: unknown): string {
   if (isApiError(error)) {
@@ -21,9 +18,4 @@ export function describeConnectError(error: unknown): string {
     if (hasApiErrorCode(error, 'NETWORK_ERROR')) return 'Sem resposta da API. Ela está no ar?';
   }
   return 'Não deu certo. Tente de novo.';
-}
-
-/** True when the way out of the error is Configurações (the saved keys), not "tentar de novo". */
-export function connectErrorNeedsSettings(error: unknown): boolean {
-  return isApiError(error) && SETTINGS_CODES.has(error.code);
 }

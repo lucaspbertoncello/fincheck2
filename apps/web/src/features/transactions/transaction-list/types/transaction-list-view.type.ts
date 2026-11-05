@@ -221,7 +221,7 @@ export type ConfirmView = {
   onClose: () => void;
 };
 
-export type RuleQuestionView = {
+type RuleQuestionView = {
   message: string;
   creating: boolean;
   error?: string;

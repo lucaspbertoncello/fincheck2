@@ -7,10 +7,8 @@ import { describe, expect, it } from 'vitest';
 import { buildAlerts } from '#/features/overview/overview/utils/build-alerts.util.ts';
 import { buildCategories } from '#/features/overview/overview/utils/build-categories.util.tsx';
 import { buildSpend } from '#/features/overview/overview/utils/build-spend.util.ts';
-import {
-  buildStrip,
-  pickDefaultDate,
-} from '#/features/overview/overview/utils/build-strip.util.ts';
+import { buildStrip } from '#/features/overview/overview/utils/build-strip.util.ts';
+import { pickDefaultDate } from '#/features/overview/overview/utils/pick-default-date.util.ts';
 
 function expense(
   id: string | null,

@@ -6,7 +6,7 @@ import {
   CHIP_CLASS,
   CHIP_GHOST_CLASS,
   CHIP_ON_CLASS,
-} from '#/features/bills/constants/chip-class.constant.ts';
+} from '#/shared/constants/chip/chip-class.constant.ts';
 
 /** How many recent people show as chips. */
 const RECENT_LIMIT = 5;

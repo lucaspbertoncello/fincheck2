@@ -12,7 +12,7 @@ import { useRestoreInvoicePaymentSuggestion } from '#/domain/invoices/invoice-pa
 import { resolvePaymentTarget } from '#/domain/bills/bill/rules/resolve-payment-target.rule.ts';
 
 /** The transaction the API found for an item: the invoice's "Pagamento encontrado" or the presumed one of a bill. */
-export function findPaymentTransactionId(item: Agenda.Item): string | null {
+function findPaymentTransactionId(item: Agenda.Item): string | null {
   return item.paymentFound?.transactionId ?? item.presumedTransactionId;
 }
 

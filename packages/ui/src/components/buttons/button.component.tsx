@@ -1,9 +1,9 @@
-import type { ReactNode } from 'react';
-import { Button as AriaButton, type ButtonProps as AriaButtonProps } from 'react-aria-components';
+import { Button as AriaButton } from 'react-aria-components';
 
 import { Icon } from '#/components/icons/icon.component.tsx';
 import type { IconName } from '#/components/icons/icon-markup.constant.ts';
 import { cx } from '#/utils/class-names.util.ts';
+import type { ButtonVariant, ButtonSize, ButtonProps } from '#/components/buttons/button.type.ts';
 
 const VARIANT_CLASS = {
   primary: {
@@ -20,55 +20,18 @@ const VARIANT_CLASS = {
     default: 'text-brand data-[hovered]:bg-brand-weak',
     danger: 'text-loss data-[hovered]:bg-loss-weak',
   },
-} as const;
+} as const satisfies Record<ButtonVariant, unknown>;
 
 const SIZE_CLASS = {
   md: 'h-ctl-touch px-s16',
   /** 36 px tall; the touch area grows to 44 px with a pseudo-element. */
   sm: 'h-ctl-sm px-s12 before:absolute before:inset-x-0 before:-inset-y-s4 before:content-[""]',
-} as const;
+} as const satisfies Record<ButtonSize, unknown>;
 
 const ICON_ONLY_SIZE_CLASS = {
   md: 'size-ctl-touch',
   sm: 'size-ctl-sm before:absolute before:-inset-s4 before:content-[""]',
-} as const;
-
-export type ButtonVariant = keyof typeof VARIANT_CLASS;
-export type ButtonSize = keyof typeof SIZE_CLASS;
-
-type ButtonBaseProps = Pick<
-  AriaButtonProps,
-  'onPress' | 'isDisabled' | 'type' | 'form' | 'autoFocus' | 'aria-expanded' | 'aria-controls'
-> & {
-  variant?: ButtonVariant;
-  size?: ButtonSize;
-  /** Destructive action: disconnect, delete, restore backup. */
-  danger?: boolean;
-  /** Spinning icon and `loadingLabel`; the button stops answering to presses. */
-  loading?: boolean;
-  /** Label while loading ("Sincronizando..."). Defaults to the normal label. */
-  loadingLabel?: string;
-  /** Fills the width of the container (modal actions on the phone). */
-  fullWidth?: boolean;
-  className?: string;
-};
-
-type TextButtonProps = ButtonBaseProps & {
-  iconOnly?: false;
-  children: ReactNode;
-  /** Leading 18 px icon. */
-  icon?: IconName;
-};
-
-type IconButtonProps = ButtonBaseProps & {
-  iconOnly: true;
-  icon: IconName;
-  /** Accessible name; an icon-only button has no visible text. */
-  label: string;
-  children?: never;
-};
-
-export type ButtonProps = TextButtonProps | IconButtonProps;
+} as const satisfies Record<ButtonSize, unknown>;
 
 /**
  * Pill button (components.md 5.1): primary gradient, secondary outline, tertiary text. Headless

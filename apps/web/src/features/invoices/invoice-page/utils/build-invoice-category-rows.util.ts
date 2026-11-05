@@ -1,10 +1,9 @@
 import type { Category } from '@fincheck/shared/categories/category/category.type.ts';
 import type { Invoice } from '@fincheck/shared/invoices/invoice/invoice.type.ts';
 
+import { NO_CATEGORY_KEY } from '#/features/invoices/invoice-page/constants/no-category-key.constant.ts';
 import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 import type { InvoiceCategoryRowData } from '#/features/invoices/invoice-page/types/invoice-page.type.ts';
-
-export const NO_CATEGORY_KEY = 'none';
 
 const percentFormat = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
 

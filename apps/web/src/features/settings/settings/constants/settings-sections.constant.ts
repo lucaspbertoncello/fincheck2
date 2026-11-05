@@ -1,6 +1,6 @@
 import type { IconName } from '@fincheck/ui';
 
-export type SettingsSectionKey = 'connections' | 'backup' | 'appearance';
+type SettingsSectionKey = 'connections' | 'backup' | 'appearance';
 
 export type SettingsSectionDefinition = {
   key: SettingsSectionKey;

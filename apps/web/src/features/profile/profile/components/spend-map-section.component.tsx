@@ -10,6 +10,7 @@ import {
 } from '@fincheck/ui';
 import { AnimatePresence, motion } from 'motion/react';
 
+import type { HeatmapSummary } from '#/features/profile/profile/types/heatmap-summary.type.ts';
 import { AnimatedHeight } from '#/features/profile/profile/components/animated-height.component.tsx';
 import { HeatmapStat } from '#/features/profile/profile/components/heatmap-stat.component.tsx';
 import { SPEND_MAP_MODE_OPTIONS } from '#/features/profile/profile/constants/spend-map-mode-options.constant.ts';
@@ -17,7 +18,6 @@ import type { SpendMapPeriod } from '#/features/profile/profile/types/spend-map-
 import { describeSpendMapPeriod } from '#/features/profile/profile/utils/describe-spend-map-period.util.ts';
 import { formatPeakDay } from '#/features/profile/profile/utils/format-peak-day.util.ts';
 import { resolveSpendMapView } from '#/features/profile/profile/utils/resolve-spend-map-view.util.ts';
-import type { HeatmapSummary } from '#/features/profile/profile/utils/summarize-heatmap.util.ts';
 import { SectionError } from '#/features/settings/settings/components/section-error.component.tsx';
 import { formatMonthParts } from '#/shared/utils/format-month-parts.util.ts';
 

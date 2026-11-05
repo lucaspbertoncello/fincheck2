@@ -22,7 +22,7 @@ import { useEndOfList } from '#/features/transactions/transaction-list/hooks/use
 import { useTransactionListSearch } from '#/features/transactions/transaction-list/hooks/use-transaction-list-search.hook.ts';
 import { buildTransactionLookups } from '#/features/transactions/transaction-list/utils/build-transaction-lookups.util.ts';
 import { groupTransactionsByDay } from '#/features/transactions/transaction-list/utils/group-transactions-by-day.util.ts';
-import { toBusinessDate } from '#/features/transactions/transaction-list/utils/to-business-date.util.ts';
+import { getBusinessDate } from '#/shared/utils/date/get-business-date.util.ts';
 import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
 import { navigateToHref } from '#/shared/layouts/application/navigation/navigate-to-href.util.ts';
 import { buildHref } from '#/shared/layouts/application/navigation/build-href.util.ts';
@@ -45,7 +45,7 @@ export function CategoryPageViewModel() {
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [archiveError, setArchiveError] = useState<string | null>(null);
 
-  const today = toBusinessDate(new Date());
+  const today = getBusinessDate(new Date());
   const range = resolveCategoryRange(search.period, month, today);
   const model = useCategoryPageModel({ categoryId: id, range });
   const { category } = model;

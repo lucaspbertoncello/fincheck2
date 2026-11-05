@@ -36,5 +36,3 @@ export function useInvoicePageModel(accountId: string, month: string) {
     restoreSuggestion: useRestoreInvoicePaymentSuggestion(),
   };
 }
-
-export type InvoicePageModel = ReturnType<typeof useInvoicePageModel>;

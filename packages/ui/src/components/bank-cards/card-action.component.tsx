@@ -1,4 +1,5 @@
-import { Button, type ButtonProps } from '#/components/buttons/button.component.tsx';
+import { Button } from '#/components/buttons/button.component.tsx';
+import type { ButtonProps } from '#/components/buttons/button.type.ts';
 
 type CardActionProps = Pick<ButtonProps, 'onPress' | 'isDisabled'> & {
   /** "link" is the quiet text action; "solid" is the primary gradient (failed sync: "Renovar"). */

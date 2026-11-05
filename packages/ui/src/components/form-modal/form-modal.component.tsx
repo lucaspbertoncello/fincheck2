@@ -7,14 +7,7 @@ import { useInitialFocus } from '#/components/form-modal/use-initial-focus.hook.
 import { ModalFrame } from '#/components/overlays/modal-frame.component.tsx';
 import { ModalHeader } from '#/components/overlays/modal-header.component.tsx';
 import type { ModalSize } from '#/components/overlays/modal-size.constant.ts';
-import type { IconName } from '#/components/icons/icon-markup.constant.ts';
-
-export type FormModalDestructive = {
-  /** "Excluir". */
-  label: string;
-  onPress: () => void;
-  icon?: IconName;
-};
+import type { FormModalDestructive } from '#/components/form-modal/form-modal.type.ts';
 
 type FormModalProps = {
   isOpen: boolean;

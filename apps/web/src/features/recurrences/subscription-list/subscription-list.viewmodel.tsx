@@ -1,7 +1,7 @@
 import { useToast } from '@fincheck/ui';
 import { useState } from 'react';
 
-import type { SubscriptionRowAction } from '#/features/recurrences/subscription-list/components/subscription-row.component.tsx';
+import type { SubscriptionRowAction } from '#/features/recurrences/subscription-list/types/subscription-row-action.type.ts';
 import { useKeptItems } from '#/features/recurrences/subscription-list/hooks/use-kept-items.hook.ts';
 import { useSubscriptionListSearch } from '#/features/recurrences/subscription-list/hooks/use-subscription-list-search.hook.ts';
 import { useSubscriptionListModel } from '#/features/recurrences/subscription-list/subscription-list.model.ts';
@@ -12,18 +12,14 @@ import type {
   SubscriptionSuggestionData,
 } from '#/features/recurrences/subscription-list/types/subscription-list.type.ts';
 import { formatMoneyText } from '#/features/recurrences/subscription-list/utils/format-money-text.util.ts';
-import { getTodayKey } from '#/features/recurrences/subscription-list/utils/get-today-key.util.ts';
+import { getBusinessDate } from '#/shared/utils/date/get-business-date.util.ts';
 import { presentSubscriptionRow } from '#/features/recurrences/subscription-list/utils/present-subscription-row.util.ts';
 import { presentSubscriptionSuggestion } from '#/features/recurrences/subscription-list/utils/present-subscription-suggestion.util.ts';
-import { isApiError } from '#/shared/api/api.error.ts';
+import { getApiErrorMessage } from '#/shared/api/get-api-error-message.util.ts';
 import { useHideValues } from '#/shared/hooks/use-hide-values.hook.ts';
 import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
 
 type DeleteTarget = { recurrenceId: string; name: string };
-
-function describeFailure(error: unknown): string {
-  return isApiError(error) ? error.message : 'Tente de novo em instantes.';
-}
 
 /** Connects the Assinaturas tab: month and URL state, the data of the month and the actions. */
 export function SubscriptionListViewModel() {
@@ -61,7 +57,7 @@ export function SubscriptionListViewModel() {
       await task();
     } catch (error) {
       setActionError({
-        message: `${failure} ${describeFailure(error)}`,
+        message: `${failure} ${getApiErrorMessage(error, 'Tente de novo em instantes.')}`,
         onRetry: () => void run(key, failure, task),
       });
     } finally {
@@ -193,7 +189,7 @@ export function SubscriptionListViewModel() {
     categoryIcons: new Map(
       (model.categories.data?.items ?? []).map((category) => [category.id, category.icon]),
     ),
-    today: getTodayKey(),
+    today: getBusinessDate(),
     hidden: isHidden,
     pendingKey,
   };

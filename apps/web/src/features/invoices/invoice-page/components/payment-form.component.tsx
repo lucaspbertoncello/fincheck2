@@ -1,7 +1,8 @@
 import { AmountField, DateQuickField, FormModalSplit } from '@fincheck/ui';
 import { useRef } from 'react';
 
-import { useFocusFirstInvalid } from '#/features/accounts/form-focus/hooks/use-focus-first-invalid.hook.ts';
+import { INVALID_FIELD_SELECTOR } from '#/shared/constants/form/invalid-field-selector.constant.ts';
+import { useFocusFirstInvalid } from '#/shared/hooks/form/use-focus-first-invalid.hook.ts';
 
 type PaymentFormProps = {
   formId: string;
@@ -32,7 +33,11 @@ export function PaymentForm({
   onSubmit,
 }: PaymentFormProps) {
   const form = useRef<HTMLFormElement>(null);
-  useFocusFirstInvalid(form, failedAttempts);
+  useFocusFirstInvalid({
+    attempt: failedAttempts,
+    selector: INVALID_FIELD_SELECTOR,
+    scope: form,
+  });
 
   return (
     <form

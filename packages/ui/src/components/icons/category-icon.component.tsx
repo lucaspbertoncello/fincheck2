@@ -1,6 +1,7 @@
 import { Icon } from '#/components/icons/icon.component.tsx';
 import type { IconName } from '#/components/icons/icon-markup.constant.ts';
 import { cx } from '#/utils/class-names.util.ts';
+import type { CategoryIconType, CategoryIconSize } from '#/components/icons/category-icon.type.ts';
 
 const SIZE_CLASS = {
   /** 32 px (pickers and form lists). */
@@ -9,7 +10,7 @@ const SIZE_CLASS = {
   row: 'size-9 lg:size-10',
   /** 48 px (review queue header). */
   lg: 'size-12',
-} as const;
+} as const satisfies Record<CategoryIconSize, unknown>;
 
 const ICON_SIZE = { sm: 'md', row: 'base', lg: 'lg' } as const;
 
@@ -17,16 +18,13 @@ const TYPE_PATH = {
   income: 'M7 17L17 7m0 0H9m8 0v8',
   expense: 'm7 7l10 10m0 0V9m0 8H9',
   transfer: 'M4 9h15m0 0l-4-4m4 4l-4 4M20 15H5m0 0l4-4m-4 4l4 4',
-} as const;
+} as const satisfies Record<CategoryIconType, unknown>;
 
 const TYPE_TONE_CLASS = {
   income: 'text-gain',
   expense: 'text-loss',
   transfer: 'text-fg-secondary',
 } as const;
-
-export type CategoryIconType = keyof typeof TYPE_PATH;
-export type CategoryIconSize = keyof typeof SIZE_CLASS;
 
 type CategoryIconProps = {
   icon: IconName;

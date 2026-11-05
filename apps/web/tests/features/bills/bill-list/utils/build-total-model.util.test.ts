@@ -1,10 +1,8 @@
 import type { Agenda } from '@fincheck/shared/dashboard/agenda/agenda.type.ts';
 import { describe, expect, it } from 'vitest';
 
-import {
-  buildFriendsModel,
-  buildPayableModel,
-} from '#/features/bills/bill-list/utils/build-total-model.util.ts';
+import { buildFriendsModel } from '#/features/bills/bill-list/utils/build-friends-model.util.ts';
+import { buildPayableModel } from '#/features/bills/bill-list/utils/build-payable-model.util.ts';
 
 const item = (overrides: Partial<Agenda.Item>): Agenda.Item => ({
   key: 'bill:1',

@@ -8,7 +8,7 @@ import {
   Section,
 } from '@fincheck/ui';
 
-export type FutureInvoiceItem = {
+type FutureInvoiceItem = {
   month: string;
   /** "Novembro 2026". */
   title: string;

@@ -4,8 +4,7 @@ import { Button } from '#/components/buttons/index.ts';
 import { Icon } from '#/components/icons/index.ts';
 import type { IconName } from '#/components/icons/index.ts';
 import { cx } from '#/utils/class-names.util.ts';
-
-export type SelectionAction = 'categorize' | 'tag' | 'ignore';
+import type { SelectionAction } from '#/components/transactions/selection/selection-bar.type.ts';
 
 const ACTIONS: { key: SelectionAction; label: string; icon: IconName }[] = [
   { key: 'categorize', label: 'Categorizar', icon: 'folder' },

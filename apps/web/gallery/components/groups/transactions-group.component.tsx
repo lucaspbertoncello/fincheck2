@@ -6,37 +6,28 @@ import {
   CategoryGroupList,
   CategorySuggestion,
   EditDateField,
-  NatureField,
   OriginalFromBankNote,
   SelectionBar,
   SelectionToggle,
-  SplitEditor,
   SplitSumIndicator,
   TagEditor,
   TransactionDayGroup,
   TransactionDayList,
   TransactionDetailBox,
-  TransactionEditPanel,
   TransactionRow,
   checkSplit,
-  validateTransactionEdit,
-  type TransactionNature,
 } from '@fincheck/ui';
 
 import {
   CATEGORY_GROUP_SAMPLES,
   ROW_SAMPLES,
   SAMPLE_CATEGORIES,
-  SAMPLE_COUNTERPARTS,
-  SAMPLE_EDIT_VALUES,
-  SAMPLE_SPLIT_PARTS,
 } from '#gallery/constants/sample-transactions.constant.ts';
 import type { GallerySectionDef } from '#gallery/types/gallery-group.type.ts';
 import { GalleryVariant } from '#gallery/components/shell/gallery-variant.component.tsx';
 import { State } from '#gallery/components/shell/state.component.tsx';
 
 const noop = () => undefined;
-const NATURES: TransactionNature[] = ['expense', 'income', 'transfer', 'out_of_account'];
 const FIRST_ROW = ROW_SAMPLES[0]!.row;
 
 function RowStack({ children }: { children: React.ReactNode }) {
@@ -284,22 +275,6 @@ export const TRANSACTIONS_SECTIONS: GallerySectionDef[] = [
         <GalleryVariant caption="EditDateField com erro" width={260}>
           <EditDateField label="Data" value="" onChange={noop} error="Data inválida." />
         </GalleryVariant>
-        {NATURES.map((nature) => (
-          <State key={nature} initial={nature}>
-            {(value, set) => (
-              <GalleryVariant caption={`NatureField ${nature}`} width={460}>
-                <NatureField
-                  nature={value}
-                  onNatureChange={set}
-                  counterparts={SAMPLE_COUNTERPARTS}
-                  counterpartId={null}
-                  onCounterpartChange={noop}
-                  counterpartError={nature === 'transfer' ? 'Escolha a outra ponta.' : undefined}
-                />
-              </GalleryVariant>
-            )}
-          </State>
-        ))}
         <State initial={['almoço', 'trabalho']}>
           {(tags, set) => (
             <GalleryVariant caption="TagEditor (Enter adiciona)" width={420}>
@@ -320,104 +295,10 @@ export const TRANSACTIONS_SECTIONS: GallerySectionDef[] = [
     ),
   },
   {
-    id: 'edit-panel',
-    title: 'TransactionEditPanel',
-    content: (
-      <>
-        <State initial={SAMPLE_EDIT_VALUES}>
-          {(values, set) => (
-            <GalleryVariant caption="padrão, editada (com original do banco)" width={900}>
-              <TransactionEditPanel
-                values={values}
-                onChange={set}
-                categories={SAMPLE_CATEGORIES}
-                counterparts={SAMPLE_COUNTERPARTS}
-                original={{ description: 'MOCOTO RESTAURANTE', amountCents: 9990 }}
-                onRestoreOriginal={noop}
-                onSave={noop}
-                onCancel={noop}
-              />
-            </GalleryVariant>
-          )}
-        </State>
-        <GalleryVariant caption="com erros (validateTransactionEdit)" width={900}>
-          <TransactionEditPanel
-            values={{ ...SAMPLE_EDIT_VALUES, description: '', amountCents: 0, categoryId: null }}
-            onChange={noop}
-            categories={SAMPLE_CATEGORIES}
-            errors={validateTransactionEdit({
-              ...SAMPLE_EDIT_VALUES,
-              description: '',
-              amountCents: 0,
-              categoryId: null,
-            })}
-            onSave={noop}
-            onCancel={noop}
-          />
-        </GalleryVariant>
-        <GalleryVariant caption="salvando" width={900}>
-          <TransactionEditPanel
-            values={SAMPLE_EDIT_VALUES}
-            onChange={noop}
-            categories={SAMPLE_CATEGORIES}
-            onSave={noop}
-            onCancel={noop}
-            saving
-          />
-        </GalleryVariant>
-        <GalleryVariant caption="transferência" width={900}>
-          <TransactionEditPanel
-            values={{
-              ...SAMPLE_EDIT_VALUES,
-              nature: 'transfer',
-              categoryId: null,
-              counterpartId: 'cp-1',
-            }}
-            onChange={noop}
-            categories={SAMPLE_CATEGORIES}
-            counterparts={SAMPLE_COUNTERPARTS}
-            onSave={noop}
-            onCancel={noop}
-          />
-        </GalleryVariant>
-      </>
-    ),
-  },
-  {
     id: 'split',
-    title: 'SplitEditor e SplitSumIndicator',
+    title: 'SplitSumIndicator',
     content: (
       <>
-        <State initial={SAMPLE_SPLIT_PARTS}>
-          {(parts, set) => (
-            <GalleryVariant caption="SplitEditor (soma confere)" width={620}>
-              <SplitEditor
-                totalCents={20800}
-                parts={parts}
-                onChange={set}
-                categories={SAMPLE_CATEGORIES}
-                createPartId={() => `part-${Math.random().toString(36).slice(2, 7)}`}
-                onConfirm={noop}
-                onCancel={noop}
-              />
-            </GalleryVariant>
-          )}
-        </State>
-        <GalleryVariant caption="SplitEditor com soma errada, salvando e erro" width={620}>
-          <SplitEditor
-            totalCents={20800}
-            parts={[
-              { id: 'p1', categoryId: 'cat-market', amountCents: 10000 },
-              { id: 'p2', categoryId: null, amountCents: 0 },
-            ]}
-            onChange={noop}
-            categories={SAMPLE_CATEGORIES}
-            createPartId={() => 'p3'}
-            onConfirm={noop}
-            onCancel={noop}
-            error="Não deu para dividir. Tente de novo."
-          />
-        </GalleryVariant>
         <GalleryVariant caption="SplitSumIndicator confere" width={420}>
           <SplitSumIndicator check={checkSplit(20800, [14000, 6800])} />
         </GalleryVariant>

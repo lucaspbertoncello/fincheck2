@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 
 import type { BankMarkCorner } from '#/components/bank-cards/bank-theme.type.ts';
 
-export type BankCardLayout = {
+type BankCardLayout = {
   /** grid-template-areas of the card: the theme picks the corner of the mark and the network. */
   areas: string;
   bn: CSSProperties;

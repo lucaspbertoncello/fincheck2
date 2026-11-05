@@ -1,21 +1,6 @@
 import { Money } from '#/components/money/index.ts';
 import { cx } from '#/utils/class-names.util.ts';
-
-export type RulePreviewMatch = {
-  id: string;
-  description: string;
-  /** Already written: "18/10". */
-  dateLabel: string;
-  cents: number;
-};
-
-export type RulePreviewData = {
-  /** "Bate com 14 transações do histórico". */
-  title: string;
-  matches: readonly RulePreviewMatch[];
-  /** How many more match beyond the ones listed. */
-  moreCount?: number;
-};
+import type { RulePreviewData } from '#/components/rules/rule-preview.type.ts';
 
 /** Preview of the history transactions a rule matches (components.md 9.1): subtle box, 3 columns. */
 export function RulePreview({

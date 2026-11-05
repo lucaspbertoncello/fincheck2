@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { buildCategoryOptions } from '#/features/transactions/transaction-list/utils/build-category-options.util.ts';
 import { describeTransactionError } from '#/features/transactions/transaction-list/utils/describe-transaction-error.util.ts';
 import { focusFirstInvalid } from '#/features/transactions/transaction-list/utils/focus-first-invalid.util.ts';
-import { toBusinessDate } from '#/features/transactions/transaction-list/utils/to-business-date.util.ts';
+import { getBusinessDate } from '#/shared/utils/date/get-business-date.util.ts';
 import { useInstallmentCreateModel } from '#/features/transactions/transaction-creation/installment-create/installment-create.model.ts';
 import { InstallmentCreateView } from '#/features/transactions/transaction-creation/installment-create/installment-create.view.tsx';
 import type {
@@ -50,7 +50,7 @@ function initialValues(): InstallmentCreateValues {
     categoryId: null,
     countText: '2',
     accountId: null,
-    purchaseOn: toBusinessDate(new Date()),
+    purchaseOn: getBusinessDate(new Date()),
     firstInvoiceMonth: null,
   };
 }

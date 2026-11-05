@@ -1,5 +1,5 @@
 import type { Category } from '@fincheck/shared/categories/category/category.type.ts';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { hasApiErrorCode } from '#/shared/api/api.error.ts';
 import { useCategoryFormModel } from '#/features/categories/category-form/category-form.model.ts';
@@ -8,7 +8,8 @@ import type {
   CategoryFormTarget,
 } from '#/features/categories/category-form/types/category-form.type.ts';
 import { validateCategoryForm } from '#/features/categories/category-form/utils/validate-category-form.util.ts';
-import { useFocusFirstInvalid } from '#/features/categories/hooks/use-focus-first-invalid.hook.ts';
+import { INVALID_FIELD_OR_STAND_IN_SELECTOR } from '#/shared/constants/form/invalid-field-selector.constant.ts';
+import { useFocusFirstInvalid } from '#/shared/hooks/form/use-focus-first-invalid.hook.ts';
 import { describeArchivedCategory } from '#/features/categories/utils/describe-archived-category.util.ts';
 import { describeCategoryUsage } from '#/features/categories/utils/describe-category-usage.util.ts';
 
@@ -34,7 +35,12 @@ export function useCategoryFormViewModel({ target, onClose, onArchive, onRestore
   const [errors, setErrors] = useState<CategoryFormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [focusToken, setFocusToken] = useState(0);
-  const formRef = useFocusFirstInvalid(focusToken);
+  const formRef = useRef<HTMLDivElement>(null);
+  useFocusFirstInvalid({
+    attempt: focusToken,
+    selector: INVALID_FIELD_OR_STAND_IN_SELECTOR,
+    scope: formRef,
+  });
 
   async function submit() {
     setSubmitError(null);

@@ -2,7 +2,7 @@ import { MotionConfig } from 'motion/react';
 import { type ReactNode, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 
-import { dayLongLabel } from '#/components/day-strip/day-date.util.ts';
+import { dayLongLabel } from '#/components/day-strip/day-long-label.util.ts';
 import { DaySlider } from '#/components/day-strip/day-slider.component.tsx';
 import { DayStrip } from '#/components/day-strip/day-strip.component.tsx';
 import type {

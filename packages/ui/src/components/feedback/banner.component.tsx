@@ -4,6 +4,7 @@ import { Button } from '#/components/buttons/index.ts';
 import { Icon } from '#/components/icons/icon.component.tsx';
 import type { IconName } from '#/components/icons/icon-markup.constant.ts';
 import { cx } from '#/utils/class-names.util.ts';
+import type { BannerVariant } from '#/components/feedback/banner.type.ts';
 
 const VARIANT = {
   /** Old data, review notice. */
@@ -12,9 +13,7 @@ const VARIANT = {
   error: { box: 'bg-loss-weak', icon: 'text-loss', name: 'danger' },
   /** "Criar regra". */
   suggestion: { box: 'bg-brand-weak', icon: 'text-brand', name: 'magic' },
-} as const satisfies Record<string, { box: string; icon: string; name: IconName }>;
-
-export type BannerVariant = keyof typeof VARIANT;
+} as const satisfies Record<BannerVariant, { box: string; icon: string; name: IconName }>;
 
 type BannerProps = {
   variant: BannerVariant;

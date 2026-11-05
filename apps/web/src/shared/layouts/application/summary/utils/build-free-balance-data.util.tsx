@@ -9,6 +9,7 @@ import type {
   FreeBalanceLine,
 } from '@fincheck/ui';
 
+import { buildPartialNotice } from '#/shared/layouts/application/summary/utils/build-partial-notice.util.ts';
 import { describeUpdateTime } from '#/shared/layouts/application/summary/utils/describe-update-time.util.ts';
 
 type BuildFreeBalanceInput = {
@@ -125,17 +126,4 @@ export function buildFreeBalanceData(input: BuildFreeBalanceInput): FreeBalanceD
     accounts: buildAccounts(input),
     moreAccountsHref: input.accountsHref,
   };
-}
-
-/** R2: "Saldo parcial: falta o saldo do Nubank". Undefined when every balance is known. */
-export function buildPartialNotice(
-  freeBalance: FreeBalance.Dto,
-  accounts: readonly Account.Dto[],
-): string | undefined {
-  if (!freeBalance.isPartial) return undefined;
-  const names = freeBalance.accountsWithoutBalance.map(
-    (id) => accounts.find((account) => account.id === id)?.name ?? 'uma conta',
-  );
-  if (names.length === 0) return 'Saldo parcial: falta o saldo de uma conta';
-  return `Saldo parcial: falta o saldo ${names.length > 1 ? 'das contas' : 'do'} ${names.join(', ')}`;
 }

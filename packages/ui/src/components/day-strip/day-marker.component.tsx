@@ -1,8 +1,4 @@
-import type {
-  DayMarker,
-  DayMarkerFlow,
-  DayMarkerStatus,
-} from '#/components/day-strip/day-strip.type.ts';
+import type { DayMarkerFlow, DayMarkerStatus } from '#/components/day-strip/day-strip.type.ts';
 import { cx } from '#/utils/class-names.util.ts';
 
 const FLOW_CLASS = {
@@ -11,21 +7,6 @@ const FLOW_CLASS = {
   /** The legend explains shapes in a neutral tone. */
   neutral: { fill: 'bg-fg-secondary', ring: 'border-fg-secondary', half: 'from-fg-secondary' },
 } as const;
-
-const STATUS_LABEL: Record<DayMarkerStatus, string> = {
-  happened: 'aconteceu',
-  expected: 'esperado',
-  partial: 'parcial',
-  late: 'atrasado',
-  different: 'valor diferente',
-};
-
-const FLOW_LABEL: Record<DayMarkerFlow, string> = { income: 'Receita', expense: 'Despesa' };
-
-/** "Receita esperada" style description, for screen readers. */
-export function describeMarker({ flow, status }: DayMarker): string {
-  return `${FLOW_LABEL[flow]} ${STATUS_LABEL[status]}`;
-}
 
 type DayMarkerDotProps = {
   flow: DayMarkerFlow | 'neutral';

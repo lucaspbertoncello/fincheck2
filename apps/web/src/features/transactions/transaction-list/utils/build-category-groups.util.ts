@@ -2,14 +2,13 @@ import type { CategoryBreakdown } from '@fincheck/shared/dashboard/category-brea
 import type { Transaction } from '@fincheck/shared/transactions/transaction/transaction.type.ts';
 import type { CategoryGroupData } from '@fincheck/ui';
 
+import { UNCATEGORIZED_GROUP_ID } from '#/features/transactions/transaction-list/constants/uncategorized-group-id.constant.ts';
 import type { TransactionLookups } from '#/features/transactions/transaction-list/types/transaction-lookups.type.ts';
 import { TRANSACTION_METHOD_LABELS } from '#/features/transactions/transaction-list/constants/transaction-method-labels.constant.ts';
-import { formatShortDate } from '#/features/transactions/transaction-list/utils/format-day-heading.util.ts';
+import { formatDayShortMonth } from '#/features/transactions/transaction-list/utils/format-day-short-month.util.ts';
 import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 import { normalizeSearchText } from '#/features/transactions/transaction-list/utils/normalize-search-text.util.ts';
 import { formatMoney } from '#/shared/utils/format-money.util.ts';
-
-export const UNCATEGORIZED_GROUP_ID = 'uncategorized';
 
 type CategoryGroups = {
   expenses: CategoryGroupData[];
@@ -59,7 +58,7 @@ export function buildCategoryGroups(
         variationPercent: uncategorized ? undefined : (item.changePct ?? undefined),
         items: item.latest.map((latest) => ({
           id: latest.transactionId,
-          dateLabel: formatShortDate(latest.occurredOn),
+          dateLabel: formatDayShortMonth(latest.occurredOn),
           name: latest.description,
           accountLabel: accountLabelOf(transactionsById.get(latest.transactionId), lookups),
           cents: Math.abs(latest.amountCents),
@@ -93,7 +92,7 @@ export function buildCategoryGroups(
         detail,
         caption:
           item.receivedCents === 0 && nextExpected
-            ? `Previsto ${formatShortDate(nextExpected)}`
+            ? `Previsto ${formatDayShortMonth(nextExpected)}`
             : undefined,
       };
     })

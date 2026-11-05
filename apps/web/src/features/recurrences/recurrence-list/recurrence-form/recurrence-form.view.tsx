@@ -11,10 +11,10 @@ import {
 import type { CategoryOption, ChoiceOption } from '@fincheck/ui';
 import { useId } from 'react';
 
+import type { AccountChipOption } from '#/shared/types/account/account-chip-option.type.ts';
 import { CategoryChips } from '#/features/recurrences/recurrence-list/recurrence-form/components/category-chips.component.tsx';
 import { DateRuleEditor } from '#/features/recurrences/recurrence-list/recurrence-form/components/date-rule-editor.component.tsx';
 import { AccountChips } from '#/shared/components/accounts/account-chips.component.tsx';
-import type { AccountChipOption } from '#/shared/components/accounts/account-chips.component.tsx';
 import type {
   PreviewDate,
   PreviewStatus,

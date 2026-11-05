@@ -2,7 +2,8 @@ import type { ReactNode } from 'react';
 
 import { Button } from '#/components/buttons/index.ts';
 import { Checkbox } from '#/components/forms/index.ts';
-import { RulePreview, type RulePreviewData } from '#/components/rules/rule-preview.component.tsx';
+import { RulePreview } from '#/components/rules/rule-preview.component.tsx';
+import type { RulePreviewData } from '#/components/rules/rule-preview.type.ts';
 import { Section } from '#/components/sections/index.ts';
 import { cx } from '#/utils/class-names.util.ts';
 

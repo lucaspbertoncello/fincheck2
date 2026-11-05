@@ -6,7 +6,7 @@ import type {
   TransactionRowView,
 } from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
 import { buildTransactionRow } from '#/features/transactions/transaction-list/utils/build-transaction-row.util.ts';
-import { formatShortDate } from '#/features/transactions/transaction-list/utils/format-day-heading.util.ts';
+import { formatDayShortMonth } from '#/features/transactions/transaction-list/utils/format-day-short-month.util.ts';
 import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 
 function describeBankChange(change: Transaction.BankChangeDto['changes'][number]): string {
@@ -14,7 +14,7 @@ function describeBankChange(change: Transaction.BankChangeDto['changes'][number]
     return `O banco mudou a descrição de “${change.before}” para “${change.after}” depois da sua edição.`;
   }
   if (change.field === 'occurredOn') {
-    return `O banco mudou a data de ${formatShortDate(String(change.before))} para ${formatShortDate(String(change.after))} depois da sua edição.`;
+    return `O banco mudou a data de ${formatDayShortMonth(String(change.before))} para ${formatDayShortMonth(String(change.after))} depois da sua edição.`;
   }
   return '';
 }

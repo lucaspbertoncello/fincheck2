@@ -3,11 +3,8 @@ import { useId } from 'react';
 import { ToggleButton, ToggleButtonGroup } from 'react-aria-components';
 
 import { Icon } from '#/components/icons/icon.component.tsx';
-import type { IconName } from '#/components/icons/icon-markup.constant.ts';
-import {
-  SegmentedIndicator,
-  type SegmentedTone,
-} from '#/components/forms/segmented-indicator.component.tsx';
+import { SegmentedIndicator } from '#/components/forms/segmented-indicator.component.tsx';
+import type { SegmentedTone } from '#/components/forms/segmented-indicator.type.ts';
 import {
   SEGMENTED_ITEM_ACTIVE_CLASS,
   SEGMENTED_ITEM_CLASS,
@@ -16,18 +13,7 @@ import {
   SEGMENTED_TRACK_CLASS,
 } from '#/components/forms/segmented-classes.constant.ts';
 import { cx } from '#/utils/class-names.util.ts';
-
-export type SegmentedOption = {
-  key: string;
-  label: string;
-  /** 18 px icon before the label ("Lista | Por categoria"). */
-  icon?: IconName;
-  /**
-   * Direction tone (`direction` mode): the slide takes the soft red or green and the tilted
-   * card-dot the strong one; "neutral" keeps the white pill and a gray dot.
-   */
-  tone?: SegmentedTone;
-};
+import type { SegmentedOption } from '#/components/forms/segmented-control.type.ts';
 
 const DOT_TONE_CLASS: Record<SegmentedTone, string> = {
   neutral: 'text-fg-secondary',

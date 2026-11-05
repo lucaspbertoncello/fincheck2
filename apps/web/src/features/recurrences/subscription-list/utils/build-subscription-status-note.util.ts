@@ -1,7 +1,7 @@
 import type { Subscription } from '@fincheck/shared/recurrences/subscription/subscription.type.ts';
 
-import { daysBetween } from '#/features/recurrences/subscription-list/utils/days-between.util.ts';
-import { formatShortDate } from '#/features/recurrences/subscription-list/utils/format-short-date.util.ts';
+import { daysBetween } from '#/shared/utils/date/days-between.util.ts';
+import { formatShortDate } from '#/shared/utils/date/format-short-date.util.ts';
 
 /** The second line of the amount column: when it was charged, or when it is expected. */
 export function buildSubscriptionStatusNote(item: Subscription.Item, today: string): string {

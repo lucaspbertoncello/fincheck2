@@ -2,7 +2,7 @@ export type InstallmentCreateField =
   'total' | 'description' | 'count' | 'account' | 'date' | 'firstInvoice';
 
 /** What the amount field holds: the whole purchase, or the value of each installment. */
-export type InstallmentAmountMode = 'total' | 'installment';
+type InstallmentAmountMode = 'total' | 'installment';
 
 export type InstallmentCreateValues = {
   /** The number typed in the amount field; `amountMode` says what it is. */
@@ -20,7 +20,7 @@ export type InstallmentCreateValues = {
 
 export type InstallmentCreateErrors = Partial<Record<InstallmentCreateField, string>>;
 
-export type InstallmentPreviewRow = {
+type InstallmentPreviewRow = {
   number: number;
   monthLabel: string;
   cents: number;

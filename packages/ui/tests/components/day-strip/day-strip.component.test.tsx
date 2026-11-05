@@ -1,11 +1,9 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import {
-  dayRangeLabel,
-  shiftBusinessDate,
-  weekStartOf,
-} from '#/components/day-strip/day-date.util.ts';
+import { dayRangeLabel } from '#/components/day-strip/day-range-label.util.ts';
+import { shiftBusinessDate } from '#/components/day-strip/shift-business-date.util.ts';
+import { weekStartOf } from '#/components/day-strip/week-start-of.util.ts';
 import { DayStripSection, formatDayTotal, type DayStripDay } from '#/components/day-strip/index.ts';
 import { groupDaysByWeek } from '#/components/day-strip/group-days-by-week.util.ts';
 import { MoneyVisibilityContext } from '#/components/money/money-visibility.context.ts';

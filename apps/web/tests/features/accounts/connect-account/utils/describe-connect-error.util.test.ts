@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  connectErrorNeedsSettings,
-  describeConnectError,
-} from '#/features/accounts/connect-account/utils/describe-connect-error.util.ts';
+import { describeConnectError } from '#/features/accounts/connect-account/utils/describe-connect-error.util.ts';
+import { connectErrorNeedsSettings } from '#/features/accounts/connect-account/utils/connect-error-needs-settings.util.ts';
 import { ApiError } from '#/shared/api/api.error.ts';
 
 describe('describeConnectError', () => {

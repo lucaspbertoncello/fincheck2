@@ -9,11 +9,9 @@ import { buildArchiveCategoryImpact } from '#/features/categories/category-list/
 import type { CategoryFormTarget } from '#/features/categories/category-form/types/category-form.type.ts';
 import { useScreenSearch } from '#/features/categories/hooks/use-screen-search.hook.ts';
 import type { TagFormTarget } from '#/features/categories/tag-form/types/tag-form.type.ts';
-import {
-  countCategoriesByFilter,
-  filterCategories,
-} from '#/features/categories/utils/filter-categories.util.ts';
-import { getBusinessToday } from '#/features/categories/utils/get-business-today.util.ts';
+import { filterCategories } from '#/features/categories/utils/filter-categories.util.ts';
+import { countCategoriesByFilter } from '#/features/categories/utils/count-categories-by-filter.util.ts';
+import { getBusinessDate } from '#/shared/utils/date/get-business-date.util.ts';
 import { toManagedCategory } from '#/features/categories/utils/to-managed-category.util.ts';
 import { toTagItem } from '#/features/categories/utils/to-tag-item.util.ts';
 import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
@@ -54,7 +52,7 @@ export function useCategoryListViewModel() {
 
   const allCategories = model.categories.data?.items ?? [];
   const allTags = model.tags.data?.items ?? [];
-  const today = getBusinessToday();
+  const today = getBusinessDate();
   const filter = search.filter;
 
   const editing = search.edit ? allCategories.find((item) => item.id === search.edit) : undefined;

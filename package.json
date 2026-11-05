@@ -16,10 +16,11 @@
   "scripts": {
     "captures": "pnpm --filter @fincheck/web captures",
     "dev": "pnpm --parallel --filter \"./apps/*\" dev",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
+    "check": "pnpm format:check && pnpm lint && pnpm knip && pnpm typecheck && pnpm test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
+    "knip": "knip --no-progress",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "prepare": "simple-git-hooks"
@@ -36,6 +37,7 @@
     "eslint": "10.13.0",
     "eslint-plugin-react-hooks": "7.1.1",
     "globals": "17.13.0",
+    "knip": "6.44.1",
     "prettier": "3.9.10",
     "simple-git-hooks": "2.14.0",
     "typescript": "6.0.3",

@@ -15,5 +15,3 @@ export function useInstallmentCreateModel() {
     deletePlan: useDeleteInstallmentPlan(),
   };
 }
-
-export type InstallmentCreateModel = ReturnType<typeof useInstallmentCreateModel>;

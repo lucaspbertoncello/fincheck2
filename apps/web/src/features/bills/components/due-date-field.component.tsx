@@ -22,7 +22,7 @@ import {
   ToggleButton,
 } from 'react-aria-components';
 
-import { CHIP_CLASS, CHIP_ON_CLASS } from '#/features/bills/constants/chip-class.constant.ts';
+import { CHIP_CLASS, CHIP_ON_CLASS } from '#/shared/constants/chip/chip-class.constant.ts';
 import { formatFullDate } from '#/features/bills/utils/format-full-date.util.ts';
 
 type DueDateFieldProps = {

@@ -3,6 +3,7 @@ import { BANK_MARK_ART, type BankMarkArt } from '#/components/bank-cards/bank-ma
 import { BANK_THEMES } from '#/components/bank-cards/bank-themes.constant.ts';
 import type { BankThemeKey } from '#/components/bank-cards/bank-theme.type.ts';
 import { cx } from '#/utils/class-names.util.ts';
+import type { BankAvatarSize } from '#/components/bank-cards/bank-avatar.type.ts';
 
 const SIZE_CLASS = {
   24: 'size-6',
@@ -10,9 +11,7 @@ const SIZE_CLASS = {
   40: 'size-10',
   48: 'size-12',
   64: 'size-16',
-} as const;
-
-export type BankAvatarSize = keyof typeof SIZE_CLASS;
+} as const satisfies Record<BankAvatarSize, unknown>;
 
 type BankAvatarProps = {
   /** A bank theme, or "wallet" for the manual wallet. */

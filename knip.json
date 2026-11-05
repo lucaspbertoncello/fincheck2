@@ -1,0 +1,27 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "workspaces": {
+    "apps/api": {
+      "project": ["src/**/*.ts", "tests/**/*.ts"],
+      "ignoreDependencies": ["@hono/zod-validator"]
+    },
+    "apps/web": {
+      "entry": ["gallery/main.tsx", "scripts/**/*.script.ts", "mocks/**/*.ts"],
+      "project": [
+        "src/**/*.{ts,tsx}",
+        "gallery/**/*.{ts,tsx}",
+        "mocks/**/*.ts",
+        "scripts/**/*.ts",
+        "tests/**/*.{ts,tsx}"
+      ],
+      "ignoreDependencies": ["tailwindcss"]
+    },
+    "packages/ui": {
+      "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"]
+    },
+    "packages/shared": {
+      "entry": ["src/**/*.ts"],
+      "project": ["src/**/*.ts", "tests/**/*.ts"]
+    }
+  }
+}

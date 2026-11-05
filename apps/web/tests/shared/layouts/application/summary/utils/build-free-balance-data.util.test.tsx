@@ -1,10 +1,8 @@
 import type { FreeBalance } from '@fincheck/shared/dashboard/free-balance/free-balance.type.ts';
 import { describe, expect, it } from 'vitest';
 
-import {
-  buildFreeBalanceData,
-  buildPartialNotice,
-} from '#/shared/layouts/application/summary/utils/build-free-balance-data.util.tsx';
+import { buildFreeBalanceData } from '#/shared/layouts/application/summary/utils/build-free-balance-data.util.tsx';
+import { buildPartialNotice } from '#/shared/layouts/application/summary/utils/build-partial-notice.util.ts';
 import { computeFreeBalance } from '#mocks/dashboard/free-balance/compute-free-balance.util.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
 

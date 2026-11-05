@@ -2,13 +2,9 @@ import type { Transaction } from '@fincheck/shared/transactions/transaction/tran
 import type { TransactionRowData } from '@fincheck/ui';
 
 import { TRANSACTION_METHOD_LABELS } from '#/features/transactions/transaction-list/constants/transaction-method-labels.constant.ts';
+import { isCountingNature } from '#/features/transactions/transaction-list/utils/is-counting-nature.util.ts';
 import type { TransactionLookups } from '#/features/transactions/transaction-list/types/transaction-lookups.type.ts';
 import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
-
-/** True when the nature counts in the month (only expense and income do; BR-TRX-006). */
-export function isCountingNature(nature: Transaction.Dto['nature']): boolean {
-  return nature === 'expense' || nature === 'income';
-}
 
 function accountLabel(transaction: Transaction.Dto, lookups: TransactionLookups): string {
   const account = lookups.accounts.get(transaction.accountId);

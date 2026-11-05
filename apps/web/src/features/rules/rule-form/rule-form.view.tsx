@@ -11,10 +11,8 @@ import {
 import type { ConfirmChange } from '@fincheck/ui';
 import type { RefObject } from 'react';
 
-import {
-  RulePreviewArea,
-  type RulePreviewStatus,
-} from '#/features/rules/rule-form/components/rule-preview-area.component.tsx';
+import { RulePreviewArea } from '#/features/rules/rule-form/components/rule-preview-area.component.tsx';
+import type { RulePreviewStatus } from '#/features/rules/rule-form/types/rule-preview-status.type.ts';
 import { RuleSentence } from '#/features/rules/rule-form/components/rule-sentence.component.tsx';
 import type {
   AccountOption,

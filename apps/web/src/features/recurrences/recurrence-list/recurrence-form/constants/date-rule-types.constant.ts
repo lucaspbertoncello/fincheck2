@@ -1,6 +1,6 @@
 import type { RecurrenceFormValues } from '#/features/recurrences/recurrence-list/recurrence-form/types/recurrence-form.type.ts';
 
-export type DateRuleTypeOption = {
+type DateRuleTypeOption = {
   key: RecurrenceFormValues['ruleType'];
   /** The first words of the sentence of that rule, so the choice and the sentence read as one. */
   label: string;

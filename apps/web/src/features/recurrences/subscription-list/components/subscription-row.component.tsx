@@ -12,9 +12,8 @@ import {
   type OverflowMenuItem,
 } from '@fincheck/ui';
 
+import type { SubscriptionRowAction } from '#/features/recurrences/subscription-list/types/subscription-row-action.type.ts';
 import type { SubscriptionRowData } from '#/features/recurrences/subscription-list/types/subscription-list.type.ts';
-
-export type SubscriptionRowAction = 'open' | 'update-value' | 'end' | 'edit' | 'delete';
 
 type SubscriptionRowProps = {
   row: SubscriptionRowData;

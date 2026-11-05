@@ -9,8 +9,3 @@ export function formatChartMoney(cents: number, hidden: boolean): string {
   const text = `${cents < 0 ? '−' : ''}R$ ${formatMoneyParts(cents)}`;
   return hidden ? maskMoneyText(text).replace('−', '') : text;
 }
-
-/** The same amount for a screen reader: the hidden state never leaks the number. */
-export function formatChartMoneyForReader(cents: number, hidden: boolean): string {
-  return hidden ? 'valor oculto' : formatChartMoney(cents, false);
-}

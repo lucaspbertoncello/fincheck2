@@ -17,7 +17,7 @@ const MESSAGES: Record<string, string> = {
   'creditCard.limitCents': 'O limite precisa ser maior que zero',
 };
 
-export type ManualAccountValidation =
+type ManualAccountValidation =
   | { ok: true; body: ReturnType<typeof createAccountRequestSchema.parse> }
   | { ok: false; errors: FormErrors };
 

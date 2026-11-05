@@ -2,6 +2,7 @@ import type { Transaction } from '@fincheck/shared/transactions/transaction/tran
 import { validateTransactionEdit, type TransactionEditErrors } from '@fincheck/ui';
 import { useState } from 'react';
 
+import { getTransactionDirection } from '#/domain/transactions/transaction/rules/get-transaction-direction.rule.ts';
 import type { TransactionListModel } from '#/features/transactions/transaction-list/transaction-list.model.ts';
 import type { TransactionLookups } from '#/features/transactions/transaction-list/types/transaction-lookups.type.ts';
 import { buildCategoryOptions } from '#/features/transactions/transaction-list/utils/build-category-options.util.ts';
@@ -125,7 +126,7 @@ export function useTransactionEditing({
     ),
     errors: mine?.errors ?? {},
     description: describeOrigin(transaction, lookups),
-    direction: transaction.amountCents > 0 ? ('income' as const) : ('expense' as const),
+    direction: getTransactionDirection(transaction.amountCents),
     formError: mine?.message,
     original:
       transaction.isEdited && transaction.bank

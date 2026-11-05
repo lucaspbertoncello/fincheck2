@@ -1,7 +1,7 @@
 import type { Occurrence } from '@fincheck/shared/recurrences/occurrence/occurrence.type.ts';
 
 import type { OccurrenceChipData } from '#/features/recurrences/recurrence-list/types/recurrence-list.type.ts';
-import { formatShortDate } from '#/features/recurrences/recurrence-list/utils/format-short-date.util.ts';
+import { formatShortDate } from '#/shared/utils/date/format-short-date.util.ts';
 import { getOccurrencePlacement } from '#/features/recurrences/recurrence-list/utils/get-occurrence-placement.util.ts';
 
 /**

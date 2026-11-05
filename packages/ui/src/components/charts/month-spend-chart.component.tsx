@@ -11,17 +11,13 @@ import {
 
 import { ChartDataTable } from '#/components/charts/chart-data-table.component.tsx';
 import type { ChartPoint } from '#/components/charts/chart-point.type.ts';
-import { formatChartMoneyForReader } from '#/components/charts/format-chart-money.util.ts';
-import {
-  formatAxisCents,
-  maxOfRows,
-  monthSpendXTicks,
-  niceYAxis,
-} from '#/components/charts/month-spend-axis.util.ts';
-import {
-  buildMonthSpendRows,
-  type MonthSpendRow,
-} from '#/components/charts/month-spend-series.util.ts';
+import { formatChartMoneyForReader } from '#/components/charts/format-chart-money-for-reader.util.ts';
+import { formatAxisCents } from '#/components/charts/format-axis-cents.util.ts';
+import { maxOfRows } from '#/components/charts/max-of-rows.util.ts';
+import { monthSpendXTicks } from '#/components/charts/month-spend-x-ticks.util.ts';
+import { niceYAxis } from '#/components/charts/nice-y-axis.util.ts';
+import { buildMonthSpendRows } from '#/components/charts/month-spend-series.util.ts';
+import { type MonthSpendRow } from '#/components/charts/month-spend-row.type.ts';
 import { MonthSpendTooltipCard } from '#/components/charts/month-spend-tooltip.component.tsx';
 import { useMoneyHidden } from '#/components/money/money-visibility.context.ts';
 

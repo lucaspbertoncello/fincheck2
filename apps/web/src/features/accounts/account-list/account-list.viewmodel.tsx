@@ -17,7 +17,8 @@ import { formatSyncAge } from '#/features/accounts/account-list/utils/format-syn
 import { getHistoryProgress } from '#/domain/accounts/account/rules/get-history-progress.rule.ts';
 import { sumTotalBalance } from '#/domain/accounts/account/rules/sum-total-balance.rule.ts';
 import { FutureInvoicesViewModel } from '#/features/invoices/future-invoices/future-invoices.viewmodel.tsx';
-import { getTodayBusinessDate } from '#/features/invoices/invoice-summary/utils/get-today-business-date.util.ts';
+import { getBusinessDate } from '#/shared/utils/date/get-business-date.util.ts';
+import { capitalize } from '#/shared/utils/text/capitalize.util.ts';
 
 /** Contas e cartões: turns the model into what the view draws and wires its actions. */
 export function AccountListViewModel() {
@@ -27,7 +28,7 @@ export function AccountListViewModel() {
   const navigate = useNavigate();
   const [actionError, setActionError] = useState<string | null>(null);
   const now = new Date();
-  const today = getTodayBusinessDate(now);
+  const today = getBusinessDate(now);
 
   const connectionsById = new Map(model.connections.map((item) => [item.id, item]));
   const invoicesByCard = new Map(model.openInvoices.map((item) => [item.accountId, item.invoice]));
@@ -168,8 +169,4 @@ export function AccountListViewModel() {
       onAccountMenuAction={handleMenuAction}
     />
   );
-}
-
-function capitalize(text: string): string {
-  return text.charAt(0).toUpperCase() + text.slice(1);
 }

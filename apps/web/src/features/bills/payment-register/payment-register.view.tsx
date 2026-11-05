@@ -24,14 +24,14 @@ export function PaymentRegisterView({
   today,
   errors,
   remainingCents,
+  halfCents,
   candidates,
   submitError,
   isSaving,
   onSubmit,
 }: PaymentRegisterViewProps) {
   const isIncome = flow === 'income';
-  const half = Math.round(remainingCents / 2);
-  const showsHalf = half > 0 && half !== remainingCents;
+  const showsHalf = halfCents > 0 && halfCents !== remainingCents;
 
   return (
     <FormModal
@@ -64,7 +64,10 @@ export function PaymentRegisterView({
                 Tudo que falta
               </ChoiceChip>
               {showsHalf ? (
-                <ChoiceChip selected={amountCents === half} onChange={() => onAmountChange(half)}>
+                <ChoiceChip
+                  selected={amountCents === halfCents}
+                  onChange={() => onAmountChange(halfCents)}
+                >
                   Metade
                 </ChoiceChip>
               ) : null}

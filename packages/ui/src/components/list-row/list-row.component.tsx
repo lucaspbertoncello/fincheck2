@@ -2,9 +2,7 @@ import type { ReactNode } from 'react';
 
 import { Collapse } from '#/components/disclosure/collapse.component.tsx';
 import { cx } from '#/utils/class-names.util.ts';
-
-/** One or two badges: the standard row never carries a third. */
-export type ListRowBadges = readonly [ReactNode] | readonly [ReactNode, ReactNode];
+import type { ListRowBadges } from '#/components/list-row/list-row.type.ts';
 
 type ListRowProps = {
   /** Leading mark: the category icon, an avatar or a bank mark. */

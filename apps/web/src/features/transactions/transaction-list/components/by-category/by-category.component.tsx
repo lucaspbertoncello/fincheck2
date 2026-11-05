@@ -8,8 +8,8 @@ import {
   SummaryBar,
 } from '@fincheck/ui';
 
+import { UNCATEGORIZED_GROUP_ID } from '#/features/transactions/transaction-list/constants/uncategorized-group-id.constant.ts';
 import type { ByCategoryView } from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
-import { UNCATEGORIZED_GROUP_ID } from '#/features/transactions/transaction-list/utils/build-category-groups.util.ts';
 
 type ByCategoryProps = {
   data: ByCategoryView;

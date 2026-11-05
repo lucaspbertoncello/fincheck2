@@ -56,7 +56,7 @@ export const SCREEN_TARGETS: CaptureTarget[] = [
   { name: 'service logos gallery', path: '/gallery.html#service-logos', kind: 'screen' },
 ];
 
-export const MODAL_TARGETS: CaptureTarget[] = [
+const MODAL_TARGETS: CaptureTarget[] = [
   { name: 'new transaction modal', path: '/transactions?new=transaction', kind: 'modal' },
   { name: 'new installment modal', path: '/transactions?new=installment', kind: 'modal' },
   { name: 'new recurrence modal', path: '/recurrences?new=recurrence', kind: 'modal' },

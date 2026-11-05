@@ -2,7 +2,7 @@ import type { TransactionDay } from '#/features/transactions/transaction-list/ty
 import { formatMonthParts } from '#/shared/utils/format-month-parts.util.ts';
 
 /** The days of one month under its heading ("Outubro 2026"). */
-export type TransactionMonth = {
+type TransactionMonth = {
   /** `YYYY-MM`. */
   key: string;
   label: string;

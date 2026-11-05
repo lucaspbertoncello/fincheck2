@@ -10,10 +10,8 @@ import { useConnectAccountModel } from '#/features/accounts/connect-account/conn
 import { ConnectAccountView } from '#/features/accounts/connect-account/connect-account.view.tsx';
 import { useConnectAccountForm } from '#/features/accounts/connect-account/hooks/use-connect-account-form.hook.ts';
 import { buildFormFromAccount } from '#/features/accounts/connect-account/utils/build-form-from-account.util.ts';
-import {
-  connectErrorNeedsSettings,
-  describeConnectError,
-} from '#/features/accounts/connect-account/utils/describe-connect-error.util.ts';
+import { describeConnectError } from '#/features/accounts/connect-account/utils/describe-connect-error.util.ts';
+import { connectErrorNeedsSettings } from '#/features/accounts/connect-account/utils/connect-error-needs-settings.util.ts';
 import { validateAccountEdit } from '#/features/accounts/connect-account/utils/validate-account-edit.util.ts';
 import { validateManualAccount } from '#/features/accounts/connect-account/utils/validate-manual-account.util.ts';
 

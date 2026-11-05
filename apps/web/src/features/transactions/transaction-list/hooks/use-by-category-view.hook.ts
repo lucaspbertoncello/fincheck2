@@ -1,20 +1,16 @@
 import type { CategoryBreakdown } from '@fincheck/shared/dashboard/category-breakdown/category-breakdown.type.ts';
 import { useState } from 'react';
 
+import { UNCATEGORIZED_GROUP_ID } from '#/features/transactions/transaction-list/constants/uncategorized-group-id.constant.ts';
+import type { PeriodRange } from '#/features/transactions/transaction-list/types/period-range.type.ts';
 import type { useTransactionListSearch } from '#/features/transactions/transaction-list/hooks/use-transaction-list-search.hook.ts';
 import type { TransactionListSearch } from '#/features/transactions/transaction-list/schemas/transaction-list-search.schema.ts';
 import type { TransactionListModel } from '#/features/transactions/transaction-list/transaction-list.model.ts';
 import type { ByCategoryView } from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
 import type { TransactionLookups } from '#/features/transactions/transaction-list/types/transaction-lookups.type.ts';
-import {
-  buildCategoryGroups,
-  UNCATEGORIZED_GROUP_ID,
-} from '#/features/transactions/transaction-list/utils/build-category-groups.util.ts';
-import {
-  describePreviousPeriod,
-  describeReceivedIn,
-} from '#/features/transactions/transaction-list/utils/describe-period.util.ts';
-import type { PeriodRange } from '#/features/transactions/transaction-list/utils/resolve-period-range.util.ts';
+import { buildCategoryGroups } from '#/features/transactions/transaction-list/utils/build-category-groups.util.ts';
+import { describeReceivedIn } from '#/features/transactions/transaction-list/utils/describe-received-in.util.ts';
+import { describePreviousPeriod } from '#/features/transactions/transaction-list/utils/describe-previous-period.util.ts';
 import { formatMonthParts } from '#/shared/utils/format-month-parts.util.ts';
 import { shiftMonthKey } from '#/shared/utils/shift-month-key.util.ts';
 

@@ -1,7 +1,7 @@
 import type { Agenda } from '@fincheck/shared/dashboard/agenda/agenda.type.ts';
 
 /** Which owner route "Registrar pagamento" calls, read from the item `source`. */
-export type PaymentTarget =
+type PaymentTarget =
   | { kind: 'bill'; billId: string }
   | { kind: 'invoice'; accountId: string; month: string }
   | { kind: 'occurrence'; occurrenceId: string };

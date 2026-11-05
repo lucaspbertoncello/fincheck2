@@ -1,6 +1,6 @@
 import { BottomNav } from '@fincheck/ui';
 
-import { buildBottomNavigationItems } from '#/shared/layouts/application/navigation/build-navigation-items.util.ts';
+import { buildBottomNavigationItems } from '#/shared/layouts/application/navigation/build-bottom-navigation-items.util.ts';
 import type { TabKey } from '#/shared/types/screen.type.ts';
 
 type ApplicationBottomNavProps = {

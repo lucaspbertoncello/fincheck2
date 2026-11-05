@@ -9,7 +9,8 @@ import {
 import { getBankCardLayout } from '#/components/bank-cards/bank-card-layout.util.ts';
 import { BankCardMark } from '#/components/bank-cards/bank-card-mark.component.tsx';
 import { BankCardNetwork } from '#/components/bank-cards/bank-card-network.component.tsx';
-import { followPointer, resetPointer } from '#/components/bank-cards/bank-card-tilt.util.ts';
+import { followPointer } from '#/components/bank-cards/follow-pointer.util.ts';
+import { resetPointer } from '#/components/bank-cards/reset-pointer.util.ts';
 import { BANK_THEMES } from '#/components/bank-cards/bank-themes.constant.ts';
 import type { BankThemeKey } from '#/components/bank-cards/bank-theme.type.ts';
 import { cx } from '#/utils/class-names.util.ts';

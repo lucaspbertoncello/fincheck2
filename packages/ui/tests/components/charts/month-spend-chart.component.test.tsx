@@ -1,12 +1,10 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import {
-  formatAxisCents,
-  maxOfRows,
-  monthSpendXTicks,
-  niceYAxis,
-} from '#/components/charts/month-spend-axis.util.ts';
+import { formatAxisCents } from '#/components/charts/format-axis-cents.util.ts';
+import { maxOfRows } from '#/components/charts/max-of-rows.util.ts';
+import { monthSpendXTicks } from '#/components/charts/month-spend-x-ticks.util.ts';
+import { niceYAxis } from '#/components/charts/nice-y-axis.util.ts';
 import { buildMonthSpendRows } from '#/components/charts/month-spend-series.util.ts';
 import { MonthSpendTooltipCard } from '#/components/charts/month-spend-tooltip.component.tsx';
 import { MonthSpendChart } from '#/components/charts/index.ts';

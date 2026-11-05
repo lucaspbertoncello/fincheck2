@@ -1,13 +1,7 @@
-import { Icon, type IconName } from '@fincheck/ui';
+import { Icon } from '@fincheck/ui';
 import { Label, Radio, RadioGroup } from 'react-aria-components';
 
-export type ChoiceCardOption<T extends string> = {
-  value: T;
-  label: string;
-  icon: IconName;
-  /** One line under the label; leave out for the compact card. */
-  description?: string;
-};
+import type { ChoiceCardOption } from '#/features/accounts/connect-account/types/choice-card-option.type.ts';
 
 type ChoiceCardsProps<T extends string> = {
   label: string;

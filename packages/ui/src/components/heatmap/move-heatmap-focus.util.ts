@@ -1,22 +1,6 @@
+import { HEATMAP_MOVES } from '#/components/heatmap/heatmap-moves.constant.ts';
+import type { HeatmapPosition } from '#/components/heatmap/heatmap-position.type.ts';
 import type { SpendHeatmapDay } from '#/components/heatmap/spend-heatmap.type.ts';
-
-export type HeatmapPosition = { column: number; row: number };
-
-/** Keys the map answers to, as the GitHub graph does. */
-const MOVES: Record<string, (position: HeatmapPosition) => HeatmapPosition> = {
-  ArrowLeft: ({ column, row }) => ({ column: column - 1, row }),
-  ArrowRight: ({ column, row }) => ({ column: column + 1, row }),
-  ArrowUp: ({ column, row }) => ({ column, row: row - 1 }),
-  ArrowDown: ({ column, row }) => ({ column, row: row + 1 }),
-  Home: ({ row }) => ({ column: 0, row }),
-  End: ({ row }) => ({ column: Number.MAX_SAFE_INTEGER, row }),
-  PageUp: ({ column }) => ({ column, row: 0 }),
-  PageDown: ({ column }) => ({ column, row: 6 }),
-};
-
-export function isHeatmapKey(key: string): boolean {
-  return key in MOVES;
-}
 
 /**
  * Where the focus goes for a key: arrows move one day, Home and End go to the first and last day of
@@ -28,7 +12,7 @@ export function moveHeatmapFocus(
   from: HeatmapPosition,
   key: string,
 ): HeatmapPosition {
-  const move = MOVES[key];
+  const move = HEATMAP_MOVES[key];
   if (!move) return from;
   const target = move(from);
   const column = Math.min(Math.max(target.column, 0), weeks.length - 1);

@@ -1,4 +1,5 @@
-export { Banner, type BannerVariant } from '#/components/feedback/banner.component.tsx';
+export { Banner } from '#/components/feedback/banner.component.tsx';
+export type { BannerVariant } from '#/components/feedback/banner.type.ts';
 export { BannerSlot } from '#/components/feedback/banner-slot.component.tsx';
 export { InlineNotice } from '#/components/feedback/inline-notice.component.tsx';
 export { ToastProvider } from '#/components/feedback/toast-provider.component.tsx';

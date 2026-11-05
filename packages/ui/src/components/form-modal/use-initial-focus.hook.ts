@@ -1,7 +1,7 @@
 import { useEffect, type RefObject } from 'react';
 
 /** Where the focus goes when nothing asked for it: the first field that takes typing. */
-export const DEFAULT_INITIAL_FOCUS =
+const DEFAULT_INITIAL_FOCUS =
   'input:not([type=hidden]):not([disabled]):not([readonly]), textarea:not([disabled])';
 
 /**

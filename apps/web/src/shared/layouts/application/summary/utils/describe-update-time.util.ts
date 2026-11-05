@@ -1,9 +1,5 @@
-const dayFormat = new Intl.DateTimeFormat('en-CA', {
-  timeZone: 'America/Sao_Paulo',
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-});
+import { calendarDaysBetween } from '#/shared/layouts/application/summary/utils/calendar-days-between.util.ts';
+
 const timeFormat = new Intl.DateTimeFormat('pt-BR', {
   timeZone: 'America/Sao_Paulo',
   hour: '2-digit',
@@ -18,13 +14,6 @@ const shortDayFormat = new Intl.DateTimeFormat('pt-BR', {
 
 const MINUTE_MS = 60 * 1000;
 const HOUR_MS = 60 * MINUTE_MS;
-const DAY_MS = 24 * HOUR_MS;
-
-function calendarDaysBetween(from: Date, to: Date): number {
-  const a = Date.parse(dayFormat.format(from));
-  const b = Date.parse(dayFormat.format(to));
-  return Math.round((b - a) / DAY_MS);
-}
 
 /**
  * "Sincronizado há 12 min", "Sincronizado há 3 h", "Ontem, 18:40" or "27/10, 18:40": when the
@@ -41,13 +30,4 @@ export function describeUpdateTime(updatedAt: string | null, now: Date): string 
   const time = timeFormat.format(updated);
   if (days === 1) return `Ontem, ${time}`;
   return `${shortDayFormat.format(updated)}, ${time}`;
-}
-
-/** "de hoje", "de ontem" or "de 3 dias atrás": the age of a bank's data, for the stale chip. */
-export function describeDataAge(updatedAt: string | null, now: Date): string {
-  if (!updatedAt) return 'sem atualização';
-  const days = calendarDaysBetween(new Date(updatedAt), now);
-  if (days <= 0) return 'de hoje';
-  if (days === 1) return 'de ontem';
-  return `de ${days} dias atrás`;
 }

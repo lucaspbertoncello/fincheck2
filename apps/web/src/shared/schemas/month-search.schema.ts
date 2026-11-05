@@ -12,5 +12,3 @@ export const monthSearchSchema = z.looseObject({
     .optional()
     .catch(undefined),
 });
-
-export type MonthSearch = z.infer<typeof monthSearchSchema>;

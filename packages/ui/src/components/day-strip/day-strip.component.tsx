@@ -1,12 +1,11 @@
 import { type RefObject, useEffect, useRef } from 'react';
 import { ListBox, ListBoxItem, type Selection } from 'react-aria-components';
 
-import {
-  dayLongLabel,
-  parseBusinessDate,
-  weekdayShort,
-} from '#/components/day-strip/day-date.util.ts';
-import { DayMarkerDot, describeMarker } from '#/components/day-strip/day-marker.component.tsx';
+import { dayLongLabel } from '#/components/day-strip/day-long-label.util.ts';
+import { parseBusinessDate } from '#/components/day-strip/parse-business-date.util.ts';
+import { weekdayShort } from '#/components/day-strip/weekday-short.util.ts';
+import { DayMarkerDot } from '#/components/day-strip/day-marker.component.tsx';
+import { describeMarker } from '#/components/day-strip/describe-marker.util.ts';
 import type { DayStripDay, DayStripVariant } from '#/components/day-strip/day-strip.type.ts';
 import { formatDayTotal } from '#/components/day-strip/format-day-total.util.ts';
 import { MaskedNumber } from '#/components/money/masked-number.component.tsx';

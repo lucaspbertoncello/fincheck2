@@ -2,7 +2,7 @@ import { BANK_MARK_ART, type BankMarkArt } from '#/components/bank-cards/bank-ma
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { BANK_THEMES, BankAvatar, BankCard, BankCardMini } from '#/components/bank-cards/index.ts';
+import { BANK_THEMES, BankAvatar, BankCard } from '#/components/bank-cards/index.ts';
 import type { BankThemeKey } from '#/components/bank-cards/index.ts';
 
 const KEYS = Object.keys(BANK_THEMES) as BankThemeKey[];
@@ -22,14 +22,6 @@ describe('bank theme colors', () => {
         expect(html, `${key} mark`).toContain(`color:${theme.mark.color}`);
         expect(html, `${key} mark fill`).toContain('fill="currentColor"');
       }
-    }
-  });
-
-  it('paints every mini card with the gradient of its theme', () => {
-    for (const key of KEYS) {
-      const [from, mid, to] = BANK_THEMES[key].gradient.stops;
-      const html = renderToStaticMarkup(<BankCardMini theme={key} />);
-      expect(html, key).toContain(`${from},${mid} 55%,${to}`);
     }
   });
 

@@ -1,6 +1,6 @@
 import { Icon } from '#/components/icons/index.ts';
 import { Money } from '#/components/money/index.ts';
-import type { SplitCheck } from '#/components/transactions/split/check-split.util.ts';
+import type { SplitCheck } from '#/components/transactions/split/split-check.type.ts';
 import { cx } from '#/utils/class-names.util.ts';
 
 type SplitSumIndicatorProps = {

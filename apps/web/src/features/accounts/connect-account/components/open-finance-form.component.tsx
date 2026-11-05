@@ -8,6 +8,7 @@ import {
   type StepItem,
 } from '@fincheck/ui';
 
+import type { OpenFinanceProblemContent } from '#/features/accounts/connect-account/types/open-finance-problem-content.type.ts';
 import { OpenFinanceOutcome } from '#/features/accounts/connect-account/components/open-finance-outcome.component.tsx';
 import { OpenFinanceProblem } from '#/features/accounts/connect-account/components/open-finance-problem.component.tsx';
 import { StackedPanels } from '#/features/accounts/connect-account/components/stacked-panels.component.tsx';
@@ -15,14 +16,6 @@ import {
   CONNECTION_CODE_LENGTH,
   OPEN_FINANCE_SITE_URL,
 } from '#/features/accounts/connect-account/constants/connect-modes.constant.ts';
-
-export type OpenFinanceProblemContent = {
-  variant: 'warning' | 'error';
-  title: string;
-  description?: string;
-  actionLabel: string;
-  onAction: () => void;
-};
 
 type OpenFinanceFormProps = {
   /** Waiting for the saved keys. */

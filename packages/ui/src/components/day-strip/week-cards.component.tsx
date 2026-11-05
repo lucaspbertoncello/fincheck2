@@ -1,7 +1,7 @@
 import { motion } from 'motion/react';
 import { Button } from 'react-aria-components';
 
-import { dayRangeLabel } from '#/components/day-strip/day-date.util.ts';
+import { dayRangeLabel } from '#/components/day-strip/day-range-label.util.ts';
 import type { WeekSummary } from '#/components/day-strip/day-strip.type.ts';
 import { ProjectionFigures } from '#/components/day-strip/projection-figures.component.tsx';
 import { cx } from '#/utils/class-names.util.ts';

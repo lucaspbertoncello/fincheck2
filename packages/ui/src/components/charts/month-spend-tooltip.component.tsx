@@ -1,5 +1,5 @@
 import { formatChartMoney } from '#/components/charts/format-chart-money.util.ts';
-import type { MonthSpendRow } from '#/components/charts/month-spend-series.util.ts';
+import type { MonthSpendRow } from '#/components/charts/month-spend-row.type.ts';
 
 type MonthSpendTooltipCardProps = {
   row: MonthSpendRow;

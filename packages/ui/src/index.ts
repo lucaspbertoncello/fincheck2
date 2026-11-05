@@ -1,6 +1,4 @@
 // Components are re-exported here, one block per subject folder.
-export { PlusButton } from '#/components/actions/index.ts';
-export { PlusMenu, type PlusMenuItem } from '#/components/actions/index.ts';
 export { CardDot, Logo } from '#/components/brand/index.ts';
 export {
   CategoryIcon,
@@ -44,53 +42,60 @@ export {
   type EmptyStateAction,
 } from '#/components/states/index.ts';
 export {
+  ExpenseSummaryCard,
   FreeBalancePanel,
+  IncomeSummaryCard,
+  MonthSummaryCard,
+  MonthSummaryCards,
+  ResultSummaryCard,
+  SummaryBar,
   type FreeBalanceAccount,
   type FreeBalanceData,
   type FreeBalanceItem,
   type FreeBalanceLine,
+  type SummaryBarSegment,
 } from '#/components/summary/index.ts';
 export { useMediaQuery } from '#/hooks/viewport/index.ts';
 export {
   Button,
+  PlusButton,
+  PlusMenu,
   type ButtonProps,
   type ButtonSize,
   type ButtonVariant,
+  type PlusMenuItem,
 } from '#/components/buttons/index.ts';
 export {
   Chip,
   ChoiceChip,
   CountBadge,
-  VARIATION_COLOR_THRESHOLD,
   VariationBadge,
   variationTone,
   type ChipTone,
   type VariationTone,
 } from '#/components/chips/index.ts';
 export {
+  AmountField,
+  CategoryPicker,
   Checkbox,
+  ChoiceField,
+  DateQuickField,
+  FieldSet,
   FineNote,
   MoneyField,
   OkLine,
   SearchField,
   SegmentedControl,
+  SelectField,
   Switch,
   TextField,
   formatCentsInput,
   parseCentsInput,
   parsePastedMoney,
-  type SegmentedOption,
-} from '#/components/forms/index.ts';
-export {
-  AmountField,
-  CategoryPicker,
-  ChoiceField,
-  DateQuickField,
-  FieldSet,
-  SelectField,
   type AmountKind,
   type ChoiceOption,
-} from '#/components/form-fields/index.ts';
+  type SegmentedOption,
+} from '#/components/forms/index.ts';
 export {
   SERVICE_LOGO_ART,
   ServiceLogo,
@@ -109,10 +114,8 @@ export {
 export { OverflowMenu, type OverflowMenuItem } from '#/components/menus/index.ts';
 export {
   AccountCard,
-  AddAccountCard,
   BankAvatar,
   BankCard,
-  BankCardMini,
   BANK_THEMES,
   InvoiceCard,
   InvoiceCycleBar,
@@ -141,7 +144,6 @@ export {
 } from '#/components/day-strip/index.ts';
 export { Section } from '#/components/sections/index.ts';
 export {
-  AccountSparkline,
   CategoryDonut,
   MonthBarsChart,
   MonthSpendChart,
@@ -180,21 +182,17 @@ export {
   CategoryGroupList,
   CategorySuggestion,
   EditDateField,
-  NatureField,
   OriginalFromBankNote,
   SelectionBar,
   SelectionToggle,
-  SplitEditor,
   SplitSumIndicator,
   TagEditor,
   TransactionDayGroup,
   TransactionDayList,
   TransactionDetailBox,
-  TransactionEditPanel,
   TransactionRow,
   balanceSplitParts,
   checkSplit,
-  countLabel,
   distributeCents,
   normalizeTag,
   sumCents,
@@ -202,7 +200,6 @@ export {
   type CategoryGroupData,
   type CategoryGroupItem,
   type CategoryOption,
-  type CounterpartOption,
   type OriginalFromBank,
   type SelectionAction,
   type SplitCheck,
@@ -230,7 +227,6 @@ export {
 export {
   BillRow,
   buildRecurrenceMenu,
-  DateRulePicker,
   ExpectedValueUpdate,
   NeedsAttentionStrip,
   PartialBar,
@@ -240,7 +236,6 @@ export {
   TotalCard,
   type BillBadge,
   type BillStatus,
-  type DateRuleOption,
   type RecurrenceAction,
   type RecurrenceFlow,
   type RecurrenceInlineAction,
@@ -265,15 +260,6 @@ export {
   type RuleTokenKind,
 } from '#/components/rules/index.ts';
 export {
-  ExpenseSummaryCard,
-  IncomeSummaryCard,
-  MonthSummaryCard,
-  MonthSummaryCards,
-  ResultSummaryCard,
-  SummaryBar,
-  type SummaryBarSegment,
-} from '#/components/month-summary/index.ts';
-export {
   SettingRow,
   SettingsNav,
   Steps,
@@ -296,3 +282,4 @@ export {
   type SpendHeatmapDay,
   type SpendHeatmapLevel,
 } from '#/components/heatmap/index.ts';
+export { countLabel } from '#/utils/count-label.util.ts';

@@ -5,7 +5,7 @@ import { waitForHealthy } from '#/domain/health/health/services/wait-for-healthy
 import { useBackupModel } from '#/features/settings/settings/backup/backup.model.ts';
 import { BackupView } from '#/features/settings/settings/backup/backup.view.tsx';
 import type { BackupFileItem } from '#/features/settings/settings/backup/types/backup-file-item.type.ts';
-import { capitalizeFirst } from '#/features/settings/settings/backup/utils/capitalize-first.util.ts';
+import { capitalize } from '#/shared/utils/text/capitalize.util.ts';
 import { describeBackupError } from '#/features/settings/settings/backup/utils/describe-backup-error.util.ts';
 import { formatBackupDay } from '#/features/settings/settings/backup/utils/format-backup-day.util.ts';
 import { formatBackupMoment } from '#/features/settings/settings/backup/utils/format-backup-moment.util.ts';
@@ -42,7 +42,7 @@ export function BackupViewModel() {
 
   const allItems: BackupFileItem[] = (files.data?.items ?? []).map((file, index) => ({
     fileName: file.fileName,
-    moment: capitalizeFirst(formatBackupMoment(file.createdAt, now)),
+    moment: capitalize(formatBackupMoment(file.createdAt, now)),
     size: formatFileSize(file.sizeBytes),
     day: formatBackupDay(file.createdAt),
     isLatest: index === 0,
@@ -114,16 +114,14 @@ export function BackupViewModel() {
       last={
         data?.lastBackup
           ? {
-              moment: capitalizeFirst(formatBackupMoment(data.lastBackup.createdAt, now)),
+              moment: capitalize(formatBackupMoment(data.lastBackup.createdAt, now)),
               size: formatFileSize(data.lastBackup.sizeBytes),
             }
           : null
       }
       failure={data?.lastError ? describeBackupError(data.lastError.code) : null}
       nextMoment={
-        data?.nextScheduledAt
-          ? capitalizeFirst(formatBackupMoment(data.nextScheduledAt, now))
-          : null
+        data?.nextScheduledAt ? capitalize(formatBackupMoment(data.nextScheduledAt, now)) : null
       }
       keepCount={data?.keepCount ?? 30}
       actionError={actionError}

@@ -10,12 +10,10 @@ import {
   Section,
 } from '@fincheck/ui';
 
+import type { FolderModalProps } from '#/features/settings/settings/backup/types/folder-modal-props.type.ts';
 import { BackupFileRow } from '#/features/settings/settings/backup/components/backup-file-row.component.tsx';
 import { BackupStatusBlock } from '#/features/settings/settings/backup/components/backup-status-block.component.tsx';
-import {
-  FolderModal,
-  type FolderModalProps,
-} from '#/features/settings/settings/backup/components/folder-modal.component.tsx';
+import { FolderModal } from '#/features/settings/settings/backup/components/folder-modal.component.tsx';
 import { FolderRow } from '#/features/settings/settings/backup/components/folder-row.component.tsx';
 import type { BackupFileItem } from '#/features/settings/settings/backup/types/backup-file-item.type.ts';
 import { SectionError } from '#/features/settings/settings/components/section-error.component.tsx';

@@ -8,7 +8,8 @@ import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category
 import { useRecurrenceListSearch } from '#/features/recurrences/recurrence-list/hooks/use-recurrence-list-search.hook.ts';
 import { RecurrenceFormStatusModal } from '#/features/recurrences/recurrence-list/recurrence-form/components/recurrence-form-status-modal.component.tsx';
 import { EMPTY_FORM_VALUES } from '#/features/recurrences/recurrence-list/recurrence-form/constants/empty-form-values.constant.ts';
-import { useFocusFirstInvalid } from '#/features/recurrences/recurrence-list/recurrence-form/hooks/use-focus-first-invalid.hook.ts';
+import { DIALOG_INVALID_INPUT_SELECTOR } from '#/shared/constants/form/invalid-field-selector.constant.ts';
+import { useFocusFirstInvalid } from '#/shared/hooks/form/use-focus-first-invalid.hook.ts';
 import {
   useRecurrenceFormAccounts,
   useRecurrenceFormActions,
@@ -29,7 +30,7 @@ import { buildUpdateBody } from '#/features/recurrences/recurrence-list/recurren
 import { buildPreviewDates } from '#/features/recurrences/recurrence-list/recurrence-form/utils/build-preview-dates.util.ts';
 import { resolveRecurrenceMethod } from '#/features/recurrences/recurrence-list/recurrence-form/utils/resolve-recurrence-method.util.ts';
 import { applyRuleDefaults } from '#/features/recurrences/recurrence-list/recurrence-form/utils/apply-rule-defaults.util.ts';
-import { isApiError } from '#/shared/api/api.error.ts';
+import { getApiErrorMessage } from '#/shared/api/get-api-error-message.util.ts';
 import { useHideValues } from '#/shared/hooks/use-hide-values.hook.ts';
 import { buildAccountChoices } from '#/shared/utils/build-account-choices.util.ts';
 
@@ -75,7 +76,11 @@ function RecurrenceFormSession({ saved, preset }: SessionProps) {
     if (preview.data) return 'ready' as const;
     return preview.isError ? ('unavailable' as const) : ('loading' as const);
   })();
-  useFocusFirstInvalid(attempt);
+  useFocusFirstInvalid({
+    attempt,
+    selector: DIALOG_INVALID_INPUT_SELECTOR,
+    scope: 'document',
+  });
 
   function handleChange(patch: Partial<RecurrenceFormValues>) {
     setValues((current) => {
@@ -96,9 +101,7 @@ function RecurrenceFormSession({ saved, preset }: SessionProps) {
     try {
       await task();
     } catch (error) {
-      setFormError(
-        isApiError(error) ? error.message : 'Não deu para salvar. Tente de novo em instantes.',
-      );
+      setFormError(getApiErrorMessage(error, 'Não deu para salvar. Tente de novo em instantes.'));
     }
   }
 

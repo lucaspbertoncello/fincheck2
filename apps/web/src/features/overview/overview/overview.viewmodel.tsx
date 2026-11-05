@@ -12,10 +12,8 @@ import { buildAlerts } from '#/features/overview/overview/utils/build-alerts.uti
 import { buildCategories } from '#/features/overview/overview/utils/build-categories.util.tsx';
 import { buildRemainingLine } from '#/features/overview/overview/utils/build-remaining-line.util.ts';
 import { buildSpend } from '#/features/overview/overview/utils/build-spend.util.ts';
-import {
-  buildStrip,
-  pickDefaultDate,
-} from '#/features/overview/overview/utils/build-strip.util.ts';
+import { buildStrip } from '#/features/overview/overview/utils/build-strip.util.ts';
+import { pickDefaultDate } from '#/features/overview/overview/utils/pick-default-date.util.ts';
 import { buildSummaryCards } from '#/features/overview/overview/utils/build-summary-cards.util.ts';
 import { toSectionState } from '#/features/overview/overview/utils/to-section-state.util.ts';
 import { useIsDesktop } from '#/shared/hooks/use-is-desktop.hook.ts';

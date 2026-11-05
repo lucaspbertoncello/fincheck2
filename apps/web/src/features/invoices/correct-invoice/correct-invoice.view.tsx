@@ -11,10 +11,11 @@ import {
 } from '@fincheck/ui';
 import { useRef } from 'react';
 
-import { useFocusFirstInvalid } from '#/features/accounts/form-focus/hooks/use-focus-first-invalid.hook.ts';
+import { INVALID_FIELD_SELECTOR } from '#/shared/constants/form/invalid-field-selector.constant.ts';
+import { useFocusFirstInvalid } from '#/shared/hooks/form/use-focus-first-invalid.hook.ts';
 
 /** What each source says the invoice is worth. */
-export type InvoiceReference = {
+type InvoiceReference = {
   key: string;
   label: string;
   cents: number;
@@ -95,7 +96,11 @@ export function CorrectInvoiceView({
   onRemove,
 }: CorrectInvoiceViewProps) {
   const content = useRef<HTMLDivElement>(null);
-  useFocusFirstInvalid(content, failedAttempts);
+  useFocusFirstInvalid({
+    attempt: failedAttempts,
+    selector: INVALID_FIELD_SELECTOR,
+    scope: content,
+  });
 
   return (
     <FormModal

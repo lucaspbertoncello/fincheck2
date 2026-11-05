@@ -20,20 +20,18 @@ import { useTransactionSplitting } from '#/features/transactions/transaction-lis
 import { useTransactionListModel } from '#/features/transactions/transaction-list/transaction-list.model.ts';
 import { TransactionListView } from '#/features/transactions/transaction-list/transaction-list.view.tsx';
 import type { TransactionListViewProps } from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
-import {
-  buildListQuery,
-  countActiveFilters,
-} from '#/features/transactions/transaction-list/utils/build-list-query.util.ts';
+import { buildListQuery } from '#/features/transactions/transaction-list/utils/build-list-query.util.ts';
+import { countActiveFilters } from '#/features/transactions/transaction-list/utils/count-active-filters.util.ts';
 import { buildRowView } from '#/features/transactions/transaction-list/utils/build-row-view.util.ts';
 import { buildTransactionLookups } from '#/features/transactions/transaction-list/utils/build-transaction-lookups.util.ts';
-import { describeEmptyPeriod } from '#/features/transactions/transaction-list/utils/describe-period.util.ts';
+import { describeEmptyPeriod } from '#/features/transactions/transaction-list/utils/describe-empty-period.util.ts';
 import { groupDaysByMonth } from '#/features/transactions/transaction-list/utils/group-days-by-month.util.ts';
 import { resolvePeriodRange } from '#/features/transactions/transaction-list/utils/resolve-period-range.util.ts';
 import { groupTransactionsByDay } from '#/features/transactions/transaction-list/utils/group-transactions-by-day.util.ts';
 import { rankCategoriesByUse } from '#/features/transactions/transaction-fields/utils/rank-categories-by-use.util.ts';
 import { formatDayChip } from '#/features/transactions/transaction-list/utils/format-day-chip.util.ts';
 import { takeRows } from '#/features/transactions/transaction-list/utils/take-rows.util.ts';
-import { toBusinessDate } from '#/features/transactions/transaction-list/utils/to-business-date.util.ts';
+import { getBusinessDate } from '#/shared/utils/date/get-business-date.util.ts';
 import { countWord } from '#/features/transactions/transaction-list/utils/count-word.util.ts';
 import { buildHref } from '#/shared/layouts/application/navigation/build-href.util.ts';
 import { navigateToHref } from '#/shared/layouts/application/navigation/navigate-to-href.util.ts';
@@ -51,7 +49,7 @@ export function TransactionListViewModel() {
   const { month } = selectedMonth;
   const { search, update } = useTransactionListSearch();
   const [ruleQuestionIds, setRuleQuestionIds] = useState<string[]>([]);
-  const today = toBusinessDate(new Date());
+  const today = getBusinessDate(new Date());
   // "Mês" is the month of the app; the wider periods read their own range (BR-TRX-007).
   const isMonth = search.period === 'month';
   const range = resolvePeriodRange(search.period, today);

@@ -10,7 +10,7 @@ import { buildHeatmapDayHref } from '#/features/profile/profile/utils/build-heat
 import { buildRecurrenceHref } from '#/features/profile/profile/utils/build-recurrence-href.util.ts';
 import { summarizeHeatmap } from '#/features/profile/profile/utils/summarize-heatmap.util.ts';
 import { buildHighlightItems } from '#/features/profile/profile/utils/build-highlight-items.util.tsx';
-import { getSaoPauloDateKey } from '#/features/settings/settings/backup/utils/get-sao-paulo-date-key.util.ts';
+import { getBusinessDate } from '#/shared/utils/date/get-business-date.util.ts';
 import { useIsDesktop } from '#/shared/hooks/use-is-desktop.hook.ts';
 import { navigateToHref } from '#/shared/layouts/application/navigation/navigate-to-href.util.ts';
 
@@ -28,7 +28,7 @@ export function ProfileViewModel() {
   const profileState = profile.isError ? 'error' : profile.data ? 'ready' : 'loading';
   const heatmapState = heatmap.isError ? 'error' : heatmap.data ? 'ready' : 'loading';
   const highlightsState = highlights.isError ? 'error' : highlights.data ? 'ready' : 'loading';
-  const today = getSaoPauloDateKey(new Date());
+  const today = getBusinessDate(new Date());
   const categoryNames = new Map((categories.data?.items ?? []).map((item) => [item.id, item.name]));
 
   return (

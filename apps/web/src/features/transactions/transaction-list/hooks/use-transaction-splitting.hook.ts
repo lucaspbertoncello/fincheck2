@@ -2,6 +2,7 @@ import type { Transaction } from '@fincheck/shared/transactions/transaction/tran
 import { distributeCents, type SplitPart } from '@fincheck/ui';
 import { useRef, useState } from 'react';
 
+import { getTransactionDirection } from '#/domain/transactions/transaction/rules/get-transaction-direction.rule.ts';
 import type { TransactionListModel } from '#/features/transactions/transaction-list/transaction-list.model.ts';
 import type { TransactionLookups } from '#/features/transactions/transaction-list/types/transaction-lookups.type.ts';
 import { buildCategoryOptions } from '#/features/transactions/transaction-list/utils/build-category-options.util.ts';
@@ -80,7 +81,7 @@ export function useTransactionSplitting({ model, lookups, transaction, close }: 
     onChange: (next: SplitPart[]) => setDraft({ id: transaction.id, parts: next }),
     categories: buildCategoryOptions(
       [...lookups.categories.values()],
-      transaction.amountCents > 0 ? 'income' : 'expense',
+      getTransactionDirection(transaction.amountCents),
     ),
     createPartId: () => `new-part-${(nextPartId.current += 1)}`,
     description: `${transaction.description}: reparta o valor entre duas categorias.`,

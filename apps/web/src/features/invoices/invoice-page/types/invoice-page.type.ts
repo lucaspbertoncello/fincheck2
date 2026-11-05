@@ -102,7 +102,7 @@ export type InvoiceItemGroupData = {
   rows: readonly InvoiceItemRowData[];
 };
 
-export type InvoicePaymentFormData = {
+type InvoicePaymentFormData = {
   registering: boolean;
   isBusy: boolean;
   cents: number;

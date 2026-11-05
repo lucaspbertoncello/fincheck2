@@ -4,12 +4,10 @@ import type { Institution } from '@fincheck/shared/accounts/institution/institut
 import { ErrorState, FormModal, Skeleton, type IconName } from '@fincheck/ui';
 import { useRef } from 'react';
 
+import type { OpenFinanceProblemContent } from '#/features/accounts/connect-account/types/open-finance-problem-content.type.ts';
 import { ChoiceCards } from '#/features/accounts/connect-account/components/choice-cards.component.tsx';
 import { ManualAccountForm } from '#/features/accounts/connect-account/components/manual-account-form.component.tsx';
-import {
-  OpenFinanceForm,
-  type OpenFinanceProblemContent,
-} from '#/features/accounts/connect-account/components/open-finance-form.component.tsx';
+import { OpenFinanceForm } from '#/features/accounts/connect-account/components/open-finance-form.component.tsx';
 import { OpenFinanceSuccess } from '#/features/accounts/connect-account/components/open-finance-success.component.tsx';
 import { StackedPanels } from '#/features/accounts/connect-account/components/stacked-panels.component.tsx';
 import { CONNECT_MODE_OPTIONS } from '#/features/accounts/connect-account/constants/connect-modes.constant.ts';
@@ -18,9 +16,10 @@ import type {
   FormErrors,
   ManualAccountForm as ManualAccountFormValues,
 } from '#/features/accounts/connect-account/types/connect-account.type.ts';
-import { useFocusFirstInvalid } from '#/features/accounts/form-focus/hooks/use-focus-first-invalid.hook.ts';
+import { INVALID_FIELD_SELECTOR } from '#/shared/constants/form/invalid-field-selector.constant.ts';
+import { useFocusFirstInvalid } from '#/shared/hooks/form/use-focus-first-invalid.hook.ts';
 
-export type ConnectAccountViewProps = {
+type ConnectAccountViewProps = {
   isOpen: boolean;
   onClose: () => void;
   /** The same modal creates and edits; editing has "Excluir" and no way to connect a bank. */
@@ -151,7 +150,11 @@ export function ConnectAccountView({
   brandOptions,
 }: ConnectAccountViewProps) {
   const content = useRef<HTMLDivElement>(null);
-  useFocusFirstInvalid(content, failedAttempts);
+  useFocusFirstInvalid({
+    attempt: failedAttempts,
+    selector: INVALID_FIELD_SELECTOR,
+    scope: content,
+  });
   const texts = resolveTexts(isEditing, isConnected, mode, form.type);
   const isOpenFinance = !isEditing && mode === 'open-finance';
   const waitingKeys = isOpenFinance && !isConnected && (!isConfigured || isLoadingSettings);

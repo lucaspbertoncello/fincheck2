@@ -1,5 +1,6 @@
 import { ICON_MARKUP, type IconName } from '#/components/icons/icon-markup.constant.ts';
 import { cx } from '#/utils/class-names.util.ts';
+import type { IconSize } from '#/components/icons/icon.type.ts';
 
 const SIZE_CLASS = {
   xs: 'size-3.5',
@@ -7,9 +8,7 @@ const SIZE_CLASS = {
   md: 'size-4.5',
   base: 'size-icon',
   lg: 'size-icon-lg',
-} as const;
-
-export type IconSize = keyof typeof SIZE_CLASS;
+} as const satisfies Record<IconSize, unknown>;
 
 type IconProps = {
   name: IconName;

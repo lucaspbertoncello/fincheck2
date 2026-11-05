@@ -1,7 +1,7 @@
 import type { Invoice } from '@fincheck/shared/invoices/invoice/invoice.type.ts';
 
 import type { InvoiceSuggestionData } from '#/features/invoices/invoice-page/types/invoice-page.type.ts';
-import { formatShortDate } from '#/features/invoices/invoice-summary/utils/format-short-date.util.ts';
+import { formatShortDate } from '#/shared/utils/date/format-short-date.util.ts';
 import { formatMoney } from '#/shared/utils/format-money.util.ts';
 
 /** "Pagamento encontrado": the debit the app found, as the card draws it; null when there is none. */

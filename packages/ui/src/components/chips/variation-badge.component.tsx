@@ -1,4 +1,5 @@
-import { variationTone, type VariationTone } from '#/components/chips/variation-tone.util.ts';
+import { variationTone } from '#/components/chips/variation-tone.util.ts';
+import { type VariationTone } from '#/components/chips/variation-tone.type.ts';
 import { cx } from '#/utils/class-names.util.ts';
 
 const percentFormat = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 });
