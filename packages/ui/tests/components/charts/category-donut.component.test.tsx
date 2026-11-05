@@ -103,4 +103,12 @@ describe('CategoryDonut', () => {
     expect(html).not.toContain('812,40');
     expect(html).toContain('Mercado');
   });
+
+  it('lays the legend rows on one shared grid: values never cut and the chip column is fixed', () => {
+    const html = render();
+
+    expect(html).toContain('grid-cols-[auto_minmax(0,1fr)_max-content_5.5rem]');
+    expect(html.match(/grid-cols-subgrid/g)?.length).toBe(slices.length);
+    expect(html).toMatch(/justify-self-end[^"]*whitespace-nowrap[^"]*tabular-nums/);
+  });
 });
