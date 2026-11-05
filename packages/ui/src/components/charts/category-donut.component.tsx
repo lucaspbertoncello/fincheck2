@@ -8,9 +8,11 @@ import { formatChartMoneyForReader } from '#/components/charts/format-chart-mone
 import { paintSlices } from '#/components/charts/paint-slices.util.ts';
 import { useMoneyHidden } from '#/components/money/money-visibility.context.ts';
 
-const SIZE = 160;
-const INNER_RADIUS = 52;
-const OUTER_RADIUS = 80;
+const SIZE = 176;
+const INNER_RADIUS = 64;
+const OUTER_RADIUS = 88;
+/** Width of the center text: the square inscribed in the hole (128 px) minus a clear ring of air. */
+const CENTER_WIDTH = 92;
 const FADED_OPACITY = 0.45;
 
 type CategoryDonutProps = {
@@ -72,14 +74,27 @@ export function CategoryDonut({
             />
           </PieChart>
         </div>
-        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-s24 text-center">
-          <span className="text-caption text-fg-secondary">{centerLabel}</span>
-          <span className="font-title text-subsection font-numeric text-fg-primary">
-            {centerTitle}
-          </span>
-          {centerDetail ? (
-            <span className="text-caption text-fg-secondary">{centerDetail}</span>
-          ) : null}
+        <div className="pointer-events-none absolute inset-0 grid place-items-center">
+          <div
+            className="flex flex-col items-center gap-s4 text-center"
+            style={{ width: CENTER_WIDTH }}
+          >
+            <span className="text-caption leading-none text-fg-secondary">{centerLabel}</span>
+            <span
+              title={centerTitle}
+              className="w-full truncate font-title text-list leading-tight font-plain text-fg-primary"
+            >
+              {centerTitle}
+            </span>
+            {centerDetail ? (
+              <span
+                title={centerDetail}
+                className="w-full truncate text-caption leading-none text-fg-secondary tabular-nums"
+              >
+                {centerDetail}
+              </span>
+            ) : null}
+          </div>
         </div>
       </div>
 

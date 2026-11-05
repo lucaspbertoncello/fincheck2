@@ -32,7 +32,6 @@ export function ApplicationRail({ screen, monthParam }: ApplicationRailProps) {
     >
       <RailLogo homeHref={buildHref('/', monthParam)} />
       <RailDivider />
-      <RailDivider />
       {items.map((item) => (
         <RailLink
           key={item.key}
