@@ -29,9 +29,9 @@ type ProfileViewProps = {
 /**
  * Perfil, a screen of its own (BR-PRF-004), in the layout of the others: the title with one line of
  * description, the balance panel beside it (under the header on the phone) and the groups, in this
- * order: Você (who the app calls the user), Empregos e renda (every source IS an income
- * recurrence, with the expected monthly income on top), the 12-month spend map and the six
- * curiosities. Loading and error keep the header, so the page does not jump when the data arrives.
+ * order (Lucas, polish 10): Você (who the app calls the user) in the head, then the 12-month
+ * spend map, the six curiosities and Empregos e renda (every source IS an income recurrence, with
+ * the expected monthly income on top). Loading and error keep the header, so the page does not jump when the data arrives.
  */
 export function ProfileView({
   isDesktop,
@@ -53,14 +53,9 @@ export function ProfileView({
       />
       {isDesktop ? null : <ApplicationSummaryPanel variant="compact" />}
       {state === 'loading' ? (
-        <>
-          <Section title="Você" divider={false}>
-            <SectionSkeleton label="Carregando o perfil" rows={1} />
-          </Section>
-          <Section title="Empregos e renda">
-            <SectionSkeleton label="Carregando a renda" rows={3} />
-          </Section>
-        </>
+        <Section title="Você" divider={false}>
+          <SectionSkeleton label="Carregando o perfil" rows={1} />
+        </Section>
       ) : null}
       {state === 'error' ? (
         <ErrorState
@@ -70,58 +65,62 @@ export function ProfileView({
         />
       ) : null}
       {state === 'ready' && profile ? (
-        <>
-          <Section title="Você" divider={false}>
-            <div className="flex items-center gap-s16">
-              <ProfileAvatar initials={profile.initials} />
-              <div className="flex min-w-0 flex-1 flex-col gap-s4">
-                <p className="truncate font-title text-page-title leading-(--line-height-title) font-heading text-fg-primary">
-                  {profile.name}
-                </p>
-                <p className="text-meta text-fg-secondary">Como você aparece no app.</p>
-              </div>
-              <Button variant="secondary" size="sm" icon="edit" onPress={onEditProfile}>
-                Editar
-              </Button>
+        <Section title="Você" divider={false}>
+          <div className="flex items-center gap-s16">
+            <ProfileAvatar initials={profile.initials} />
+            <div className="flex min-w-0 flex-1 flex-col gap-s4">
+              <p className="truncate font-title text-page-title leading-(--line-height-title) font-heading text-fg-primary">
+                {profile.name}
+              </p>
+              <p className="text-meta text-fg-secondary">Como você aparece no app.</p>
             </div>
-          </Section>
-
-          <Section
-            title="Empregos e renda"
-            action={
-              <Button variant="secondary" size="sm" icon="salary" onPress={onAddSource}>
-                Adicionar fonte
-              </Button>
-            }
-          >
-            <p className="flex flex-wrap items-baseline gap-x-s8 text-money-lg text-fg-primary lg:text-money-card">
-              <Money cents={profile.income.monthlyExpectedCents} sign="none" tone="income" />
-              <span className="text-meta text-fg-secondary">de renda mensal esperada</span>
-            </p>
-            {profile.income.sources.length === 0 ? (
-              <EmptyState
-                icon="salary"
-                title="Nenhuma fonte de renda ainda"
-                description="Cadastre seu salário ou outra receita fixa: ela vira uma recorrência e entra na renda mensal."
-                headingLevel={3}
-                primaryAction={{ label: 'Adicionar fonte', icon: 'salary', onPress: onAddSource }}
-              />
-            ) : (
-              <ul className="flex flex-col">
-                {profile.income.sources.map((source) => (
-                  <IncomeSourceRow
-                    key={source.recurrenceId}
-                    source={source}
-                    onEdit={() => onEditSource(source.recurrenceId)}
-                  />
-                ))}
-              </ul>
-            )}
-          </Section>
-        </>
+            <Button variant="secondary" size="sm" icon="edit" onPress={onEditProfile}>
+              Editar
+            </Button>
+          </div>
+        </Section>
       ) : null}
       {spendMap}
       {highlights}
+      {state === 'loading' ? (
+        <Section title="Empregos e renda">
+          <SectionSkeleton label="Carregando a renda" rows={3} />
+        </Section>
+      ) : null}
+      {state === 'ready' && profile ? (
+        <Section
+          title="Empregos e renda"
+          action={
+            <Button variant="secondary" size="sm" icon="salary" onPress={onAddSource}>
+              Adicionar fonte
+            </Button>
+          }
+        >
+          <p className="flex flex-wrap items-baseline gap-x-s8 text-money-lg text-fg-primary lg:text-money-card">
+            <Money cents={profile.income.monthlyExpectedCents} sign="none" tone="income" />
+            <span className="text-meta text-fg-secondary">de renda mensal esperada</span>
+          </p>
+          {profile.income.sources.length === 0 ? (
+            <EmptyState
+              icon="salary"
+              title="Nenhuma fonte de renda ainda"
+              description="Cadastre seu salário ou outra receita fixa: ela vira uma recorrência e entra na renda mensal."
+              headingLevel={3}
+              primaryAction={{ label: 'Adicionar fonte', icon: 'salary', onPress: onAddSource }}
+            />
+          ) : (
+            <ul className="flex flex-col">
+              {profile.income.sources.map((source) => (
+                <IncomeSourceRow
+                  key={source.recurrenceId}
+                  source={source}
+                  onEdit={() => onEditSource(source.recurrenceId)}
+                />
+              ))}
+            </ul>
+          )}
+        </Section>
+      ) : null}
       {editModal}
     </div>
   );
