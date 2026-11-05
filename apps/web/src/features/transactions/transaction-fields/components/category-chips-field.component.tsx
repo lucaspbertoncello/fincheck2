@@ -1,4 +1,4 @@
-import { CategoryPicker, FieldSet, Icon, type CategoryOption } from '@fincheck/ui';
+import { CategoryPicker, Collapse, FieldSet, Icon, type CategoryOption } from '@fincheck/ui';
 import { useState } from 'react';
 import { Button as AriaButton, ToggleButton } from 'react-aria-components';
 
@@ -76,7 +76,7 @@ export function CategoryChipsField({
           </AriaButton>
         ) : null}
       </div>
-      {searching ? (
+      <Collapse isOpen={searching} contentClassName="pt-s8">
         <CategoryPicker
           label="Buscar outra categoria"
           categories={categories}
@@ -86,9 +86,8 @@ export function CategoryChipsField({
             if (categoryId) setSearching(false);
           }}
           autoFocus
-          className="mt-s8"
         />
-      ) : null}
+      </Collapse>
     </FieldSet>
   );
 }

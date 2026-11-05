@@ -1,19 +1,9 @@
 import { parseDate, type CalendarDate } from '@internationalized/date';
-import {
-  DateField,
-  DateInput,
-  DateSegment,
-  FieldError,
-  I18nProvider,
-  Label,
-} from 'react-aria-components';
+import { DateField, DateInput, DateSegment, I18nProvider, Label } from 'react-aria-components';
 
-import {
-  FIELD_BOX_CLASS,
-  FIELD_ERROR_CLASS,
-  FIELD_LABEL_CLASS,
-} from '#/components/forms/field-classes.constant.ts';
+import { FIELD_BOX_CLASS, FIELD_LABEL_CLASS } from '#/components/forms/field-classes.constant.ts';
 import { cx } from '#/utils/class-names.util.ts';
+import { FieldErrorMessage } from '#/components/forms/field-error-message.component.tsx';
 
 type EditDateFieldProps = {
   label: string;
@@ -52,7 +42,7 @@ export function EditDateField({ label, value, onChange, error, className }: Edit
             />
           )}
         </DateInput>
-        <FieldError className={FIELD_ERROR_CLASS}>{error}</FieldError>
+        <FieldErrorMessage error={error} />
       </DateField>
     </I18nProvider>
   );

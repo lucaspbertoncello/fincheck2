@@ -1,6 +1,7 @@
-import { useId, useRef, useState, type ReactNode, type TransitionEvent } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import { Button as AriaButton } from 'react-aria-components';
 
+import { Collapse } from '#/components/disclosure/collapse.component.tsx';
 import { Icon } from '#/components/icons/icon.component.tsx';
 import { cx } from '#/utils/class-names.util.ts';
 
@@ -22,9 +23,9 @@ type FormModalMoreProps = {
 /**
  * Progressive disclosure for the fields that are rarely needed ("Mais opções"): a toggle row in the
  * look of a group label (accent text, chevron that turns, hairline to the edge) and a panel that
- * opens by growing its row track while the content fades in. The only layout motion of the modal,
- * on purpose: the panel must take its height. Closed, the panel is `inert` (no focus, not read).
- * `prefers-reduced-motion` cuts the animation to 1 ms.
+ * opens with the system `Collapse` (height and opacity). The only layout motion of the modal, on
+ * purpose: the panel must take its height. Closed, the panel is `inert` (no focus, not read) but
+ * stays mounted, so the fields keep what was typed.
  *
  * Placement rule (components.md 13.6): what "Mais opções" reveals enters last, so nothing that was
  * on screen moves. Put it as the last child of the body (or of the last column of a
@@ -45,7 +46,6 @@ export function FormModalMore({
   const [innerOpen, setInnerOpen] = useState(defaultOpen);
   const panelId = useId();
   const open = (isOpen ?? innerOpen) || hasError;
-  const trackRef = useRef<HTMLDivElement>(null);
 
   const toggle = () => {
     const next = !open;
@@ -53,17 +53,9 @@ export function FormModalMore({
     onOpenChange?.(next);
   };
 
-  /** The row track finished growing: bring the revealed content into view only if it is cut off. */
-  const revealIfCut = (event: TransitionEvent<HTMLDivElement>) => {
-    if (
-      !open ||
-      event.target !== event.currentTarget ||
-      event.propertyName !== 'grid-template-rows'
-    ) {
-      return;
-    }
-    const track = trackRef.current;
-    if (!track || typeof track.scrollIntoView !== 'function') return;
+  /** The panel finished growing: bring the revealed content into view only if it is cut off. */
+  const revealIfCut = (track: HTMLElement) => {
+    if (typeof track.scrollIntoView !== 'function') return;
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     track.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' });
   };
@@ -90,28 +82,15 @@ export function FormModalMore({
         <span aria-hidden="true" className="h-px flex-1 bg-line" />
         {summary && !open ? <span className="text-meta text-fg-tertiary">{summary}</span> : null}
       </div>
-      <div
-        ref={trackRef}
-        onTransitionEnd={revealIfCut}
-        className={cx(
-          'grid transition-[grid-template-rows] duration-(--duration-slide) ease-(--ease-standard)',
-          open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
-        )}
+      <Collapse
+        isOpen={open}
+        id={panelId}
+        keepMounted
+        onOpened={revealIfCut}
+        contentClassName="flex flex-col gap-s16 pt-s16 pb-s4"
       >
-        <div className="-mx-s4 min-h-0 overflow-hidden">
-          <div
-            id={panelId}
-            inert={!open}
-            className={cx(
-              'flex flex-col gap-s16 px-s4 pt-s16 pb-s4',
-              'transition-[opacity,transform] duration-(--duration-slide) ease-(--ease-standard)',
-              open ? 'translate-y-0 opacity-100' : '-translate-y-s4 opacity-0',
-            )}
-          >
-            {children}
-          </div>
-        </div>
-      </div>
+        {children}
+      </Collapse>
     </section>
   );
 }

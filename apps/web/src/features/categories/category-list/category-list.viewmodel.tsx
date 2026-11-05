@@ -71,7 +71,7 @@ export function useCategoryListViewModel() {
 
   const archiveTarget = allCategories.find((item) => item.id === archiveTargetId);
   const archivedTags = allTags.filter((tag) => tag.archivedAt !== null);
-  const visibleTags = showArchivedTags ? allTags : allTags.filter((tag) => tag.archivedAt === null);
+  const activeTags = allTags.filter((tag) => tag.archivedAt === null);
 
   async function moveCategory(
     id: string,
@@ -188,7 +188,8 @@ export function useCategoryListViewModel() {
     onRequestArchive,
     onRestoreCategory: restoreCategory,
 
-    tags: visibleTags.map(toTagItem),
+    tags: activeTags.map(toTagItem),
+    archivedTags: archivedTags.map(toTagItem),
     activeTagCount: allTags.length - archivedTags.length,
     archivedTagCount: archivedTags.length,
     showArchivedTags,

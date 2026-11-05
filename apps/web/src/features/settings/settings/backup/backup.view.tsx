@@ -1,6 +1,7 @@
 import {
   Button,
   Chip,
+  Collapse,
   ConfirmDialog,
   EmptyState,
   ErrorState,
@@ -45,7 +46,9 @@ type BackupViewProps = {
   files: {
     isLoading: boolean;
     isError: boolean;
+    /** Every backup of the folder; the first `shortCount` are always shown, the rest open on request. */
     items: BackupFileItem[];
+    shortCount: number;
     /** True when the list can grow to every backup of the folder. */
     canExpand: boolean;
     isExpanded: boolean;
@@ -154,11 +157,17 @@ export function BackupView({
             {safetyCopy ? (
               <OkLine>Backup restaurado. A cópia de segurança ficou em {safetyCopy}.</OkLine>
             ) : null}
-            {actionError ? (
-              <p role="alert" className="text-meta text-loss">
-                {actionError}
-              </p>
-            ) : null}
+            <Collapse
+              isOpen={Boolean(actionError)}
+              trackClassName="-mt-s16"
+              contentClassName="pt-s16"
+            >
+              {actionError ? (
+                <p role="alert" className="text-meta text-loss">
+                  {actionError}
+                </p>
+              ) : null}
+            </Collapse>
           </Section>
 
           <Section title="Pasta">
@@ -177,20 +186,41 @@ export function BackupView({
               <p className="text-label text-fg-secondary">Ainda não há backups nessa pasta.</p>
             ) : null}
             {files.items.length > 0 ? (
-              <ul aria-label="Backups da pasta" className="flex flex-col">
-                {files.items.map((file) => (
-                  <BackupFileRow
-                    key={file.fileName}
-                    file={file}
-                    isDisabled={isRunning}
-                    onRestore={() => restore.onAsk(file.fileName)}
-                  />
-                ))}
-              </ul>
+              <div>
+                <ul aria-label="Backups da pasta" className="flex flex-col">
+                  {files.items.slice(0, files.shortCount).map((file) => (
+                    <BackupFileRow
+                      key={file.fileName}
+                      file={file}
+                      isDisabled={isRunning}
+                      onRestore={() => restore.onAsk(file.fileName)}
+                    />
+                  ))}
+                </ul>
+                {files.canExpand ? (
+                  <Collapse isOpen={files.isExpanded}>
+                    <ul aria-label="Demais backups da pasta" className="flex flex-col">
+                      {files.items.slice(files.shortCount).map((file) => (
+                        <BackupFileRow
+                          key={file.fileName}
+                          file={file}
+                          isDisabled={isRunning}
+                          onRestore={() => restore.onAsk(file.fileName)}
+                        />
+                      ))}
+                    </ul>
+                  </Collapse>
+                ) : null}
+              </div>
             ) : null}
             {files.canExpand ? (
               <div>
-                <Button variant="tertiary" size="sm" onPress={files.onToggleExpanded}>
+                <Button
+                  variant="tertiary"
+                  size="sm"
+                  aria-expanded={files.isExpanded}
+                  onPress={files.onToggleExpanded}
+                >
                   {files.isExpanded
                     ? 'Mostrar só os últimos'
                     : `Mostrar todos (${files.totalCount})`}

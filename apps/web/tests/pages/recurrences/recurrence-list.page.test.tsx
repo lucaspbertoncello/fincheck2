@@ -426,6 +426,8 @@ describe('RecurrenceListPage', () => {
       fireEvent.click(await expenses.findByRole('button', { name: 'Ações de Plano celular' }));
       fireEvent.click(await screen.findByRole('menuitem', { name: 'Editar' }));
 
+      // "Pausar" lives in "Mais opções", which is closed (inert) until opened.
+      fireEvent.click(await screen.findByRole('button', { name: /Mais opções/ }));
       fireEvent.click(await screen.findByRole('button', { name: 'Pausar' }));
 
       expect(await screen.findByText(/Plano celular pausada/)).toBeInTheDocument();

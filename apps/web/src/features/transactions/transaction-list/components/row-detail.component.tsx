@@ -3,6 +3,7 @@ import {
   BankDifferenceBox,
   Button,
   CategorySuggestion,
+  Collapse,
   Icon,
   TransactionDetailBox,
 } from '@fincheck/ui';
@@ -76,16 +77,18 @@ export function RowDetail({ transactionId, detail, selectionMode, handlers }: Ro
     );
   }
 
-  const difference = showDifference ? (
-    <BankDifferenceBox
-      bankName={detail.bankName}
-      bankCents={detail.bankCents}
-      yourName={detail.yourName}
-      yourCents={detail.yourCents}
-      onRestoreOriginal={() => handlers.onRestoreOriginal(transactionId)}
-      selectionMode={selectionMode}
-    />
-  ) : null;
+  const difference = (
+    <Collapse isOpen={showDifference}>
+      <BankDifferenceBox
+        bankName={detail.bankName}
+        bankCents={detail.bankCents}
+        yourName={detail.yourName}
+        yourCents={detail.yourCents}
+        onRestoreOriginal={() => handlers.onRestoreOriginal(transactionId)}
+        selectionMode={selectionMode}
+      />
+    </Collapse>
+  );
 
   if (detail.amount) {
     return (
@@ -128,6 +131,7 @@ export function RowDetail({ transactionId, detail, selectionMode, handlers }: Ro
           <Button
             variant="tertiary"
             size="sm"
+            aria-expanded={showDifference}
             onPress={() => setShowDifference((current) => !current)}
           >
             Ver diferença

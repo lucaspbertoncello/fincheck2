@@ -318,9 +318,18 @@ describe('CategoryListPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Arquivadas (1)' }));
 
-    const tags = screen.getByRole('list', { name: 'Tags' });
-    expect(await within(tags).findByText('presente')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Esconder arquivadas' })).toBeInTheDocument();
+    const archived = await screen.findByRole('list', { name: 'Tags arquivadas' });
+    expect(within(archived).getByText('presente')).toBeInTheDocument();
+    const hide = screen.getByRole('button', { name: 'Esconder arquivadas' });
+    expect(hide).toHaveAttribute('aria-expanded', 'true');
+
+    fireEvent.click(hide);
+
+    expect(screen.queryByRole('list', { name: 'Tags arquivadas' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Arquivadas (1)' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
   });
 
   it('shows the error with "Tentar de novo" when the categories do not load, and recovers', async () => {

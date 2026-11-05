@@ -314,7 +314,7 @@ describe('TotalCard', () => {
     expect(html).not.toContain('aria-expanded');
   });
 
-  it('opens the composition with items and the total when it has items', () => {
+  it('starts closed: the head is the trigger of a collapsed, inert panel', () => {
     const html = renderToStaticMarkup(
       <TotalCard
         label="A pagar"
@@ -327,10 +327,13 @@ describe('TotalCard', () => {
     );
 
     expect(html).toContain('aria-expanded="false"');
-    expect(html).toContain('Academia Corpo');
-    expect(html).toContain('vence 25/10');
-    expect(html).toContain('Total');
     expect(html).toContain('4.187,14');
+    expect(html).toContain('grid-rows-[0fr]');
+    expect(html).toContain('inert=""');
+    // The composition mounts when it opens (no heavy list while closed).
+    expect(html).not.toContain('Academia Corpo');
+    const controls = /aria-controls="([^"]+)"/.exec(html)?.[1];
+    expect(html).toContain(`id="${controls}"`);
   });
 });
 

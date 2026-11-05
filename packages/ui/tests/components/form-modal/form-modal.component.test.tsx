@@ -134,15 +134,16 @@ describe('FormModalMore', () => {
     expect(html).toContain('aria-expanded="false"');
   });
 
-  it('moves only with transform and opacity, apart from the row track', () => {
+  it('opens with the system Collapse: height and opacity, no transform', () => {
     const html = renderToStaticMarkup(
       <FormModalMore>
         <input />
       </FormModalMore>,
     );
 
-    expect(html).toContain('transition-[opacity,transform]');
+    expect(html).toContain('transition-opacity');
     expect(html).toContain('transition-[grid-template-rows]');
+    expect(html).not.toContain('transition-[opacity,transform]');
     expect(html).not.toContain('transition-all');
   });
 });

@@ -1,16 +1,14 @@
 import { useRef, type ClipboardEvent, type CSSProperties, type PointerEvent } from 'react';
-import { FieldError, Input, Label, Text, TextField as AriaTextField } from 'react-aria-components';
+import { Input, Label, Text, TextField as AriaTextField } from 'react-aria-components';
 
 import { AmountKindToggle } from '#/components/form-fields/amount-kind-toggle.component.tsx';
 import type { AmountKind } from '#/components/form-fields/amount-kind.type.ts';
-import {
-  FIELD_DESCRIPTION_CLASS,
-  FIELD_ERROR_CLASS,
-} from '#/components/forms/field-classes.constant.ts';
+import { FIELD_DESCRIPTION_CLASS } from '#/components/forms/field-classes.constant.ts';
 import { formatCentsInput } from '#/components/forms/format-cents-input.util.ts';
 import { parseCentsInput } from '#/components/forms/parse-cents-input.util.ts';
 import { parsePastedMoney } from '#/components/forms/parse-pasted-money.util.ts';
 import { cx } from '#/utils/class-names.util.ts';
+import { FieldErrorMessage } from '#/components/forms/field-error-message.component.tsx';
 
 type AmountFieldProps = {
   /** Integer cents, always positive. Zero shows the "0,00" placeholder. */
@@ -138,7 +136,7 @@ export function AmountField({
             {description}
           </Text>
         ) : null}
-        <FieldError className={FIELD_ERROR_CLASS}>{error}</FieldError>
+        <FieldErrorMessage error={error} />
       </AriaTextField>
     </div>
   );

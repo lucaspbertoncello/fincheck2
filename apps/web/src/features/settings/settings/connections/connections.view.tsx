@@ -1,4 +1,12 @@
-import { Chip, ConfirmDialog, EmptyState, ErrorState, FineNote, Section } from '@fincheck/ui';
+import {
+  Collapse,
+  Chip,
+  ConfirmDialog,
+  EmptyState,
+  ErrorState,
+  FineNote,
+  Section,
+} from '@fincheck/ui';
 
 import { SettingsPageFrame } from '#/features/settings/settings/components/settings-page-frame.component.tsx';
 import { SETTINGS_SECTION } from '#/features/settings/settings/constants/settings-sections.constant.ts';
@@ -73,11 +81,17 @@ export function ConnectionsView({
       {state === 'setup' ? (
         <Section title="Ligar o Open Finance" divider={false}>
           <PluggySetup {...setup} />
-          {actionError ? (
-            <p role="alert" className="text-meta text-loss">
-              {actionError}
-            </p>
-          ) : null}
+          <Collapse
+            isOpen={Boolean(actionError)}
+            trackClassName="-mt-s16"
+            contentClassName="pt-s16"
+          >
+            {actionError ? (
+              <p role="alert" className="text-meta text-loss">
+                {actionError}
+              </p>
+            ) : null}
+          </Collapse>
         </Section>
       ) : null}
       {state === 'ready' && items.length === 0 ? (
@@ -118,11 +132,17 @@ export function ConnectionsView({
               </li>
             ))}
           </ul>
-          {actionError ? (
-            <p role="alert" className="text-meta text-loss">
-              {actionError}
-            </p>
-          ) : null}
+          <Collapse
+            isOpen={Boolean(actionError)}
+            trackClassName="-mt-s16"
+            contentClassName="pt-s16"
+          >
+            {actionError ? (
+              <p role="alert" className="text-meta text-loss">
+                {actionError}
+              </p>
+            ) : null}
+          </Collapse>
         </Section>
       ) : null}
       {state === 'ready' ? (

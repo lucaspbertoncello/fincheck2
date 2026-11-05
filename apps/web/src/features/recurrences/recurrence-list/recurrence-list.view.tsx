@@ -1,5 +1,6 @@
 import {
   Banner,
+  BannerSlot,
   Chip,
   ConfirmDialog,
   DayStripSection,
@@ -109,15 +110,17 @@ function ReadyContent({
 }: RecurrenceListViewProps) {
   return (
     <div className="flex flex-col gap-s24">
-      {actionError ? (
-        <Banner
-          variant="error"
-          title="Não foi possível concluir"
-          description={actionError.message}
-          actionLabel="Tentar de novo"
-          onAction={actionError.onRetry}
-        />
-      ) : null}
+      <BannerSlot isOpen={Boolean(actionError)}>
+        {actionError ? (
+          <Banner
+            variant="error"
+            title="Não foi possível concluir"
+            description={actionError.message}
+            actionLabel="Tentar de novo"
+            onAction={actionError.onRetry}
+          />
+        ) : null}
+      </BannerSlot>
 
       {attentionRows.length > 0 ? (
         <NeedsAttentionStrip countLabel={countLabel(attentionRows.length)}>

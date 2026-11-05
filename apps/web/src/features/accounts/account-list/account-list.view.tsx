@@ -1,5 +1,6 @@
 import {
   Banner,
+  BannerSlot,
   ContentSkeleton,
   EmptyState,
   ErrorState,
@@ -78,7 +79,9 @@ export function AccountListView({
 
   return (
     <div className="flex flex-col gap-s24">
-      {actionError ? <Banner variant="error" title={actionError} /> : null}
+      <BannerSlot isOpen={Boolean(actionError)}>
+        {actionError ? <Banner variant="error" title={actionError} /> : null}
+      </BannerSlot>
       {progress.map((item) => (
         <Banner
           key={item.connectionId}

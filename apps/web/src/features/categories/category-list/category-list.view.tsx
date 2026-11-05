@@ -1,8 +1,10 @@
 import {
   Banner,
+  BannerSlot,
   Button,
   CategoryFilter,
   CategoryList,
+  Collapse,
   ConfirmDialog,
   ContentSkeleton,
   CountBadge,
@@ -42,6 +44,7 @@ export function CategoryListView({
   onRequestArchive,
   onRestoreCategory,
   tags,
+  archivedTags,
   activeTagCount,
   archivedTagCount,
   showArchivedTags,
@@ -55,14 +58,16 @@ export function CategoryListView({
 }: CategoryListViewProps) {
   return (
     <div className="flex flex-col gap-s24">
-      {actionError ? (
-        <Banner
-          variant="error"
-          title={actionError}
-          actionLabel="Fechar"
-          onAction={onDismissActionError}
-        />
-      ) : null}
+      <BannerSlot isOpen={Boolean(actionError)}>
+        {actionError ? (
+          <Banner
+            variant="error"
+            title={actionError}
+            actionLabel="Fechar"
+            onAction={onDismissActionError}
+          />
+        ) : null}
+      </BannerSlot>
 
       {isLoading ? <ContentSkeleton variant="sections" /> : null}
 
@@ -110,7 +115,12 @@ export function CategoryListView({
                 <>
                   <CountBadge count={activeTagCount} />
                   {archivedTagCount > 0 ? (
-                    <Button variant="tertiary" size="sm" onPress={onToggleArchivedTags}>
+                    <Button
+                      variant="tertiary"
+                      size="sm"
+                      aria-expanded={showArchivedTags}
+                      onPress={onToggleArchivedTags}
+                    >
                       {showArchivedTags
                         ? 'Esconder arquivadas'
                         : `Arquivadas (${archivedTagCount})`}
@@ -130,6 +140,21 @@ export function CategoryListView({
                 onArchive={onArchiveTag}
                 onRestore={onRestoreTag}
               />
+              {archivedTagCount > 0 ? (
+                <Collapse
+                  isOpen={showArchivedTags}
+                  trackClassName="-mt-s16"
+                  contentClassName="pt-s16"
+                >
+                  <TagList
+                    tags={archivedTags}
+                    label="Tags arquivadas"
+                    onRename={onRenameTag}
+                    onArchive={onArchiveTag}
+                    onRestore={onRestoreTag}
+                  />
+                </Collapse>
+              ) : null}
             </Section>
           ) : null}
         </>

@@ -1,5 +1,6 @@
 import {
   Banner,
+  BannerSlot,
   ConfirmDialog,
   ContentSkeleton,
   EmptyState,
@@ -47,14 +48,16 @@ export function TransactionListView(props: TransactionListViewProps) {
       ))}
       {!isCategoryView && props.dayFilter ? <DayFilterChip filter={props.dayFilter} /> : null}
 
-      {props.actionError ? (
-        <Banner
-          variant="error"
-          title={props.actionError.message}
-          actionLabel="Fechar"
-          onAction={props.actionError.onClose}
-        />
-      ) : null}
+      <BannerSlot isOpen={Boolean(props.actionError)}>
+        {props.actionError ? (
+          <Banner
+            variant="error"
+            title={props.actionError.message}
+            actionLabel="Fechar"
+            onAction={props.actionError.onClose}
+          />
+        ) : null}
+      </BannerSlot>
 
       {isCategoryView ? <CategoryContent {...props} /> : null}
       {!isCategoryView && status === 'loading' ? <ContentSkeleton variant="list" /> : null}

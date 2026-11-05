@@ -38,7 +38,7 @@ export type ButtonSize = keyof typeof SIZE_CLASS;
 
 type ButtonBaseProps = Pick<
   AriaButtonProps,
-  'onPress' | 'isDisabled' | 'type' | 'form' | 'autoFocus'
+  'onPress' | 'isDisabled' | 'type' | 'form' | 'autoFocus' | 'aria-expanded' | 'aria-controls'
 > & {
   variant?: ButtonVariant;
   size?: ButtonSize;
@@ -88,6 +88,8 @@ export function Button(props: ButtonProps) {
     type = 'button',
     form,
     autoFocus,
+    'aria-expanded': ariaExpanded,
+    'aria-controls': ariaControls,
   } = props;
 
   const icon: IconName | undefined = loading && !props.icon ? 'sync' : props.icon;
@@ -98,6 +100,8 @@ export function Button(props: ButtonProps) {
       type={type}
       form={form}
       autoFocus={autoFocus}
+      aria-expanded={ariaExpanded}
+      aria-controls={ariaControls}
       onPress={onPress}
       isDisabled={isDisabled}
       isPending={loading}

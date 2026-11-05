@@ -1,6 +1,5 @@
 import {
   Button as AriaButton,
-  FieldError,
   Label,
   ListBox,
   ListBoxItem,
@@ -14,11 +13,11 @@ import type { ChoiceOption } from '#/components/form-fields/choice-option.type.t
 import {
   FIELD_BOX_CLASS,
   FIELD_DESCRIPTION_CLASS,
-  FIELD_ERROR_CLASS,
   FIELD_LABEL_CLASS,
 } from '#/components/forms/field-classes.constant.ts';
 import { Icon } from '#/components/icons/icon.component.tsx';
 import { cx } from '#/utils/class-names.util.ts';
+import { FieldErrorMessage } from '#/components/forms/field-error-message.component.tsx';
 
 type SelectFieldProps = {
   label: string;
@@ -84,7 +83,7 @@ export function SelectField({
           {description}
         </Text>
       ) : null}
-      <FieldError className={FIELD_ERROR_CLASS}>{error}</FieldError>
+      <FieldErrorMessage error={error} />
       <Popover className="popover-enter w-(--trigger-width) rounded-panel border border-line bg-menu shadow-(--shadow-menu) backdrop-blur-(--blur-popover)">
         <ListBox className="max-h-72 overflow-auto p-s8 outline-none">
           {options.map((option) => (

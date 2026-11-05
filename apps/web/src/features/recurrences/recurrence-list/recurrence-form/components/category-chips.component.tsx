@@ -1,4 +1,4 @@
-import { CategoryPicker, FieldSet, Icon } from '@fincheck/ui';
+import { CategoryPicker, Collapse, FieldSet, Icon } from '@fincheck/ui';
 import type { CategoryOption, IconName } from '@fincheck/ui';
 import { useState } from 'react';
 import { Label, Radio, RadioGroup } from 'react-aria-components';
@@ -54,7 +54,7 @@ export function CategoryChips({
   }
 
   return (
-    <div className={`flex flex-col gap-s8 ${className ?? ''}`}>
+    <div className={`flex flex-col ${className ?? ''}`}>
       <RadioGroup
         value={searching ? OTHERS_KEY : value}
         onChange={(key) => {
@@ -78,7 +78,7 @@ export function CategoryChips({
           ))}
         </div>
       </RadioGroup>
-      {searching ? (
+      <Collapse isOpen={searching} contentClassName="pt-s8">
         <CategoryPicker
           label="Buscar outra categoria"
           categories={categories}
@@ -90,7 +90,7 @@ export function CategoryChips({
             onChange(categoryId);
           }}
         />
-      ) : null}
+      </Collapse>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { FieldSet, Icon, Money } from '@fincheck/ui';
+import { Collapse, FieldSet, Icon, Money } from '@fincheck/ui';
 import { useState } from 'react';
 import { ToggleButton } from 'react-aria-components';
 
@@ -40,7 +40,43 @@ export function CandidateRowsField({
   const [expanded, setExpanded] = useState(false);
   const chosenIndex = options.findIndex((option) => option.transactionId === value);
   const showAll = expanded || chosenIndex >= VISIBLE_ROWS;
-  const rows = showAll ? options : options.slice(0, VISIBLE_ROWS);
+  const hasMore = options.length > VISIBLE_ROWS;
+
+  function renderRows(rows: readonly PaymentCandidateOption[]) {
+    return (
+      <ul className="m-0 flex list-none flex-col gap-s8 p-0">
+        {rows.map((option) => {
+          const selected = option.transactionId === value;
+          return (
+            <li key={option.transactionId}>
+              <ToggleButton
+                isSelected={selected}
+                onChange={() => onChange(selected ? null : option.transactionId)}
+                className="focus-ring flex min-h-ctl-touch w-full cursor-pointer items-center gap-s12 rounded-input border border-line px-s12 py-s8 text-left transition-[background-color,border-color] duration-(--duration-fast) ease-(--ease-standard) data-[hovered]:bg-subtle data-[selected]:border-brand data-[selected]:bg-brand-weak"
+              >
+                <span
+                  aria-hidden="true"
+                  className={`grid size-5 shrink-0 place-items-center rounded-capsule border ${
+                    selected ? 'border-brand bg-brand text-fg-on-accent' : 'border-line'
+                  }`}
+                >
+                  {selected ? <Icon name="check" size="sm" /> : null}
+                </span>
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate text-label text-fg-primary">{option.description}</span>
+                  <span className="truncate text-meta text-fg-secondary">
+                    {option.dateText}
+                    {option.counterparty ? ` · ${option.counterparty}` : ''}
+                  </span>
+                </span>
+                <Money cents={option.amountCents} sign="none" weight="plain" />
+              </ToggleButton>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }
 
   return (
     <FieldSet label={label} aside={optional ? 'opcional' : undefined} error={error}>
@@ -51,49 +87,26 @@ export function CandidateRowsField({
           {emptyText}
         </p>
       ) : (
-        <ul className="m-0 flex list-none flex-col gap-s8 p-0">
-          {rows.map((option) => {
-            const selected = option.transactionId === value;
-            return (
-              <li key={option.transactionId}>
-                <ToggleButton
-                  isSelected={selected}
-                  onChange={() => onChange(selected ? null : option.transactionId)}
-                  className="focus-ring flex min-h-ctl-touch w-full cursor-pointer items-center gap-s12 rounded-input border border-line px-s12 py-s8 text-left transition-[background-color,border-color] duration-(--duration-fast) ease-(--ease-standard) data-[hovered]:bg-subtle data-[selected]:border-brand data-[selected]:bg-brand-weak"
+        <div>
+          {renderRows(options.slice(0, VISIBLE_ROWS))}
+          {hasMore ? (
+            <>
+              <Collapse isOpen={showAll} contentClassName="pt-s8">
+                {renderRows(options.slice(VISIBLE_ROWS))}
+              </Collapse>
+              <Collapse isOpen={!showAll} contentClassName="pt-s4">
+                <button
+                  type="button"
+                  onClick={() => setExpanded(true)}
+                  className="focus-ring self-start rounded-capsule px-s4 text-label font-emphasis whitespace-nowrap text-brand"
                 >
-                  <span
-                    aria-hidden="true"
-                    className={`grid size-5 shrink-0 place-items-center rounded-capsule border ${
-                      selected ? 'border-brand bg-brand text-fg-on-accent' : 'border-line'
-                    }`}
-                  >
-                    {selected ? <Icon name="check" size="sm" /> : null}
-                  </span>
-                  <span className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate text-label text-fg-primary">
-                      {option.description}
-                    </span>
-                    <span className="truncate text-meta text-fg-secondary">
-                      {option.dateText}
-                      {option.counterparty ? ` · ${option.counterparty}` : ''}
-                    </span>
-                  </span>
-                  <Money cents={option.amountCents} sign="none" weight="plain" />
-                </ToggleButton>
-              </li>
-            );
-          })}
-        </ul>
+                  Ver todas ({options.length})
+                </button>
+              </Collapse>
+            </>
+          ) : null}
+        </div>
       )}
-      {!isLoading && options.length > VISIBLE_ROWS && !showAll ? (
-        <button
-          type="button"
-          onClick={() => setExpanded(true)}
-          className="focus-ring mt-s4 self-start rounded-capsule px-s4 text-label font-emphasis whitespace-nowrap text-brand"
-        >
-          Ver todas ({options.length})
-        </button>
-      ) : null}
     </FieldSet>
   );
 }

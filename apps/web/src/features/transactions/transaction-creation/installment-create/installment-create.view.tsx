@@ -1,6 +1,7 @@
 import {
   AmountField,
   ChoiceField,
+  Collapse,
   DateQuickField,
   FormModal,
   FormModalMore,
@@ -97,7 +98,13 @@ export function InstallmentCreateView(props: InstallmentCreateViewProps) {
           </p>
         )}
       </FormModalSplit>
-      {preview ? <InstallmentPreview preview={preview} /> : null}
+      <Collapse
+        isOpen={Boolean(preview)}
+        trackClassName="-mt-s16 lg:-mt-s24"
+        contentClassName="pt-s16 lg:pt-s24"
+      >
+        {preview ? <InstallmentPreview preview={preview} /> : null}
+      </Collapse>
       <FormModalMore
         summary={firstInvoice ? `fatura de ${firstInvoice.label.toLowerCase()}` : 'data, fatura'}
         hasError={Boolean(errors.date || errors.firstInvoice)}

@@ -1,6 +1,8 @@
 import {
   Banner,
+  BannerSlot,
   Button,
+  Collapse,
   ContentSkeleton,
   ErrorState,
   FormModalGroup,
@@ -99,7 +101,9 @@ export function InvoiceDetailView({
           ) : null}
           {state === 'ready' && data ? (
             <>
-              {actionError ? <Banner variant="error" title={actionError} /> : null}
+              <BannerSlot isOpen={Boolean(actionError)} gap="s16-s24">
+                {actionError ? <Banner variant="error" title={actionError} /> : null}
+              </BannerSlot>
 
               <FormModalSplit aside={<InvoiceHero data={data} />}>
                 {madeOf.length > 0 ? (
@@ -134,7 +138,11 @@ export function InvoiceDetailView({
                     ))}
                   </ul>
                 )}
-                {registering ? (
+                <Collapse
+                  isOpen={registering}
+                  trackClassName="-mt-s8 lg:-mt-s12"
+                  contentClassName="pt-s8 lg:pt-s12"
+                >
                   <PaymentForm
                     formId={PAYMENT_FORM_ID}
                     cents={paymentCents}
@@ -146,7 +154,7 @@ export function InvoiceDetailView({
                     failedAttempts={failedAttempts}
                     onSubmit={onSavePayment}
                   />
-                ) : null}
+                </Collapse>
               </FormModalGroup>
 
               <FormModalGroup label="Lançamentos">

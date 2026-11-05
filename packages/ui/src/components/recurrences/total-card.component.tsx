@@ -1,4 +1,6 @@
-import { Button, Disclosure, DisclosurePanel, Heading } from 'react-aria-components';
+import { useId, useState } from 'react';
+import { Button, Heading } from 'react-aria-components';
+import { Collapse } from '#/components/disclosure/index.ts';
 
 import { Icon } from '#/components/icons/index.ts';
 import { Money } from '#/components/money/index.ts';
@@ -31,7 +33,8 @@ function Head({
   totalCents,
   caption,
   expandable,
-}: TotalCardProps & { expandable: boolean }) {
+  isOpen = false,
+}: TotalCardProps & { expandable: boolean; isOpen?: boolean }) {
   return (
     <>
       <span className="block text-label text-fg-secondary">{label}</span>
@@ -41,7 +44,10 @@ function Head({
           <Icon
             name="chevron-down"
             size="md"
-            className="text-fg-secondary transition-transform duration-(--duration-fast) group-data-[expanded]:rotate-180"
+            className={cx(
+              'text-fg-secondary transition-transform duration-(--duration-fast)',
+              isOpen && 'rotate-180',
+            )}
           />
         ) : null}
       </span>
@@ -52,8 +58,8 @@ function Head({
 
 /**
  * Total card (components.md 10.2, KPI): glass box with the value at 20 / 300. With `items`, the
- * whole head is a button that opens the composition (a React Aria disclosure, the chevron turns
- * 180°) with a rule between lines and the total in the footer.
+ * whole head is a button that opens the composition (a `Collapse`, the chevron turns 180°) with a
+ * rule between lines and the total in the footer.
  */
 export function TotalCard({
   label,
@@ -72,17 +78,48 @@ export function TotalCard({
   }
 
   return (
-    <Disclosure className={cx('group glass p-s16 lg:px-s24', className)}>
+    <ExpandableTotalCard
+      label={label}
+      totalCents={totalCents}
+      caption={caption}
+      items={items}
+      totalLabel={totalLabel}
+      className={className}
+    />
+  );
+}
+
+function ExpandableTotalCard({
+  label,
+  totalCents,
+  caption,
+  items = [],
+  totalLabel = 'Total',
+  className,
+}: TotalCardProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const panelId = useId();
+
+  return (
+    <div className={cx('glass p-s16 lg:px-s24', className)}>
       <Heading className="m-0">
         <Button
-          slot="trigger"
+          aria-expanded={isOpen}
+          aria-controls={panelId}
+          onPress={() => setIsOpen((current) => !current)}
           className="focus-ring block min-h-ctl-touch w-full cursor-pointer rounded-input text-left"
         >
-          <Head label={label} totalCents={totalCents} caption={caption} expandable />
+          <Head
+            label={label}
+            totalCents={totalCents}
+            caption={caption}
+            expandable
+            isOpen={isOpen}
+          />
         </Button>
       </Heading>
-      <DisclosurePanel>
-        <ul className="mt-s16 flex flex-col divide-y divide-line border-t border-line">
+      <Collapse isOpen={isOpen} id={panelId} contentClassName="pt-s16">
+        <ul className="flex flex-col divide-y divide-line border-t border-line">
           {items.map((item) => (
             <li key={item.key} className="flex items-center justify-between gap-s16 py-s12">
               <span className="min-w-0">
@@ -99,7 +136,7 @@ export function TotalCard({
           <span>{totalLabel}</span>
           <Money cents={totalCents} sign="none" weight="plain" />
         </p>
-      </DisclosurePanel>
-    </Disclosure>
+      </Collapse>
+    </div>
   );
 }

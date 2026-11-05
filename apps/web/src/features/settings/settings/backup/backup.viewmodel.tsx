@@ -47,7 +47,6 @@ export function BackupViewModel() {
     day: formatBackupDay(file.createdAt),
     isLatest: index === 0,
   }));
-  const items = isExpanded ? allItems : allItems.slice(0, SHORT_LIST_COUNT);
   const target = allItems.find((item) => item.fileName === targetFile) ?? null;
 
   function startEditingFolder() {
@@ -144,7 +143,8 @@ export function BackupViewModel() {
       files={{
         isLoading: files.isPending && folderPath !== null,
         isError: files.isError,
-        items,
+        items: allItems,
+        shortCount: SHORT_LIST_COUNT,
         canExpand: allItems.length > SHORT_LIST_COUNT,
         isExpanded,
         totalCount: allItems.length,

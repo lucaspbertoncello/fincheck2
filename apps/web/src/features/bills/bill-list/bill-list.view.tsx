@@ -1,4 +1,4 @@
-import { Banner, ContentSkeleton, EmptyState, TotalCard } from '@fincheck/ui';
+import { Banner, BannerSlot, ContentSkeleton, EmptyState, TotalCard } from '@fincheck/ui';
 
 import type { BillListViewProps } from '#/features/bills/bill-list/bill-list.model.ts';
 import { BillAgendaSection } from '#/features/bills/bill-list/components/bill-agenda-section.component.tsx';
@@ -36,14 +36,16 @@ export function BillListView({
 
   return (
     <div className="flex flex-col gap-s24">
-      {actionError ? (
-        <Banner
-          variant="error"
-          title={actionError}
-          actionLabel="Fechar aviso"
-          onAction={onDismissActionError}
-        />
-      ) : null}
+      <BannerSlot isOpen={Boolean(actionError)}>
+        {actionError ? (
+          <Banner
+            variant="error"
+            title={actionError}
+            actionLabel="Fechar aviso"
+            onAction={onDismissActionError}
+          />
+        ) : null}
+      </BannerSlot>
       <div className="grid items-start gap-s16 lg:grid-cols-2 lg:gap-s24">
         {[payable, friends].map((card) => (
           <TotalCard

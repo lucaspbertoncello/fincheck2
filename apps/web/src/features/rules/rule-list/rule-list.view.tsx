@@ -1,4 +1,11 @@
-import { Banner, ConfirmDialog, ContentSkeleton, EmptyState, RuleList } from '@fincheck/ui';
+import {
+  Banner,
+  BannerSlot,
+  ConfirmDialog,
+  ContentSkeleton,
+  EmptyState,
+  RuleList,
+} from '@fincheck/ui';
 
 import { RuleForm } from '#/features/rules/rule-form/rule-form.component.tsx';
 import type { useRuleListViewModel } from '#/features/rules/rule-list/rule-list.viewmodel.tsx';
@@ -28,23 +35,27 @@ export function RuleListView({
 }: RuleListViewProps) {
   return (
     <div className="flex flex-col gap-s24">
-      {actionError ? (
-        <Banner
-          variant="error"
-          title={actionError}
-          actionLabel="Fechar"
-          onAction={onDismissActionError}
-        />
-      ) : null}
+      <BannerSlot isOpen={Boolean(actionError)}>
+        {actionError ? (
+          <Banner
+            variant="error"
+            title={actionError}
+            actionLabel="Fechar"
+            onAction={onDismissActionError}
+          />
+        ) : null}
+      </BannerSlot>
 
-      {applyNotice ? (
-        <Banner
-          variant="suggestion"
-          title={applyNotice}
-          actionLabel="Entendi"
-          onAction={onDismissApplyNotice}
-        />
-      ) : null}
+      <BannerSlot isOpen={Boolean(applyNotice)}>
+        {applyNotice ? (
+          <Banner
+            variant="suggestion"
+            title={applyNotice}
+            actionLabel="Entendi"
+            onAction={onDismissApplyNotice}
+          />
+        ) : null}
+      </BannerSlot>
 
       <div className="flex flex-col gap-s24 lg:flex-row lg:items-start">
         <div className="flex min-w-0 flex-col gap-s16 empty:hidden lg:flex-1">

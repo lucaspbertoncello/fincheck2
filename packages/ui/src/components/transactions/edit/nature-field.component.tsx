@@ -1,10 +1,11 @@
 import { ChoiceChip } from '#/components/chips/index.ts';
 import { FineNote, SegmentedControl, type SegmentedOption } from '#/components/forms/index.ts';
-import { FIELD_ERROR_CLASS } from '#/components/forms/field-classes.constant.ts';
+import {} from '#/components/forms/field-classes.constant.ts';
 import type {
   CounterpartOption,
   TransactionNature,
 } from '#/components/transactions/edit/transaction-edit.type.ts';
+import { FieldErrorMessage } from '#/components/forms/field-error-message.component.tsx';
 
 const BASE_OPTIONS: SegmentedOption[] = [
   { key: 'expense', label: 'Despesa' },
@@ -78,11 +79,7 @@ export function NatureField({
               banco, ele aparece aqui.
             </FineNote>
           )}
-          {counterpartError ? (
-            <p role="alert" className={FIELD_ERROR_CLASS}>
-              {counterpartError}
-            </p>
-          ) : null}
+          <FieldErrorMessage error={counterpartError} gap="s8" inField={false} />
         </div>
       ) : null}
     </div>

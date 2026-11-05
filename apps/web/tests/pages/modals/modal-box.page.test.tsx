@@ -88,8 +88,11 @@ function nothingFollowsTheToggleSection(dialog: HTMLElement) {
   let node: HTMLElement | null = toggle.closest('section');
   expect(node, 'the toggle has no section').not.toBeNull();
   while (node && !node.className.includes('overflow-y-auto')) {
+    // A closed Collapse (the error banner's slot) takes no room, so it does not count as "after".
+    const next = node.nextElementSibling;
+    const isClosedCollapse = next?.className.includes('grid-rows-[0fr]') ?? false;
     expect(
-      node.nextElementSibling,
+      isClosedCollapse ? null : next,
       `something follows <${node.tagName} class="${node.className}">`,
     ).toBeNull();
     node = node.parentElement;

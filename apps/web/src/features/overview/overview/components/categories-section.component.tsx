@@ -1,5 +1,6 @@
-import { CategoryDonut, Icon, Section } from '@fincheck/ui';
-import { Button, Disclosure, DisclosurePanel, Heading } from 'react-aria-components';
+import { CategoryDonut, Collapse, Icon, Section } from '@fincheck/ui';
+import { useId, useState, type ReactNode } from 'react';
+import { Button, Heading } from 'react-aria-components';
 
 import { CategoryInsightCard } from '#/features/overview/overview/components/category-insight-card.component.tsx';
 import { OverviewLink } from '#/features/overview/overview/components/overview-link.component.tsx';
@@ -27,6 +28,46 @@ function CategoriesBody({ data }: { data: CategoriesData }) {
   );
 }
 
+function CollapsibleCategories({ data, link }: { data: CategoriesData; link: ReactNode }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const panelId = useId();
+
+  return (
+    <section aria-label="Por categoria" className="border-t border-line pt-s8">
+      <Heading level={2} className="m-0">
+        <Button
+          aria-expanded={isOpen}
+          aria-controls={panelId}
+          onPress={() => setIsOpen((current) => !current)}
+          className="focus-ring flex min-h-ctl-touch w-full cursor-pointer items-center gap-s8 rounded-input text-start"
+        >
+          <span className="font-title text-section font-heading text-fg-primary">
+            Por categoria
+          </span>
+          {data.collapsedSummary ? (
+            <span className="min-w-0 flex-1 truncate text-meta text-fg-secondary">
+              · {data.collapsedSummary}
+            </span>
+          ) : (
+            <span className="flex-1" />
+          )}
+          <Icon
+            name="chevron-right"
+            size="md"
+            className={`text-fg-secondary transition-transform duration-(--duration-fast) ease-(--ease-standard) ${isOpen ? 'rotate-90' : ''}`}
+          />
+        </Button>
+      </Heading>
+      <Collapse isOpen={isOpen} id={panelId}>
+        <div className="flex flex-col gap-s16 pb-s16">
+          <div className="flex justify-end">{link}</div>
+          <CategoriesBody data={data} />
+        </div>
+      </Collapse>
+    </section>
+  );
+}
+
 /** "Por categoria": donut with legend and the growth card; "Ver todas" opens Transações by category. */
 export function CategoriesSection({
   data,
@@ -43,38 +84,5 @@ export function CategoriesSection({
     );
   }
 
-  return (
-    <section aria-label="Por categoria" className="border-t border-line pt-s8">
-      <Disclosure className="group">
-        <Heading level={2} className="m-0">
-          <Button
-            slot="trigger"
-            className="focus-ring flex min-h-ctl-touch w-full cursor-pointer items-center gap-s8 rounded-input text-start"
-          >
-            <span className="font-title text-section font-heading text-fg-primary">
-              Por categoria
-            </span>
-            {data.collapsedSummary ? (
-              <span className="min-w-0 flex-1 truncate text-meta text-fg-secondary">
-                · {data.collapsedSummary}
-              </span>
-            ) : (
-              <span className="flex-1" />
-            )}
-            <Icon
-              name="chevron-right"
-              size="md"
-              className="text-fg-secondary transition-transform duration-(--duration-fast) ease-(--ease-standard) group-data-[expanded]:rotate-90"
-            />
-          </Button>
-        </Heading>
-        <DisclosurePanel>
-          <div className="flex flex-col gap-s16 pb-s16">
-            <div className="flex justify-end">{link}</div>
-            <CategoriesBody data={data} />
-          </div>
-        </DisclosurePanel>
-      </Disclosure>
-    </section>
-  );
+  return <CollapsibleCategories data={data} link={link} />;
 }

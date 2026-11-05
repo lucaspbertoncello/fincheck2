@@ -271,7 +271,11 @@ describe('TransactionListPage', () => {
 
     expect(await screen.findByText('por categoria', undefined, LONG_WAIT)).toBeInTheDocument();
     expect(screen.getByText('por fonte')).toBeInTheDocument();
-    fireEvent.click(await screen.findByRole('button', { name: /Mercado/ }));
+    const group = await screen.findByRole('button', { name: /Mercado/ });
+    expect(group).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('button', { name: /Ver as \d+ transações na lista/ })).toBeNull();
+    fireEvent.click(group);
+    expect(group).toHaveAttribute('aria-expanded', 'true');
     fireEvent.click(await screen.findByRole('button', { name: /Ver as \d+ transações na lista/ }));
 
     await waitFor(() => expect(window.location.search).toContain('category='));
@@ -346,17 +350,21 @@ describe('TransactionListPage', () => {
     const search = await screen.findByRole('combobox', { name: 'Buscar outra categoria' });
     await user.type(search, 'Pets');
     await user.click(await screen.findByRole('option', { name: 'Pets' }));
-    expect(await within(dialog).findByRole('button', { name: 'Pets' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+    // jsdom has no `inert`: a real browser drops the focus out of the folding search (and closes
+    // its popover) at once, while here React Aria may still hide the dialog for a moment, so the
+    // queries below look through `aria-hidden`.
+    expect(
+      await within(dialog).findByRole('button', { name: 'Pets', hidden: true }),
+    ).toHaveAttribute('aria-pressed', 'true');
 
-    await user.click(within(dialog).getByRole('button', { name: 'Ontem' }));
-    expect(within(dialog).getByRole('button', { name: 'Ontem' })).toHaveAttribute(
+    await user.click(within(dialog).getByRole('button', { name: 'Ontem', hidden: true }));
+    expect(within(dialog).getByRole('button', { name: 'Ontem', hidden: true })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
-    expect(within(dialog).getByRole('radio', { name: 'Carteira' })).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole('radio', { name: 'Carteira', hidden: true }),
+    ).toBeInTheDocument();
   });
 
   it('creates an installment purchase by the ?new=installment modal, with the preview', async () => {

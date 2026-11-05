@@ -1,4 +1,10 @@
-import { CategoryIcon, CategoryPicker, FieldSet, type CategoryOption } from '@fincheck/ui';
+import {
+  CategoryIcon,
+  CategoryPicker,
+  Collapse,
+  FieldSet,
+  type CategoryOption,
+} from '@fincheck/ui';
 import { useState } from 'react';
 import { ToggleButton } from 'react-aria-components';
 
@@ -73,7 +79,7 @@ export function CategoryChipsField({
           </ToggleButton>
         ) : null}
       </div>
-      {searching ? (
+      <Collapse isOpen={searching} contentClassName="pt-s8">
         <CategoryPicker
           label="Buscar categoria"
           categories={real}
@@ -84,7 +90,7 @@ export function CategoryChipsField({
           }}
           autoFocus
         />
-      ) : null}
+      </Collapse>
     </FieldSet>
   );
 }

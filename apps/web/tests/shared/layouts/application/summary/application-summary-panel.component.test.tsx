@@ -30,9 +30,16 @@ describe('ApplicationSummaryPanel', () => {
 
     const balance = await within(panel).findByRole('button', { name: /A receber/ });
     expect(balance).toHaveAttribute('aria-expanded', 'false');
+    // Closed, the items are not mounted: the line only has its (empty) Collapse.
+    const items = document.getElementById(balance.getAttribute('aria-controls') ?? '');
+    expect(items).toHaveAttribute('inert');
+    expect(items).toHaveAttribute('aria-hidden', 'true');
+    expect(items).toBeEmptyDOMElement();
     fireEvent.click(balance);
 
     await waitFor(() => expect(balance).toHaveAttribute('aria-expanded', 'true'));
+    expect(items).not.toHaveAttribute('inert');
+    expect(items).not.toBeEmptyDOMElement();
   });
 
   it('is the compact card on the other screens, with the same data', async () => {

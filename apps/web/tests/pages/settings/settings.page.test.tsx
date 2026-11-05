@@ -342,11 +342,16 @@ describe('SettingsPage', () => {
       await openPage('backup');
 
       const list = await screen.findByRole('list', { name: 'Backups da pasta' });
+      const more = screen.getByRole('button', { name: 'Mostrar todos (8)' });
+      expect(more).toHaveAttribute('aria-expanded', 'false');
       expect(within(list).getAllByRole('listitem')).toHaveLength(5);
-      await user.click(screen.getByRole('button', { name: 'Mostrar todos (8)' }));
-      expect(within(list).getAllByRole('listitem')).toHaveLength(8);
+      // Closed, the rest is out of the accessibility tree (inert and aria-hidden).
+      expect(screen.queryByRole('list', { name: 'Demais backups da pasta' })).toBeNull();
+      await user.click(more);
+      const rest = screen.getByRole('list', { name: 'Demais backups da pasta' });
+      expect(within(rest).getAllByRole('listitem')).toHaveLength(3);
       await user.click(screen.getByRole('button', { name: 'Mostrar só os últimos' }));
-      expect(within(list).getAllByRole('listitem')).toHaveLength(5);
+      expect(screen.queryByRole('list', { name: 'Demais backups da pasta' })).toBeNull();
     });
 
     it('changes the folder through a text field that the API checks', async () => {

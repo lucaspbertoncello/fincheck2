@@ -1,4 +1,4 @@
-import { Button, Money } from '@fincheck/ui';
+import { Button, Collapse, Money } from '@fincheck/ui';
 import { useId, useState } from 'react';
 
 import type { InstallmentPreview as InstallmentPreviewData } from '#/features/transactions/transaction-creation/installment-create/types/installment-create-form.type.ts';
@@ -24,7 +24,7 @@ export function InstallmentPreview({ preview }: InstallmentPreviewProps) {
   return (
     <section
       aria-label="Prévia das parcelas"
-      className="flex flex-col gap-s8 rounded-panel bg-subtle px-s16 py-s12"
+      className="flex flex-col rounded-panel bg-subtle px-s16 py-s12"
     >
       <div className="flex items-start justify-between gap-s12">
         <div className="flex min-w-0 flex-col gap-s4">
@@ -69,11 +69,8 @@ export function InstallmentPreview({ preview }: InstallmentPreviewProps) {
           {open ? 'Ocultar' : 'Ver parcelas'}
         </Button>
       </div>
-      {open ? (
-        <ul
-          id={listId}
-          className="m-0 flex max-h-40 flex-col gap-s4 overflow-y-auto border-t border-line p-0 pt-s8"
-        >
+      <Collapse isOpen={open} id={listId} contentClassName="pt-s8">
+        <ul className="m-0 flex max-h-40 flex-col gap-s4 overflow-y-auto border-t border-line p-0 pt-s8">
           {preview.rows.map((row) => (
             <li
               key={row.number}
@@ -86,7 +83,7 @@ export function InstallmentPreview({ preview }: InstallmentPreviewProps) {
             </li>
           ))}
         </ul>
-      ) : null}
+      </Collapse>
     </section>
   );
 }

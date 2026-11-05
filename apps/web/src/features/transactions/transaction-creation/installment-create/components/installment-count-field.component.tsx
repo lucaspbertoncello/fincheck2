@@ -1,4 +1,4 @@
-import { FieldSet, TextField } from '@fincheck/ui';
+import { Collapse, FieldSet, TextField } from '@fincheck/ui';
 import { useState } from 'react';
 import { Button as AriaButton, ToggleButton } from 'react-aria-components';
 
@@ -56,7 +56,7 @@ export function InstallmentCountField({ countText, onChange, error }: Installmen
           Outro
         </AriaButton>
       </div>
-      {custom ? (
+      <Collapse isOpen={custom} contentClassName="pt-s8">
         <TextField
           label="Número de parcelas"
           value={countText}
@@ -66,9 +66,9 @@ export function InstallmentCountField({ countText, onChange, error }: Installmen
           autoComplete="off"
           maxLength={2}
           autoFocus
-          className="mt-s8 w-40"
+          className="w-40"
         />
-      ) : null}
+      </Collapse>
     </FieldSet>
   );
 }

@@ -1,14 +1,14 @@
-import { FieldError, Label, Radio, RadioGroup, Text } from 'react-aria-components';
+import { Label, Radio, RadioGroup, Text } from 'react-aria-components';
 
 import type { ChoiceOption } from '#/components/form-fields/choice-option.type.ts';
 import {
   FIELD_DESCRIPTION_CLASS,
-  FIELD_ERROR_CLASS,
   FIELD_LABEL_CLASS,
 } from '#/components/forms/field-classes.constant.ts';
 import { SegmentedControl } from '#/components/forms/segmented-control.component.tsx';
 import { Icon } from '#/components/icons/icon.component.tsx';
 import { cx } from '#/utils/class-names.util.ts';
+import { FieldErrorMessage } from '#/components/forms/field-error-message.component.tsx';
 
 type ChoiceFieldProps = {
   label: string;
@@ -64,11 +64,7 @@ export function ChoiceField({
           isDisabled={isDisabled}
         />
         {description ? <p className={FIELD_DESCRIPTION_CLASS}>{description}</p> : null}
-        {error ? (
-          <p role="alert" className={FIELD_ERROR_CLASS}>
-            {error}
-          </p>
-        ) : null}
+        <FieldErrorMessage error={error} gap="s4" inField={false} />
       </div>
     );
   }
@@ -107,7 +103,7 @@ export function ChoiceField({
           {description}
         </Text>
       ) : null}
-      <FieldError className={FIELD_ERROR_CLASS}>{error}</FieldError>
+      <FieldErrorMessage error={error} />
     </RadioGroup>
   );
 }

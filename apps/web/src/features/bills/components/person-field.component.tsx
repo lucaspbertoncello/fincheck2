@@ -1,4 +1,4 @@
-import { FieldSet, TextField } from '@fincheck/ui';
+import { Collapse, FieldSet, TextField } from '@fincheck/ui';
 import { useState } from 'react';
 import { ToggleButton } from 'react-aria-components';
 
@@ -62,7 +62,7 @@ export function PersonField({ label, recent, value, onChange, error }: PersonFie
           </ToggleButton>
         </div>
       ) : null}
-      {showInput ? (
+      <Collapse isOpen={showInput} contentClassName={people.length > 0 ? 'pt-s8' : undefined}>
         <TextField
           label="Nome"
           value={value}
@@ -71,9 +71,8 @@ export function PersonField({ label, recent, value, onChange, error }: PersonFie
           maxLength={80}
           autoComplete="off"
           autoFocus={people.length > 0}
-          className={people.length > 0 ? 'mt-s8' : undefined}
         />
-      ) : null}
+      </Collapse>
     </FieldSet>
   );
 }

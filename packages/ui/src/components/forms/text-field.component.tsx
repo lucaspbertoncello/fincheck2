@@ -1,12 +1,12 @@
-import { FieldError, Input, Label, Text, TextField as AriaTextField } from 'react-aria-components';
+import { Input, Label, Text, TextField as AriaTextField } from 'react-aria-components';
 
 import {
   FIELD_BOX_CLASS,
   FIELD_DESCRIPTION_CLASS,
-  FIELD_ERROR_CLASS,
   FIELD_LABEL_CLASS,
 } from '#/components/forms/field-classes.constant.ts';
 import { cx } from '#/utils/class-names.util.ts';
+import { FieldErrorMessage } from '#/components/forms/field-error-message.component.tsx';
 
 type TextFieldProps = {
   /** Visible label above the field. */
@@ -69,7 +69,7 @@ export function TextField({
           {description}
         </Text>
       ) : null}
-      <FieldError className={FIELD_ERROR_CLASS}>{error}</FieldError>
+      <FieldErrorMessage error={error} />
     </AriaTextField>
   );
 }

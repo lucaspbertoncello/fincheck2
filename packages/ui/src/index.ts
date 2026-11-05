@@ -91,6 +91,7 @@ export {
   type AmountKind,
   type ChoiceOption,
 } from '#/components/form-fields/index.ts';
+export { Collapse } from '#/components/disclosure/index.ts';
 export {
   FormModal,
   FormModalGroup,
@@ -142,6 +143,7 @@ export {
 } from '#/components/charts/index.ts';
 export {
   Banner,
+  BannerSlot,
   InlineNotice,
   ToastProvider,
   UndoToast,

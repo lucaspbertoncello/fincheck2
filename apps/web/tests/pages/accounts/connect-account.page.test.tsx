@@ -37,7 +37,7 @@ describe('Conectar conta (?new=account)', () => {
     expect(
       within(dialog).queryByRole('textbox', { name: 'Nome da conta' }),
     ).not.toBeInTheDocument();
-    const hidden = dialog.querySelector('[aria-hidden=true][inert]');
+    const hidden = dialog.querySelector('[aria-hidden=true][inert].invisible');
     expect(hidden).not.toBeNull();
     expect(hidden).toHaveClass('invisible', 'col-start-1', 'row-start-1');
 

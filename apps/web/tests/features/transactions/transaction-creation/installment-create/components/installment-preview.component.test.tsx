@@ -32,10 +32,19 @@ describe('InstallmentPreview', () => {
     renderPreview(30000, 3);
 
     expect(screen.queryByText(/1\/3/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ver parcelas' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
     await user.click(screen.getByRole('button', { name: 'Ver parcelas' }));
+    expect(screen.getByRole('button', { name: 'Ocultar' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
     expect(screen.getByText(/1\/3 · fatura de novembro 2026/)).toBeInTheDocument();
     expect(screen.getByText(/3\/3 · fatura de janeiro 2027/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Ocultar' }));
-    expect(screen.queryByText(/1\/3/)).not.toBeInTheDocument();
+    // Folding: the list stays until the height has gone, but leaves the accessibility tree at once.
+    expect(screen.queryByRole('list')).not.toBeInTheDocument();
   });
 });

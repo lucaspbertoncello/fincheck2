@@ -1,7 +1,6 @@
 import {
   Button as AriaButton,
   ComboBox,
-  FieldError,
   Group,
   Input,
   Label,
@@ -15,13 +14,13 @@ import {
 import {
   FIELD_BOX_CLASS,
   FIELD_DESCRIPTION_CLASS,
-  FIELD_ERROR_CLASS,
   FIELD_LABEL_CLASS,
 } from '#/components/forms/field-classes.constant.ts';
 import { CategoryIcon } from '#/components/icons/category-icon.component.tsx';
 import { Icon } from '#/components/icons/icon.component.tsx';
 import type { CategoryOption } from '#/components/transactions/category-option.type.ts';
 import { cx } from '#/utils/class-names.util.ts';
+import { FieldErrorMessage } from '#/components/forms/field-error-message.component.tsx';
 
 type CategoryPickerProps = {
   label: string;
@@ -94,7 +93,7 @@ export function CategoryPicker({
           {description}
         </Text>
       ) : null}
-      <FieldError className={FIELD_ERROR_CLASS}>{error}</FieldError>
+      <FieldErrorMessage error={error} />
       <Popover className="popover-enter w-(--trigger-width) rounded-panel border border-line bg-menu shadow-(--shadow-menu) backdrop-blur-(--blur-popover)">
         <ListBox
           renderEmptyState={() => (

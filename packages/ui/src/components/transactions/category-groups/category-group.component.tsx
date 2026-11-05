@@ -1,7 +1,9 @@
-import { Button as AriaButton, Disclosure, DisclosurePanel } from 'react-aria-components';
+import { useId } from 'react';
+import { Button as AriaButton } from 'react-aria-components';
 
 import { Button } from '#/components/buttons/index.ts';
 import { VariationBadge } from '#/components/chips/index.ts';
+import { Collapse } from '#/components/disclosure/index.ts';
 import { Icon } from '#/components/icons/index.ts';
 import { CategoryIcon } from '#/components/icons/index.ts';
 import { Money } from '#/components/money/index.ts';
@@ -28,7 +30,8 @@ type CategoryGroupProps = {
 /**
  * One category of the "por categoria" view (components.md 6.2): icon, name with a chevron that
  * turns on open, share bar (4 px, at most 360 wide), value and variation. Open, it lists the last
- * transactions in a subtle box with the link to the list. Headless disclosure from React Aria.
+ * transactions in a subtle box with the link to the list, which opens with the system `Collapse`
+ * (height and opacity).
  */
 export function CategoryGroup({
   group,
@@ -40,6 +43,8 @@ export function CategoryGroup({
   className,
 }: CategoryGroupProps) {
   const expandable = Boolean(group.items?.length) && !group.uncategorized;
+  const isOpen = expandable && expanded;
+  const panelId = useId();
   const detail =
     group.detail ??
     `${countLabel(group.count, 'transação', 'transações')} • ${percentFormat.format(group.sharePercent)}%`;
@@ -50,25 +55,25 @@ export function CategoryGroup({
         <Icon
           name="chevron-down"
           size="sm"
-          className="text-fg-secondary transition-transform duration-(--duration-fast) motion-reduce:transition-none group-data-[expanded]/cat:rotate-180"
+          className={cx(
+            'text-fg-secondary transition-transform duration-(--duration-fast) motion-reduce:transition-none',
+            isOpen && 'rotate-180',
+          )}
         />
       ) : null}
     </>
   );
 
   return (
-    <Disclosure
-      isExpanded={expandable && expanded}
-      onExpandedChange={onExpandedChange}
-      isDisabled={!expandable}
-      className={cx('group/cat border-b border-line last:border-b-0', className)}
-    >
+    <div className={cx('border-b border-line last:border-b-0', className)}>
       <div className="flex items-start gap-s12 py-s12 lg:gap-s16 lg:py-s16">
         <CategoryIcon icon={group.icon} dashed={group.uncategorized} />
         <div className="flex min-w-0 flex-1 flex-col gap-s4">
           {expandable ? (
             <AriaButton
-              slot="trigger"
+              aria-expanded={isOpen}
+              aria-controls={panelId}
+              onPress={() => onExpandedChange(!isOpen)}
               className="focus-ring -ml-s4 flex min-h-ctl-sm w-fit max-w-full cursor-pointer items-center gap-s8 rounded-input px-s4 text-left"
             >
               {trigger}
@@ -111,15 +116,15 @@ export function CategoryGroup({
         </div>
       </div>
       {expandable ? (
-        <DisclosurePanel>
+        <Collapse isOpen={isOpen} id={panelId}>
           <CategoryGroupItems
             items={group.items ?? []}
             kind={kind}
             totalCount={group.count}
             onSeeAll={onSeeAll ? () => onSeeAll(group.id) : undefined}
           />
-        </DisclosurePanel>
+        </Collapse>
       ) : null}
-    </Disclosure>
+    </div>
   );
 }

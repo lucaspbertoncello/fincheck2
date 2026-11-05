@@ -1,14 +1,14 @@
-import { FieldError, Input, Label, Text, TextField as AriaTextField } from 'react-aria-components';
+import { Input, Label, Text, TextField as AriaTextField } from 'react-aria-components';
 
 import { formatCentsInput } from '#/components/forms/format-cents-input.util.ts';
 import {
   FIELD_BOX_CLASS,
   FIELD_DESCRIPTION_CLASS,
-  FIELD_ERROR_CLASS,
   FIELD_LABEL_CLASS,
 } from '#/components/forms/field-classes.constant.ts';
 import { parseCentsInput } from '#/components/forms/parse-cents-input.util.ts';
 import { cx } from '#/utils/class-names.util.ts';
+import { FieldErrorMessage } from '#/components/forms/field-error-message.component.tsx';
 
 type MoneyFieldProps = {
   label: string;
@@ -91,7 +91,7 @@ export function MoneyField({
           {description}
         </Text>
       ) : null}
-      <FieldError className={FIELD_ERROR_CLASS}>{error}</FieldError>
+      <FieldErrorMessage error={error} />
     </AriaTextField>
   );
 }

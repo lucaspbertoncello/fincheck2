@@ -1,7 +1,8 @@
 import { ChoiceChip } from '#/components/chips/index.ts';
 import type { CategoryOption } from '#/components/transactions/category-option.type.ts';
-import { FIELD_ERROR_CLASS } from '#/components/forms/field-classes.constant.ts';
+import {} from '#/components/forms/field-classes.constant.ts';
 import { cx } from '#/utils/class-names.util.ts';
+import { FieldErrorMessage } from '#/components/forms/field-error-message.component.tsx';
 
 type CategoryChoicesProps = {
   label: string;
@@ -37,11 +38,7 @@ export function CategoryChoices({
           </ChoiceChip>
         ))}
       </div>
-      {error ? (
-        <p role="alert" className={FIELD_ERROR_CLASS}>
-          {error}
-        </p>
-      ) : null}
+      <FieldErrorMessage error={error} gap="s8" inField={false} />
     </div>
   );
 }

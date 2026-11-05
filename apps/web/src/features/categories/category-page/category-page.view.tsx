@@ -1,5 +1,6 @@
 import {
   Banner,
+  BannerSlot,
   Button,
   ConfirmDialog,
   ContentSkeleton,
@@ -63,14 +64,16 @@ export function CategoryPageView(props: CategoryPageViewProps) {
       backHref={props.backHref}
       picker={props.picker}
     >
-      {props.actionError ? (
-        <Banner
-          variant="error"
-          title={props.actionError.message}
-          actionLabel="Fechar"
-          onAction={props.actionError.onClose}
-        />
-      ) : null}
+      <BannerSlot isOpen={Boolean(props.actionError)} gap="s16-s24">
+        {props.actionError ? (
+          <Banner
+            variant="error"
+            title={props.actionError.message}
+            actionLabel="Fechar"
+            onAction={props.actionError.onClose}
+          />
+        ) : null}
+      </BannerSlot>
 
       <CategorySummary
         kind={props.kind}

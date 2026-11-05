@@ -1,6 +1,7 @@
 import { useId, useRef, type FormEvent, type ReactNode } from 'react';
 
 import { Button } from '#/components/buttons/index.ts';
+import { Collapse } from '#/components/disclosure/collapse.component.tsx';
 import { Banner } from '#/components/feedback/banner.component.tsx';
 import { useInitialFocus } from '#/components/form-modal/use-initial-focus.hook.ts';
 import { ModalFrame } from '#/components/overlays/modal-frame.component.tsx';
@@ -96,7 +97,13 @@ function FormModalForm({
         <div className="@container min-h-0 flex-1 overflow-y-auto overscroll-contain px-s16 pt-s4 pb-s16 lg:px-s24">
           <div className="flex flex-col gap-s16 lg:gap-s24">
             {children}
-            {error ? <Banner variant="error" title={error} /> : null}
+            <Collapse
+              isOpen={Boolean(error)}
+              trackClassName="-mt-s16 lg:-mt-s24"
+              contentClassName="pt-s16 lg:pt-s24"
+            >
+              {error ? <Banner variant="error" title={error} /> : null}
+            </Collapse>
           </div>
         </div>
         <footer className="flex flex-col gap-s8 border-t border-line px-s16 py-s12 lg:flex-row lg:items-center lg:gap-s12 lg:px-s24 lg:py-s16">

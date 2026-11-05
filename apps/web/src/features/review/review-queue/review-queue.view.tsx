@@ -1,5 +1,6 @@
 import {
   Banner,
+  BannerSlot,
   Button,
   CategoryChoices,
   ContentSkeleton,
@@ -111,7 +112,9 @@ export function ReviewQueueView({
 
       {card ? <ReviewQueueCard {...card} /> : null}
 
-      {actionError ? <Banner variant="error" title={actionError} /> : null}
+      <BannerSlot isOpen={Boolean(actionError)}>
+        {actionError ? <Banner variant="error" title={actionError} /> : null}
+      </BannerSlot>
 
       {queueItems.length > 0 ? (
         <section aria-labelledby="review-queue-heading" className="flex flex-col gap-s8">
