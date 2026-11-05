@@ -32,7 +32,8 @@ describe('invoices routes', () => {
     const nubank = byName('Roxinho');
     expect(nubank?.status).toBe('open');
     expect(nubank?.breakdown.installmentsCents).toBe(34_900);
-    expect(nubank?.breakdown.expectedRecurringCents).toBe(5499);
+    // Plano celular (54,99) and Nuvem+ (19,90), the subscription that did not charge yet.
+    expect(nubank?.breakdown.expectedRecurringCents).toBe(5499 + 1990);
     expect(nubank?.totalCents).toBe(nubank?.computedTotalCents);
 
     const bradesco = byName('Bradesco Black');

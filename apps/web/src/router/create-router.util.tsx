@@ -11,6 +11,7 @@ import { recurrencesRoute } from '#/router/routes/recurrences.route.tsx';
 import { rootRoute } from '#/router/routes/root.route.tsx';
 import { reviewRoute } from '#/router/routes/review.route.tsx';
 import { rulesRoute } from '#/router/routes/rules.route.tsx';
+import { subscriptionsRoute } from '#/router/routes/subscriptions.route.tsx';
 import { settingsAppearanceRoute } from '#/router/routes/settings-appearance.route.tsx';
 import { settingsBackupRoute } from '#/router/routes/settings-backup.route.tsx';
 import { settingsConnectionsRoute } from '#/router/routes/settings-connections.route.tsx';
@@ -28,6 +29,7 @@ export function createAppRouter(queryClient: QueryClient) {
       reviewRoute,
       recurrencesRoute,
       billsRoute,
+      subscriptionsRoute,
       accountsRoute,
       categoriesRoute,
       categoryRoute,

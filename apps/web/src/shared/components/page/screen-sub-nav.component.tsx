@@ -10,6 +10,7 @@ const GROUPS = {
     items: [
       { key: 'recurrences', label: 'Recorrências' },
       { key: 'bills', label: 'A pagar e receber' },
+      { key: 'subscriptions', label: 'Assinaturas' },
     ],
   },
   categories: {
@@ -25,7 +26,7 @@ type ScreenSubNavProps = {
   group: keyof typeof GROUPS;
 };
 
-/** Sub-tabs under the header: Recorrências | A pagar e receber, Categorias | Regras. */
+/** Sub-tabs under the header: Recorrências | A pagar e receber | Assinaturas, Categorias | Regras. */
 export function ScreenSubNav({ group }: ScreenSubNavProps) {
   const { screen, monthParam } = useActiveScreen();
   const { label, items } = GROUPS[group];

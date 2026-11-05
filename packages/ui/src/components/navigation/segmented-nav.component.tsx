@@ -4,6 +4,7 @@ import { Link } from 'react-aria-components';
 import { SegmentedIndicator } from '#/components/forms/segmented-indicator.component.tsx';
 import {
   SEGMENTED_ITEM_ACTIVE_CLASS,
+  SEGMENTED_ITEM_COMPACT_CLASS,
   SEGMENTED_ITEM_CLASS,
   SEGMENTED_ITEM_INACTIVE_CLASS,
   SEGMENTED_TRACK_CLASS,
@@ -34,6 +35,7 @@ type SegmentedNavProps = {
 export function SegmentedNav({ items, activeKey, label, className }: SegmentedNavProps) {
   // Stable per group, not per instance: each sub-screen mounts its own SegmentedNav, and the
   // indicator only slides between two screens if both instances share the same layoutId.
+  const itemClass = items.length > 2 ? SEGMENTED_ITEM_COMPACT_CLASS : SEGMENTED_ITEM_CLASS;
   const indicatorId = `segmented-nav-${label}`;
 
   return (
@@ -47,7 +49,7 @@ export function SegmentedNav({ items, activeKey, label, className }: SegmentedNa
               href={item.href}
               aria-current={active ? 'page' : undefined}
               className={cx(
-                SEGMENTED_ITEM_CLASS,
+                itemClass,
                 active ? SEGMENTED_ITEM_ACTIVE_CLASS : SEGMENTED_ITEM_INACTIVE_CLASS,
               )}
             >

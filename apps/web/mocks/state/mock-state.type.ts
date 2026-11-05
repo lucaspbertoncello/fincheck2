@@ -178,6 +178,8 @@ export namespace MockState {
     tags: TagRecord[];
     rules: RuleRecord[];
     ruleSuggestionDecisions: RuleSuggestionDecisionRecord[];
+    // Keys of the subscription suggestions Lucas answered "Agora não" to.
+    subscriptionDismissals: string[];
     connections: ConnectionRecord[];
     runs: RunRecord[];
     syncSettings: { clientId: string; updatedAt: string } | null;

@@ -18,6 +18,8 @@ export type ShowUndoToastOptions = {
   actionLabel?: string;
   /** Check icon before the message. Defaults to false. */
   withIcon?: boolean;
+  /** Runs when the toast leaves, by timeout, by the action or by being closed. */
+  onClose?: () => void;
   /** Milliseconds on screen; it pauses while hovered or focused. Defaults to 6000. */
   timeout?: number;
 };

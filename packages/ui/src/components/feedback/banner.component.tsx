@@ -25,6 +25,14 @@ type BannerProps = {
   /** Button on the right (below the text, full width, on the phone). */
   actionLabel?: string;
   onAction?: () => void;
+  /** Second, quieter button beside the first ("Agora não"). */
+  secondaryActionLabel?: string;
+  onSecondaryAction?: () => void;
+  /**
+   * Where the buttons go: "end" (default) at the right, full width on the phone; "below" in a strip
+   * under the text, aligned with it and never stretched.
+   */
+  actionsPlacement?: 'end' | 'below';
   /** The action button spins and stops answering. */
   actionLoading?: boolean;
   className?: string;
@@ -41,10 +49,38 @@ export function Banner({
   description,
   actionLabel,
   onAction,
+  secondaryActionLabel,
+  onSecondaryAction,
+  actionsPlacement = 'end',
   actionLoading = false,
   className,
 }: BannerProps) {
   const style = VARIANT[variant];
+  const below = actionsPlacement === 'below';
+  const primary =
+    actionLabel && onAction ? (
+      <Button
+        variant="secondary"
+        size={below ? 'sm' : 'md'}
+        danger={variant === 'error'}
+        loading={actionLoading}
+        onPress={onAction}
+        className={below ? undefined : 'w-full lg:w-auto'}
+      >
+        {actionLabel}
+      </Button>
+    ) : null;
+  const secondary =
+    secondaryActionLabel && onSecondaryAction ? (
+      <Button
+        variant="tertiary"
+        size={below ? 'sm' : 'md'}
+        onPress={onSecondaryAction}
+        className={below ? undefined : 'w-full lg:w-auto'}
+      >
+        {secondaryActionLabel}
+      </Button>
+    ) : null;
 
   return (
     <div
@@ -60,18 +96,19 @@ export function Banner({
         <div className="flex min-w-0 flex-col gap-s4">
           <p className="text-body font-emphasis text-fg-primary">{title}</p>
           {description ? <p className="text-label text-fg-secondary">{description}</p> : null}
+          {below && (primary || secondary) ? (
+            <div className="mt-s12 flex flex-wrap items-center gap-s8">
+              {primary}
+              {secondary}
+            </div>
+          ) : null}
         </div>
       </div>
-      {actionLabel && onAction ? (
-        <Button
-          variant="secondary"
-          danger={variant === 'error'}
-          loading={actionLoading}
-          onPress={onAction}
-          className="w-full lg:w-auto"
-        >
-          {actionLabel}
-        </Button>
+      {!below && (primary || secondary) ? (
+        <div className="flex flex-col gap-s8 lg:flex-row">
+          {primary}
+          {secondary}
+        </div>
       ) : null}
     </div>
   );

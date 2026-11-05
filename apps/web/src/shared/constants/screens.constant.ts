@@ -57,6 +57,18 @@ export const SCREENS: Record<ScreenKey, ScreenDefinition> = {
     showsPanel: true,
     subNav: 'recurrences',
   },
+  subscriptions: {
+    key: 'subscriptions',
+    path: '/recurrences/subscriptions',
+    title: 'Recorrentes',
+    tab: 'recurrences',
+    plusLabel: 'Nova recorrência',
+    plusMode: 'direct',
+    plusAction: 'new-recurrence',
+    filtersByMonth: true,
+    showsPanel: true,
+    subNav: 'recurrences',
+  },
   accounts: {
     key: 'accounts',
     path: '/accounts',

@@ -15,10 +15,17 @@ type ToastProviderProps = {
 function createToastService() {
   const queue = new ToastQueue<UndoToastContent>({ maxVisibleToasts: MAX_VISIBLE_TOASTS });
   const api: ToastApi = {
-    showUndoToast: ({ message, onUndo, actionLabel = 'Desfazer', withIcon = false, timeout }) =>
+    showUndoToast: ({
+      message,
+      onUndo,
+      actionLabel = 'Desfazer',
+      withIcon = false,
+      timeout,
+      onClose,
+    }) =>
       queue.add(
         { message, actionLabel, onAction: onUndo, withIcon },
-        { timeout: timeout ?? DEFAULT_TIMEOUT_MS },
+        { timeout: timeout ?? DEFAULT_TIMEOUT_MS, onClose },
       ),
     closeToast: (key) => queue.close(key),
   };

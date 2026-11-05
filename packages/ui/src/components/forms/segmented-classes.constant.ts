@@ -16,5 +16,11 @@ export const SEGMENTED_ITEM_CLASS = `${SEGMENTED_ITEM_BASE_CLASS} flex-1`;
 /** Content width first, the extra space shared: long and short labels all stay on one line. */
 export const SEGMENTED_ITEM_FIT_CLASS = `${SEGMENTED_ITEM_BASE_CLASS} flex-auto`;
 
+/**
+ * Three or more links on the phone (Recorrências | A pagar e receber | Assinaturas): content width
+ * first and 8 px of padding, so the three labels fit in 343 px on one line.
+ */
+export const SEGMENTED_ITEM_COMPACT_CLASS = SEGMENTED_ITEM_FIT_CLASS.replace('px-s12', 'px-s8');
+
 export const SEGMENTED_ITEM_ACTIVE_CLASS = 'text-fg-primary';
 export const SEGMENTED_ITEM_INACTIVE_CLASS = 'text-fg-tertiary data-[hovered]:text-fg-primary';

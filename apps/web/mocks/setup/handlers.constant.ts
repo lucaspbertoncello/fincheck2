@@ -19,6 +19,7 @@ import { profileMock } from '#mocks/profile/profile/profile.mock.ts';
 import { invoiceMock } from '#mocks/invoices/invoice/invoice.mock.ts';
 import { occurrenceMock } from '#mocks/recurrences/occurrence/occurrence.mock.ts';
 import { recurrenceMock } from '#mocks/recurrences/recurrence/recurrence.mock.ts';
+import { subscriptionMock } from '#mocks/recurrences/subscription/subscription.mock.ts';
 import { connectionMock } from '#mocks/sync/connection/connection.mock.ts';
 import { installmentPlanMock } from '#mocks/transactions/installment-plan/installment-plan.mock.ts';
 import { transactionMock } from '#mocks/transactions/transaction/transaction.mock.ts';
@@ -33,6 +34,7 @@ export const handlers = [
   ...invoiceMock,
   ...recurrenceMock,
   ...occurrenceMock,
+  ...subscriptionMock,
   ...billMock,
   ...categoryMock,
   ...tagMock,

@@ -33,7 +33,8 @@ describe('RecurrenceListPage', () => {
     expect(attention.getByText('Diarista')).toBeInTheDocument();
     expect(attention.getByText('Internet')).toBeInTheDocument();
     expect(attention.getAllByText('Atrasado').length).toBeGreaterThan(0);
-    expect(attention.getByText('Valor diferente')).toBeInTheDocument();
+    // Internet and Musicando (a subscription whose price went up) both wait for an answer.
+    expect(attention.getAllByText('Valor diferente')).toHaveLength(2);
 
     expect(screen.getByText(/^Receitas esperadas em /)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /, dia a dia$/ })).toBeInTheDocument();
@@ -53,7 +54,10 @@ describe('RecurrenceListPage', () => {
     renderApp(URL);
     const attention = await findAttentionStrip();
 
-    fireEvent.click(attention.getByRole('button', { name: 'Marcar como paga' }));
+    const diarista = attention.getByText('Diarista').closest('li');
+    if (!diarista) throw new Error('No row for Diarista');
+
+    fireEvent.click(within(diarista).getByRole('button', { name: 'Marcar como paga' }));
 
     expect(await screen.findByText('Diarista marcada como paga.')).toBeInTheDocument();
     await waitFor(() => expect(attention.queryByText('Diarista')).not.toBeInTheDocument());
@@ -74,7 +78,11 @@ describe('RecurrenceListPage', () => {
     renderApp(URL);
     const attention = await findAttentionStrip();
 
-    fireEvent.click(attention.getByRole('button', { name: 'Atualizar' }));
+    // The question sits in the item right after the row of the Internet.
+    const question = attention.getByText('Internet').closest('li')?.nextElementSibling;
+    if (!(question instanceof HTMLElement)) throw new Error('No question under Internet');
+
+    fireEvent.click(within(question).getByRole('button', { name: 'Atualizar' }));
 
     await waitFor(() => expect(attention.queryByText('Internet')).not.toBeInTheDocument());
   });

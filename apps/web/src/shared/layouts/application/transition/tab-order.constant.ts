@@ -11,12 +11,13 @@ export const TAB_ORDER: readonly TabKey[] = [
 ];
 
 /**
- * Fixed order of the screens that have sub-tabs (Recorrências | A pagar e receber, Categorias |
+ * Fixed order of the screens that have sub-tabs (Recorrências | A pagar e receber | Assinaturas, Categorias |
  * Regras). It decides the direction of the transition between two sub-tabs of the same tab.
  */
 export const SUB_SCREEN_ORDER: readonly ScreenKey[] = [
   'recurrences',
   'bills',
+  'subscriptions',
   'categories',
   'rules',
 ];

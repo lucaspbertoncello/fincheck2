@@ -31,6 +31,34 @@ describe('Banner', () => {
     expect(suggestion).toContain('bg-brand-weak');
   });
 
+  it('puts two answers in a strip under the text, aligned with it, when asked to', () => {
+    const html = renderToStaticMarkup(
+      <Banner
+        variant="suggestion"
+        title="Parece uma assinatura: Netflix"
+        actionsPlacement="below"
+        actionLabel="Acompanhar"
+        onAction={() => {}}
+        secondaryActionLabel="Agora não"
+        onSecondaryAction={() => {}}
+      />,
+    );
+
+    // Inside the text column (after the title), not at the right edge, and never stretched.
+    expect(html.indexOf('Parece uma assinatura')).toBeLessThan(html.indexOf('Acompanhar'));
+    expect(html.indexOf('Acompanhar')).toBeLessThan(html.indexOf('Agora não'));
+    expect(html).toContain('mt-s12 flex flex-wrap');
+    expect(html).not.toContain('w-full');
+  });
+
+  it('keeps the buttons at the end, full width on the phone, by default', () => {
+    const html = renderToStaticMarkup(
+      <Banner variant="warning" title="Dado" actionLabel="Ver" onAction={() => {}} />,
+    );
+
+    expect(html).toContain('w-full lg:w-auto');
+  });
+
   it('omits the button when there is no action', () => {
     const html = renderToStaticMarkup(<Banner variant="warning" title="Dado de ontem" />);
 

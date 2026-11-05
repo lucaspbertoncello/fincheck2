@@ -21,6 +21,7 @@ const SCREENS = [
   '/transactions/review',
   '/recurrences',
   '/recurrences/bills',
+  '/recurrences/subscriptions',
   '/accounts',
   '/categories',
   '/categories/rules',

@@ -7,6 +7,7 @@ export type ScreenKey =
   | 'review'
   | 'recurrences'
   | 'bills'
+  | 'subscriptions'
   | 'accounts'
   | 'categories'
   | 'rules'

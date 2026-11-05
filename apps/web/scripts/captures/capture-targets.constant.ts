@@ -15,6 +15,7 @@ export const SCREEN_TARGETS: CaptureTarget[] = [
   { name: 'review', path: '/transactions/review', kind: 'screen' },
   { name: 'recurrences', path: '/recurrences', kind: 'screen' },
   { name: 'bills', path: '/recurrences/bills', kind: 'screen' },
+  { name: 'subscriptions', path: '/recurrences/subscriptions', kind: 'screen' },
   { name: 'accounts', path: '/accounts', kind: 'screen' },
   { name: 'categories', path: '/categories', kind: 'screen' },
   { name: 'rules', path: '/categories/rules', kind: 'screen' },
