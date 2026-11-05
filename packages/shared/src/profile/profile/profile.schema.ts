@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { businessDateSchema, instantSchema } from '../../common/date/date.schema.ts';
+import { businessDateSchema, instantSchema, monthSchema } from '../../common/date/date.schema.ts';
 import { idSchema } from '../../common/id/id.schema.ts';
 import { nonNegativeCentsSchema, positiveCentsSchema } from '../../common/money/money.schema.ts';
 import {
@@ -47,4 +47,39 @@ export const updateProfileRequestSchema = z.object({
     .max(PROFILE_INITIALS_LIMITS.max)
     .regex(/^\p{L}+$/u)
     .optional(),
+});
+
+// The biggest Pix in one direction (BR-PRF-005). `counterparty` is the name the bank printed on the
+// statement and can be missing; the amount has no sign.
+export const profilePixHighlightSchema = z.object({
+  amountCents: positiveCentsSchema,
+  counterparty: z.string().min(1).max(120).nullable(),
+  occurredOn: businessDateSchema,
+  transactionId: idSchema,
+});
+
+// The six curiosities of the profile (BR-PRF-005). Each one is null when there is no data for it.
+// Spending is by competence (BR-DSH-001), the last 12 months; the two Pix cover the whole history.
+export const profileHighlightsDtoSchema = z.object({
+  largestPixSent: profilePixHighlightSchema.nullable(),
+  largestPixReceived: profilePixHighlightSchema.nullable(),
+  topCategory: z
+    .object({
+      categoryId: idSchema,
+      totalCents: positiveCentsSchema,
+      // 0 to 100, one decimal place.
+      sharePercent: z.number().min(0).max(100),
+    })
+    .nullable(),
+  costliestMonth: z.object({ month: monthSchema, totalCents: positiveCentsSchema }).nullable(),
+  costliestWeekday: z
+    .object({
+      // 0 is Sunday. `averageCents` is per occurrence of that weekday in the 12 months.
+      weekday: z.int().min(0).max(6),
+      averageCents: positiveCentsSchema,
+    })
+    .nullable(),
+  longestNoSpendStreak: z
+    .object({ days: z.int().min(1), from: businessDateSchema, to: businessDateSchema })
+    .nullable(),
 });

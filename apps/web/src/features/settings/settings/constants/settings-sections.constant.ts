@@ -1,6 +1,6 @@
 import type { IconName } from '@fincheck/ui';
 
-export type SettingsSectionKey = 'profile' | 'connections' | 'backup' | 'appearance';
+export type SettingsSectionKey = 'connections' | 'backup' | 'appearance';
 
 export type SettingsSectionDefinition = {
   key: SettingsSectionKey;
@@ -18,14 +18,6 @@ export const SETTINGS_PATH = '/settings';
 
 /** The pages of Configurações, by key. */
 export const SETTINGS_SECTION: Record<SettingsSectionKey, SettingsSectionDefinition> = {
-  profile: {
-    key: 'profile',
-    path: '/settings/profile',
-    title: 'Perfil',
-    description: 'Quem você é no app, de onde vem a sua renda e como o dinheiro sai.',
-    subtitle: 'Nome, renda e gastos',
-    icon: 'user',
-  },
   connections: {
     key: 'connections',
     path: '/settings/connections',
@@ -54,7 +46,6 @@ export const SETTINGS_SECTION: Record<SettingsSectionKey, SettingsSectionDefinit
 
 /** The pages in the order of the menu. */
 export const SETTINGS_SECTIONS: SettingsSectionDefinition[] = [
-  SETTINGS_SECTION.profile,
   SETTINGS_SECTION.connections,
   SETTINGS_SECTION.backup,
   SETTINGS_SECTION.appearance,

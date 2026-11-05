@@ -6,18 +6,22 @@ import { settingsRoute } from '#/router/routes/settings.route.tsx';
 
 /**
  * `/settings`: the old anchors (`/settings#backup`) go to the page of the section, keeping the
- * search; with no anchor the page decides (list on the phone, Perfil on the desktop).
+ * search (`#profile` goes to the Perfil screen, which left Configurações); with no anchor the page
+ * decides (list on the phone, Conexões on the desktop).
  */
 export const settingsIndexRoute = createRoute({
   getParentRoute: () => settingsRoute,
   path: '/',
   beforeLoad: ({ location }) => {
+    if (location.hash === 'profile' || location.hash === '#profile')
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- TanStack Router redirects by throwing `redirect()`
+      throw redirect({ to: '/profile', search: (previous) => previous, hash: '', replace: true });
     const section = findSectionByHash(location.hash);
     if (section)
-      // The four paths are routes of the tree; `section.path` is typed as a plain string.
+      // The three paths are routes of the tree; `section.path` is typed as a plain string.
       // eslint-disable-next-line @typescript-eslint/only-throw-error -- TanStack Router redirects by throwing `redirect()`
       throw redirect({
-        to: section.path as '/settings/profile',
+        to: section.path as '/settings/backup',
         search: (previous) => previous,
         replace: true,
       });

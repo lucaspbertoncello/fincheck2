@@ -30,7 +30,6 @@ afterEach(() => {
 });
 
 const TITLE = {
-  profile: 'Perfil',
   connections: 'Conexões',
   backup: 'Backup',
   appearance: 'Aparência',
@@ -552,7 +551,6 @@ describe('SettingsPage', () => {
 
   describe('páginas', () => {
     it.each([
-      ['profile', 'Perfil'],
       ['connections', 'Conexões'],
       ['backup', 'Backup'],
       ['appearance', 'Aparência'],
@@ -564,7 +562,7 @@ describe('SettingsPage', () => {
 
         const nav = await screen.findByRole('navigation', { name: 'Páginas de Configurações' });
         const links = within(nav).getAllByRole('link');
-        expect(links).toHaveLength(4);
+        expect(links).toHaveLength(3);
         for (const link of links) {
           if (link.textContent?.includes(title))
             expect(link).toHaveAttribute('aria-current', 'page');
@@ -585,7 +583,7 @@ describe('SettingsPage', () => {
     it('goes from one page to the next through the menu', async () => {
       useDesktop();
       const user = createUser();
-      await openPage('profile');
+      await openPage('connections');
 
       const nav = await screen.findByRole('navigation', { name: 'Páginas de Configurações' });
       await user.click(within(nav).getByRole('link', { name: /Backup/ }));
@@ -597,19 +595,35 @@ describe('SettingsPage', () => {
         'aria-current',
         'page',
       );
-      expect(within(nav).getByRole('link', { name: /Perfil/ })).not.toHaveAttribute('aria-current');
+      expect(within(nav).getByRole('link', { name: /Conexões/ })).not.toHaveAttribute(
+        'aria-current',
+      );
     });
 
-    it('goes to Perfil when /settings opens on the desktop', async () => {
+    it('goes to Conexões when /settings opens on the desktop', async () => {
       useDesktop();
       renderApp('/settings');
 
-      expect(await screen.findByRole('heading', { level: 1, name: 'Perfil' })).toBeInTheDocument();
-      expect(window.location.pathname).toBe('/settings/profile');
+      expect(
+        await screen.findByRole('heading', { level: 1, name: 'Conexões' }),
+      ).toBeInTheDocument();
+      expect(window.location.pathname).toBe('/settings/connections');
     });
 
     it.each([
-      ['#profile', '/settings/profile', 'Perfil'],
+      ['/settings/profile', ''],
+      ['/settings#profile', ''],
+      ['/settings/profile?month=2026-09', 'month=2026-09'],
+    ])('sends %s to the Perfil screen, which left Configurações', async (url, search) => {
+      renderApp(url);
+
+      expect(await screen.findByRole('heading', { level: 1, name: 'Perfil' })).toBeInTheDocument();
+      expect(window.location.pathname).toBe('/profile');
+      expect(window.location.hash).toBe('');
+      if (search) expect(window.location.search).toContain(search);
+    });
+
+    it.each([
       ['#connections', '/settings/connections', 'Conexões'],
       ['#backup', '/settings/backup', 'Backup'],
       ['#appearance', '/settings/appearance', 'Aparência'],
@@ -642,12 +656,7 @@ describe('SettingsPage', () => {
         within(nav)
           .getAllByRole('link')
           .map((link) => link.getAttribute('href')),
-      ).toEqual([
-        '/settings/profile',
-        '/settings/connections',
-        '/settings/backup',
-        '/settings/appearance',
-      ]);
+      ).toEqual(['/settings/connections', '/settings/backup', '/settings/appearance']);
       expect(window.location.pathname).toBe('/settings');
       expect(
         screen.getByText('Tokens e chaves ficam criptografados neste PC.'),
@@ -678,7 +687,7 @@ describe('SettingsPage', () => {
 
     it('has the side menu with only the list of pages on the desktop, outside the page', async () => {
       useDesktop();
-      await openPage('profile');
+      await openPage('connections');
 
       const nav = await screen.findByRole('navigation', { name: 'Páginas de Configurações' });
       expect(screen.getByRole('main')).not.toContainElement(nav);
@@ -687,7 +696,6 @@ describe('SettingsPage', () => {
           .getAllByRole('link')
           .map((link) => link.textContent),
       ).toEqual([
-        expect.stringContaining('Perfil'),
         expect.stringContaining('Conexões'),
         expect.stringContaining('Backup'),
         expect.stringContaining('Aparência'),

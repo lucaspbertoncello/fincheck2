@@ -52,7 +52,8 @@ describe('findSectionByHash', () => {
     expect(findSectionByHash('#backup')?.path).toBe('/settings/backup');
     expect(findSectionByHash('#appearance')?.path).toBe('/settings/appearance');
     expect(findSectionByHash('#connections')?.path).toBe('/settings/connections');
-    expect(findSectionByHash('#profile')?.path).toBe('/settings/profile');
+    // Perfil left Configurações: its old anchor is redirected by the route, not found here.
+    expect(findSectionByHash('#profile')).toBeUndefined();
     expect(findSectionByHash('')).toBeUndefined();
     expect(findSectionByHash('#nada')).toBeUndefined();
   });

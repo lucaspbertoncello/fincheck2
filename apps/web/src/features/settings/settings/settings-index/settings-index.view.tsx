@@ -12,7 +12,7 @@ export function SettingsIndexView({ navItems }: SettingsIndexViewProps) {
   return (
     <SettingsPageFrame
       title="Configurações"
-      description="Perfil, conexões, backup e aparência."
+      description="Conexões, backup e aparência."
       showBack={false}
     >
       <div className="glass flex flex-col gap-s24 p-s16">

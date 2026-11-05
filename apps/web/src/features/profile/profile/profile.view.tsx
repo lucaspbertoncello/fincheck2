@@ -1,16 +1,17 @@
 import type { Profile } from '@fincheck/shared/profile/profile/profile.type.ts';
-import { Button, EmptyState, ErrorState, Money, Section } from '@fincheck/ui';
+import { Button, EmptyState, ErrorState, Money, PageHeader, Section } from '@fincheck/ui';
 import type { ReactNode } from 'react';
 
 import { SectionSkeleton } from '#/features/settings/settings/components/section-skeleton.component.tsx';
-import { SettingsPageFrame } from '#/features/settings/settings/components/settings-page-frame.component.tsx';
-import { SETTINGS_SECTION } from '#/features/settings/settings/constants/settings-sections.constant.ts';
-import { IncomeSourceRow } from '#/features/settings/settings/profile/components/income-source-row.component.tsx';
-import { ProfileAvatar } from '#/features/settings/settings/profile/components/profile-avatar.component.tsx';
+import { IncomeSourceRow } from '#/features/profile/profile/components/income-source-row.component.tsx';
+import { ProfileAvatar } from '#/features/profile/profile/components/profile-avatar.component.tsx';
+import { ApplicationSummaryPanel } from '#/shared/layouts/application/summary/application-summary-panel.component.tsx';
 
-const PAGE = SETTINGS_SECTION.profile;
+const DESCRIPTION = 'Sua renda, seus gastos e algumas curiosidades.';
 
 type ProfileViewProps = {
+  /** True from 1024 px: the balance panel is in the shell column; on the phone it comes under the header. */
+  isDesktop: boolean;
   state: 'loading' | 'error' | 'ready';
   profile?: Profile.Dto;
   onRetry: () => void;
@@ -19,16 +20,21 @@ type ProfileViewProps = {
   onEditSource: (recurrenceId: string) => void;
   /** The 12-month spend map group, below. */
   spendMap: ReactNode;
+  /** The six curiosities group, at the end. */
+  highlights: ReactNode;
   /** The edit modal, when open. */
   editModal: ReactNode;
 };
 
 /**
- * "Perfil": three groups. Você (who the app calls the user), Empregos e renda (every source IS an
- * income recurrence, with the expected monthly income on top) and the 12-month spend map. Loading
- * and error keep the header, so the page does not jump when the data arrives.
+ * Perfil, a screen of its own (BR-PRF-004), in the layout of the others: the title with one line of
+ * description, the balance panel beside it (under the header on the phone) and the groups, in this
+ * order: Você (who the app calls the user), Empregos e renda (every source IS an income
+ * recurrence, with the expected monthly income on top), the 12-month spend map and the six
+ * curiosities. Loading and error keep the header, so the page does not jump when the data arrives.
  */
 export function ProfileView({
+  isDesktop,
   state,
   profile,
   onRetry,
@@ -36,10 +42,16 @@ export function ProfileView({
   onAddSource,
   onEditSource,
   spendMap,
+  highlights,
   editModal,
 }: ProfileViewProps) {
   return (
-    <SettingsPageFrame title={PAGE.title} description={PAGE.description}>
+    <div className="flex min-w-0 flex-col gap-s16 lg:gap-s24">
+      <PageHeader
+        title="Perfil"
+        date={<p className="text-meta text-fg-secondary lg:text-label">{DESCRIPTION}</p>}
+      />
+      {isDesktop ? null : <ApplicationSummaryPanel variant="compact" />}
       {state === 'loading' ? (
         <>
           <Section title="Você" divider={false}>
@@ -109,7 +121,8 @@ export function ProfileView({
         </>
       ) : null}
       {spendMap}
+      {highlights}
       {editModal}
-    </SettingsPageFrame>
+    </div>
   );
 }

@@ -2,8 +2,8 @@ import type { Profile } from '@fincheck/shared/profile/profile/profile.type.ts';
 import { Button, Chip, Money } from '@fincheck/ui';
 
 import { describeDateRule } from '#/features/recurrences/recurrence-list/utils/describe-date-rule.util.ts';
-import { EMPLOYMENT_REGIME_LABEL } from '#/features/settings/settings/profile/constants/employment-regime-label.constant.ts';
-import { formatShortDay } from '#/features/settings/settings/profile/utils/format-short-day.util.ts';
+import { EMPLOYMENT_REGIME_LABEL } from '#/features/profile/profile/constants/employment-regime-label.constant.ts';
+import { formatShortDay } from '#/features/profile/profile/utils/format-short-day.util.ts';
 
 type IncomeSourceRowProps = {
   source: Profile.IncomeSource;

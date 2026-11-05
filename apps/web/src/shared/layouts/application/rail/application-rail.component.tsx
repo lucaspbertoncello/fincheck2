@@ -18,8 +18,8 @@ function RailDivider() {
  * name of each icon is a tip on hover and keyboard focus. It is the left half of the pair the
  * shell draws (rail + panel): the shell stretches it to the height of the panel, and the icons
  * are one group centered in that height, so it reads as "icons in the middle" whatever the panel
- * height. Top to bottom: the logo, the five tabs with the sliding capsule
- * and Configurações, split by a hairline each. The "+" is not here: it floats at the bottom right
+ * height. Top to bottom: the logo, the six tabs (the five and Perfil, below Categorias) with the
+ * sliding capsule and Configurações, split by a hairline each. The "+" is not here: it floats at the bottom right
  * of the window (see `ApplicationLayout`). Same surface as the panel (`glass`).
  */
 export function ApplicationRail({ screen, monthParam }: ApplicationRailProps) {

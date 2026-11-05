@@ -3,8 +3,8 @@ import { updateProfileRequestSchema } from '@fincheck/shared/profile/profile/pro
 import type { Profile } from '@fincheck/shared/profile/profile/profile.type.ts';
 import { useState } from 'react';
 
-import { useProfileEditModel } from '#/features/settings/settings/profile/profile-edit/profile-edit.model.ts';
-import { ProfileEditView } from '#/features/settings/settings/profile/profile-edit/profile-edit.view.tsx';
+import { useProfileEditModel } from '#/features/profile/profile/profile-edit/profile-edit.model.ts';
+import { ProfileEditView } from '#/features/profile/profile/profile-edit/profile-edit.view.tsx';
 
 type ProfileEditViewModelProps = {
   profile: Profile.Dto;

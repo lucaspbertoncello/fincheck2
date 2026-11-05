@@ -13,6 +13,7 @@ import { spendingCurveMock } from '#mocks/dashboard/spending-curve/spending-curv
 import { spendHeatmapMock } from '#mocks/dashboard/spend-heatmap/spend-heatmap.mock.ts';
 import { timelineMock } from '#mocks/dashboard/timeline/timeline.mock.ts';
 import { healthMock } from '#mocks/health/health/health.mock.ts';
+import { profileHighlightsMock } from '#mocks/profile/highlights/profile-highlights.mock.ts';
 import { profileMock } from '#mocks/profile/profile/profile.mock.ts';
 import { invoiceMock } from '#mocks/invoices/invoice/invoice.mock.ts';
 import { occurrenceMock } from '#mocks/recurrences/occurrence/occurrence.mock.ts';
@@ -46,4 +47,5 @@ export const handlers = [
   ...connectionMock,
   ...backupMock,
   ...profileMock,
+  ...profileHighlightsMock,
 ];

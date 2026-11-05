@@ -24,16 +24,17 @@ afterEach(() => {
 });
 
 async function openProfile() {
-  renderApp('/settings/profile');
+  renderApp('/profile');
   return screen.findByRole('heading', { level: 1, name: 'Perfil' });
 }
 
 describe('Perfil', () => {
-  it('opens first in the side menu and shows the name, the initials and the expected income', async () => {
+  it('is a screen of its own with the balance panel beside it, and shows the name, the initials and the expected income', async () => {
     await openProfile();
 
-    const nav = await screen.findByRole('navigation', { name: 'Páginas de Configurações' });
-    expect(within(nav).getAllByRole('link')[0]).toHaveTextContent('Perfil');
+    expect(screen.getByText('Sua renda, seus gastos e algumas curiosidades.')).toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Páginas de Configurações' })).toBeNull();
+    expect(await screen.findByRole('region', { name: 'Saldo em contas' })).toBeInTheDocument();
     expect(await screen.findByText('Davi Moreira', { selector: 'p' })).toBeInTheDocument();
     expect(screen.getByText('DM')).toBeInTheDocument();
     expect(screen.getByText('de renda mensal esperada')).toBeInTheDocument();

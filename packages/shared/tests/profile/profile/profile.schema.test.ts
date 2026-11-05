@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { profileDtoSchema, updateProfileRequestSchema } from '#/profile/profile/profile.schema.ts';
+import {
+  profileDtoSchema,
+  profileHighlightsDtoSchema,
+  updateProfileRequestSchema,
+} from '#/profile/profile/profile.schema.ts';
 
 const source = {
   recurrenceId: '0194f3a0-0000-7000-8000-000000000001',
@@ -61,5 +65,60 @@ describe('updateProfileRequestSchema', () => {
 
   it('refuses an empty name', () => {
     expect(updateProfileRequestSchema.safeParse({ name: '   ' }).success).toBe(false);
+  });
+});
+
+describe('profileHighlightsDtoSchema', () => {
+  const pix = {
+    amountCents: 120_000,
+    counterparty: 'RAFAEL MOURA',
+    occurredOn: '2026-03-12',
+    transactionId: '0194f3a0-0000-7000-8000-000000000009',
+  };
+  const full = {
+    largestPixSent: pix,
+    largestPixReceived: { ...pix, counterparty: null },
+    topCategory: {
+      categoryId: '0194f3a0-0000-7000-8000-00000000000a',
+      totalCents: 540_000,
+      sharePercent: 31.4,
+    },
+    costliestMonth: { month: '2026-03', totalCents: 910_000 },
+    costliestWeekday: { weekday: 6, averageCents: 18_500 },
+    longestNoSpendStreak: { days: 4, from: '2026-05-02', to: '2026-05-05' },
+  };
+
+  it('reads the six curiosities, the Pix name being optional', () => {
+    const dto = profileHighlightsDtoSchema.parse(full);
+
+    expect(dto.largestPixReceived?.counterparty).toBeNull();
+    expect(dto.costliestWeekday?.weekday).toBe(6);
+  });
+
+  it('accepts every curiosity as null (no data yet)', () => {
+    const empty = Object.fromEntries(Object.keys(full).map((key) => [key, null]));
+
+    expect(profileHighlightsDtoSchema.safeParse(empty).success).toBe(true);
+  });
+
+  it('refuses a Pix with sign, a weekday past Saturday and a share above 100', () => {
+    expect(
+      profileHighlightsDtoSchema.safeParse({
+        ...full,
+        largestPixSent: { ...pix, amountCents: -1 },
+      }).success,
+    ).toBe(false);
+    expect(
+      profileHighlightsDtoSchema.safeParse({
+        ...full,
+        costliestWeekday: { weekday: 7, averageCents: 100 },
+      }).success,
+    ).toBe(false);
+    expect(
+      profileHighlightsDtoSchema.safeParse({
+        ...full,
+        topCategory: { ...full.topCategory, sharePercent: 101 },
+      }).success,
+    ).toBe(false);
   });
 });

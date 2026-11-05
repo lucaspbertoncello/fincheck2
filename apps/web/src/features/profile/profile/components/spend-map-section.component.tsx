@@ -3,9 +3,9 @@ import { Money, Section, SpendHeatmap, SpendHeatmapLegend } from '@fincheck/ui';
 
 import { SectionError } from '#/features/settings/settings/components/section-error.component.tsx';
 import { SectionSkeleton } from '#/features/settings/settings/components/section-skeleton.component.tsx';
-import { HeatmapStat } from '#/features/settings/settings/profile/components/heatmap-stat.component.tsx';
-import { formatPeakDay } from '#/features/settings/settings/profile/utils/format-peak-day.util.ts';
-import type { HeatmapSummary } from '#/features/settings/settings/profile/utils/summarize-heatmap.util.ts';
+import { HeatmapStat } from '#/features/profile/profile/components/heatmap-stat.component.tsx';
+import { formatPeakDay } from '#/features/profile/profile/utils/format-peak-day.util.ts';
+import type { HeatmapSummary } from '#/features/profile/profile/utils/summarize-heatmap.util.ts';
 
 type SpendMapSectionProps = {
   state: 'loading' | 'error' | 'ready';

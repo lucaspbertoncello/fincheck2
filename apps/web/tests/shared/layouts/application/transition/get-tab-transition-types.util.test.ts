@@ -73,14 +73,35 @@ describe('getTabTransitionTypes', () => {
   });
 
   it('leaves Configurações backward, to any tab, marked as an edge', () => {
-    for (const to of ['/', '/transactions', '/recurrences', '/accounts', '/categories']) {
-      expect(getTabTransitionTypes(change('/settings/profile', to))).toEqual([
+    for (const to of [
+      '/',
+      '/transactions',
+      '/recurrences',
+      '/accounts',
+      '/categories',
+      '/profile',
+    ]) {
+      expect(getTabTransitionTypes(change('/settings/connections', to))).toEqual([
         'tab',
         'back',
         'edge',
       ]);
       expect(getTabTransitionTypes(change('/settings', to))).toEqual(['tab', 'back', 'edge']);
     }
+  });
+
+  it('puts Perfil between Categorias and Configurações: forward from the tabs, back from Configurações', () => {
+    expect(getTabTransitionTypes(change('/categories', '/profile'))).toEqual(['tab', 'fwd']);
+    expect(getTabTransitionTypes(change('/', '/profile'))).toEqual(['tab', 'fwd']);
+    expect(getTabTransitionTypes(change('/profile', '/categories/rules'))).toEqual(['tab', 'back']);
+    // The edge flag is about the left column of Configurações, which Perfil does not have.
+    expect(getTabTransitionTypes(change('/profile', '/settings'))).toEqual(['tab', 'fwd', 'edge']);
+    expect(getTabTransitionTypes(change('/settings/backup', '/profile'))).toEqual([
+      'tab',
+      'back',
+      'edge',
+    ]);
+    expect(getTabTransitionTypes(change('/profile', '/profile', false))).toBe(false);
   });
 
   it('uses the "reduce" type for the edge of Configurações with reduced motion', () => {
@@ -101,7 +122,10 @@ describe('getTabTransitionTypes', () => {
   });
 
   it('slides between the list of the phone and its pages, and not within the same screen', () => {
-    expect(getTabTransitionTypes(change('/settings', '/settings/profile'))).toEqual(['tab', 'fwd']);
+    expect(getTabTransitionTypes(change('/settings', '/settings/connections'))).toEqual([
+      'tab',
+      'fwd',
+    ]);
     expect(getTabTransitionTypes(change('/settings/appearance', '/settings'))).toEqual([
       'tab',
       'back',
@@ -110,7 +134,7 @@ describe('getTabTransitionTypes', () => {
   });
 
   it('slides between the Configurações pages in the order of their menu', () => {
-    expect(getTabTransitionTypes(change('/settings/profile', '/settings/backup'))).toEqual([
+    expect(getTabTransitionTypes(change('/settings/connections', '/settings/appearance'))).toEqual([
       'tab',
       'fwd',
     ]);

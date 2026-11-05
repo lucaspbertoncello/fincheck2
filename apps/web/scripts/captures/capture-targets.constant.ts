@@ -18,9 +18,9 @@ export const SCREEN_TARGETS: CaptureTarget[] = [
   { name: 'accounts', path: '/accounts', kind: 'screen' },
   { name: 'categories', path: '/categories', kind: 'screen' },
   { name: 'rules', path: '/categories/rules', kind: 'screen' },
-  // `/settings` is the list on the phone and goes to Perfil on the desktop.
+  { name: 'profile', path: '/profile', kind: 'screen' },
+  // `/settings` is the list on the phone and goes to Conexões on the desktop.
   { name: 'settings menu', path: '/settings', kind: 'screen' },
-  { name: 'settings profile', path: '/settings/profile', kind: 'screen' },
   { name: 'settings connections', path: '/settings/connections', kind: 'screen' },
   { name: 'settings backup', path: '/settings/backup', kind: 'screen' },
   { name: 'settings appearance', path: '/settings/appearance', kind: 'screen' },

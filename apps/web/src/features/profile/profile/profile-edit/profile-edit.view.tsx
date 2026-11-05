@@ -1,6 +1,6 @@
 import { FormModal, FormModalGroup, TextField } from '@fincheck/ui';
 
-import { ProfileAvatar } from '#/features/settings/settings/profile/components/profile-avatar.component.tsx';
+import { ProfileAvatar } from '#/features/profile/profile/components/profile-avatar.component.tsx';
 
 type ProfileEditViewProps = {
   name: string;

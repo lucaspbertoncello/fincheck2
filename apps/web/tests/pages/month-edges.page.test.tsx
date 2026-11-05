@@ -37,7 +37,7 @@ describe.each([
 
   it('draws the spend heatmap in the profile, with the highest day and the average', async () => {
     setTestClock(now);
-    renderApp('/settings/profile');
+    renderApp('/profile');
 
     expect(await screen.findByText('Maior dia')).toBeInTheDocument();
     expect(screen.getByText('Média por dia')).toBeInTheDocument();

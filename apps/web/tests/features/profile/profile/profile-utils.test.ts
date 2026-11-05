@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildHeatmapDayHref } from '#/features/settings/settings/profile/utils/build-heatmap-day-href.util.ts';
-import { buildRecurrenceHref } from '#/features/settings/settings/profile/utils/build-recurrence-href.util.ts';
-import { formatPeakDay } from '#/features/settings/settings/profile/utils/format-peak-day.util.ts';
-import { formatShortDay } from '#/features/settings/settings/profile/utils/format-short-day.util.ts';
-import { summarizeHeatmap } from '#/features/settings/settings/profile/utils/summarize-heatmap.util.ts';
+import { buildHeatmapDayHref } from '#/features/profile/profile/utils/build-heatmap-day-href.util.ts';
+import { buildRecurrenceHref } from '#/features/profile/profile/utils/build-recurrence-href.util.ts';
+import { formatPeakDay } from '#/features/profile/profile/utils/format-peak-day.util.ts';
+import { formatShortDay } from '#/features/profile/profile/utils/format-short-day.util.ts';
+import { summarizeHeatmap } from '#/features/profile/profile/utils/summarize-heatmap.util.ts';
 
 describe('summarizeHeatmap', () => {
   const days = [

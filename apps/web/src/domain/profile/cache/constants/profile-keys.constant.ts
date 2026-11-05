@@ -3,4 +3,5 @@
 export const profileKeys = {
   all: ['profile'] as const,
   current: () => ['profile', 'current'] as const,
+  highlights: () => ['profile', 'highlights'] as const,
 };

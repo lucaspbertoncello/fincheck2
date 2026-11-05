@@ -7,7 +7,7 @@ import { useIsDesktop } from '#/shared/hooks/use-is-desktop.hook.ts';
 import { usePanelSlot } from '#/shared/layouts/application/panel/panel-slot.context.ts';
 
 /**
- * Frame of Configurações: on the desktop the menu of the four pages goes into the left column of
+ * Frame of Configurações: on the desktop the menu of the three pages goes into the left column of
  * the shell and stays there while the pages change; the page of the route comes in the `Outlet`.
  */
 export function SettingsViewModel() {

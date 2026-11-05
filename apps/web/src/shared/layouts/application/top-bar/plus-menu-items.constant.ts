@@ -14,6 +14,7 @@ export const PLUS_ACTION_PATHS: Record<string, string> = {
   'new-category': '/categories?new=category',
   'new-tag': '/categories?filter=tags&new=tag',
   'new-rule': '/categories/rules?new=rule',
+  'new-income-source': '/recurrences?new=recurrence',
 };
 
 /** Menu of the general "+" (screens.md, "Botão +"). */

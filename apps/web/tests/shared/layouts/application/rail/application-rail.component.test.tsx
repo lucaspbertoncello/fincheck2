@@ -30,7 +30,7 @@ async function hover(element: HTMLElement) {
 const rail = () => document.querySelector<HTMLElement>('nav.glass[aria-label="Principal"]')!;
 
 describe('ApplicationRail', () => {
-  it('takes the place of the top bar on the desktop: no banner, the five tabs and Configurações', async () => {
+  it('takes the place of the top bar on the desktop: no banner, the six tabs and Configurações', async () => {
     renderDesktop('/');
     await screen.findByRole('heading', { level: 1, name: 'Visão geral' });
 
@@ -45,6 +45,7 @@ describe('ApplicationRail', () => {
       'Recorrentes',
       'Contas e cartões',
       'Categorias',
+      'Perfil',
       'Configurações',
     ]);
   });
@@ -75,9 +76,24 @@ describe('ApplicationRail', () => {
     );
   });
 
-  it('marks Configurações without a sliding capsule', async () => {
-    renderDesktop('/settings/profile');
+  it('puts Perfil right below Categorias, with the sliding capsule when it is the current one', async () => {
+    renderDesktop('/profile');
     await screen.findByRole('heading', { level: 1, name: 'Perfil' });
+
+    const current = within(rail()).getByRole('link', { name: 'Perfil' });
+    expect(current).toHaveAttribute('aria-current', 'page');
+    expect(current.querySelector('.tab-indicator')).not.toBeNull();
+    expect(current.previousElementSibling).toBe(
+      within(rail()).getByRole('link', { name: 'Categorias' }),
+    );
+    expect(within(rail()).getByRole('link', { name: 'Configurações' })).not.toHaveAttribute(
+      'aria-current',
+    );
+  });
+
+  it('marks Configurações without a sliding capsule', async () => {
+    renderDesktop('/settings/connections');
+    await screen.findByRole('heading', { level: 1, name: 'Conexões' });
 
     expect(within(rail()).getByRole('link', { name: 'Configurações' })).toHaveAttribute(
       'aria-current',
@@ -177,8 +193,8 @@ describe('ApplicationRail', () => {
   });
 
   it('leaves the panel slot of Configurações beside the rail, in the sticky pair', async () => {
-    renderDesktop('/settings/profile');
-    await screen.findByRole('heading', { level: 1, name: 'Perfil' });
+    renderDesktop('/settings/connections');
+    await screen.findByRole('heading', { level: 1, name: 'Conexões' });
 
     const frame = screen.getByRole('main').parentElement?.parentElement;
     expect(frame).toHaveClass('overflow-y-clip', 'min-h-dvh');

@@ -5,10 +5,10 @@ import { useSettingsNavItems } from '#/features/settings/settings/hooks/use-sett
 import { SETTINGS_SECTION } from '#/features/settings/settings/constants/settings-sections.constant.ts';
 import { useIsDesktop } from '#/shared/hooks/use-is-desktop.hook.ts';
 
-const FIRST_PAGE = SETTINGS_SECTION.profile.path;
+const FIRST_PAGE = SETTINGS_SECTION.connections.path;
 
 /**
- * `/settings`. On the desktop the menu is always on screen beside a page, so it goes to Perfil; on
+ * `/settings`. On the desktop the menu is always on screen beside a page, so it goes to Conexões; on
  * the phone it is the list that opens each page.
  */
 export function SettingsIndexViewModel() {

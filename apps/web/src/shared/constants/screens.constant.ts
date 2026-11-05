@@ -93,6 +93,17 @@ export const SCREENS: Record<ScreenKey, ScreenDefinition> = {
     showsPanel: true,
     subNav: 'categories',
   },
+  profile: {
+    key: 'profile',
+    path: '/profile',
+    title: 'Perfil',
+    tab: 'profile',
+    plusLabel: 'Nova fonte de renda',
+    plusMode: 'direct',
+    plusAction: 'new-income-source',
+    filtersByMonth: false,
+    showsPanel: true,
+  },
   settings: {
     key: 'settings',
     path: '/settings',

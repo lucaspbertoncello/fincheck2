@@ -7,6 +7,7 @@ export const TAB_ORDER: readonly TabKey[] = [
   'recurrences',
   'accounts',
   'categories',
+  'profile',
 ];
 
 /**
@@ -22,7 +23,6 @@ export const SUB_SCREEN_ORDER: readonly ScreenKey[] = [
 
 /** Order of the Configurações pages, left to right in the side menu: a later page slides forward. */
 export const SETTINGS_PAGE_ORDER = [
-  '/settings/profile',
   '/settings/connections',
   '/settings/backup',
   '/settings/appearance',

@@ -1,4 +1,5 @@
-export type TabKey = 'overview' | 'transactions' | 'recurrences' | 'accounts' | 'categories';
+export type TabKey =
+  'overview' | 'transactions' | 'recurrences' | 'accounts' | 'categories' | 'profile';
 
 export type ScreenKey =
   | 'overview'
@@ -9,6 +10,7 @@ export type ScreenKey =
   | 'accounts'
   | 'categories'
   | 'rules'
+  | 'profile'
   | 'settings';
 
 export type ScreenDefinition = {
