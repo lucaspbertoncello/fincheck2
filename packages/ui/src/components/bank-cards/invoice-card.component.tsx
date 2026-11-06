@@ -58,7 +58,7 @@ export function InvoiceCard({
           {isCredit ? (
             <p className="flex items-baseline gap-s8 text-money-md text-fg-primary">
               <span className="font-title text-body text-fg-secondary">crédito de</span>
-              <Money cents={Math.abs(totalCents)} sign="none" tone="income" />
+              <Money cents={Math.abs(totalCents)} sign="none" />
             </p>
           ) : (
             <p className="text-money-md text-fg-primary">

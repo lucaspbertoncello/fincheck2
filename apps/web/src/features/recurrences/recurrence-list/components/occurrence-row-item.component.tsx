@@ -32,7 +32,6 @@ export function OccurrenceRowItem({ row, onAction, onDecideDifference }: Occurre
           <ExpectedValueUpdate
             newCents={row.difference.newCents}
             keptCents={row.difference.keptCents}
-            flow={row.flow}
             onUpdate={() => onDecideDifference(row, 'update')}
             onKeep={() => onDecideDifference(row, 'keep')}
           />

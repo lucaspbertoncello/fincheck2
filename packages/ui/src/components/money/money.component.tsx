@@ -19,7 +19,10 @@ const TONE_CLASS = {
 type MoneyProps = {
   /** Integer cents. A negative value shows "−" when `sign` is "auto". */
   cents: number;
-  /** "plus" and "minus" force the sign; "auto" shows "−" only for negatives; "none" never shows one. */
+  /**
+   * "plus" and "minus" force the sign; "auto" shows "−" only for negatives; "none" shows none. With
+   * the `income` or `expense` tone the flow sign always shows ("+" green, "−" red), whatever this is.
+   */
   sign?: 'plus' | 'minus' | 'auto' | 'none';
   /** Reserves the 10 px sign column so signs line up in a list. */
   signColumn?: boolean;
@@ -53,8 +56,14 @@ export function Money({
 }: MoneyProps) {
   const hidden = useMoneyHidden();
   const shape = formatMoneyParts(cents, showCents);
+  // A flow color always comes with its sign (Lucas, 06/11/2026): red is "−", green is "+".
+  const flowSign = tone === 'expense' ? '−' : tone === 'income' ? '+' : '';
   const signChar =
-    sign === 'plus' ? '+' : sign === 'minus' ? '−' : sign === 'auto' && cents < 0 ? '−' : '';
+    sign === 'plus'
+      ? '+'
+      : sign === 'minus'
+        ? '−'
+        : flowSign || (sign === 'auto' && cents < 0 ? '−' : '');
 
   return (
     <span

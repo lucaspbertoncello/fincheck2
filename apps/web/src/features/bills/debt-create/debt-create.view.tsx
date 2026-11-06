@@ -40,9 +40,8 @@ function DebtNoteText({ note }: { note: DebtNote }) {
     );
   }
 
-  const tone = note.mode === 'owe' ? 'expense' : 'income';
-  const left = <Money cents={note.remainingCents} sign="none" weight="plain" tone={tone} />;
-  const pix = <Money cents={note.pixCents} sign="none" weight="plain" tone={tone} />;
+  const left = <Money cents={note.remainingCents} sign="none" weight="plain" />;
+  const pix = <Money cents={note.pixCents} sign="none" weight="plain" />;
 
   return note.mode === 'owe' ? (
     <>

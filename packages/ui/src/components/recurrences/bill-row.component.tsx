@@ -110,7 +110,7 @@ export function BillRow({
         partial ? (
           <>
             {detailParts} · falta{' '}
-            <Money cents={amountCents - settledCents} sign="none" weight="plain" tone={flow} />
+            <Money cents={amountCents - settledCents} sign="none" weight="plain" />
           </>
         ) : (
           detailParts

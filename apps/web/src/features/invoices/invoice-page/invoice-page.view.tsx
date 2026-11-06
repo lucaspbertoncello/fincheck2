@@ -109,7 +109,7 @@ export function InvoicePageView(props: InvoicePageViewProps) {
 
       {hasCategories || hasHighlights ? (
         <div
-          className={`grid grid-cols-1 gap-s16 lg:gap-s24 ${hasCategories && hasHighlights ? 'lg:grid-cols-2' : ''}`}
+          className={`grid grid-cols-1 gap-s16 lg:gap-s24 ${hasCategories && hasHighlights ? 'xl:grid-cols-2' : ''}`}
         >
           {props.highlights ? <InvoiceHighlights data={props.highlights} /> : null}
           {hasCategories ? (

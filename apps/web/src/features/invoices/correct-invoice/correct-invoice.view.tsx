@@ -46,11 +46,11 @@ type CorrectInvoiceViewProps = {
 
 /** A value that can be a credit: a negative total reads "crédito de R$ X", never a minus (R5). */
 function ReferenceValue({ cents }: { cents: number }) {
-  if (cents >= 0) return <Money cents={cents} sign="none" weight="plain" tone="expense" />;
+  if (cents >= 0) return <Money cents={cents} sign="none" weight="plain" />;
   return (
     <span className="flex items-baseline gap-s4">
       <span className="text-fg-secondary">crédito de</span>
-      <Money cents={Math.abs(cents)} sign="none" weight="plain" tone="income" />
+      <Money cents={Math.abs(cents)} sign="none" weight="plain" />
     </span>
   );
 }

@@ -33,17 +33,17 @@ export function InstallmentPreview({ preview }: InstallmentPreviewProps) {
               <>
                 <span className="money-numeric">{preview.count}×</span>
                 <span className="text-label text-fg-secondary">de</span>
-                <Money cents={preview.firstCents} sign="none" tone="expense" />
+                <Money cents={preview.firstCents} sign="none" />
               </>
             ) : (
               <>
                 <span className="money-numeric">1×</span>
                 <span className="text-label text-fg-secondary">de</span>
-                <Money cents={preview.firstCents} sign="none" tone="expense" />
+                <Money cents={preview.firstCents} sign="none" />
                 <span className="text-label text-fg-secondary">e</span>
                 <span className="money-numeric">{preview.count - 1}×</span>
                 <span className="text-label text-fg-secondary">de</span>
-                <Money cents={preview.restCents} sign="none" tone="expense" />
+                <Money cents={preview.restCents} sign="none" />
               </>
             )}
           </p>

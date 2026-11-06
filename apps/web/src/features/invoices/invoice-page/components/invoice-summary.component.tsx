@@ -28,7 +28,7 @@ export function InvoiceSummary({ data, onRegisterPayment, onCorrect }: InvoiceSu
         {isCredit ? (
           <p className="flex items-baseline gap-s8 text-money-lg text-fg-primary">
             <span className="font-title text-body text-fg-secondary">crédito de</span>
-            <Money cents={Math.abs(data.totalCents)} sign="none" tone="income" />
+            <Money cents={Math.abs(data.totalCents)} sign="none" />
           </p>
         ) : (
           <p className="text-money-lg text-fg-primary">

@@ -42,7 +42,7 @@ export function IncomeSummaryCard({
       value={<Money cents={receivedCents} sign="none" tone="income" />}
       subtext={
         <>
-          de <Money cents={expectedCents} sign="none" weight="plain" tone="income" />
+          de <Money cents={expectedCents} sign="none" weight="plain" />
           {pendingNote ? `; ${pendingNote}` : null}
         </>
       }

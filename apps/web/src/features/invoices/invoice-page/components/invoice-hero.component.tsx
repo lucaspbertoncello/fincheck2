@@ -17,21 +17,22 @@ type InvoiceHeroProps = {
  */
 export function InvoiceHero({ card, children }: InvoiceHeroProps) {
   return (
-    <div className="grid grid-cols-1 gap-s16 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] lg:gap-s24">
+    <div className="grid grid-cols-1 gap-s16 lg:gap-s24 xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
       {card ? (
-        <BankCard
-          theme={card.theme}
-          nickname={card.nickname}
-          last4={card.last4}
-          dueLabel={card.dueLabel}
-          bankName={card.bankName}
-          transitionName={card.transitionName}
-          className="self-start"
-        />
+        <div className="w-full max-w-[24rem] self-start">
+          <BankCard
+            theme={card.theme}
+            nickname={card.nickname}
+            last4={card.last4}
+            dueLabel={card.dueLabel}
+            bankName={card.bankName}
+            transitionName={card.transitionName}
+          />
+        </div>
       ) : (
         <span
           aria-hidden="true"
-          className="skeleton-pulse block aspect-[85.6/53.98] w-full self-start rounded-panel bg-track"
+          className="skeleton-pulse block aspect-[85.6/53.98] w-full max-w-[24rem] self-start rounded-panel bg-track"
         />
       )}
       {children}
