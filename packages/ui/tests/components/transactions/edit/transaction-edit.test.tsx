@@ -1,50 +1,9 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import {
-  EditDateField,
-  normalizeTag,
-  validateTransactionEdit,
-  type TransactionEditValues,
-} from '#/components/transactions/index.ts';
+import { EditDateField, normalizeTag } from '#/components/transactions/index.ts';
 
 const noop = () => {};
-
-const values: TransactionEditValues = {
-  description: 'Padaria Estrela',
-  amountCents: 4590,
-  date: '2026-10-19',
-  categoryId: 'food',
-  tags: ['padaria'],
-  nature: 'expense',
-  counterpartId: null,
-};
-
-describe('validateTransactionEdit', () => {
-  it('accepts a complete transaction', () => {
-    expect(validateTransactionEdit(values)).toEqual({});
-  });
-
-  it('flags an empty description, a zero amount and a bad date', () => {
-    const errors = validateTransactionEdit({
-      ...values,
-      description: '   ',
-      amountCents: 0,
-      date: '2026-02-31',
-    });
-
-    expect(errors.description).toBeDefined();
-    expect(errors.amount).toBeDefined();
-    expect(errors.date).toBeDefined();
-  });
-
-  it('flags a transfer with no other leg', () => {
-    expect(validateTransactionEdit({ ...values, nature: 'transfer' }).counterpart).toBeDefined();
-    expect(
-      validateTransactionEdit({ ...values, nature: 'transfer', counterpartId: 'leg-1' }),
-    ).toEqual({});
-  });
-});
 
 describe('normalizeTag', () => {
   it('drops the "#", lowercases and joins words with hyphens', () => {

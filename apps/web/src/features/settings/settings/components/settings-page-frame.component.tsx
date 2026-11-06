@@ -2,7 +2,7 @@ import { Icon, PageHeader } from '@fincheck/ui';
 import type { ReactNode } from 'react';
 import { Link } from 'react-aria-components';
 
-import { SETTINGS_PATH } from '#/features/settings/settings/constants/settings-sections.constant.ts';
+import { SETTINGS_PATH } from '#/shared/constants/settings/settings-sections.constant.ts';
 import { buildHref } from '#/shared/layouts/application/navigation/build-href.util.ts';
 import { useActiveScreen } from '#/shared/layouts/application/navigation/use-active-screen.hook.ts';
 

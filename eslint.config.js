@@ -238,8 +238,7 @@ export default tseslint.config(
     plugins: { fincheck },
     rules: {
       'no-restricted-imports': ['error', { patterns: [RELATIVE_IMPORTS, MOCKS_FROM_SOURCE] }],
-      // Warning until the structural cleanup removes the existing cases; then it becomes an error.
-      'fincheck/web-boundaries': 'warn',
+      'fincheck/web-boundaries': 'error',
     },
   },
   {

@@ -1,4 +1,4 @@
-import type { TransactionPeriod } from '#/features/transactions/transaction-list/schemas/transaction-list-search.schema.ts';
+import type { TransactionPeriod } from '#/shared/schemas/transactions/transaction-list-search.schema.ts';
 
 /** The title of the empty list of the category page ("Nenhuma transação em outubro de 2026"). */
 export function describeEmptyCategoryPeriod(

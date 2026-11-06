@@ -3,7 +3,7 @@ import { useRef, useState } from 'react';
 import { INVALID_FIELD_OR_STAND_IN_SELECTOR } from '#/shared/constants/form/invalid-field-selector.constant.ts';
 import { useFocusFirstInvalid } from '#/shared/hooks/form/use-focus-first-invalid.hook.ts';
 import { useTagFormModel } from '#/features/categories/tag-form/tag-form.model.ts';
-import type { TagFormTarget } from '#/features/categories/tag-form/types/tag-form.type.ts';
+import type { TagFormTarget } from '#/features/categories/types/tag-form.type.ts';
 import { validateTagName } from '#/features/categories/tag-form/utils/validate-tag-name.util.ts';
 import { hasApiErrorCode } from '#/shared/api/api.error.ts';
 

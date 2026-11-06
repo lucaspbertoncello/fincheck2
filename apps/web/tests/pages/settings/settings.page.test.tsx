@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { reloadApp } from '#/shared/utils/reload-app.util.ts';
-import { setTheme } from '#/shared/stores/theme.store.ts';
+import { setThemePreference } from '#/shared/stores/theme.store.ts';
 import { server } from '#mocks/setup/server.util.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
 import { createUser } from '#tests/support/interaction/create-user.util.ts';
@@ -29,7 +29,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  setTheme('light'); // stops following the system theme
+  setThemePreference('light'); // stops following the system theme
   window.localStorage.clear();
   window.history.replaceState({}, '', '/');
   media.restore();

@@ -2,6 +2,11 @@ import type { CategoryBreakdown } from '@fincheck/shared/dashboard/category-brea
 import type { MonthSummary } from '@fincheck/shared/dashboard/month-summary/month-summary.type.ts';
 import type { SpendingCurve } from '@fincheck/shared/dashboard/spending-curve/spending-curve.type.ts';
 
+import { buildExpenseBar } from '#/domain/dashboard/month-summary/rules/build-expense-bar.rule.ts';
+import { buildIncomeBar } from '#/domain/dashboard/month-summary/rules/build-income-bar.rule.ts';
+import { buildResultBar } from '#/domain/dashboard/month-summary/rules/build-result-bar.rule.ts';
+import { getReceivedPercent } from '#/domain/dashboard/month-summary/rules/get-received-percent.rule.ts';
+import { getSpentVariationPercent } from '#/domain/dashboard/month-summary/rules/get-spent-variation-percent.rule.ts';
 import type { SummaryCardsData } from '#/features/overview/overview/overview.model.ts';
 import { monthName } from '#/features/overview/overview/utils/month-name.util.ts';
 import { shiftMonthKey } from '#/shared/utils/shift-month-key.util.ts';
@@ -34,7 +39,17 @@ export function buildSummaryCards(
     pendingNote: describePending(breakdown),
     spentCents: summary.expenses.spentCents,
     previousSamePointCents: summary.expenses.previousSpentCents,
-    previousTotalCents: previousMonthTotal(curve, summary.expenses.previousSpentCents),
+    incomePercent: getReceivedPercent(summary.income.receivedCents, summary.income.expectedCents),
+    incomeBar: buildIncomeBar(summary.income.receivedCents, summary.income.expectedCents),
+    expenseVariationPercent: getSpentVariationPercent(
+      summary.expenses.spentCents,
+      summary.expenses.previousSpentCents,
+    ),
+    expenseBar: buildExpenseBar(
+      summary.expenses.spentCents,
+      previousMonthTotal(curve, summary.expenses.previousSpentCents),
+    ),
+    resultBar: buildResultBar(summary.income.receivedCents, summary.expenses.spentCents),
     previousMonthLabel: monthName(shiftMonthKey(month, -1)),
     previousResultCents: summary.result.previousCents,
   };

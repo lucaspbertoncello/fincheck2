@@ -1,7 +1,7 @@
 import { normalizeText } from '@fincheck/shared/common/text/normalize-text.util.ts';
 import type { Rule } from '@fincheck/shared/categories/rule/rule.type.ts';
 
-import type { RuleTextMode } from '#/features/rules/rule-form/types/rule-form.type.ts';
+import type { RuleTextMode } from '#/features/rules/types/rule-form.type.ts';
 
 type EditedValues = {
   mode: RuleTextMode;

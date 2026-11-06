@@ -1,8 +1,8 @@
 import type { CategoryBreakdown } from '@fincheck/shared/dashboard/category-breakdown/category-breakdown.type.ts';
 import type { Category } from '@fincheck/shared/categories/category/category.type.ts';
 
-import type { PeriodRange } from '#/features/transactions/transaction-list/types/period-range.type.ts';
-import type { TransactionPeriod } from '#/features/transactions/transaction-list/schemas/transaction-list-search.schema.ts';
+import type { PeriodRange } from '#/shared/types/transactions/period-range.type.ts';
+import type { TransactionPeriod } from '#/shared/schemas/transactions/transaction-list-search.schema.ts';
 
 type CategoryFigures = {
   /** What was spent (expense) or received (income) in the period. */

@@ -1,7 +1,7 @@
 import { Section, SegmentedControl, SettingRow, type SegmentedOption } from '@fincheck/ui';
 
 import { SettingsPageFrame } from '#/features/settings/settings/components/settings-page-frame.component.tsx';
-import { SETTINGS_SECTION } from '#/features/settings/settings/constants/settings-sections.constant.ts';
+import { SETTINGS_SECTION } from '#/shared/constants/settings/settings-sections.constant.ts';
 
 const THEME_OPTIONS: SegmentedOption[] = [
   { key: 'light', label: 'Claro' },

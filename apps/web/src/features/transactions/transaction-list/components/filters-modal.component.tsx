@@ -1,6 +1,6 @@
 import { Button, ChoiceChip, Modal, Switch } from '@fincheck/ui';
 
-import type { FiltersView } from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
+import type { FiltersView } from '#/shared/types/transactions/transaction-list-view.type.ts';
 
 type FiltersModalProps = {
   filters: FiltersView;

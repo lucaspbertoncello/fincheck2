@@ -1,7 +1,7 @@
 import { Icon } from '@fincheck/ui';
 import { Button } from 'react-aria-components';
 
-import type { DayFilterView } from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
+import type { DayFilterView } from '#/shared/types/transactions/transaction-list-view.type.ts';
 
 type DayFilterChipProps = {
   filter: DayFilterView;

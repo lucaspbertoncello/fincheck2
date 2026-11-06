@@ -13,8 +13,8 @@ import {
 import { InstallmentCountField } from '#/features/transactions/transaction-creation/installment-create/components/installment-count-field.component.tsx';
 import { InstallmentPreview } from '#/features/transactions/transaction-creation/installment-create/components/installment-preview.component.tsx';
 import type { InstallmentCreateViewProps } from '#/features/transactions/transaction-creation/installment-create/types/installment-create-view.type.ts';
-import { AccountChoiceField } from '#/features/transactions/transaction-fields/components/account-choice-field.component.tsx';
-import { CategoryChipsField } from '#/features/transactions/transaction-fields/components/category-chips-field.component.tsx';
+import { AccountChoiceField } from '#/features/transactions/components/account-choice-field.component.tsx';
+import { CategoryChipsField } from '#/features/transactions/components/category-chips-field.component.tsx';
 
 const AMOUNT_MODES = [
   { key: 'total', label: 'Valor total' },

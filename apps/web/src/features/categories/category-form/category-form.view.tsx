@@ -11,7 +11,7 @@ import type { RefObject } from 'react';
 
 import { CategoryPreview } from '#/features/categories/category-form/components/category-preview.component.tsx';
 import { IconPicker } from '#/features/categories/category-form/components/icon-picker.component.tsx';
-import type { CategoryFormErrors } from '#/features/categories/category-form/types/category-form.type.ts';
+import type { CategoryFormErrors } from '#/features/categories/types/category-form.type.ts';
 
 type CategoryFormViewProps = {
   formRef: RefObject<HTMLDivElement | null>;

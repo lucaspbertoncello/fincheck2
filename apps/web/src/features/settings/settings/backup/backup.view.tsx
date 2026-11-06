@@ -16,10 +16,10 @@ import { BackupStatusBlock } from '#/features/settings/settings/backup/component
 import { FolderModal } from '#/features/settings/settings/backup/components/folder-modal.component.tsx';
 import { FolderRow } from '#/features/settings/settings/backup/components/folder-row.component.tsx';
 import type { BackupFileItem } from '#/features/settings/settings/backup/types/backup-file-item.type.ts';
-import { SectionError } from '#/features/settings/settings/components/section-error.component.tsx';
-import { SectionSkeleton } from '#/features/settings/settings/components/section-skeleton.component.tsx';
+import { SectionError } from '#/shared/components/states/section-error.component.tsx';
+import { SectionSkeleton } from '#/shared/components/states/section-skeleton.component.tsx';
 import { SettingsPageFrame } from '#/features/settings/settings/components/settings-page-frame.component.tsx';
-import { SETTINGS_SECTION } from '#/features/settings/settings/constants/settings-sections.constant.ts';
+import { SETTINGS_SECTION } from '#/shared/constants/settings/settings-sections.constant.ts';
 
 const PAGE = SETTINGS_SECTION.backup;
 

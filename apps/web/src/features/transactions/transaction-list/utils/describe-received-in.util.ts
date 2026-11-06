@@ -1,4 +1,4 @@
-import type { TransactionPeriod } from '#/features/transactions/transaction-list/schemas/transaction-list-search.schema.ts';
+import type { TransactionPeriod } from '#/shared/schemas/transactions/transaction-list-search.schema.ts';
 
 /** What the legend under the income bar says for a period. */
 export function describeReceivedIn(period: TransactionPeriod): string {

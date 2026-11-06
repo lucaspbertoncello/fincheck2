@@ -1,8 +1,8 @@
 import { useToast } from '@fincheck/ui';
 
 import type { TransactionListModel } from '#/features/transactions/transaction-list/transaction-list.model.ts';
-import type { TransactionLookups } from '#/features/transactions/transaction-list/types/transaction-lookups.type.ts';
-import { countWord } from '#/features/transactions/transaction-list/utils/count-word.util.ts';
+import type { TransactionLookups } from '#/shared/types/transactions/transaction-lookups.type.ts';
+import { countWord } from '#/shared/utils/text/count-word.util.ts';
 
 type RuleQuestionArgs = {
   model: TransactionListModel;

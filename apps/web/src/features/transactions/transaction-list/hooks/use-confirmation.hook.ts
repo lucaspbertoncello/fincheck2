@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 import type { useRowActions } from '#/features/transactions/transaction-list/hooks/use-row-actions.hook.ts';
 import type { TransactionListModel } from '#/features/transactions/transaction-list/transaction-list.model.ts';
-import type { ConfirmView } from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
+import type { ConfirmView } from '#/shared/types/transactions/transaction-list-view.type.ts';
 
 type ConfirmKind = 'delete' | 'restore-original' | 'unsplit';
 

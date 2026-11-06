@@ -3,11 +3,11 @@ import { Banner, BannerSlot, ConfirmDialog, Section, TotalCard } from '@fincheck
 import type { SubscriptionRowAction } from '#/features/recurrences/subscription-list/types/subscription-row-action.type.ts';
 import { Reveal } from '#/features/recurrences/subscription-list/components/reveal.component.tsx';
 import { SubscriptionListEmpty } from '#/features/recurrences/subscription-list/components/states/subscription-list-empty.component.tsx';
-import { SubscriptionListError } from '#/features/recurrences/subscription-list/components/states/subscription-list-error.component.tsx';
+import { LoadErrorState } from '#/shared/components/states/load-error-state.component.tsx';
 import { SubscriptionListLoading } from '#/features/recurrences/subscription-list/components/states/subscription-list-loading.component.tsx';
 import { SubscriptionRow } from '#/features/recurrences/subscription-list/components/subscription-row.component.tsx';
 import { SubscriptionSuggestion } from '#/features/recurrences/subscription-list/components/subscription-suggestion.component.tsx';
-import { RecurrenceFormViewModel } from '#/features/recurrences/recurrence-list/recurrence-form/recurrence-form.viewmodel.tsx';
+import { RecurrenceFormViewModel } from '#/features/recurrences/recurrence-form/recurrence-form.viewmodel.tsx';
 import type {
   ActionErrorData,
   SubscriptionRowData,
@@ -46,7 +46,7 @@ export function SubscriptionListView(props: SubscriptionListViewProps) {
   return (
     <>
       {state === 'loading' ? <SubscriptionListLoading /> : null}
-      {state === 'error' ? <SubscriptionListError onRetry={onRetry} /> : null}
+      {state === 'error' ? <LoadErrorState what="as assinaturas" onRetry={onRetry} /> : null}
       {state === 'empty' ? <SubscriptionListEmpty onCreate={onCreate} /> : null}
       {state === 'ready' ? <ReadyContent {...props} /> : null}
       <RecurrenceFormViewModel />

@@ -1,6 +1,6 @@
 import { Icon, Money, type IconName } from '@fincheck/ui';
 
-import type { MonthTotalsView } from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
+import type { MonthTotalsView } from '#/shared/types/transactions/transaction-list-view.type.ts';
 
 type TotalProps = {
   icon: IconName;

@@ -17,7 +17,6 @@ export type {
   TransactionEditValues,
   TransactionNature,
 } from '#/components/transactions/edit/transaction-edit.type.ts';
-export { validateTransactionEdit } from '#/components/transactions/edit/validate-transaction-edit.util.ts';
 export { TransactionDayGroup } from '#/components/transactions/list/transaction-day-group.component.tsx';
 export { TransactionDayList } from '#/components/transactions/list/transaction-day-list.component.tsx';
 export { BankChangedNotice } from '#/components/transactions/row/bank-changed-notice.component.tsx';
@@ -33,13 +32,6 @@ export type {
 export { SelectionBar } from '#/components/transactions/selection/selection-bar.component.tsx';
 export type { SelectionAction } from '#/components/transactions/selection/selection-bar.type.ts';
 export { SelectionToggle } from '#/components/transactions/selection/selection-toggle.component.tsx';
-export { balanceSplitParts } from '#/components/transactions/split/balance-split-parts.util.ts';
-export { checkSplit } from '#/components/transactions/split/check-split.util.ts';
-export {
-  type SplitCheck,
-  type SplitStatus,
-} from '#/components/transactions/split/split-check.type.ts';
-export { distributeCents } from '#/components/transactions/split/distribute-cents.util.ts';
+export type { SplitStatus } from '#/components/transactions/split/split-status.type.ts';
 export type { SplitPart } from '#/components/transactions/split/split-part.type.ts';
 export { SplitSumIndicator } from '#/components/transactions/split/split-sum-indicator.component.tsx';
-export { sumCents } from '#/components/transactions/split/sum-cents.util.ts';

@@ -8,7 +8,7 @@ import type {
   ListControlsView,
   ListTypeFilter,
   ListViewMode,
-} from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
+} from '#/shared/types/transactions/transaction-list-view.type.ts';
 
 type ListControlsProps = {
   controls: ListControlsView;

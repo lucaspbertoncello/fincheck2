@@ -14,15 +14,15 @@ import {
 import { BulkPickerModal } from '#/features/transactions/transaction-list/components/bulk-picker-modal.component.tsx';
 import { ByCategory } from '#/features/transactions/transaction-list/components/by-category/by-category.component.tsx';
 import { DayFilterChip } from '#/features/transactions/transaction-list/components/day-filter-chip.component.tsx';
-import { DayList } from '#/features/transactions/transaction-list/components/day-list.component.tsx';
+import { DayList } from '#/shared/components/transactions/day-list.component.tsx';
 import { FiltersModal } from '#/features/transactions/transaction-list/components/filters-modal.component.tsx';
-import { LoadMore } from '#/features/transactions/transaction-list/components/load-more.component.tsx';
+import { LoadMore } from '#/shared/components/transactions/load-more.component.tsx';
 import { ListControls } from '#/features/transactions/transaction-list/components/list-controls.component.tsx';
 import { MonthTotals } from '#/features/transactions/transaction-list/components/month-totals.component.tsx';
 import { TransactionEditModal } from '#/features/transactions/transaction-list/components/transaction-edit-modal.component.tsx';
 import { TransactionSplitModal } from '#/features/transactions/transaction-list/components/transaction-split-modal.component.tsx';
-import { LoadFailed } from '#/features/transactions/transaction-list/components/states/load-failed.component.tsx';
-import type { TransactionListViewProps } from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
+import { LoadFailed } from '#/shared/components/transactions/load-failed.component.tsx';
+import type { TransactionListViewProps } from '#/shared/types/transactions/transaction-list-view.type.ts';
 
 /**
  * Transações, lista e por categoria: controls, month totals, the "para revisar" strip, the days with

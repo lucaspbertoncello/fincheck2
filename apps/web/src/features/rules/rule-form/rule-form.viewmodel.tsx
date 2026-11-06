@@ -13,8 +13,8 @@ import type {
   RuleFormTarget,
   RuleTextMode,
   TagOption,
-} from '#/features/rules/rule-form/types/rule-form.type.ts';
-import { buildCategoryGroups } from '#/features/rules/rule-form/utils/build-category-groups.util.ts';
+} from '#/features/rules/types/rule-form.type.ts';
+import { buildCategoryGroups } from '#/features/rules/utils/build-category-groups.util.ts';
 import { buildPreviewBody } from '#/features/rules/rule-form/utils/build-preview-body.util.ts';
 import { buildRuleUpdateBody } from '#/features/rules/rule-form/utils/build-rule-update-body.util.ts';
 import { getRuleTextMode } from '#/features/rules/rule-form/utils/get-rule-text-mode.util.ts';

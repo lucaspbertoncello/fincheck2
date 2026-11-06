@@ -6,7 +6,7 @@ import { useCategoryFormModel } from '#/features/categories/category-form/catego
 import type {
   CategoryFormErrors,
   CategoryFormTarget,
-} from '#/features/categories/category-form/types/category-form.type.ts';
+} from '#/features/categories/types/category-form.type.ts';
 import { validateCategoryForm } from '#/features/categories/category-form/utils/validate-category-form.util.ts';
 import { INVALID_FIELD_OR_STAND_IN_SELECTOR } from '#/shared/constants/form/invalid-field-selector.constant.ts';
 import { useFocusFirstInvalid } from '#/shared/hooks/form/use-focus-first-invalid.hook.ts';

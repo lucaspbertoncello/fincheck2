@@ -1,12 +1,15 @@
 import type { Transaction } from '@fincheck/shared/transactions/transaction/transaction.type.ts';
-import { distributeCents, type SplitPart } from '@fincheck/ui';
+import type { SplitPart } from '@fincheck/ui';
 import { useRef, useState } from 'react';
 
+import { balanceSplitParts } from '#/domain/transactions/transaction-split/rules/balance-split-parts.rule.ts';
+import { checkSplit } from '#/domain/transactions/transaction-split/rules/check-split.rule.ts';
+import { distributeCents } from '#/domain/transactions/transaction-split/rules/distribute-cents.rule.ts';
 import { getTransactionDirection } from '#/domain/transactions/transaction/rules/get-transaction-direction.rule.ts';
 import type { TransactionListModel } from '#/features/transactions/transaction-list/transaction-list.model.ts';
-import type { TransactionLookups } from '#/features/transactions/transaction-list/types/transaction-lookups.type.ts';
-import { buildCategoryOptions } from '#/features/transactions/transaction-list/utils/build-category-options.util.ts';
-import { describeTransactionError } from '#/features/transactions/transaction-list/utils/describe-transaction-error.util.ts';
+import type { TransactionLookups } from '#/shared/types/transactions/transaction-lookups.type.ts';
+import { buildCategoryOptions } from '#/features/transactions/utils/build-category-options.util.ts';
+import { describeTransactionError } from '#/shared/utils/transactions/describe-transaction-error.util.ts';
 
 const SPLIT_PARTS = 2;
 
@@ -74,11 +77,24 @@ export function useTransactionSplitting({ model, lookups, transaction, close }: 
     }
   }
 
+  const amounts = parts.map((part) => part.amountCents);
+  const change = (next: SplitPart[]) => setDraft({ id: transaction.id, parts: next });
+
   return {
     transactionId: transaction.id,
     totalCents: total,
     parts,
-    onChange: (next: SplitPart[]) => setDraft({ id: transaction.id, parts: next }),
+    check: checkSplit(total, amounts),
+    changeAmount: (index: number, amountCents: number) => {
+      const balanced = balanceSplitParts(total, amounts, index, amountCents);
+      change(parts.map((part, position) => ({ ...part, amountCents: balanced[position] ?? 0 })));
+    },
+    changeCategory: (index: number, categoryId: string | null) =>
+      change(parts.map((part, position) => (position === index ? { ...part, categoryId } : part))),
+    evenSplit: () => {
+      const even = distributeCents(total, parts.length);
+      change(parts.map((part, position) => ({ ...part, amountCents: even[position] ?? 0 })));
+    },
     categories: buildCategoryOptions(
       [...lookups.categories.values()],
       getTransactionDirection(transaction.amountCents),

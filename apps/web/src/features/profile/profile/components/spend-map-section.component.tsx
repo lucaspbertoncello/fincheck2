@@ -18,7 +18,7 @@ import type { SpendMapPeriod } from '#/features/profile/profile/types/spend-map-
 import { describeSpendMapPeriod } from '#/features/profile/profile/utils/describe-spend-map-period.util.ts';
 import { formatPeakDay } from '#/features/profile/profile/utils/format-peak-day.util.ts';
 import { resolveSpendMapView } from '#/features/profile/profile/utils/resolve-spend-map-view.util.ts';
-import { SectionError } from '#/features/settings/settings/components/section-error.component.tsx';
+import { SectionError } from '#/shared/components/states/section-error.component.tsx';
 import { formatMonthParts } from '#/shared/utils/format-month-parts.util.ts';
 
 type SpendMapSectionProps = {

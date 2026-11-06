@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { describeReceivedIn } from '#/features/transactions/transaction-list/utils/describe-received-in.util.ts';
 import { describeEmptyPeriod } from '#/features/transactions/transaction-list/utils/describe-empty-period.util.ts';
 import { describePreviousPeriod } from '#/features/transactions/transaction-list/utils/describe-previous-period.util.ts';
-import { resolvePeriodRange } from '#/features/transactions/transaction-list/utils/resolve-period-range.util.ts';
+import { resolvePeriodRange } from '#/shared/utils/transactions/resolve-period-range.util.ts';
 
 describe('words of a period', () => {
   const twelve = resolvePeriodRange('12m', '2026-10-22');

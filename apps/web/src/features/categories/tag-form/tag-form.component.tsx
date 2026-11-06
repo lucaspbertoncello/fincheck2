@@ -1,6 +1,6 @@
 import { useTagFormViewModel } from '#/features/categories/tag-form/tag-form.viewmodel.tsx';
 import { TagFormView } from '#/features/categories/tag-form/tag-form.view.tsx';
-import type { TagFormTarget } from '#/features/categories/tag-form/types/tag-form.type.ts';
+import type { TagFormTarget } from '#/features/categories/types/tag-form.type.ts';
 
 type TagFormProps = {
   /** What to open; null keeps it closed. */

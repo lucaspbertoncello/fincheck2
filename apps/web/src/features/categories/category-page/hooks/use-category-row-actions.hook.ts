@@ -3,7 +3,7 @@ import { useToast, type TransactionMenuKey } from '@fincheck/ui';
 import { useRouter } from '@tanstack/react-router';
 
 import type { CategoryPageModel } from '#/features/categories/category-page/category-page.model.ts';
-import type { TransactionRowHandlers } from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
+import type { TransactionRowHandlers } from '#/shared/types/transactions/transaction-list-view.type.ts';
 import { buildHref } from '#/shared/layouts/application/navigation/build-href.util.ts';
 import { navigateToHref } from '#/shared/layouts/application/navigation/navigate-to-href.util.ts';
 

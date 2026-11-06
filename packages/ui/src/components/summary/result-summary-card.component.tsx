@@ -1,9 +1,9 @@
 import { Money } from '#/components/money/money.component.tsx';
 import { MonthSummaryCard } from '#/components/summary/month-summary-card.component.tsx';
 import { ResultBadge } from '#/components/summary/result-badge.component.tsx';
-import { resultBar } from '#/components/summary/result-bar.util.ts';
 import { SignedMoney } from '#/components/summary/signed-money.component.tsx';
 import { SummaryBar } from '#/components/summary/summary-bar.component.tsx';
+import type { SummaryBarSegment } from '#/components/summary/summary-bar-segment.type.ts';
 import { capitalize } from '#/components/summary/capitalize.util.ts';
 
 type ResultSummaryCardProps = {
@@ -11,6 +11,8 @@ type ResultSummaryCardProps = {
   spentCents: number;
   /** The result (received minus spent) of the previous month at the same point (BR-DSH-011). */
   previousResultCents: number;
+  /** Ready bar stretches: expenses and what is left of what came in. */
+  barSegments: SummaryBarSegment[];
   /** Name of the previous month, lower case ("setembro"). */
   previousMonthLabel: string;
   label?: string;
@@ -26,6 +28,7 @@ export function ResultSummaryCard({
   receivedCents,
   spentCents,
   previousResultCents,
+  barSegments,
   previousMonthLabel,
   label = 'Resultado do mês',
   href,
@@ -51,12 +54,7 @@ export function ResultSummaryCard({
           {capitalize(previousMonthLabel)} neste ponto: <SignedMoney cents={previousResultCents} />
         </>
       }
-      bar={
-        <SummaryBar
-          segments={resultBar(receivedCents, spentCents)}
-          label="Despesas e o que sobrou do que entrou"
-        />
-      }
+      bar={<SummaryBar segments={barSegments} label="Despesas e o que sobrou do que entrou" />}
       barLegend="Despesas e o que sobrou"
     />
   );

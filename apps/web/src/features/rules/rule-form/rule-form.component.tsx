@@ -2,10 +2,7 @@ import { useRuleFormViewModel } from '#/features/rules/rule-form/rule-form.viewm
 import { RuleFormView } from '#/features/rules/rule-form/rule-form.view.tsx';
 import type { Rule } from '@fincheck/shared/categories/rule/rule.type.ts';
 
-import type {
-  RuleFormOutcome,
-  RuleFormTarget,
-} from '#/features/rules/rule-form/types/rule-form.type.ts';
+import type { RuleFormOutcome, RuleFormTarget } from '#/features/rules/types/rule-form.type.ts';
 
 type RuleFormProps = {
   /** What to open; null keeps it closed. */

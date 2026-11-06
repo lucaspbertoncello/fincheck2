@@ -3,11 +3,11 @@ import { useToast, type RuleAction } from '@fincheck/ui';
 import { useRouter } from '@tanstack/react-router';
 import { useState } from 'react';
 
-import { useScreenSearch } from '#/features/categories/hooks/use-screen-search.hook.ts';
+import { useScreenSearch } from '#/shared/hooks/use-screen-search.hook.ts';
 import { useDeferredDeletion } from '#/features/rules/hooks/use-deferred-deletion.hook.ts';
 import { useApplyExisting } from '#/features/rules/rule-list/hooks/use-apply-existing.hook.ts';
 import { useRuleOutcomeToasts } from '#/features/rules/hooks/use-rule-outcome-toasts.hook.ts';
-import type { RuleFormTarget } from '#/features/rules/rule-form/types/rule-form.type.ts';
+import type { RuleFormTarget } from '#/features/rules/types/rule-form.type.ts';
 import { useRuleListModel } from '#/features/rules/rule-list/rule-list.model.ts';
 import { ruleListSearchSchema } from '#/features/rules/rule-list/schemas/rule-list-search.schema.ts';
 import { buildRecreateBody } from '#/features/rules/rule-list/utils/build-recreate-body.util.ts';

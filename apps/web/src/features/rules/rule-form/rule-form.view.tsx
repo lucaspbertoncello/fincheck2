@@ -13,14 +13,14 @@ import type { RefObject } from 'react';
 
 import { RulePreviewArea } from '#/features/rules/rule-form/components/rule-preview-area.component.tsx';
 import type { RulePreviewStatus } from '#/features/rules/rule-form/types/rule-preview-status.type.ts';
-import { RuleSentence } from '#/features/rules/rule-form/components/rule-sentence.component.tsx';
+import { RuleSentence } from '#/features/rules/components/rule-sentence.component.tsx';
 import type {
   AccountOption,
   CategoryGroup,
   RuleFormErrors,
   RuleTextMode,
   TagOption,
-} from '#/features/rules/rule-form/types/rule-form.type.ts';
+} from '#/features/rules/types/rule-form.type.ts';
 
 const TEXT_MODE_OPTIONS: SegmentedOption[] = [
   { key: 'description', label: 'Descrição' },

@@ -1,7 +1,7 @@
 import { useToast } from '@fincheck/ui';
 import { useState } from 'react';
 
-import { useAccountsSearch } from '#/features/accounts/account-search/hooks/use-accounts-search.hook.ts';
+import { useAccountsSearch } from '#/shared/hooks/accounts/use-accounts-search.hook.ts';
 import { useDeleteAccountModel } from '#/features/accounts/delete-account/delete-account.model.ts';
 import { DeleteAccountView } from '#/features/accounts/delete-account/delete-account.view.tsx';
 import { buildDeletionSummary } from '#/features/accounts/delete-account/utils/build-deletion-summary.util.ts';

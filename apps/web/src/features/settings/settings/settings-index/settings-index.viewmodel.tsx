@@ -2,7 +2,7 @@ import { Navigate } from '@tanstack/react-router';
 
 import { SettingsIndexView } from '#/features/settings/settings/settings-index/settings-index.view.tsx';
 import { useSettingsNavItems } from '#/features/settings/settings/hooks/use-settings-nav-items.hook.ts';
-import { SETTINGS_SECTION } from '#/features/settings/settings/constants/settings-sections.constant.ts';
+import { SETTINGS_SECTION } from '#/shared/constants/settings/settings-sections.constant.ts';
 import { useIsDesktop } from '#/shared/hooks/use-is-desktop.hook.ts';
 
 const FIRST_PAGE = SETTINGS_SECTION.connections.path;

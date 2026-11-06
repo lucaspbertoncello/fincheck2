@@ -2,7 +2,7 @@ import type { Recurrence } from '@fincheck/shared/recurrences/recurrence/recurre
 
 import type { IdleRecurrenceData } from '#/features/recurrences/recurrence-list/types/recurrence-list.type.ts';
 import type { RowContext } from '#/features/recurrences/recurrence-list/types/row-context.type.ts';
-import { describeDateRule } from '#/features/recurrences/recurrence-list/utils/describe-date-rule.util.ts';
+import { describeDateRule } from '#/shared/utils/recurrences/describe-date-rule.util.ts';
 import { recognizeService } from '#/domain/recurrences/service-logo/rules/recognize-service.rule.ts';
 import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 

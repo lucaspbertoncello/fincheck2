@@ -1,7 +1,7 @@
 import type { Invoice } from '@fincheck/shared/invoices/invoice/invoice.type.ts';
 
 import { NO_CATEGORY_KEY } from '#/features/invoices/invoice-page/constants/no-category-key.constant.ts';
-import { normalizeSearchText } from '#/features/transactions/transaction-list/utils/normalize-search-text.util.ts';
+import { normalizeSearchText } from '#/shared/utils/text/normalize-search-text.util.ts';
 
 type Filters = {
   /** A category id, `none` or null (no category filter). */

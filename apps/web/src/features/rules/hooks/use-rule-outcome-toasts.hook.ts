@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 import { useDeleteRule } from '#/domain/categories/rule/hooks/use-delete-rule.hook.ts';
 import { useRestoreBulkTransactions } from '#/domain/transactions/transaction-bulk/hooks/use-restore-bulk-transactions.hook.ts';
-import type { RuleFormOutcome } from '#/features/rules/rule-form/types/rule-form.type.ts';
+import type { RuleFormOutcome } from '#/features/rules/types/rule-form.type.ts';
 
 /**
  * The undo toast after a rule is saved: "14 transações foram para Transporte" (undo restores them)

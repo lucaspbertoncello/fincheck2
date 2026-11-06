@@ -1,4 +1,4 @@
-import type { TransactionListSearch } from '#/features/transactions/transaction-list/schemas/transaction-list-search.schema.ts';
+import type { TransactionListSearch } from '#/shared/schemas/transactions/transaction-list-search.schema.ts';
 
 const DIRECTION_BY_TYPE = { all: undefined, expense: 'out', income: 'in' } as const;
 

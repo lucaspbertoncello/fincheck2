@@ -2,7 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { useBillCounterparties } from '#/domain/bills/bill/hooks/use-bill-counterparties.hook.ts';
-import { useBills } from '#/domain/bills/bill/hooks/use-bills.hook.ts';
+import { useBill } from '#/domain/bills/bill/hooks/use-bill.hook.ts';
 import { useCreateBill } from '#/domain/bills/bill/hooks/use-create-bill.hook.ts';
 import { useCreateBillPayment } from '#/domain/bills/bill-payment/hooks/use-create-bill-payment.hook.ts';
 import { useDeleteBillPayment } from '#/domain/bills/bill-payment/hooks/use-delete-bill-payment.hook.ts';
@@ -13,26 +13,18 @@ import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-bef
 resetDatabaseBeforeEach();
 
 describe('bills domain', () => {
-  it('reads the open bills and the counterparty names', async () => {
+  it('reads the counterparty names', async () => {
     const { wrapper } = createQueryWrapper();
-    const { result } = renderHook(
-      () => ({ bills: useBills({ status: 'open' }), names: useBillCounterparties() }),
-      { wrapper },
-    );
-    await waitFor(() => {
-      expect(result.current.bills.isSuccess).toBe(true);
-      expect(result.current.names.isSuccess).toBe(true);
-    });
+    const { result } = renderHook(() => useBillCounterparties(), { wrapper });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(result.current.bills.data?.items.length).toBeGreaterThan(0);
-    expect(result.current.names.data?.items.map((item) => item.name)).toContain('Rafa');
+    expect(result.current.data?.items.map((item) => item.name)).toContain('Rafa');
   });
 
-  it('creates a bill, pays it and undoes the payment; the list and the Livre follow', async () => {
+  it('creates a bill, pays it and undoes the payment; the bill and the Livre follow', async () => {
     const { wrapper } = createQueryWrapper();
     const { result } = renderHook(
       () => ({
-        list: useBills({ status: 'all' }),
         free: useFreeBalance(),
         create: useCreateBill(),
         pay: useCreateBillPayment(),
@@ -41,22 +33,22 @@ describe('bills domain', () => {
       { wrapper },
     );
     await waitFor(() => {
-      expect(result.current.list.isSuccess).toBe(true);
       expect(result.current.free.isSuccess).toBe(true);
     });
 
     let id = '';
     await act(async () => {
-      const bill = await result.current.create.mutateAsync({
+      const created = await result.current.create.mutateAsync({
         direction: 'payable',
         kind: 'general',
         description: 'Conta nova',
         amountCents: 12_000,
         dueOn: '2099-01-01',
       });
-      id = bill.id;
+      id = created.id;
     });
-    const read = () => result.current.list.data?.items.find((item) => item.id === id);
+    const bill = renderHook(() => useBill(id), { wrapper });
+    const read = () => bill.result.current.data;
     await waitFor(() => expect(read()?.status).toBe('open'));
 
     let paymentId = '';

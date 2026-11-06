@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 import { ExpectedAmountView } from '#/features/recurrences/recurrence-list/expected-amount/expected-amount.view.tsx';
 import { useExpectedAmountModel } from '#/features/recurrences/recurrence-list/expected-amount/expected-amount.model.ts';
-import { useRecurrenceListSearch } from '#/features/recurrences/recurrence-list/hooks/use-recurrence-list-search.hook.ts';
+import { useRecurrenceListSearch } from '#/features/recurrences/hooks/use-recurrence-list-search.hook.ts';
 import { getApiErrorMessage } from '#/shared/api/get-api-error-message.util.ts';
 import { formatMonthParts } from '#/shared/utils/format-month-parts.util.ts';
 import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';

@@ -1,4 +1,4 @@
-import type { TransactionDay } from '#/features/transactions/transaction-list/types/transaction-day.type.ts';
+import type { TransactionDay } from '#/shared/types/transactions/transaction-day.type.ts';
 
 /** Cuts the grouped days after `count` transactions, so a long month shows in pages. */
 export function takeRows(days: readonly TransactionDay[], count: number): TransactionDay[] {

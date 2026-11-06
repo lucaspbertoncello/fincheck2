@@ -16,8 +16,8 @@ import {
   type TransactionNature,
 } from '@fincheck/ui';
 
-import { CategoryChipsField } from '#/features/transactions/transaction-fields/components/category-chips-field.component.tsx';
-import type { TransactionEditorView } from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
+import { CategoryChipsField } from '#/features/transactions/components/category-chips-field.component.tsx';
+import type { TransactionEditorView } from '#/shared/types/transactions/transaction-list-view.type.ts';
 
 type TransactionEditModalProps = {
   editor: TransactionEditorView;

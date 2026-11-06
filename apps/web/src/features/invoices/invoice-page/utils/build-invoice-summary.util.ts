@@ -5,7 +5,7 @@ import { INVOICE_STATUS_LABELS } from '#/features/invoices/invoice-page/constant
 import type { InvoiceSummaryData } from '#/features/invoices/invoice-page/types/invoice-page.type.ts';
 import { computeInvoiceVariation } from '#/features/invoices/invoice-page/utils/compute-invoice-variation.util.ts';
 import { describeInvoiceDue } from '#/features/invoices/invoice-page/utils/describe-invoice-due.util.ts';
-import { buildInvoiceDueLine } from '#/features/invoices/invoice-summary/utils/build-invoice-due-line.util.ts';
+import { buildInvoiceDueLine } from '#/domain/invoices/invoice/rules/build-invoice-due-line.rule.ts';
 
 /** The cycle bar: running while open, full once closed, none when paid or not opened yet. */
 function resolveCycleProgress(invoice: Invoice.Dto, today: string): number | undefined {

@@ -5,34 +5,34 @@ import { useMemo, useState } from 'react';
 import { useByCategoryView } from '#/features/transactions/transaction-list/hooks/use-by-category-view.hook.ts';
 import { useConfirmation } from '#/features/transactions/transaction-list/hooks/use-confirmation.hook.ts';
 import { useFiltersView } from '#/features/transactions/transaction-list/hooks/use-filters-view.hook.ts';
-import { useActionError } from '#/features/transactions/transaction-list/hooks/use-action-error.hook.ts';
+import { useActionError } from '#/shared/hooks/transactions/use-action-error.hook.ts';
 import { useBulkActions } from '#/features/transactions/transaction-list/hooks/use-bulk-actions.hook.ts';
 import { useDebouncedSearchText } from '#/features/transactions/transaction-list/hooks/use-debounced-search-text.hook.ts';
 import { useSyncFailures } from '#/features/transactions/transaction-list/hooks/use-sync-failures.hook.ts';
-import { useEndOfList } from '#/features/transactions/transaction-list/hooks/use-end-of-list.hook.ts';
+import { useEndOfList } from '#/shared/hooks/transactions/use-end-of-list.hook.ts';
 import { useListWindow } from '#/features/transactions/transaction-list/hooks/use-list-window.hook.ts';
 import { useRowActions } from '#/features/transactions/transaction-list/hooks/use-row-actions.hook.ts';
 import { useRuleQuestion } from '#/features/transactions/transaction-list/hooks/use-rule-question.hook.ts';
 import { useTransactionEditing } from '#/features/transactions/transaction-list/hooks/use-transaction-editing.hook.ts';
-import { useTransactionListSearch } from '#/features/transactions/transaction-list/hooks/use-transaction-list-search.hook.ts';
+import { useTransactionListSearch } from '#/shared/hooks/transactions/use-transaction-list-search.hook.ts';
 import { useTransactionSelection } from '#/features/transactions/transaction-list/hooks/use-transaction-selection.hook.ts';
 import { useTransactionSplitting } from '#/features/transactions/transaction-list/hooks/use-transaction-splitting.hook.ts';
 import { useTransactionListModel } from '#/features/transactions/transaction-list/transaction-list.model.ts';
 import { TransactionListView } from '#/features/transactions/transaction-list/transaction-list.view.tsx';
-import type { TransactionListViewProps } from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
+import type { TransactionListViewProps } from '#/shared/types/transactions/transaction-list-view.type.ts';
 import { buildListQuery } from '#/features/transactions/transaction-list/utils/build-list-query.util.ts';
 import { countActiveFilters } from '#/features/transactions/transaction-list/utils/count-active-filters.util.ts';
-import { buildRowView } from '#/features/transactions/transaction-list/utils/build-row-view.util.ts';
-import { buildTransactionLookups } from '#/features/transactions/transaction-list/utils/build-transaction-lookups.util.ts';
+import { buildRowView } from '#/shared/utils/transactions/build-row-view.util.ts';
+import { buildTransactionLookups } from '#/shared/utils/transactions/build-transaction-lookups.util.ts';
 import { describeEmptyPeriod } from '#/features/transactions/transaction-list/utils/describe-empty-period.util.ts';
-import { groupDaysByMonth } from '#/features/transactions/transaction-list/utils/group-days-by-month.util.ts';
-import { resolvePeriodRange } from '#/features/transactions/transaction-list/utils/resolve-period-range.util.ts';
-import { groupTransactionsByDay } from '#/features/transactions/transaction-list/utils/group-transactions-by-day.util.ts';
-import { rankCategoriesByUse } from '#/features/transactions/transaction-fields/utils/rank-categories-by-use.util.ts';
+import { groupDaysByMonth } from '#/shared/utils/transactions/group-days-by-month.util.ts';
+import { resolvePeriodRange } from '#/shared/utils/transactions/resolve-period-range.util.ts';
+import { groupTransactionsByDay } from '#/shared/utils/transactions/group-transactions-by-day.util.ts';
+import { rankCategoriesByUse } from '#/features/transactions/utils/rank-categories-by-use.util.ts';
 import { formatDayChip } from '#/features/transactions/transaction-list/utils/format-day-chip.util.ts';
 import { takeRows } from '#/features/transactions/transaction-list/utils/take-rows.util.ts';
 import { getBusinessDate } from '#/shared/utils/date/get-business-date.util.ts';
-import { countWord } from '#/features/transactions/transaction-list/utils/count-word.util.ts';
+import { countWord } from '#/shared/utils/text/count-word.util.ts';
 import { buildHref } from '#/shared/layouts/application/navigation/build-href.util.ts';
 import { navigateToHref } from '#/shared/layouts/application/navigation/navigate-to-href.util.ts';
 import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
@@ -300,7 +300,10 @@ export function TransactionListViewModel() {
           transactionId: splitting.transactionId,
           totalCents: splitting.totalCents,
           parts: splitting.parts,
-          onChange: splitting.onChange,
+          check: splitting.check,
+          onAmountChange: splitting.changeAmount,
+          onCategoryChange: splitting.changeCategory,
+          onEvenSplit: splitting.evenSplit,
           categories: splitting.categories,
           createPartId: splitting.createPartId,
           description: splitting.description,

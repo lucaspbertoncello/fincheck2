@@ -5,6 +5,7 @@ import type {
   DayStripMode,
   DonutSlice,
   RemainingLineData,
+  SummaryBarSegment,
 } from '@fincheck/ui';
 
 /** What one block of the screen is doing: each block loads, fails and retries on its own. */
@@ -26,7 +27,13 @@ export type SummaryCardsData = {
   pendingNote: string | undefined;
   spentCents: number;
   previousSamePointCents: number;
-  previousTotalCents: number;
+  /** Received over expected, in whole percent. */
+  incomePercent: number;
+  incomeBar: SummaryBarSegment[];
+  /** Against the previous month at the same point; null when it had nothing. */
+  expenseVariationPercent: number | null;
+  expenseBar: SummaryBarSegment[];
+  resultBar: SummaryBarSegment[];
   /** "setembro". */
   previousMonthLabel: string;
   previousResultCents: number;

@@ -1,7 +1,7 @@
 import type { Transaction } from '@fincheck/shared/transactions/transaction/transaction.type.ts';
 import type { TransactionEditValues } from '@fincheck/ui';
 
-import type { TransactionLookups } from '#/features/transactions/transaction-list/types/transaction-lookups.type.ts';
+import type { TransactionLookups } from '#/shared/types/transactions/transaction-lookups.type.ts';
 
 /** The values the edit panel starts with. A nature outside expense, income and transfer shows as "Fora da conta". */
 export function buildEditValues(

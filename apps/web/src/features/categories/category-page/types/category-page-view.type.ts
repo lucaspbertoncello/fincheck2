@@ -1,11 +1,11 @@
 import type { ConfirmChange, IconName, MonthBar } from '@fincheck/ui';
 import type { ReactNode } from 'react';
 
-import type { CategoryFormTarget } from '#/features/categories/category-form/types/category-form.type.ts';
+import type { CategoryFormTarget } from '#/features/categories/types/category-form.type.ts';
 import type {
   TransactionMonthView,
   TransactionRowHandlers,
-} from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
+} from '#/shared/types/transactions/transaction-list-view.type.ts';
 
 export type CategoryPageKind = 'expense' | 'income';
 

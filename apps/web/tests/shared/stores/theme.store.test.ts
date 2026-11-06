@@ -1,11 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import {
-  getTheme,
-  getThemePreference,
-  setTheme,
-  setThemePreference,
-} from '#/shared/stores/theme.store.ts';
+import { getThemePreference, setThemePreference } from '#/shared/stores/theme.store.ts';
 import { stubMatchMedia } from '#tests/support/viewport/stub-match-media.util.ts';
 
 describe('theme store', () => {
@@ -18,7 +13,7 @@ describe('theme store', () => {
   });
 
   afterEach(() => {
-    setTheme('light'); // stops following the system theme
+    setThemePreference('light'); // stops following the system theme
     window.localStorage.clear();
     media.restore();
   });
@@ -30,7 +25,7 @@ describe('theme store', () => {
   it('saves a fixed choice and applies it', () => {
     setThemePreference('dark');
 
-    expect(getTheme()).toBe('dark');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
     expect(getThemePreference()).toBe('dark');
     expect(window.localStorage.getItem('fincheck:theme')).toBe('dark');
   });
@@ -43,10 +38,10 @@ describe('theme store', () => {
 
     expect(window.localStorage.getItem('fincheck:theme')).toBeNull();
     expect(getThemePreference()).toBe('system');
-    expect(getTheme()).toBe('dark');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
 
     media.setSystemDark(false);
-    expect(getTheme()).toBe('light');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
   });
 
   it('a fixed choice stops following the OS', () => {
@@ -55,6 +50,6 @@ describe('theme store', () => {
 
     media.setSystemDark(true);
 
-    expect(getTheme()).toBe('light');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
   });
 });

@@ -8,8 +8,8 @@ import {
   TextField,
 } from '@fincheck/ui';
 
-import { AccountChoiceField } from '#/features/transactions/transaction-fields/components/account-choice-field.component.tsx';
-import { CategoryChipsField } from '#/features/transactions/transaction-fields/components/category-chips-field.component.tsx';
+import { AccountChoiceField } from '#/features/transactions/components/account-choice-field.component.tsx';
+import { CategoryChipsField } from '#/features/transactions/components/category-chips-field.component.tsx';
 import type { TransactionCreateViewProps } from '#/features/transactions/transaction-creation/transaction-create/types/transaction-create-view.type.ts';
 
 /**

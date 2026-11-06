@@ -7,10 +7,10 @@ import type {
   InvoiceBlockData,
 } from '#/features/accounts/account-list/types/account-list.type.ts';
 import { buildAccountMenuItems } from '#/features/accounts/account-list/utils/build-account-menu-items.util.ts';
-import { resolveAccountTheme } from '#/features/accounts/account-list/utils/resolve-account-theme.util.ts';
-import { buildInvoiceDueLine } from '#/features/invoices/invoice-summary/utils/build-invoice-due-line.util.ts';
+import { resolveAccountTheme } from '#/features/accounts/utils/resolve-account-theme.util.ts';
+import { buildInvoiceDueLine } from '#/domain/invoices/invoice/rules/build-invoice-due-line.rule.ts';
 import { getCycleProgress } from '#/domain/invoices/invoice/rules/get-cycle-progress.rule.ts';
-import { mapInvoiceStatus } from '#/features/invoices/invoice-summary/utils/map-invoice-status.util.ts';
+import { mapInvoiceStatus } from '#/domain/invoices/invoice/rules/map-invoice-status.rule.ts';
 
 const MAX_INSTALLMENTS = 3;
 

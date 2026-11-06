@@ -3,17 +3,13 @@
 // "Sistema" is the absence of a saved choice: the index.html script then follows the OS, and
 // this store keeps following it while the preference is "system".
 
-export type Theme = 'light' | 'dark';
+type Theme = 'light' | 'dark';
 export type ThemePreference = Theme | 'system';
 
 const STORAGE_KEY = 'fincheck:theme';
 const DARK_QUERY = '(prefers-color-scheme: dark)';
 
 let stopFollowingSystem: (() => void) | null = null;
-
-export function getTheme(): Theme {
-  return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-}
 
 function applyTheme(theme: Theme): void {
   document.documentElement.setAttribute('data-theme', theme);
@@ -51,7 +47,7 @@ export function getThemePreference(): ThemePreference {
   return readSavedTheme() ?? 'system';
 }
 
-export function setTheme(theme: Theme): void {
+function setTheme(theme: Theme): void {
   stopFollowingSystem?.();
   stopFollowingSystem = null;
   applyTheme(theme);

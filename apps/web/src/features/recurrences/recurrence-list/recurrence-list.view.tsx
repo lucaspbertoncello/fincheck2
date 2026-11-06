@@ -15,11 +15,11 @@ import { DayOccurrenceList } from '#/features/recurrences/recurrence-list/compon
 import { IdleRecurrenceRow } from '#/features/recurrences/recurrence-list/components/idle-recurrence-row.component.tsx';
 import { OccurrenceRowItem } from '#/features/recurrences/recurrence-list/components/occurrence-row-item.component.tsx';
 import { RecurrenceListEmpty } from '#/features/recurrences/recurrence-list/components/states/recurrence-list-empty.component.tsx';
-import { RecurrenceListError } from '#/features/recurrences/recurrence-list/components/states/recurrence-list-error.component.tsx';
+import { LoadErrorState } from '#/shared/components/states/load-error-state.component.tsx';
 import { RecurrenceListLoading } from '#/features/recurrences/recurrence-list/components/states/recurrence-list-loading.component.tsx';
 import { ExpectedAmountViewModel } from '#/features/recurrences/recurrence-list/expected-amount/expected-amount.viewmodel.tsx';
 import { LinkOccurrenceViewModel } from '#/features/recurrences/recurrence-list/link-occurrence/link-occurrence.viewmodel.tsx';
-import { RecurrenceFormViewModel } from '#/features/recurrences/recurrence-list/recurrence-form/recurrence-form.viewmodel.tsx';
+import { RecurrenceFormViewModel } from '#/features/recurrences/recurrence-form/recurrence-form.viewmodel.tsx';
 import type {
   ActionErrorData,
   IdleRecurrenceData,
@@ -70,7 +70,7 @@ export function RecurrenceListView(props: RecurrenceListViewProps) {
   return (
     <>
       {state === 'loading' ? <RecurrenceListLoading /> : null}
-      {state === 'error' ? <RecurrenceListError onRetry={onRetry} /> : null}
+      {state === 'error' ? <LoadErrorState what="as recorrências" onRetry={onRetry} /> : null}
       {state === 'empty' ? <RecurrenceListEmpty onCreate={onCreate} /> : null}
       {state === 'ready' ? <ReadyContent {...props} /> : null}
       <RecurrenceFormViewModel />

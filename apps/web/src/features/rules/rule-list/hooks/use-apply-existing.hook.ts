@@ -6,7 +6,7 @@ import { useState } from 'react';
 
 import { useApplyRule } from '#/domain/categories/rule/hooks/use-apply-rule.hook.ts';
 import { ruleQueries } from '#/domain/categories/rule/queries/rule.query.ts';
-import type { RuleFormOutcome } from '#/features/rules/rule-form/types/rule-form.type.ts';
+import type { RuleFormOutcome } from '#/features/rules/types/rule-form.type.ts';
 import { buildRulePreviewBody } from '#/features/rules/rule-list/utils/build-rule-preview-body.util.ts';
 import { describeNothingToApply } from '#/features/rules/rule-list/utils/describe-nothing-to-apply.util.ts';
 import { buildHistoryChanges } from '#/features/rules/utils/build-history-changes.util.ts';

@@ -3,7 +3,7 @@ import { useToast } from '@fincheck/ui';
 import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 
-import { useAccountsSearch } from '#/features/accounts/account-search/hooks/use-accounts-search.hook.ts';
+import { useAccountsSearch } from '#/shared/hooks/accounts/use-accounts-search.hook.ts';
 import { useAccountListModel } from '#/features/accounts/account-list/account-list.model.ts';
 import { AccountListView } from '#/features/accounts/account-list/account-list.view.tsx';
 import type {
@@ -16,7 +16,7 @@ import { describeConnectionError } from '#/features/accounts/account-list/utils/
 import { formatSyncAge } from '#/features/accounts/account-list/utils/format-sync-age.util.ts';
 import { getHistoryProgress } from '#/domain/accounts/account/rules/get-history-progress.rule.ts';
 import { sumTotalBalance } from '#/domain/accounts/account/rules/sum-total-balance.rule.ts';
-import { FutureInvoicesViewModel } from '#/features/invoices/future-invoices/future-invoices.viewmodel.tsx';
+import { FutureInvoicesViewModel } from '#/features/accounts/future-invoices/future-invoices.viewmodel.tsx';
 import { getBusinessDate } from '#/shared/utils/date/get-business-date.util.ts';
 import { capitalize } from '#/shared/utils/text/capitalize.util.ts';
 

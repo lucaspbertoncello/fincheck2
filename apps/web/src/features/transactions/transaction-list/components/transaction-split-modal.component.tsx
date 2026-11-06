@@ -6,13 +6,9 @@ import {
   MoneyField,
   Money,
   SplitSumIndicator,
-  balanceSplitParts,
-  checkSplit,
-  distributeCents,
-  type SplitPart,
 } from '@fincheck/ui';
 
-import type { TransactionSplitterView } from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
+import type { TransactionSplitterView } from '#/shared/types/transactions/transaction-list-view.type.ts';
 
 type TransactionSplitModalProps = {
   splitter: TransactionSplitterView;
@@ -26,36 +22,7 @@ type TransactionSplitModalProps = {
  * the footer.
  */
 export function TransactionSplitModal({ splitter }: TransactionSplitModalProps) {
-  const { parts, totalCents } = splitter;
-  const check = checkSplit(
-    totalCents,
-    parts.map((part) => part.amountCents),
-  );
-
-  function changeAmount(index: number, amountCents: number) {
-    const amounts = balanceSplitParts(
-      totalCents,
-      parts.map((part) => part.amountCents),
-      index,
-      amountCents,
-    );
-    splitter.onChange(
-      parts.map((part, position) => ({ ...part, amountCents: amounts[position] ?? 0 })),
-    );
-  }
-
-  function changeCategory(index: number, categoryId: string | null) {
-    splitter.onChange(
-      parts.map((part, position) => (position === index ? { ...part, categoryId } : part)),
-    );
-  }
-
-  function evenSplit() {
-    const amounts = distributeCents(totalCents, parts.length);
-    splitter.onChange(
-      parts.map((part: SplitPart, position) => ({ ...part, amountCents: amounts[position] ?? 0 })),
-    );
-  }
+  const { parts, totalCents, check } = splitter;
 
   return (
     <FormModal
@@ -98,21 +65,21 @@ export function TransactionSplitModal({ splitter }: TransactionSplitModalProps) 
               label={`Categoria da parte ${index + 1}`}
               categories={splitter.categories}
               value={part.categoryId}
-              onChange={(categoryId) => changeCategory(index, categoryId)}
+              onChange={(categoryId) => splitter.onCategoryChange(index, categoryId)}
               autoFocus={index === 0}
             />
             <MoneyField
               label={`Valor da parte ${index + 1}`}
               cents={part.amountCents}
-              onChange={(amountCents) => changeAmount(index, amountCents)}
+              onChange={(amountCents) => splitter.onAmountChange(index, amountCents)}
               error={check.emptyPartIndexes.includes(index) ? 'Informe o valor.' : undefined}
             />
           </div>
         ))}
       </FormModalGroup>
       <div className="flex flex-wrap items-center justify-between gap-s12">
-        <SplitSumIndicator check={check} />
-        <Button variant="tertiary" size="sm" onPress={evenSplit}>
+        <SplitSumIndicator status={check.status} differenceCents={check.differenceCents} />
+        <Button variant="tertiary" size="sm" onPress={splitter.onEvenSplit}>
           Dividir por igual
         </Button>
       </div>

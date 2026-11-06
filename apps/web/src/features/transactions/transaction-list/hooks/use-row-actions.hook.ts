@@ -2,7 +2,7 @@ import type { Transaction } from '@fincheck/shared/transactions/transaction/tran
 import { useToast } from '@fincheck/ui';
 
 import type { TransactionListModel } from '#/features/transactions/transaction-list/transaction-list.model.ts';
-import type { TransactionLookups } from '#/features/transactions/transaction-list/types/transaction-lookups.type.ts';
+import type { TransactionLookups } from '#/shared/types/transactions/transaction-lookups.type.ts';
 
 type RowActionsArgs = {
   model: TransactionListModel;

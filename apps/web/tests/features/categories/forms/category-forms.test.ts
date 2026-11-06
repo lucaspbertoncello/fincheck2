@@ -2,7 +2,7 @@ import type { Category } from '@fincheck/shared/categories/category/category.typ
 import { describe, expect, it } from 'vitest';
 
 import { validateCategoryForm } from '#/features/categories/category-form/utils/validate-category-form.util.ts';
-import { buildArchiveCategoryImpact } from '#/features/categories/category-list/utils/build-archive-category-impact.util.ts';
+import { buildArchiveCategoryImpact } from '#/features/categories/utils/build-archive-category-impact.util.ts';
 import { validateTagName } from '#/features/categories/tag-form/utils/validate-tag-name.util.ts';
 
 describe('validateCategoryForm', () => {

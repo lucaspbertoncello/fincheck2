@@ -1,7 +1,7 @@
 import {
   SETTINGS_SECTIONS,
   type SettingsSectionDefinition,
-} from '#/features/settings/settings/constants/settings-sections.constant.ts';
+} from '#/shared/constants/settings/settings-sections.constant.ts';
 
 /** The section named by an old anchor (`#backup`), or undefined when the hash names none. */
 export function findSectionByHash(hash: string): SettingsSectionDefinition | undefined {

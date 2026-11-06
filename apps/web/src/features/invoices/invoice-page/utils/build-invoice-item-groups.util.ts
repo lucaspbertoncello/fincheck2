@@ -11,7 +11,7 @@ import type {
   InvoiceSortKey,
 } from '#/features/invoices/invoice-page/types/invoice-page.type.ts';
 import { formatShortDate } from '#/shared/utils/date/format-short-date.util.ts';
-import { formatDayHeading } from '#/features/transactions/transaction-list/utils/format-day-heading.util.ts';
+import { formatDayHeading } from '#/shared/utils/date/format-day-heading.util.ts';
 
 const UNDATED_KEY = 'undated';
 

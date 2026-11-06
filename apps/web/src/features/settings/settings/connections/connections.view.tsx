@@ -10,8 +10,8 @@ import {
 
 import type { PluggySetupProps } from '#/features/settings/settings/connections/types/pluggy-setup-props.type.ts';
 import { SettingsPageFrame } from '#/features/settings/settings/components/settings-page-frame.component.tsx';
-import { SETTINGS_SECTION } from '#/features/settings/settings/constants/settings-sections.constant.ts';
-import { SectionSkeleton } from '#/features/settings/settings/components/section-skeleton.component.tsx';
+import { SETTINGS_SECTION } from '#/shared/constants/settings/settings-sections.constant.ts';
+import { SectionSkeleton } from '#/shared/components/states/section-skeleton.component.tsx';
 import { ConnectionRow } from '#/features/settings/settings/connections/components/connection-row.component.tsx';
 import { PendingMatches } from '#/features/settings/settings/connections/components/pending-matches.component.tsx';
 import { PluggySetup } from '#/features/settings/settings/connections/components/pluggy-setup.component.tsx';

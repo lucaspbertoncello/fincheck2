@@ -1,6 +1,6 @@
 import { Chip, ConfirmDialog, RuleEditor } from '@fincheck/ui';
 
-import { RuleSentence } from '#/features/rules/rule-form/components/rule-sentence.component.tsx';
+import { RuleSentence } from '#/features/rules/components/rule-sentence.component.tsx';
 import type { useRuleSuggestionViewModel } from '#/features/rules/rule-suggestion/rule-suggestion.viewmodel.tsx';
 
 type RuleSuggestionViewProps = ReturnType<typeof useRuleSuggestionViewModel>;

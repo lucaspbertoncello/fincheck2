@@ -22,13 +22,16 @@ export function SummaryCardsSection({ data, links }: SummaryCardsSectionProps) {
       <IncomeSummaryCard
         receivedCents={data.receivedCents}
         expectedCents={data.expectedCents}
+        percent={data.incomePercent}
+        barSegments={data.incomeBar}
         pendingNote={data.pendingNote}
         href={links.income}
       />
       <ExpenseSummaryCard
         spentCents={data.spentCents}
         previousSamePointCents={data.previousSamePointCents}
-        previousTotalCents={data.previousTotalCents}
+        barSegments={data.expenseBar}
+        variationPercent={data.expenseVariationPercent}
         previousMonthLabel={data.previousMonthLabel}
         href={links.expense}
       />
@@ -36,6 +39,7 @@ export function SummaryCardsSection({ data, links }: SummaryCardsSectionProps) {
         receivedCents={data.receivedCents}
         spentCents={data.spentCents}
         previousResultCents={data.previousResultCents}
+        barSegments={data.resultBar}
         previousMonthLabel={data.previousMonthLabel}
         href={links.result}
       />

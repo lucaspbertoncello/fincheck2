@@ -8,20 +8,6 @@ import { dashboardKeys } from '#/domain/dashboard/cache/constants/dashboard-keys
 import { apiRequest } from '#/shared/api/api-request.service.ts';
 
 export const spendHeatmapQueries = {
-  // `until` is the last day of the map; without it the API uses today.
-  until: (until?: string) =>
-    queryOptions({
-      queryKey: dashboardKeys.spendHeatmap(until ?? 'today'),
-      queryFn: ({ signal }) =>
-        apiRequest({
-          method: 'GET',
-          path: '/dashboard/spend-heatmap',
-          querySchema: getSpendHeatmapQuerySchema,
-          query: until ? { until } : {},
-          responseSchema: spendHeatmapDtoSchema,
-          signal,
-        }),
-    }),
   // A period (`from` and `to`, both included): a month or a year for the Mês | Ano of Perfil.
   range: (from: string, to: string) =>
     queryOptions({

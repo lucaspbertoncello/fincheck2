@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { hideValuesStore } from '#/shared/stores/hide-values.store.ts';
-import { setTheme } from '#/shared/stores/theme.store.ts';
+import { setThemePreference } from '#/shared/stores/theme.store.ts';
 import { stubMatchMedia } from '#tests/support/viewport/stub-match-media.util.ts';
 import { renderApp } from '#tests/support/app/render-app.util.tsx';
 
@@ -269,7 +269,7 @@ describe('ApplicationLayout', () => {
 
       expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
     } finally {
-      setTheme('light'); // stops following the system theme
+      setThemePreference('light'); // stops following the system theme
       media.restore();
     }
   });

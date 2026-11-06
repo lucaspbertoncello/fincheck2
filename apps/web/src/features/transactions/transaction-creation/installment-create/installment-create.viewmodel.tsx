@@ -3,9 +3,9 @@ import { INSTALLMENT_LIMITS } from '@fincheck/shared/transactions/installment-pl
 import { useToast } from '@fincheck/ui';
 import { useState } from 'react';
 
-import { buildCategoryOptions } from '#/features/transactions/transaction-list/utils/build-category-options.util.ts';
-import { describeTransactionError } from '#/features/transactions/transaction-list/utils/describe-transaction-error.util.ts';
-import { focusFirstInvalid } from '#/features/transactions/transaction-list/utils/focus-first-invalid.util.ts';
+import { buildCategoryOptions } from '#/features/transactions/utils/build-category-options.util.ts';
+import { describeTransactionError } from '#/shared/utils/transactions/describe-transaction-error.util.ts';
+import { focusFirstInvalid } from '#/features/transactions/utils/focus-first-invalid.util.ts';
 import { getBusinessDate } from '#/shared/utils/date/get-business-date.util.ts';
 import { useInstallmentCreateModel } from '#/features/transactions/transaction-creation/installment-create/installment-create.model.ts';
 import { InstallmentCreateView } from '#/features/transactions/transaction-creation/installment-create/installment-create.view.tsx';
@@ -17,7 +17,7 @@ import type {
 import { buildInstallmentPreview } from '#/features/transactions/transaction-creation/installment-create/utils/build-installment-preview.util.ts';
 import { buildInvoiceMonths } from '#/features/transactions/transaction-creation/installment-create/utils/build-invoice-months.util.ts';
 import { buildAccountChoices } from '#/shared/utils/build-account-choices.util.ts';
-import { rankCategoriesByUse } from '#/features/transactions/transaction-fields/utils/rank-categories-by-use.util.ts';
+import { rankCategoriesByUse } from '#/features/transactions/utils/rank-categories-by-use.util.ts';
 import { collectFieldErrors } from '#/features/transactions/transaction-creation/utils/collect-field-errors.util.ts';
 
 const FIELDS: Record<string, InstallmentCreateField> = {

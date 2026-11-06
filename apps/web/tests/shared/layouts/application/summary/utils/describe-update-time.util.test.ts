@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import { describeUpdateTime } from '#/shared/layouts/application/summary/utils/describe-update-time.util.ts';
-import { describeDataAge } from '#/shared/layouts/application/summary/utils/describe-data-age.util.ts';
 
 const NOW = new Date('2026-10-30T15:00:00-03:00');
 
@@ -14,16 +13,5 @@ describe('describeUpdateTime', () => {
     [null, 'Ainda sem atualização'],
   ])('%s -> %s', (updatedAt, expected) => {
     expect(describeUpdateTime(updatedAt, NOW)).toBe(expected);
-  });
-});
-
-describe('describeDataAge', () => {
-  it.each([
-    ['2026-10-30T08:00:00-03:00', 'de hoje'],
-    ['2026-10-29T08:00:00-03:00', 'de ontem'],
-    ['2026-10-26T08:00:00-03:00', 'de 4 dias atrás'],
-    [null, 'sem atualização'],
-  ])('%s -> %s', (updatedAt, expected) => {
-    expect(describeDataAge(updatedAt, NOW)).toBe(expected);
   });
 });

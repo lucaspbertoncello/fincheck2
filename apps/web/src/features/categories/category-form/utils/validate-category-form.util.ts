@@ -4,7 +4,7 @@ import type { Category } from '@fincheck/shared/categories/category/category.typ
 import type {
   CategoryFormErrors,
   CategoryFormValues,
-} from '#/features/categories/category-form/types/category-form.type.ts';
+} from '#/features/categories/types/category-form.type.ts';
 
 type CategoryFormResult =
   { ok: true; body: Category.CreateRequest } | { ok: false; errors: CategoryFormErrors };

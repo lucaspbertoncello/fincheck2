@@ -4,7 +4,7 @@ import type { Tag } from '@fincheck/shared/categories/tag/tag.type.ts';
 import { describe, expect, it } from 'vitest';
 
 import { getRuleTextMode } from '#/features/rules/rule-form/utils/get-rule-text-mode.util.ts';
-import { buildCategoryGroups } from '#/features/rules/rule-form/utils/build-category-groups.util.ts';
+import { buildCategoryGroups } from '#/features/rules/utils/build-category-groups.util.ts';
 import { buildPreviewBody } from '#/features/rules/rule-form/utils/build-preview-body.util.ts';
 import { buildRuleUpdateBody } from '#/features/rules/rule-form/utils/build-rule-update-body.util.ts';
 import { validateRuleForm } from '#/features/rules/rule-form/utils/validate-rule-form.util.ts';

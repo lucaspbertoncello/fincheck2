@@ -1,7 +1,7 @@
 import { useToast } from '@fincheck/ui';
 import { useState } from 'react';
 
-import { useRecurrenceListSearch } from '#/features/recurrences/recurrence-list/hooks/use-recurrence-list-search.hook.ts';
+import { useRecurrenceListSearch } from '#/features/recurrences/hooks/use-recurrence-list-search.hook.ts';
 import { useLinkOccurrenceModel } from '#/features/recurrences/recurrence-list/link-occurrence/link-occurrence.model.ts';
 import { LinkOccurrenceView } from '#/features/recurrences/recurrence-list/link-occurrence/link-occurrence.view.tsx';
 import type { LinkCandidateData } from '#/features/recurrences/recurrence-list/link-occurrence/types/link-candidate.type.ts';

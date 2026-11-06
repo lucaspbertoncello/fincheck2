@@ -4,7 +4,7 @@ import { useToast } from '@fincheck/ui';
 import { useNavigate, useParams, useRouter } from '@tanstack/react-router';
 import { useState } from 'react';
 
-import { useAccountsSearch } from '#/features/accounts/account-search/hooks/use-accounts-search.hook.ts';
+import { useAccountsSearch } from '#/shared/hooks/accounts/use-accounts-search.hook.ts';
 import { useInvoicePageOrigin } from '#/features/invoices/invoice-page/hooks/use-invoice-page-origin.hook.ts';
 import { useInvoicePageModel } from '#/features/invoices/invoice-page/invoice-page.model.ts';
 import { InvoicePageView } from '#/features/invoices/invoice-page/invoice-page.view.tsx';

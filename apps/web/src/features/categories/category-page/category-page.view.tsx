@@ -13,9 +13,9 @@ import { CategoryForm } from '#/features/categories/category-form/category-form.
 import { CategorySummary } from '#/features/categories/category-page/components/category-summary.component.tsx';
 import { BackPageFrame } from '#/shared/components/page/back-page-frame.component.tsx';
 import type { CategoryPageViewProps } from '#/features/categories/category-page/types/category-page-view.type.ts';
-import { DayList } from '#/features/transactions/transaction-list/components/day-list.component.tsx';
-import { LoadMore } from '#/features/transactions/transaction-list/components/load-more.component.tsx';
-import { LoadFailed } from '#/features/transactions/transaction-list/components/states/load-failed.component.tsx';
+import { DayList } from '#/shared/components/transactions/day-list.component.tsx';
+import { LoadMore } from '#/shared/components/transactions/load-more.component.tsx';
+import { LoadFailed } from '#/shared/components/transactions/load-failed.component.tsx';
 
 const NO_SELECTION: ReadonlySet<string> = new Set();
 

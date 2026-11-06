@@ -1,4 +1,4 @@
-import { SETTINGS_SECTION } from '#/features/settings/settings/constants/settings-sections.constant.ts';
+import { SETTINGS_SECTION } from '#/shared/constants/settings/settings-sections.constant.ts';
 import { buildHref } from '#/shared/layouts/application/navigation/build-href.util.ts';
 import { buildNavigationItems } from '#/shared/layouts/application/navigation/build-navigation-items.util.ts';
 import { RailLink } from '#/shared/layouts/application/rail/rail-link.component.tsx';

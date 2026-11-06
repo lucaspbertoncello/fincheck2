@@ -1,10 +1,10 @@
 import { updateInvoiceRequestSchema } from '@fincheck/shared/invoices/invoice/invoice.schema.ts';
 import { useState } from 'react';
 
-import { useAccountsSearch } from '#/features/accounts/account-search/hooks/use-accounts-search.hook.ts';
+import { useAccountsSearch } from '#/shared/hooks/accounts/use-accounts-search.hook.ts';
 import { useCorrectInvoiceModel } from '#/features/invoices/correct-invoice/correct-invoice.model.ts';
 import { CorrectInvoiceView } from '#/features/invoices/correct-invoice/correct-invoice.view.tsx';
-import { splitInvoiceTarget } from '#/features/invoices/invoice-summary/utils/split-invoice-target.util.ts';
+import { splitInvoiceTarget } from '#/features/invoices/utils/split-invoice-target.util.ts';
 
 /** "Corrigir valor" of an invoice (BR-INV-004). Opens by `?correct=<cardId>:<YYYY-MM>`. */
 export function CorrectInvoiceViewModel() {

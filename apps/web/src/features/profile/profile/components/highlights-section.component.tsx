@@ -1,6 +1,6 @@
 import { Section } from '@fincheck/ui';
 
-import { SectionError } from '#/features/settings/settings/components/section-error.component.tsx';
+import { SectionError } from '#/shared/components/states/section-error.component.tsx';
 import { HighlightCard } from '#/features/profile/profile/components/highlight-card.component.tsx';
 import type { HighlightItem } from '#/features/profile/profile/types/highlight-item.type.ts';
 

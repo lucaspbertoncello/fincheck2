@@ -4,7 +4,7 @@ import type { OccurrenceRowData } from '#/features/recurrences/recurrence-list/t
 import type { RowContext } from '#/features/recurrences/recurrence-list/types/row-context.type.ts';
 import { buildOccurrenceStatusNote } from '#/features/recurrences/recurrence-list/utils/build-occurrence-status-note.util.ts';
 import { buildRecurrenceAccountLabel } from '#/features/recurrences/recurrence-list/utils/build-recurrence-account-label.util.ts';
-import { describeDateRule } from '#/features/recurrences/recurrence-list/utils/describe-date-rule.util.ts';
+import { describeDateRule } from '#/shared/utils/recurrences/describe-date-rule.util.ts';
 import { getOccurrenceAmount } from '#/domain/recurrences/occurrence/rules/get-occurrence-amount.rule.ts';
 import { getOccurrenceInlineActions } from '#/domain/recurrences/occurrence/rules/get-occurrence-inline-actions.rule.ts';
 import { getOccurrenceRowStatus } from '#/domain/recurrences/occurrence/rules/get-occurrence-row-status.rule.ts';

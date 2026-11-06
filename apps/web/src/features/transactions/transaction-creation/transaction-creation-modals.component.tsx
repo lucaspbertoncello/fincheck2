@@ -1,6 +1,6 @@
 import { InstallmentCreateViewModel } from '#/features/transactions/transaction-creation/installment-create/installment-create.viewmodel.tsx';
 import { TransactionCreateViewModel } from '#/features/transactions/transaction-creation/transaction-create/transaction-create.viewmodel.tsx';
-import { useTransactionListSearch } from '#/features/transactions/transaction-list/hooks/use-transaction-list-search.hook.ts';
+import { useTransactionListSearch } from '#/shared/hooks/transactions/use-transaction-list-search.hook.ts';
 
 /**
  * The two creation modals the Transações feature owns, opened by the `new` search param:

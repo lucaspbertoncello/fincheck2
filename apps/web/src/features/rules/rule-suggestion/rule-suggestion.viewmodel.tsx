@@ -2,8 +2,8 @@ import type { RuleSuggestion } from '@fincheck/shared/categories/rule-suggestion
 import { useState } from 'react';
 
 import { useRuleOutcomeToasts } from '#/features/rules/hooks/use-rule-outcome-toasts.hook.ts';
-import type { TagOption } from '#/features/rules/rule-form/types/rule-form.type.ts';
-import { buildCategoryGroups } from '#/features/rules/rule-form/utils/build-category-groups.util.ts';
+import type { TagOption } from '#/features/rules/types/rule-form.type.ts';
+import { buildCategoryGroups } from '#/features/rules/utils/build-category-groups.util.ts';
 import { useRuleSuggestionModel } from '#/features/rules/rule-suggestion/rule-suggestion.model.ts';
 import { buildHistoryLabel } from '#/features/rules/utils/build-history-label.util.ts';
 import { buildHistoryChanges } from '#/features/rules/utils/build-history-changes.util.ts';

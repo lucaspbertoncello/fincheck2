@@ -1,9 +1,9 @@
 import { useState } from 'react';
 
-import type { useTransactionListSearch } from '#/features/transactions/transaction-list/hooks/use-transaction-list-search.hook.ts';
-import type { FiltersView } from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
-import type { TransactionLookups } from '#/features/transactions/transaction-list/types/transaction-lookups.type.ts';
-import { buildCategoryOptions } from '#/features/transactions/transaction-list/utils/build-category-options.util.ts';
+import type { useTransactionListSearch } from '#/shared/hooks/transactions/use-transaction-list-search.hook.ts';
+import type { FiltersView } from '#/shared/types/transactions/transaction-list-view.type.ts';
+import type { TransactionLookups } from '#/shared/types/transactions/transaction-lookups.type.ts';
+import { buildCategoryOptions } from '#/features/transactions/utils/build-category-options.util.ts';
 import { countActiveFilters } from '#/features/transactions/transaction-list/utils/count-active-filters.util.ts';
 
 type FiltersViewArgs = {

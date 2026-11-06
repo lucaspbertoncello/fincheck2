@@ -1,13 +1,17 @@
 import type { CategoryBreakdown } from '@fincheck/shared/dashboard/category-breakdown/category-breakdown.type.ts';
 import { useState } from 'react';
 
+import { buildExpenseBar } from '#/domain/dashboard/month-summary/rules/build-expense-bar.rule.ts';
+import { buildIncomeBar } from '#/domain/dashboard/month-summary/rules/build-income-bar.rule.ts';
+import { getReceivedPercent } from '#/domain/dashboard/month-summary/rules/get-received-percent.rule.ts';
+import { getSpentVariationPercent } from '#/domain/dashboard/month-summary/rules/get-spent-variation-percent.rule.ts';
 import { UNCATEGORIZED_GROUP_ID } from '#/features/transactions/transaction-list/constants/uncategorized-group-id.constant.ts';
-import type { PeriodRange } from '#/features/transactions/transaction-list/types/period-range.type.ts';
-import type { useTransactionListSearch } from '#/features/transactions/transaction-list/hooks/use-transaction-list-search.hook.ts';
-import type { TransactionListSearch } from '#/features/transactions/transaction-list/schemas/transaction-list-search.schema.ts';
+import type { PeriodRange } from '#/shared/types/transactions/period-range.type.ts';
+import type { useTransactionListSearch } from '#/shared/hooks/transactions/use-transaction-list-search.hook.ts';
+import type { TransactionListSearch } from '#/shared/schemas/transactions/transaction-list-search.schema.ts';
 import type { TransactionListModel } from '#/features/transactions/transaction-list/transaction-list.model.ts';
-import type { ByCategoryView } from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
-import type { TransactionLookups } from '#/features/transactions/transaction-list/types/transaction-lookups.type.ts';
+import type { ByCategoryView } from '#/shared/types/transactions/transaction-list-view.type.ts';
+import type { TransactionLookups } from '#/shared/types/transactions/transaction-lookups.type.ts';
 import { buildCategoryGroups } from '#/features/transactions/transaction-list/utils/build-category-groups.util.ts';
 import { describeReceivedIn } from '#/features/transactions/transaction-list/utils/describe-received-in.util.ts';
 import { describePreviousPeriod } from '#/features/transactions/transaction-list/utils/describe-previous-period.util.ts';
@@ -58,8 +62,11 @@ export function useByCategoryView({
           ? {
               spentCents: monthSummary.expenses.spentCents,
               comparison: {
-                previousSamePointCents: monthSummary.expenses.previousSpentCents,
-                previousTotalCents: breakdown.expenses.previousTotalCents ?? 0,
+                ...describeExpenseComparison(
+                  monthSummary.expenses.spentCents,
+                  monthSummary.expenses.previousSpentCents,
+                  breakdown.expenses.previousTotalCents ?? 0,
+                ),
                 previousLabel: formatMonthParts(shiftMonthKey(month, -1)).monthLabel.toLowerCase(),
               },
             }
@@ -70,6 +77,14 @@ export function useByCategoryView({
       incomeCard: {
         receivedCents: breakdown.incomes.receivedCents,
         expectedCents: isMonth ? breakdown.incomes.expectedCents : null,
+        percent: getReceivedPercent(
+          breakdown.incomes.receivedCents,
+          isMonth ? breakdown.incomes.expectedCents : 0,
+        ),
+        barSegments: buildIncomeBar(
+          breakdown.incomes.receivedCents,
+          isMonth ? breakdown.incomes.expectedCents : 0,
+        ),
         receivedLegend: describeReceivedIn(search.period),
         sourceCount: groups.incomes.length,
       },
@@ -93,6 +108,18 @@ export function useByCategoryView({
   };
 }
 
+function describeExpenseComparison(
+  spentCents: number,
+  previousSamePointCents: number,
+  previousTotalCents: number,
+) {
+  return {
+    previousSamePointCents,
+    barSegments: buildExpenseBar(spentCents, previousTotalCents),
+    variationPercent: getSpentVariationPercent(spentCents, previousSamePointCents),
+  };
+}
+
 function buildPeriodComparison(
   breakdown: CategoryBreakdown.Dto,
   period: TransactionListSearch['period'],
@@ -103,5 +130,12 @@ function buildPeriodComparison(
   if (previousLabel === null || previousTotalCents === null) return null;
 
   // A period has no "same point" to stop at: it is compared whole against the whole one before.
-  return { previousSamePointCents: previousTotalCents, previousTotalCents, previousLabel };
+  return {
+    ...describeExpenseComparison(
+      breakdown.expenses.totalCents,
+      previousTotalCents,
+      previousTotalCents,
+    ),
+    previousLabel,
+  };
 }

@@ -1,17 +1,19 @@
 import { VariationBadge } from '#/components/chips/variation-badge.component.tsx';
 import { capitalize } from '#/components/summary/capitalize.util.ts';
 import { Money } from '#/components/money/money.component.tsx';
-import { expenseBar } from '#/components/summary/expense-bar.util.ts';
 import { MonthSummaryCard } from '#/components/summary/month-summary-card.component.tsx';
 import { SignedMoney } from '#/components/summary/signed-money.component.tsx';
 import { SummaryBar } from '#/components/summary/summary-bar.component.tsx';
+import type { SummaryBarSegment } from '#/components/summary/summary-bar-segment.type.ts';
 
 type ExpenseSummaryCardProps = {
   spentCents: number;
   /** Spent in the previous month up to the same day. */
   previousSamePointCents: number;
-  /** The whole previous month, the gray stretch of the bar. */
-  previousTotalCents: number;
+  /** Ready bar stretches: the previous month, what is spent of it and what went past it. */
+  barSegments: SummaryBarSegment[];
+  /** Variation against the previous month at the same point, in percent; null when there is none. */
+  variationPercent: number | null;
   /** Name of the previous month, lower case ("setembro"). */
   previousMonthLabel: string;
   label?: string;
@@ -26,20 +28,20 @@ type ExpenseSummaryCardProps = {
 export function ExpenseSummaryCard({
   spentCents,
   previousSamePointCents,
-  previousTotalCents,
+  barSegments,
+  variationPercent,
   previousMonthLabel,
   label = 'Despesas',
   href,
 }: ExpenseSummaryCardProps) {
   const deltaCents = spentCents - previousSamePointCents;
-  const percent = previousSamePointCents > 0 ? (deltaCents / previousSamePointCents) * 100 : null;
 
   return (
     <MonthSummaryCard
       href={href}
       icon="receipt"
       label={label}
-      badge={percent === null ? null : <VariationBadge percent={percent} />}
+      badge={variationPercent === null ? null : <VariationBadge percent={variationPercent} />}
       value={<Money cents={spentCents} sign="none" />}
       subtext={
         deltaCents === 0 ? (
@@ -52,7 +54,7 @@ export function ExpenseSummaryCard({
       }
       bar={
         <SummaryBar
-          segments={expenseBar(spentCents, previousTotalCents)}
+          segments={barSegments}
           label={`Gasto do mês contra ${previousMonthLabel} inteiro`}
         />
       }

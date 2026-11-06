@@ -3,7 +3,7 @@ import { useParams, useRouter } from '@tanstack/react-router';
 import { useMemo, useState } from 'react';
 
 import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
-import { buildArchiveCategoryImpact } from '#/features/categories/category-list/utils/build-archive-category-impact.util.ts';
+import { buildArchiveCategoryImpact } from '#/features/categories/utils/build-archive-category-impact.util.ts';
 import { useCategoryPageModel } from '#/features/categories/category-page/category-page.model.ts';
 import { CategoryPageView } from '#/features/categories/category-page/category-page.view.tsx';
 import { useCategoryRowActions } from '#/features/categories/category-page/hooks/use-category-row-actions.hook.ts';
@@ -16,12 +16,12 @@ import { buildMonthViews } from '#/features/categories/category-page/utils/build
 import { buildTrendBars } from '#/features/categories/category-page/utils/build-trend-bars.util.ts';
 import { describeEmptyCategoryPeriod } from '#/features/categories/category-page/utils/describe-empty-category-period.util.ts';
 import { resolveCategoryRange } from '#/features/categories/category-page/utils/resolve-category-range.util.ts';
-import { TransactionPeriodPicker } from '#/features/transactions/transaction-list/components/transaction-period-picker.component.tsx';
-import { useActionError } from '#/features/transactions/transaction-list/hooks/use-action-error.hook.ts';
-import { useEndOfList } from '#/features/transactions/transaction-list/hooks/use-end-of-list.hook.ts';
-import { useTransactionListSearch } from '#/features/transactions/transaction-list/hooks/use-transaction-list-search.hook.ts';
-import { buildTransactionLookups } from '#/features/transactions/transaction-list/utils/build-transaction-lookups.util.ts';
-import { groupTransactionsByDay } from '#/features/transactions/transaction-list/utils/group-transactions-by-day.util.ts';
+import { TransactionPeriodPickerViewModel } from '#/shared/components/transactions/transaction-period-picker.viewmodel.tsx';
+import { useActionError } from '#/shared/hooks/transactions/use-action-error.hook.ts';
+import { useEndOfList } from '#/shared/hooks/transactions/use-end-of-list.hook.ts';
+import { useTransactionListSearch } from '#/shared/hooks/transactions/use-transaction-list-search.hook.ts';
+import { buildTransactionLookups } from '#/shared/utils/transactions/build-transaction-lookups.util.ts';
+import { groupTransactionsByDay } from '#/shared/utils/transactions/group-transactions-by-day.util.ts';
 import { getBusinessDate } from '#/shared/utils/date/get-business-date.util.ts';
 import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
 import { navigateToHref } from '#/shared/layouts/application/navigation/navigate-to-href.util.ts';
@@ -154,7 +154,7 @@ export function CategoryPageViewModel() {
     description: `Categoria de ${isExpense ? 'despesa' : 'receita'}${category?.archivedAt ? ' · arquivada' : ''}`,
     icon: mapCategoryIcon(category?.icon),
     archived: Boolean(category?.archivedAt),
-    picker: <TransactionPeriodPicker />,
+    picker: <TransactionPeriodPickerViewModel />,
     actionError: error.message ? { message: error.message, onClose: error.clear } : null,
     onEdit: () => setEditing(true),
     figuresStatus: model.breakdown.isError ? 'error' : figures ? 'ready' : 'loading',

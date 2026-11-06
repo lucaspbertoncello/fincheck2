@@ -1,12 +1,16 @@
 import { Chip } from '#/components/chips/chip.component.tsx';
 import { Money } from '#/components/money/money.component.tsx';
-import { incomeBar } from '#/components/summary/income-bar.util.ts';
 import { MonthSummaryCard } from '#/components/summary/month-summary-card.component.tsx';
 import { SummaryBar } from '#/components/summary/summary-bar.component.tsx';
+import type { SummaryBarSegment } from '#/components/summary/summary-bar-segment.type.ts';
 
 type IncomeSummaryCardProps = {
   receivedCents: number;
   expectedCents: number;
+  /** Received over expected, in whole percent. */
+  percent: number;
+  /** Ready bar stretches. */
+  barSegments: SummaryBarSegment[];
   /** What is still to come, in words ("Maxxy ainda vem"). */
   pendingNote?: string;
   label?: string;
@@ -18,12 +22,12 @@ type IncomeSummaryCardProps = {
 export function IncomeSummaryCard({
   receivedCents,
   expectedCents,
+  percent,
+  barSegments,
   pendingNote,
   label = 'Receitas',
   href,
 }: IncomeSummaryCardProps) {
-  const percent = expectedCents > 0 ? Math.round((receivedCents / expectedCents) * 100) : 0;
-
   return (
     <MonthSummaryCard
       href={href}
@@ -42,12 +46,7 @@ export function IncomeSummaryCard({
           {pendingNote ? `; ${pendingNote}` : null}
         </>
       }
-      bar={
-        <SummaryBar
-          segments={incomeBar(receivedCents, expectedCents)}
-          label={`Recebido: ${percent}% do esperado`}
-        />
-      }
+      bar={<SummaryBar segments={barSegments} label={`Recebido: ${percent}% do esperado`} />}
       barLegend="Recebido do esperado"
     />
   );

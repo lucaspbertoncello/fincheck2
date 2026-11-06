@@ -1,6 +1,6 @@
 import type { SettingsNavItem } from '@fincheck/ui';
 
-import { SETTINGS_SECTIONS } from '#/features/settings/settings/constants/settings-sections.constant.ts';
+import { SETTINGS_SECTIONS } from '#/shared/constants/settings/settings-sections.constant.ts';
 import { useSettingsModel } from '#/features/settings/settings/settings.model.ts';
 import { joinNames } from '#/features/settings/settings/utils/join-names.util.ts';
 import { buildHref } from '#/shared/layouts/application/navigation/build-href.util.ts';

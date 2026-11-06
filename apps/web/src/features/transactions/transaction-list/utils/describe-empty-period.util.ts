@@ -1,5 +1,5 @@
-import type { TransactionPeriod } from '#/features/transactions/transaction-list/schemas/transaction-list-search.schema.ts';
-import type { PeriodRange } from '#/features/transactions/transaction-list/types/period-range.type.ts';
+import type { TransactionPeriod } from '#/shared/schemas/transactions/transaction-list-search.schema.ts';
+import type { PeriodRange } from '#/shared/types/transactions/period-range.type.ts';
 
 /** The title of the empty screen for a period with nothing in it. */
 export function describeEmptyPeriod(

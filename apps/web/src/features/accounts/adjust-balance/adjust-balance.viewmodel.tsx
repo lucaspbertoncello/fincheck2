@@ -1,11 +1,11 @@
 import { adjustBalanceRequestSchema } from '@fincheck/shared/accounts/balance-adjustment/balance-adjustment.schema.ts';
 import { useState } from 'react';
 
-import { useAccountsSearch } from '#/features/accounts/account-search/hooks/use-accounts-search.hook.ts';
+import { useAccountsSearch } from '#/shared/hooks/accounts/use-accounts-search.hook.ts';
 import { useAdjustBalanceModel } from '#/features/accounts/adjust-balance/adjust-balance.model.ts';
 import { AdjustBalanceView } from '#/features/accounts/adjust-balance/adjust-balance.view.tsx';
 import { describeAdjustError } from '#/features/accounts/adjust-balance/utils/describe-adjust-error.util.ts';
-import { resolveAccountTheme } from '#/features/accounts/account-list/utils/resolve-account-theme.util.ts';
+import { resolveAccountTheme } from '#/features/accounts/utils/resolve-account-theme.util.ts';
 
 /** "Ajustar saldo" (manual account) and "Atualizar saldo" (wallet). Opens by `?adjust=<accountId>`. */
 export function AdjustBalanceViewModel() {

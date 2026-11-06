@@ -15,7 +15,6 @@ import {
   TransactionDayList,
   TransactionDetailBox,
   TransactionRow,
-  checkSplit,
 } from '@fincheck/ui';
 
 import {
@@ -23,6 +22,7 @@ import {
   ROW_SAMPLES,
   SAMPLE_CATEGORIES,
 } from '#gallery/constants/sample-transactions.constant.ts';
+import { checkSplit } from '#/domain/transactions/transaction-split/rules/check-split.rule.ts';
 import type { GallerySectionDef } from '#gallery/types/gallery-group.type.ts';
 import { GalleryVariant } from '#gallery/components/shell/gallery-variant.component.tsx';
 import { State } from '#gallery/components/shell/state.component.tsx';
@@ -32,6 +32,11 @@ const FIRST_ROW = ROW_SAMPLES[0]!.row;
 
 function RowStack({ children }: { children: React.ReactNode }) {
   return <ul className="m-0 flex list-none flex-col p-0">{children}</ul>;
+}
+
+function splitIndicatorProps(totalCents: number, partsCents: number[]) {
+  const { status, differenceCents } = checkSplit(totalCents, partsCents);
+  return { status, differenceCents };
 }
 
 export const TRANSACTIONS_SECTIONS: GallerySectionDef[] = [
@@ -300,13 +305,13 @@ export const TRANSACTIONS_SECTIONS: GallerySectionDef[] = [
     content: (
       <>
         <GalleryVariant caption="SplitSumIndicator confere" width={420}>
-          <SplitSumIndicator check={checkSplit(20800, [14000, 6800])} />
+          <SplitSumIndicator {...splitIndicatorProps(20800, [14000, 6800])} />
         </GalleryVariant>
         <GalleryVariant caption="faltam" width={420}>
-          <SplitSumIndicator check={checkSplit(20800, [14000, 3000])} />
+          <SplitSumIndicator {...splitIndicatorProps(20800, [14000, 3000])} />
         </GalleryVariant>
         <GalleryVariant caption="passou" width={420}>
-          <SplitSumIndicator check={checkSplit(20800, [14000, 9000])} />
+          <SplitSumIndicator {...splitIndicatorProps(20800, [14000, 9000])} />
         </GalleryVariant>
       </>
     ),

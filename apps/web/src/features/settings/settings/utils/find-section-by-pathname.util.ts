@@ -1,7 +1,7 @@
 import {
   SETTINGS_SECTIONS,
   type SettingsSectionDefinition,
-} from '#/features/settings/settings/constants/settings-sections.constant.ts';
+} from '#/shared/constants/settings/settings-sections.constant.ts';
 
 /** The section whose page is at this pathname (`/settings/backup`), or undefined on `/settings`. */
 export function findSectionByPathname(pathname: string): SettingsSectionDefinition | undefined {

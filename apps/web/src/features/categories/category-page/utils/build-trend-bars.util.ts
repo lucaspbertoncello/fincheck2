@@ -1,7 +1,7 @@
 import type { CategoryBreakdown } from '@fincheck/shared/dashboard/category-breakdown/category-breakdown.type.ts';
 import type { MonthBar } from '@fincheck/ui';
 
-import { countWord } from '#/features/transactions/transaction-list/utils/count-word.util.ts';
+import { countWord } from '#/shared/utils/text/count-word.util.ts';
 
 const SHORT_MONTH = new Intl.DateTimeFormat('pt-BR', { month: 'short', timeZone: 'UTC' });
 const LONG_MONTH = new Intl.DateTimeFormat('pt-BR', {

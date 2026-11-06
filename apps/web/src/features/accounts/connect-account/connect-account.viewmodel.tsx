@@ -4,7 +4,7 @@ import { createConnectionRequestSchema } from '@fincheck/shared/sync/connection/
 import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 
-import { useAccountsSearch } from '#/features/accounts/account-search/hooks/use-accounts-search.hook.ts';
+import { useAccountsSearch } from '#/shared/hooks/accounts/use-accounts-search.hook.ts';
 import { MANUAL_ACCOUNT_TYPES } from '#/features/accounts/connect-account/constants/manual-account-types.constant.ts';
 import { useConnectAccountModel } from '#/features/accounts/connect-account/connect-account.model.ts';
 import { ConnectAccountView } from '#/features/accounts/connect-account/connect-account.view.tsx';

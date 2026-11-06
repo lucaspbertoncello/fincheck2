@@ -1,10 +1,13 @@
 import { Icon } from '#/components/icons/index.ts';
 import { Money } from '#/components/money/index.ts';
-import type { SplitCheck } from '#/components/transactions/split/split-check.type.ts';
+import type { SplitStatus } from '#/components/transactions/split/split-status.type.ts';
 import { cx } from '#/utils/class-names.util.ts';
 
 type SplitSumIndicatorProps = {
-  check: SplitCheck;
+  /** Ready from the split rule: whether the parts close the total. */
+  status: SplitStatus;
+  /** Total minus the sum of the parts: positive when short, negative when over. */
+  differenceCents: number;
   className?: string;
 };
 
@@ -12,13 +15,13 @@ type SplitSumIndicatorProps = {
  * Sum indicator of the split (components.md 6.1): "Soma confere" on green, or how much is left or
  * over on amber. Polite live region, so the change is announced as parts are typed.
  */
-export function SplitSumIndicator({ check, className }: SplitSumIndicatorProps) {
-  const matches = check.status === 'matches';
+export function SplitSumIndicator({ status, differenceCents, className }: SplitSumIndicatorProps) {
+  const matches = status === 'matches';
 
   return (
     <p
       role="status"
-      data-status={check.status}
+      data-status={status}
       className={cx(
         'flex items-center gap-s8 rounded-input px-s12 py-s8 text-label',
         matches ? 'bg-gain-weak text-fg-primary' : 'bg-caution-weak text-fg-primary',
@@ -34,9 +37,9 @@ export function SplitSumIndicator({ check, className }: SplitSumIndicatorProps) 
         <span>Soma confere</span>
       ) : (
         <span>
-          {check.status === 'short' ? 'Faltam ' : 'Passou '}
+          {status === 'short' ? 'Faltam ' : 'Passou '}
           <Money
-            cents={Math.abs(check.differenceCents)}
+            cents={Math.abs(differenceCents)}
             sign="none"
             weight="emphasis"
             className="text-label"

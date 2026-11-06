@@ -1,7 +1,7 @@
 import type { Occurrence } from '@fincheck/shared/recurrences/occurrence/occurrence.type.ts';
 
 import { daysBetween } from '#/shared/utils/date/days-between.util.ts';
-import { formatMoneyNote } from '#/features/recurrences/recurrence-list/utils/format-money-note.util.ts';
+import { formatMoneyNote } from '#/features/recurrences/utils/format-money-note.util.ts';
 import { formatShortDate } from '#/shared/utils/date/format-short-date.util.ts';
 import { getOccurrenceRowStatus } from '#/domain/recurrences/occurrence/rules/get-occurrence-row-status.rule.ts';
 

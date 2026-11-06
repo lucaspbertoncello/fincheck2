@@ -9,7 +9,7 @@ import {
 } from '@fincheck/ui';
 
 import { UNCATEGORIZED_GROUP_ID } from '#/features/transactions/transaction-list/constants/uncategorized-group-id.constant.ts';
-import type { ByCategoryView } from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
+import type { ByCategoryView } from '#/shared/types/transactions/transaction-list-view.type.ts';
 
 type ByCategoryProps = {
   data: ByCategoryView;
@@ -72,7 +72,8 @@ export function ByCategory({ data }: ByCategoryProps) {
             <ExpenseSummaryCard
               spentCents={expenseCard.spentCents}
               previousSamePointCents={expenseCard.comparison.previousSamePointCents}
-              previousTotalCents={expenseCard.comparison.previousTotalCents}
+              barSegments={expenseCard.comparison.barSegments}
+              variationPercent={expenseCard.comparison.variationPercent}
               previousMonthLabel={expenseCard.comparison.previousLabel}
             />
           ) : (
@@ -90,6 +91,8 @@ export function ByCategory({ data }: ByCategoryProps) {
             <IncomeSummaryCard
               receivedCents={incomeCard.receivedCents}
               expectedCents={incomeCard.expectedCents}
+              percent={incomeCard.percent}
+              barSegments={incomeCard.barSegments}
             />
           )
         ) : null}

@@ -2,7 +2,7 @@ import type { RecurrenceAction } from '@fincheck/ui';
 import { useToast } from '@fincheck/ui';
 import { useState } from 'react';
 
-import { useRecurrenceListSearch } from '#/features/recurrences/recurrence-list/hooks/use-recurrence-list-search.hook.ts';
+import { useRecurrenceListSearch } from '#/features/recurrences/hooks/use-recurrence-list-search.hook.ts';
 import { useRecurrenceListModel } from '#/features/recurrences/recurrence-list/recurrence-list.model.ts';
 import { RecurrenceListView } from '#/features/recurrences/recurrence-list/recurrence-list.view.tsx';
 import type {

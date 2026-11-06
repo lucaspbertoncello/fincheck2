@@ -1,8 +1,8 @@
 import { ChoiceField, FormModal, SelectField } from '@fincheck/ui';
 
-import { CategoryChipsField } from '#/features/transactions/transaction-fields/components/category-chips-field.component.tsx';
-import type { BulkPickerView } from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
-import { countWord } from '#/features/transactions/transaction-list/utils/count-word.util.ts';
+import { CategoryChipsField } from '#/features/transactions/components/category-chips-field.component.tsx';
+import type { BulkPickerView } from '#/shared/types/transactions/transaction-list-view.type.ts';
+import { countWord } from '#/shared/utils/text/count-word.util.ts';
 
 type BulkPickerModalProps = {
   bulk: BulkPickerView;

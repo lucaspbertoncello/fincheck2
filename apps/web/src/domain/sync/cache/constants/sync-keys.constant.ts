@@ -4,5 +4,4 @@ export const syncKeys = {
   all: ['sync'] as const,
   settings: () => ['sync', 'settings'] as const,
   connections: () => ['sync', 'connections'] as const,
-  runs: (connectionId: string) => ['sync', 'runs', connectionId] as const,
 };

@@ -3,11 +3,11 @@ import type { Transaction } from '@fincheck/shared/transactions/transaction/tran
 import type { CategoryGroupData } from '@fincheck/ui';
 
 import { UNCATEGORIZED_GROUP_ID } from '#/features/transactions/transaction-list/constants/uncategorized-group-id.constant.ts';
-import type { TransactionLookups } from '#/features/transactions/transaction-list/types/transaction-lookups.type.ts';
-import { TRANSACTION_METHOD_LABELS } from '#/features/transactions/transaction-list/constants/transaction-method-labels.constant.ts';
-import { formatDayShortMonth } from '#/features/transactions/transaction-list/utils/format-day-short-month.util.ts';
+import type { TransactionLookups } from '#/shared/types/transactions/transaction-lookups.type.ts';
+import { TRANSACTION_METHOD_LABELS } from '#/shared/constants/transactions/transaction-method-labels.constant.ts';
+import { formatDayShortMonth } from '#/shared/utils/date/format-day-short-month.util.ts';
 import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
-import { normalizeSearchText } from '#/features/transactions/transaction-list/utils/normalize-search-text.util.ts';
+import { normalizeSearchText } from '#/shared/utils/text/normalize-search-text.util.ts';
 import { formatMoney } from '#/shared/utils/format-money.util.ts';
 
 type CategoryGroups = {

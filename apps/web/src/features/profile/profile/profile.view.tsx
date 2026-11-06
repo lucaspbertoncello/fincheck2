@@ -2,7 +2,7 @@ import type { Profile } from '@fincheck/shared/profile/profile/profile.type.ts';
 import { Button, EmptyState, ErrorState, Money, PageHeader, Section } from '@fincheck/ui';
 import type { ReactNode } from 'react';
 
-import { SectionSkeleton } from '#/features/settings/settings/components/section-skeleton.component.tsx';
+import { SectionSkeleton } from '#/shared/components/states/section-skeleton.component.tsx';
 import { IncomeSourceRow } from '#/features/profile/profile/components/income-source-row.component.tsx';
 import { ProfileAvatar } from '#/features/profile/profile/components/profile-avatar.component.tsx';
 import { ApplicationSummaryPanel } from '#/shared/layouts/application/summary/application-summary-panel.component.tsx';

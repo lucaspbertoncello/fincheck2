@@ -1,16 +1,17 @@
 import type { Transaction } from '@fincheck/shared/transactions/transaction/transaction.type.ts';
-import { validateTransactionEdit, type TransactionEditErrors } from '@fincheck/ui';
+import type { TransactionEditErrors } from '@fincheck/ui';
 import { useState } from 'react';
 
 import { getTransactionDirection } from '#/domain/transactions/transaction/rules/get-transaction-direction.rule.ts';
+import { validateTransactionEdit } from '#/domain/transactions/transaction/rules/validate-transaction-edit.rule.ts';
 import type { TransactionListModel } from '#/features/transactions/transaction-list/transaction-list.model.ts';
-import type { TransactionLookups } from '#/features/transactions/transaction-list/types/transaction-lookups.type.ts';
-import { buildCategoryOptions } from '#/features/transactions/transaction-list/utils/build-category-options.util.ts';
+import type { TransactionLookups } from '#/shared/types/transactions/transaction-lookups.type.ts';
+import { buildCategoryOptions } from '#/features/transactions/utils/build-category-options.util.ts';
 import { buildCounterpartOptions } from '#/features/transactions/transaction-list/utils/build-counterpart-options.util.ts';
 import { buildEditValues } from '#/features/transactions/transaction-list/utils/build-edit-values.util.ts';
 import { buildUpdateBody } from '#/features/transactions/transaction-list/utils/build-update-body.util.ts';
-import { describeTransactionError } from '#/features/transactions/transaction-list/utils/describe-transaction-error.util.ts';
-import { focusFirstInvalid } from '#/features/transactions/transaction-list/utils/focus-first-invalid.util.ts';
+import { describeTransactionError } from '#/shared/utils/transactions/describe-transaction-error.util.ts';
+import { focusFirstInvalid } from '#/features/transactions/utils/focus-first-invalid.util.ts';
 
 function describeOrigin(transaction: Transaction.Dto, lookups: TransactionLookups): string {
   const account = lookups.accounts.get(transaction.accountId)?.name ?? 'sua conta';

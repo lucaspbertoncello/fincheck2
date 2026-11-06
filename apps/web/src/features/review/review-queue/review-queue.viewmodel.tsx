@@ -2,6 +2,10 @@ import { useToast, type CategoryOption, type IconName, type ReviewChoice } from 
 import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 
+import { useLinkReviewPayment } from '#/features/review/review-queue/hooks/use-link-review-payment.hook.ts';
+import { useReviewRuleSuggestion } from '#/features/review/review-queue/hooks/use-review-rule-suggestion.hook.ts';
+import { useSaveReviewEntry } from '#/features/review/review-queue/hooks/use-save-review-entry.hook.ts';
+import { useUndoReviewEntry } from '#/features/review/review-queue/hooks/use-undo-review-entry.hook.ts';
 import {
   useReviewQueueModel,
   useReviewRuleModel,
@@ -20,8 +24,6 @@ import { buildTransactionDetail } from '#/features/review/review-queue/utils/bui
 import { countRuleCatches } from '#/domain/transactions/review-queue/rules/count-rule-catches.rule.ts';
 import { orderQueue } from '#/domain/transactions/review-queue/rules/order-queue.rule.ts';
 import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
-import { hasApiErrorCode } from '#/shared/api/api.error.ts';
-import { getApiErrorMessage } from '#/shared/api/get-api-error-message.util.ts';
 import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
 
 const LISTED_IN_QUEUE = 8;
@@ -128,33 +130,16 @@ function ReviewVisit({ month }: { month: string }) {
   const listed = upcoming.slice(0, LISTED_IN_QUEUE);
   const hiddenCount = Math.max(0, remaining - (reopened ? 0 : 1) - listed.length);
 
-  async function resolveTagIds(names: readonly string[]): Promise<string[]> {
-    const ids: string[] = [];
-    for (const name of names) {
-      const existing = tags.find((tag) => tag.name.toLowerCase() === name.toLowerCase());
-      ids.push(existing ? existing.id : (await model.createTag.mutateAsync({ name })).id);
-    }
-    return ids;
-  }
-
-  async function undoSave(entry: ReviewedEntry) {
-    try {
-      if (entry.historyPrevious.length > 0) {
-        await model.restoreBulk.mutateAsync({ items: entry.historyPrevious });
-      }
-      if (entry.ruleId) await model.deleteRule.mutateAsync(entry.ruleId);
-      await model.updateTransaction.mutateAsync({
-        id: entry.item.transaction.id,
-        body: { categoryId: null, tagIds: entry.item.transaction.tagIds },
-      });
+  const undoSave = useUndoReviewEntry({
+    onUndone: (entry) => {
       setReviewed((current) =>
         current.filter((saved) => saved.item.transaction.id !== entry.item.transaction.id),
       );
       setCursor(null);
-    } catch (error) {
-      setActionError(getApiErrorMessage(error, 'Não deu para desfazer. Tente de novo.'));
-    }
-  }
+    },
+    onError: setActionError,
+  });
+  const saveEntry = useSaveReviewEntry({ tags, onError: setActionError });
 
   async function save() {
     if (!currentItem || !transaction || !activeDraft?.categoryId) return;
@@ -162,47 +147,15 @@ function ReviewVisit({ month }: { month: string }) {
     setSaving(true);
     setActionError(null);
 
-    try {
-      const tagIds = await resolveTagIds(activeDraft.tags);
-      await model.updateTransaction.mutateAsync({
-        id: transaction.id,
-        body: { categoryId, tagIds },
-      });
-    } catch (error) {
-      setSaving(false);
-      setActionError(getApiErrorMessage(error, 'Não deu para salvar. Tente de novo.'));
-      return;
-    }
-
-    let entry: ReviewedEntry = {
+    const entry = await saveEntry({
       item: currentItem,
       categoryId,
-      tags: activeDraft.tags,
-      ruleId: null,
-      historyPrevious: [],
-    };
-
-    if (ruleOffered && activeDraft.ruleEnabled) {
-      try {
-        const created = await model.createRule.mutateAsync({
-          descriptionContains: pattern,
-          kind,
-          categoryId,
-          applyToHistory: true,
-        });
-        entry = {
-          ...entry,
-          ruleId: created.rule.id,
-          historyPrevious: created.applied?.previous ?? [],
-        };
-      } catch (error) {
-        // The same rule already exists: the goal of the checkbox is met. Anything else is told.
-        if (!hasApiErrorCode(error, 'RULE_DUPLICATE')) {
-          setActionError(
-            `A transação foi salva, mas a regra não: ${getApiErrorMessage(error, 'tente criá-la pela tela Regras.')}`,
-          );
-        }
-      }
+      tagNames: activeDraft.tags,
+      rule: ruleOffered && activeDraft.ruleEnabled ? { pattern, kind } : null,
+    });
+    if (!entry) {
+      setSaving(false);
+      return;
     }
 
     setSaving(false);
@@ -223,7 +176,6 @@ function ReviewVisit({ month }: { month: string }) {
       withIcon: true,
     });
   }
-
   function skip() {
     if (cursor !== null) {
       setCursor(cursor + 1 >= reviewed.length ? null : cursor + 1);
@@ -239,72 +191,13 @@ function ReviewVisit({ month }: { month: string }) {
     setCursor((cursor ?? reviewed.length) - 1);
   }
 
-  async function chooseCandidate(transactionId: string, occurrenceId: string) {
-    setActionError(null);
-    try {
-      const occurrence = await model.linkPayment.mutateAsync({
-        id: occurrenceId,
-        body: { transactionId },
-      });
-      const payment = occurrence.payments.find((item) => item.transactionId === transactionId);
-      showUndoToast({
-        message: `Pix ligado a ${occurrence.recurrenceName}`,
-        onUndo: () => {
-          if (!payment) return;
-          model.unlinkPayment
-            .mutateAsync({ id: occurrenceId, paymentId: payment.id })
-            .catch((error: unknown) =>
-              setActionError(getApiErrorMessage(error, 'Não deu para desfazer. Tente de novo.')),
-            );
-        },
-        withIcon: true,
-      });
-    } catch (error) {
-      setActionError(getApiErrorMessage(error, 'Não deu para ligar o Pix. Tente de novo.'));
-    }
-  }
+  const linkPayment = useLinkReviewPayment({ onError: setActionError });
 
   const firstSuggestion = (suggestions.data?.items ?? []).find((item) =>
     categoryById.has(item.categoryId),
   );
 
-  async function acceptSuggestion() {
-    if (!firstSuggestion) return;
-    setActionError(null);
-    try {
-      const created = await model.acceptSuggestion.mutateAsync({
-        pattern: firstSuggestion.pattern,
-        categoryId: firstSuggestion.categoryId,
-        applyToHistory: firstSuggestion.willChangeCount > 0,
-      });
-      const previous = created.applied?.previous ?? [];
-      showUndoToast({
-        message: `Regra criada para “${firstSuggestion.pattern}”`,
-        onUndo: () => {
-          void (async () => {
-            try {
-              if (previous.length > 0) await model.restoreBulk.mutateAsync({ items: previous });
-              await model.deleteRule.mutateAsync(created.rule.id);
-            } catch (error) {
-              setActionError(getApiErrorMessage(error, 'Não deu para desfazer. Tente de novo.'));
-            }
-          })();
-        },
-        withIcon: true,
-      });
-    } catch (error) {
-      setActionError(getApiErrorMessage(error, 'Não deu para criar a regra. Tente de novo.'));
-    }
-  }
-
-  function dismissSuggestion() {
-    if (!firstSuggestion) return;
-    model.dismissSuggestion
-      .mutateAsync({ pattern: firstSuggestion.pattern, categoryId: firstSuggestion.categoryId })
-      .catch((error: unknown) =>
-        setActionError(getApiErrorMessage(error, 'Não deu para dispensar. Tente de novo.')),
-      );
-  }
+  const ruleSuggestion = useReviewRuleSuggestion({ onError: setActionError });
 
   const accountName = (accountId: string) => accounts.find((item) => item.id === accountId)?.name;
 
@@ -375,7 +268,10 @@ function ReviewVisit({ month }: { month: string }) {
         ambiguity: buildAmbiguity(item),
       }))}
       hiddenCount={hiddenCount}
-      onChooseCandidate={(itemId, optionId) => void chooseCandidate(itemId, optionId)}
+      onChooseCandidate={(itemId, optionId) => {
+        setActionError(null);
+        void linkPayment(itemId, optionId);
+      }}
       onChooseOther={(itemId) => {
         setPromotedId(itemId);
         setCursor(null);
@@ -384,8 +280,11 @@ function ReviewVisit({ month }: { month: string }) {
         firstSuggestion
           ? {
               message: `Você moveu ${firstSuggestion.recategorizedCount} transações “${firstSuggestion.pattern}” para ${categoryById.get(firstSuggestion.categoryId)?.name}. A regra faz isso sozinha daqui para a frente.`,
-              onCreate: () => void acceptSuggestion(),
-              onDismiss: dismissSuggestion,
+              onCreate: () => {
+                setActionError(null);
+                void ruleSuggestion.accept(firstSuggestion);
+              },
+              onDismiss: () => ruleSuggestion.dismiss(firstSuggestion),
             }
           : null
       }

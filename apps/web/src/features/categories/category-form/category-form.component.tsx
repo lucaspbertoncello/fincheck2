@@ -1,6 +1,6 @@
 import { useCategoryFormViewModel } from '#/features/categories/category-form/category-form.viewmodel.tsx';
 import { CategoryFormView } from '#/features/categories/category-form/category-form.view.tsx';
-import type { CategoryFormTarget } from '#/features/categories/category-form/types/category-form.type.ts';
+import type { CategoryFormTarget } from '#/features/categories/types/category-form.type.ts';
 
 type CategoryFormProps = {
   /** What to open; null keeps it closed. */

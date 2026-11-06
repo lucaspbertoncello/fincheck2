@@ -1,5 +1,5 @@
 import type { TransactionListModel } from '#/features/transactions/transaction-list/transaction-list.model.ts';
-import type { SyncFailureView } from '#/features/transactions/transaction-list/types/transaction-list-view.type.ts';
+import type { SyncFailureView } from '#/shared/types/transactions/transaction-list-view.type.ts';
 
 type SyncFailuresArgs = {
   model: TransactionListModel;

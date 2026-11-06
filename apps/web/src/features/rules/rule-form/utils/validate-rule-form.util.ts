@@ -1,10 +1,7 @@
 import { createRuleRequestSchema } from '@fincheck/shared/categories/rule/rule.schema.ts';
 import type { Rule } from '@fincheck/shared/categories/rule/rule.type.ts';
 
-import type {
-  RuleFormErrors,
-  RuleTextMode,
-} from '#/features/rules/rule-form/types/rule-form.type.ts';
+import type { RuleFormErrors, RuleTextMode } from '#/features/rules/types/rule-form.type.ts';
 
 type RuleFormValues = {
   mode: RuleTextMode;
