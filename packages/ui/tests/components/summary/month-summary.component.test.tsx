@@ -140,14 +140,14 @@ describe('linked cards', () => {
     expect(html).not.toContain('cursor-pointer');
   });
 
-  it('gives every card the surface box at rest, with no border', () => {
+  it('gives every card the same box as the profile curiosities: line and glass', () => {
     const html = renderToStaticMarkup(
       <IncomeSummaryCard receivedCents={1} expectedCents={2} percent={0} barSegments={[]} />,
     );
 
-    expect(html).toContain('bg-subtle');
+    expect(html).toContain('border-line');
+    expect(html).toContain('bg-glass');
     expect(html).toContain('rounded-panel');
-    expect(html).not.toContain('border-line');
   });
 });
 
@@ -201,7 +201,7 @@ describe('MonthSummaryCards', () => {
 });
 
 describe('MonthSummaryCard header', () => {
-  it('never truncates the label: no ellipsis class, the icon yields room in a narrow card', () => {
+  it('never truncates the label: no ellipsis class, the icon goes over it in a narrow card', () => {
     const html = renderToStaticMarkup(
       <ResultSummaryCard
         receivedCents={380200}
@@ -216,6 +216,6 @@ describe('MonthSummaryCard header', () => {
     expect(title?.[1]).toContain('whitespace-nowrap');
     expect(title?.[1]).not.toContain('truncate');
     expect(html).toContain('@container/card');
-    expect(html).toContain('@min-[17rem]/card:grid');
+    expect(html).toContain('@min-[11rem]/card:flex-row');
   });
 });

@@ -1,6 +1,7 @@
 import {
   ExpenseSummaryCard,
   IncomeSummaryCard,
+  MetricCard,
   Money,
   MonthSummaryCard,
   MonthSummaryCards,
@@ -155,6 +156,22 @@ export const MONTH_SUMMARY_SECTIONS: GallerySectionDef[] = [
             }
             barLegend="Legenda da barra"
           />
+        </GalleryVariant>
+        <GalleryVariant caption="MetricCard (curiosidades do Perfil, sem barra)" width={260}>
+          <MetricCard
+            icon="trend"
+            label="Maior Pix"
+            value={<Money cents={123456} sign="none" tone="expense" />}
+            lines={
+              <>
+                <span className="truncate whitespace-nowrap">para Rafael</span>
+                <span className="truncate whitespace-nowrap">12 mar</span>
+              </>
+            }
+          />
+        </GalleryVariant>
+        <GalleryVariant caption="MetricCard sem dado" width={260}>
+          <MetricCard icon="trend" label="Maior Pix" value={null} />
         </GalleryVariant>
         {TONES.map((tone) => (
           <GalleryVariant key={tone} caption={`SummaryBar ${tone}`} width={240}>

@@ -1,7 +1,6 @@
-import { Section } from '@fincheck/ui';
+import { MetricCard, Section } from '@fincheck/ui';
 
 import { SectionError } from '#/shared/components/states/section-error.component.tsx';
-import { HighlightCard } from '#/features/profile/profile/components/highlight-card.component.tsx';
 import type { HighlightItem } from '#/features/profile/profile/types/highlight-item.type.ts';
 
 type HighlightsSectionProps = {
@@ -33,7 +32,27 @@ export function HighlightsSection({ state, items, onRetry }: HighlightsSectionPr
           >
             {items.map((item) => (
               <li key={item.key} className="flex min-w-0">
-                <HighlightCard item={item} isLoading={state === 'loading'} />
+                <MetricCard
+                  icon={item.icon}
+                  label={item.label}
+                  value={item.value}
+                  isLoading={state === 'loading'}
+                  lines={
+                    <>
+                      {item.context?.lead ? (
+                        <span
+                          className="min-w-0 truncate whitespace-nowrap"
+                          title={item.context.lead}
+                        >
+                          {item.context.lead}
+                        </span>
+                      ) : null}
+                      <span className="min-w-0 truncate whitespace-nowrap">
+                        {item.context?.tail}
+                      </span>
+                    </>
+                  }
+                />
               </li>
             ))}
           </ul>

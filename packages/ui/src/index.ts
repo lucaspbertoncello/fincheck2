@@ -45,6 +45,7 @@ export {
   ExpenseSummaryCard,
   FreeBalancePanel,
   IncomeSummaryCard,
+  MetricCard,
   MonthSummaryCard,
   MonthSummaryCards,
   ResultSummaryCard,
