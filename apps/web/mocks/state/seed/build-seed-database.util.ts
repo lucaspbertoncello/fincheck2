@@ -31,7 +31,12 @@ export function buildSeedDatabase(): MockState.Database {
     runs: [],
     syncSettings: null,
     backup: { folderPath: null, files: [], running: false, lastError: null },
-    profile: { name: 'Davi Moreira', initials: 'DM', updatedAt: toInstant(addDays(TODAY, -30)) },
+    profile: {
+      name: 'Davi Moreira',
+      initials: 'DM',
+      avatarId: null,
+      updatedAt: toInstant(addDays(TODAY, -30)),
+    },
   };
   const ids = buildSeedIds();
 

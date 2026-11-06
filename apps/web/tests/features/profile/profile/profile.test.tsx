@@ -76,7 +76,7 @@ describe('Perfil', () => {
     const name = within(dialog).getByLabelText(/Nome/);
     await user.clear(name);
     await user.type(name, 'Lucas Bertoncello');
-    expect(within(dialog).getByText('LB')).toBeInTheDocument(); // live preview
+    expect(within(dialog).getAllByText('LB').length).toBeGreaterThan(0); // live preview and the initials option
 
     await user.click(within(dialog).getByRole('button', { name: 'Salvar' }));
 
@@ -85,6 +85,58 @@ describe('Perfil', () => {
       expect(screen.queryByRole('dialog', { name: 'Editar perfil' })).not.toBeInTheDocument(),
     );
     expect(screen.getByText('LB')).toBeInTheDocument();
+  });
+
+  it('chooses an illustrated avatar, saves it in the PUT and shows it in the header', async () => {
+    const user = userEvent.setup();
+    const bodies: unknown[] = [];
+    server.events.on('request:start', async ({ request }) => {
+      if (request.method === 'PUT' && new URL(request.url).pathname === '/api/profile') {
+        bodies.push(await request.clone().json());
+      }
+    });
+    await openProfile();
+
+    await user.click((await screen.findAllByRole('button', { name: 'Editar' }))[0]!);
+    const dialog = await screen.findByRole('dialog', { name: 'Editar perfil' });
+    expect(within(dialog).getByRole('radio', { name: 'Usar iniciais' })).toBeChecked();
+    expect(within(dialog).getAllByRole('radio')).toHaveLength(13);
+
+    await user.click(within(dialog).getByRole('radio', { name: 'Avatar 3' }));
+    expect(within(dialog).getByRole('radio', { name: 'Avatar 3' })).toBeChecked();
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar' }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Editar perfil' })).not.toBeInTheDocument(),
+    );
+    expect(bodies).toEqual([{ name: 'Davi Moreira', avatarId: 'notionists-03' }]);
+    expect(db.profile.avatarId).toBe('notionists-03');
+    expect(screen.queryByText('DM')).toBeNull();
+    server.events.removeAllListeners('request:start');
+  });
+
+  it('goes back to the initials with "Usar iniciais", sending null', async () => {
+    const user = userEvent.setup();
+    db.profile.avatarId = 'notionists-07';
+    const bodies: unknown[] = [];
+    server.events.on('request:start', async ({ request }) => {
+      if (request.method === 'PUT' && new URL(request.url).pathname === '/api/profile') {
+        bodies.push(await request.clone().json());
+      }
+    });
+    await openProfile();
+
+    await user.click((await screen.findAllByRole('button', { name: 'Editar' }))[0]!);
+    const dialog = await screen.findByRole('dialog', { name: 'Editar perfil' });
+    expect(within(dialog).getByRole('radio', { name: 'Avatar 7' })).toBeChecked();
+
+    await user.click(within(dialog).getByRole('radio', { name: 'Usar iniciais' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar' }));
+
+    await waitFor(() => expect(bodies).toEqual([{ name: 'Davi Moreira', avatarId: null }]));
+    expect(db.profile.avatarId).toBeNull();
+    expect(await screen.findByText('DM')).toBeInTheDocument();
+    server.events.removeAllListeners('request:start');
   });
 
   it('asks for a name before saving', async () => {

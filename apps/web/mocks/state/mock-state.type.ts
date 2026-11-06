@@ -7,6 +7,7 @@ import type { BillPayment } from '@fincheck/shared/bills/bill-payment/bill-payme
 import type { Bill } from '@fincheck/shared/bills/bill/bill.type.ts';
 import type { Category } from '@fincheck/shared/categories/category/category.type.ts';
 import type { InvoicePayment } from '@fincheck/shared/invoices/invoice-payment/invoice-payment.type.ts';
+import type { Profile } from '@fincheck/shared/profile/profile/profile.type.ts';
 import type { Occurrence } from '@fincheck/shared/recurrences/occurrence/occurrence.type.ts';
 import type { Recurrence } from '@fincheck/shared/recurrences/recurrence/recurrence.type.ts';
 import type { Connection } from '@fincheck/shared/sync/connection/connection.type.ts';
@@ -163,6 +164,7 @@ export namespace MockState {
   export interface ProfileRecord {
     name: string;
     initials: string;
+    avatarId: Profile.AvatarId | null;
     updatedAt: string;
   }
 

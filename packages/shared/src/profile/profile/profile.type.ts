@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 
 import type {
+  profileAvatarIdSchema,
   profileDtoSchema,
   profileHighlightsDtoSchema,
   profileIncomeSourceSchema,
@@ -9,6 +10,7 @@ import type {
 } from './profile.schema.ts';
 
 export namespace Profile {
+  export type AvatarId = z.infer<typeof profileAvatarIdSchema>;
   export type Dto = z.infer<typeof profileDtoSchema>;
   export type IncomeSource = z.infer<typeof profileIncomeSourceSchema>;
   export type Highlights = z.infer<typeof profileHighlightsDtoSchema>;

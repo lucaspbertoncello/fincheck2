@@ -23,11 +23,26 @@ describe('profileDtoSchema', () => {
     const dto = profileDtoSchema.parse({
       name: 'Davi Moreira',
       initials: 'DM',
+      avatarId: 'notionists-03',
       income: { monthlyExpectedCents: 450_000, sources: [source] },
       updatedAt: '2026-10-30T15:00:00.000Z',
     });
 
     expect(dto.income.sources[0]?.dateRule.day).toBeNull();
+    expect(dto.avatarId).toBe('notionists-03');
+  });
+
+  it('needs the avatar to be one of the 12 ids or null', () => {
+    const base = {
+      name: 'Davi',
+      initials: 'D',
+      income: { monthlyExpectedCents: 0, sources: [] },
+      updatedAt: '2026-10-30T15:00:00.000Z',
+    };
+
+    expect(profileDtoSchema.safeParse({ ...base, avatarId: null }).success).toBe(true);
+    expect(profileDtoSchema.safeParse({ ...base, avatarId: 'notionists-13' }).success).toBe(false);
+    expect(profileDtoSchema.safeParse(base).success).toBe(false);
   });
 
   it('refuses a regime outside CLT, PJ and other', () => {
@@ -37,6 +52,7 @@ describe('profileDtoSchema', () => {
       profileDtoSchema.safeParse({
         name: 'Davi',
         initials: 'D',
+        avatarId: null,
         income: { monthlyExpectedCents: 0, sources: [wrong] },
         updatedAt: '2026-10-30T15:00:00.000Z',
       }).success,
@@ -45,6 +61,17 @@ describe('profileDtoSchema', () => {
 });
 
 describe('updateProfileRequestSchema', () => {
+  it('takes an avatar id, null (back to the initials) or nothing', () => {
+    expect(
+      updateProfileRequestSchema.parse({ name: 'Davi', avatarId: 'notionists-12' }).avatarId,
+    ).toBe('notionists-12');
+    expect(updateProfileRequestSchema.parse({ name: 'Davi', avatarId: null }).avatarId).toBeNull();
+    expect(updateProfileRequestSchema.parse({ name: 'Davi' }).avatarId).toBeUndefined();
+    expect(updateProfileRequestSchema.safeParse({ name: 'Davi', avatarId: 'x' }).success).toBe(
+      false,
+    );
+  });
+
   it('trims the name and lets the initials be left out', () => {
     expect(updateProfileRequestSchema.parse({ name: '  Davi Moreira ' })).toEqual({
       name: 'Davi Moreira',

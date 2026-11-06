@@ -8,7 +8,11 @@ import {
   dateRuleSchema,
   employmentRegimeSchema,
 } from '../../recurrences/recurrence/recurrence.schema.ts';
-import { PROFILE_INITIALS_LIMITS, PROFILE_NAME_LIMITS } from './profile.constant.ts';
+import {
+  PROFILE_AVATAR_IDS,
+  PROFILE_INITIALS_LIMITS,
+  PROFILE_NAME_LIMITS,
+} from './profile.constant.ts';
 
 // A source of income IS an income recurrence (BR-PRF-002): this is a reading of it, with the fields
 // the profile shows. Creating and editing go through `/recurrences`.
@@ -25,9 +29,13 @@ export const profileIncomeSourceSchema = z.object({
   nextExpectedOn: businessDateSchema.nullable(),
 });
 
+export const profileAvatarIdSchema = z.enum(PROFILE_AVATAR_IDS);
+
 export const profileDtoSchema = z.object({
   name: z.string().min(PROFILE_NAME_LIMITS.min).max(PROFILE_NAME_LIMITS.max),
   initials: z.string().min(PROFILE_INITIALS_LIMITS.min).max(PROFILE_INITIALS_LIMITS.max),
+  // The illustrated avatar chosen (BR-PRF-001); null shows the initials.
+  avatarId: profileAvatarIdSchema.nullable(),
   income: z.object({
     // Sum of the expected amount of the active income recurrences (not paused, not archived).
     monthlyExpectedCents: nonNegativeCentsSchema,
@@ -37,7 +45,8 @@ export const profileDtoSchema = z.object({
   updatedAt: instantSchema,
 });
 
-// `initials` can be left out: the API derives them from the name (`deriveInitials`).
+// `initials` can be left out: the API derives them from the name (`deriveInitials`). `avatarId` left
+// out keeps the current one; null goes back to the initials.
 export const updateProfileRequestSchema = z.object({
   name: z.string().trim().min(PROFILE_NAME_LIMITS.min).max(PROFILE_NAME_LIMITS.max),
   initials: z
@@ -47,6 +56,7 @@ export const updateProfileRequestSchema = z.object({
     .max(PROFILE_INITIALS_LIMITS.max)
     .regex(/^\p{L}+$/u)
     .optional(),
+  avatarId: profileAvatarIdSchema.nullable().optional(),
 });
 
 // The biggest Pix in one direction (BR-PRF-005). `counterparty` is the name the bank printed on the

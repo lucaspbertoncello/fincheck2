@@ -1,9 +1,9 @@
 import { useRouter } from '@tanstack/react-router';
-import { useState } from 'react';
 
 import { HighlightsSection } from '#/features/profile/profile/components/highlights-section.component.tsx';
 import { SpendMapSection } from '#/features/profile/profile/components/spend-map-section.component.tsx';
 import { ProfileEditViewModel } from '#/features/profile/profile/profile-edit/profile-edit.viewmodel.tsx';
+import { useProfileSearch } from '#/features/profile/profile/hooks/use-profile-search.hook.ts';
 import { useProfileModel } from '#/features/profile/profile/profile.model.ts';
 import { ProfileView } from '#/features/profile/profile/profile.view.tsx';
 import { buildHeatmapDayHref } from '#/features/profile/profile/utils/build-heatmap-day-href.util.ts';
@@ -23,7 +23,8 @@ export function ProfileViewModel() {
   const { profile, spendPeriod, heatmap, highlights, categories } = useProfileModel();
   const router = useRouter();
   const isDesktop = useIsDesktop();
-  const [isEditing, setIsEditing] = useState(false);
+  const { search, update } = useProfileSearch();
+  const isEditing = search.edit === 'profile';
 
   const profileState = profile.isError ? 'error' : profile.data ? 'ready' : 'loading';
   const heatmapState = heatmap.isError ? 'error' : heatmap.data ? 'ready' : 'loading';
@@ -37,7 +38,7 @@ export function ProfileViewModel() {
       state={profileState}
       profile={profile.data}
       onRetry={() => void profile.refetch()}
-      onEditProfile={() => setIsEditing(true)}
+      onEditProfile={() => update({ edit: 'profile' })}
       onAddSource={() => navigateToHref(router, buildRecurrenceHref())}
       onEditSource={(recurrenceId) => navigateToHref(router, buildRecurrenceHref(recurrenceId))}
       spendMap={
@@ -69,7 +70,10 @@ export function ProfileViewModel() {
       }
       editModal={
         isEditing && profile.data ? (
-          <ProfileEditViewModel profile={profile.data} onClose={() => setIsEditing(false)} />
+          <ProfileEditViewModel
+            profile={profile.data}
+            onClose={() => update({ edit: undefined })}
+          />
         ) : null
       }
     />

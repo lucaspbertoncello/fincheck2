@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 
 import { SectionSkeleton } from '#/shared/components/states/section-skeleton.component.tsx';
 import { IncomeSourceRow } from '#/features/profile/profile/components/income-source-row.component.tsx';
-import { ProfileAvatar } from '#/features/profile/profile/components/profile-avatar.component.tsx';
+import { ProfileAvatar } from '#/shared/components/profile/profile-avatar.component.tsx';
 import { ApplicationSummaryPanel } from '#/shared/layouts/application/summary/application-summary-panel.component.tsx';
 
 const DESCRIPTION = 'Sua renda, seus gastos e algumas curiosidades.';
@@ -67,7 +67,7 @@ export function ProfileView({
       {state === 'ready' && profile ? (
         <Section title="Você" divider={false}>
           <div className="flex items-center gap-s16">
-            <ProfileAvatar initials={profile.initials} />
+            <ProfileAvatar initials={profile.initials} avatarId={profile.avatarId} />
             <div className="flex min-w-0 flex-1 flex-col gap-s4">
               <p className="truncate font-title text-page-title leading-(--line-height-title) font-heading text-fg-primary">
                 {profile.name}

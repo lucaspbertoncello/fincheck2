@@ -46,6 +46,7 @@ function buildProfile(): Profile.Dto {
   return {
     name: db.profile.name,
     initials: db.profile.initials,
+    avatarId: db.profile.avatarId,
     income: {
       monthlyExpectedCents: sources.reduce((sum, item) => sum + item.expectedAmountCents, 0),
       sources,
@@ -66,6 +67,8 @@ export const profileMock = [
       db.profile = {
         name: body.name,
         initials: (body.initials ?? deriveInitials(body.name)).toLocaleUpperCase('pt-BR'),
+        // Left out keeps the current avatar; null goes back to the initials.
+        avatarId: body.avatarId === undefined ? db.profile.avatarId : body.avatarId,
         updatedAt: NOW_ISO,
       };
 

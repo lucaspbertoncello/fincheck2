@@ -65,6 +65,22 @@ describe('profile routes', () => {
     expect(saved.initials).toBe('DMO');
   });
 
+  it('stores the avatar, keeps it when it is left out and clears it with null', async () => {
+    expect((await profile()).avatarId).toBeNull();
+
+    const chosen = profileDtoSchema.parse(
+      (await callApi('PUT', '/profile', { name: 'Davi Moreira', avatarId: 'notionists-05' })).json,
+    );
+    expect(chosen.avatarId).toBe('notionists-05');
+
+    await callApi('PUT', '/profile', { name: 'Davi M' });
+    expect((await profile()).avatarId).toBe('notionists-05');
+
+    await callApi('PUT', '/profile', { name: 'Davi M', avatarId: null });
+    expect((await profile()).avatarId).toBeNull();
+    expect((await callApi('PUT', '/profile', { name: 'Davi', avatarId: 'nope' })).status).toBe(400);
+  });
+
   it('refuses an empty name and four letters of initials', async () => {
     expect((await callApi('PUT', '/profile', { name: ' ' })).status).toBe(400);
     expect((await callApi('PUT', '/profile', { name: 'Davi', initials: 'ABCD' })).status).toBe(400);

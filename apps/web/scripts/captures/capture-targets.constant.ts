@@ -65,6 +65,7 @@ const MODAL_TARGETS: CaptureTarget[] = [
   { name: 'connect account modal', path: '/accounts?new=account', kind: 'modal' },
   { name: 'new category modal', path: '/categories?new=category', kind: 'modal' },
   { name: 'new rule modal', path: '/categories/rules?new=rule', kind: 'modal' },
+  { name: 'edit profile modal', path: '/profile?edit=profile', kind: 'modal' },
 ];
 
 export const CAPTURE_TARGETS: CaptureTarget[] = [...SCREEN_TARGETS, ...MODAL_TARGETS];

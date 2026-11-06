@@ -11,13 +11,14 @@ type ProfileEditViewModelProps = {
   onClose: () => void;
 };
 
-/** Edits the name and the initials; the initials stay empty (derived by the API) unless they were changed. */
+/** Edits the name, the initials and the avatar; the initials stay empty (derived by the API) unless they were changed. */
 export function ProfileEditViewModel({ profile, onClose }: ProfileEditViewModelProps) {
   const { update } = useProfileEditModel();
   const [name, setName] = useState(profile.name);
   const [initials, setInitials] = useState(
     profile.initials === deriveInitials(profile.name) ? '' : profile.initials,
   );
+  const [avatarId, setAvatarId] = useState<Profile.AvatarId | null>(profile.avatarId);
   const [errors, setErrors] = useState<{ name?: string; initials?: string }>({});
   const [submitError, setSubmitError] = useState<string>();
 
@@ -30,6 +31,7 @@ export function ProfileEditViewModel({ profile, onClose }: ProfileEditViewModelP
     const parsed = updateProfileRequestSchema.safeParse({
       name,
       ...(typed ? { initials: typed } : {}),
+      avatarId,
     });
     if (!parsed.success) {
       const fields = parsed.error.issues.map((issue) => issue.path[0]);
@@ -51,6 +53,7 @@ export function ProfileEditViewModel({ profile, onClose }: ProfileEditViewModelP
     <ProfileEditView
       name={name}
       initials={initials}
+      avatarId={avatarId}
       previewInitials={previewInitials}
       nameError={errors.name}
       initialsError={errors.initials}
@@ -64,6 +67,7 @@ export function ProfileEditViewModel({ profile, onClose }: ProfileEditViewModelP
         setInitials(value);
         setErrors((current) => ({ ...current, initials: undefined }));
       }}
+      onAvatarChange={setAvatarId}
       onSubmit={submit}
       onClose={onClose}
     />
