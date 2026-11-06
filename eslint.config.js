@@ -241,7 +241,11 @@ export default tseslint.config(
   },
   {
     files: ['apps/api/tests/**/*.ts'],
-    rules: { 'no-restricted-imports': ['error', { patterns: [RELATIVE_IMPORTS] }] },
+    rules: {
+      'no-restricted-imports': ['error', { patterns: [RELATIVE_IMPORTS] }],
+      // Test doubles implement async ports with plain values.
+      '@typescript-eslint/require-await': 'off',
+    },
   },
   {
     files: ['apps/web/**/*.{ts,tsx}', 'packages/ui/**/*.{ts,tsx}'],

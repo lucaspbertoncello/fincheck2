@@ -33,3 +33,4 @@ coverage/
 Thumbs.db
 
 apps/web/.vitest/
+apps/api/.vitest/

@@ -2,14 +2,15 @@ import type { Kysely } from 'kysely';
 
 import type { Database } from '#/database/database.type.ts';
 import { createApp } from '#/main/http/create-app.util.ts';
+import type { Clock } from '#/shared/clock/clock.interface.ts';
 import { LOCAL_TOKEN_HEADER } from '#/shared/local-token/local-token.constant.ts';
 
 export const TEST_LOCAL_TOKEN = 'test-local-token-0123456789abcdef';
 
 // The API with a known local token. `request` already sends the token header; pass the header in
-// `init` to send another value.
-export function createTestApp(db: Kysely<Database>) {
-  const app = createApp({ db, localToken: TEST_LOCAL_TOKEN });
+// `init` to send another value. `clock` freezes the time of the use cases.
+export function createTestApp(db: Kysely<Database>, options: { clock?: Clock } = {}) {
+  const app = createApp({ db, localToken: TEST_LOCAL_TOKEN, ...options });
 
   return {
     request(path: string, init: RequestInit = {}) {
