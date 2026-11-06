@@ -1,10 +1,7 @@
-import type { ServiceLogoSlug } from '@fincheck/ui';
+import type { SubscriptionService } from '@fincheck/shared/recurrences/subscription-service/subscription-service.type.ts';
 
 type ServicePattern = {
-  /** The name of the service as the screen says it. */
-  name: string;
-  /** The logo file (Simple Icons), or `null` when there is none: the circle writes the initial. */
-  slug: ServiceLogoSlug | null;
+  slug: SubscriptionService.Slug;
   /**
    * What the charge description may say, tested on the normalized text (see `normalizeServiceText`):
    * capitals, no accents, "+" written as "PLUS", every other mark turned into a space.
@@ -13,43 +10,35 @@ type ServicePattern = {
 };
 
 /**
- * The 26 services of BR-REC-017 ("Logo oficial"), in the order the first match wins: the narrower
- * name comes before the wider one (YouTube Music and Amazon Music before YouTube Premium and Prime
- * Video).
+ * What each of the 26 services of BR-REC-017 looks like in a description, in the order the first
+ * match wins: the narrower name comes before the wider one (YouTube Music and Amazon Music before
+ * YouTube Premium and Prime Video). The names come from `SUBSCRIPTION_SERVICES`.
  */
 export const SERVICE_PATTERNS: readonly ServicePattern[] = [
-  { name: 'Netflix', slug: 'netflix', patterns: [/\bNETFLIX\b/] },
-  { name: 'YouTube Music', slug: 'youtubemusic', patterns: [/\bYOUTUBE ?MUSIC\b/] },
-  { name: 'YouTube Premium', slug: 'youtube', patterns: [/\bYOUTUBE ?PREMIUM\b/, /\bYOUTUBE\b/] },
-  {
-    name: 'Max',
-    slug: 'hbomax',
-    patterns: [/\bHBO\b/, /^MAX$/, /^MAX (STREAMING|ASSINATURA|BRASIL)$/],
-  },
-  { name: 'Disney+', slug: null, patterns: [/\bDISNEY ?PLUS\b/] },
-  { name: 'Amazon Music', slug: null, patterns: [/\b(AMAZON|AMZN) ?MUSIC\b/] },
-  {
-    name: 'Prime Video',
-    slug: null,
-    patterns: [/\bPRIME ?VIDEO\b/, /\b(AMAZON|AMZN) ?PRIME\b/],
-  },
-  { name: 'Apple TV+', slug: 'appletv', patterns: [/\bAPPLE ?TV\b/] },
-  { name: 'Globoplay', slug: null, patterns: [/\bGLOBO ?PLAY\b/] },
-  { name: 'Paramount+', slug: 'paramountplus', patterns: [/\bPARAMOUNT\b/] },
-  { name: 'Crunchyroll', slug: 'crunchyroll', patterns: [/\bCRUNCHY ?ROLL\b/] },
-  { name: 'Star+', slug: null, patterns: [/\bSTAR ?PLUS\b/] },
-  { name: 'Spotify', slug: 'spotify', patterns: [/\bSPOTIFY\b/] },
-  { name: 'Apple Music', slug: 'applemusic', patterns: [/\bAPPLE ?MUSIC\b/] },
-  { name: 'Deezer', slug: 'deezer', patterns: [/\bDEEZER\b/] },
-  { name: 'Tidal', slug: 'tidal', patterns: [/\bTIDAL\b/] },
-  { name: 'ChatGPT', slug: null, patterns: [/\bCHAT ?GPT\b/, /\bOPENAI\b/] },
-  { name: 'Claude', slug: 'claude', patterns: [/\bCLAUDE\b/, /\bANTHROPIC\b/] },
-  { name: 'Gemini', slug: 'googlegemini', patterns: [/\bGEMINI\b/] },
-  { name: 'DeepSeek', slug: 'deepseek', patterns: [/\bDEEP ?SEEK\b/] },
-  { name: 'GLM', slug: 'zdotai', patterns: [/\bGLM\b/, /\bZHIPU\b/, /\bZ AI\b/] },
-  { name: 'Perplexity', slug: 'perplexity', patterns: [/\bPERPLEXITY\b/] },
-  { name: 'Grok', slug: null, patterns: [/\bGROK\b/, /\bXAI\b/] },
-  { name: 'Mistral', slug: 'mistralai', patterns: [/\bMISTRAL\b/, /\bLE CHAT\b/] },
-  { name: 'GitHub Copilot', slug: 'githubcopilot', patterns: [/\bGITHUB ?COPILOT\b/] },
-  { name: 'Midjourney', slug: null, patterns: [/\bMID ?JOURNEY\b/] },
+  { slug: 'netflix', patterns: [/\bNETFLIX\b/] },
+  { slug: 'youtubemusic', patterns: [/\bYOUTUBE ?MUSIC\b/] },
+  { slug: 'youtube', patterns: [/\bYOUTUBE ?PREMIUM\b/, /\bYOUTUBE\b/] },
+  { slug: 'hbomax', patterns: [/\bHBO\b/, /^MAX$/, /^MAX (STREAMING|ASSINATURA|BRASIL)$/] },
+  { slug: 'disneyplus', patterns: [/\bDISNEY ?PLUS\b/] },
+  { slug: 'amazonmusic', patterns: [/\b(AMAZON|AMZN) ?MUSIC\b/] },
+  { slug: 'primevideo', patterns: [/\bPRIME ?VIDEO\b/, /\b(AMAZON|AMZN) ?PRIME\b/] },
+  { slug: 'appletv', patterns: [/\bAPPLE ?TV\b/] },
+  { slug: 'globoplay', patterns: [/\bGLOBO ?PLAY\b/] },
+  { slug: 'paramountplus', patterns: [/\bPARAMOUNT\b/] },
+  { slug: 'crunchyroll', patterns: [/\bCRUNCHY ?ROLL\b/] },
+  { slug: 'starplus', patterns: [/\bSTAR ?PLUS\b/] },
+  { slug: 'spotify', patterns: [/\bSPOTIFY\b/] },
+  { slug: 'applemusic', patterns: [/\bAPPLE ?MUSIC\b/] },
+  { slug: 'deezer', patterns: [/\bDEEZER\b/] },
+  { slug: 'tidal', patterns: [/\bTIDAL\b/] },
+  { slug: 'chatgpt', patterns: [/\bCHAT ?GPT\b/, /\bOPENAI\b/] },
+  { slug: 'claude', patterns: [/\bCLAUDE\b/, /\bANTHROPIC\b/] },
+  { slug: 'googlegemini', patterns: [/\bGEMINI\b/] },
+  { slug: 'deepseek', patterns: [/\bDEEP ?SEEK\b/] },
+  { slug: 'zdotai', patterns: [/\bGLM\b/, /\bZHIPU\b/, /\bZ AI\b/] },
+  { slug: 'perplexity', patterns: [/\bPERPLEXITY\b/] },
+  { slug: 'grok', patterns: [/\bGROK\b/, /\bXAI\b/] },
+  { slug: 'mistralai', patterns: [/\bMISTRAL\b/, /\bLE CHAT\b/] },
+  { slug: 'githubcopilot', patterns: [/\bGITHUB ?COPILOT\b/] },
+  { slug: 'midjourney', patterns: [/\bMID ?JOURNEY\b/] },
 ];

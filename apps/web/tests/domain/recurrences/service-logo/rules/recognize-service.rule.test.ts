@@ -1,6 +1,7 @@
 import { SERVICE_LOGO_ART } from '@fincheck/ui';
 import { describe, expect, it } from 'vitest';
 
+import { SERVICE_LOGO_SLUGS } from '#/domain/recurrences/service-logo/constants/service-logo-slugs.constant.ts';
 import { SERVICE_PATTERNS } from '#/domain/recurrences/service-logo/constants/service-patterns.constant.ts';
 import { recognizeService } from '#/domain/recurrences/service-logo/rules/recognize-service.rule.ts';
 
@@ -53,14 +54,15 @@ describe('recognizeService', () => {
   });
 
   it('gives 18 services a logo file and 8 only the initial', () => {
-    expect(SERVICE_PATTERNS.filter((service) => service.slug !== null)).toHaveLength(18);
-    expect(SERVICE_PATTERNS.filter((service) => service.slug === null)).toHaveLength(8);
+    const logos = Object.values(SERVICE_LOGO_SLUGS);
+    expect(logos.filter((logo) => logo !== null)).toHaveLength(18);
+    expect(logos.filter((logo) => logo === null)).toHaveLength(8);
   });
 
-  it('points every slug to a logo that exists', () => {
-    for (const service of SERVICE_PATTERNS) {
-      if (service.slug) expect(SERVICE_LOGO_ART).toHaveProperty(service.slug);
-    }
+  it('points every service to a logo that exists, and every logo to a service', () => {
+    const logos = Object.values(SERVICE_LOGO_SLUGS).filter((logo) => logo !== null);
+    for (const logo of logos) expect(SERVICE_LOGO_ART).toHaveProperty(logo);
+    expect([...logos].sort()).toEqual(Object.keys(SERVICE_LOGO_ART).sort());
   });
 
   it('ignores case and accents', () => {

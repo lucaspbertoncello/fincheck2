@@ -38,31 +38,69 @@ const SEPTEMBER = '2026-09';
 const AUGUST = '2026-08';
 
 describe('GET /subscriptions (items and summary)', () => {
-  it('lists the expense recurrences paid on the card, by charge day, and nothing else', async () => {
+  it('lists the recurrences marked as a subscription, by charge day, and nothing else', async () => {
     const data = await readSubscriptions();
     const names = data.items.map((item) => item.recurrence.name);
 
     expect(names).toEqual(
       expect.arrayContaining([
         'Netflix',
-        'Plano celular',
         'Spotify',
         'Nuvem+ 200 GB',
         'Treina Cursos',
+        'Clube do livro',
+        'Ioga em casa',
         'Revista Digital',
       ]),
     );
-    // Academia is a debit expense and the salaries are income: not subscriptions.
+    // Plano celular is on the card but not marked; Academia is not marked; salaries are income.
+    expect(names).not.toContain('Plano celular');
     expect(names).not.toContain('Academia');
     expect(names).not.toContain('Mesada');
-    expect(data.items.every((item) => item.recurrence.method === 'credit')).toBe(true);
+    expect(data.items.every((item) => item.recurrence.isSubscription)).toBe(true);
     // The ended one comes after the active ones.
     expect(names.at(-1)).toBe('Revista Digital');
     const activeDays = data.items.slice(0, -1).map((item) => item.chargeDay);
     expect(activeDays).toEqual([...activeDays].sort((a, b) => a - b));
   });
 
+  it('lists an insurance paid on the card only once it is marked as a subscription', async () => {
+    const created = await callApi('POST', '/recurrences', {
+      kind: 'expense',
+      name: 'Seguro do carro',
+      expectedAmountCents: 18_000,
+      accountId: findTestCard().id,
+      method: 'credit',
+      dateRule: { type: 'fixed_day', day: 12 },
+    });
+    expect(created.status).toBe(201);
+    const { recurrence } = createRecurrenceResponseSchema.parse(created.json);
+    expect(recurrence).toMatchObject({ isSubscription: false, serviceSlug: null });
+
+    expect((await readSubscriptions()).items.map((item) => item.recurrence.name)).not.toContain(
+      'Seguro do carro',
+    );
+
+    const marked = await callApi('PATCH', `/recurrences/${recurrence.id}`, {
+      isSubscription: true,
+    });
+    expect(marked.status).toBe(200);
+    expect((await readSubscriptions()).items.map((item) => item.recurrence.name)).toContain(
+      'Seguro do carro',
+    );
+  });
+
+  it('lists a subscription paid by a method other than the card, with its charges', async () => {
+    const ioga = itemNamed(await readSubscriptions(), 'Ioga em casa');
+
+    expect(ioga.recurrence).toMatchObject({ method: 'debit', serviceSlug: null });
+    expect(ioga).toMatchObject({ status: 'charged', lastChargeCents: 3990, alert: null });
+  });
+
   it('marks charged, to charge and did not charge', async () => {
+    const plano = db.recurrences.find((item) => item.name === 'Plano celular');
+    if (!plano) throw new Error('No Plano celular');
+    plano.isSubscription = true;
     const data = await readSubscriptions();
 
     expect(itemNamed(data, 'Netflix')).toMatchObject({ status: 'charged', alert: null });
@@ -119,7 +157,7 @@ describe('GET /subscriptions (items and summary)', () => {
     const monthly = active.reduce((sum, item) => sum + item.recurrence.expectedAmountCents, 0);
 
     expect(data.summary.activeCount).toBe(active.length);
-    expect(data.summary.activeCount).toBe(5);
+    expect(data.summary.activeCount).toBe(6);
     expect(data.summary.monthlyTotalCents).toBe(monthly);
     expect(data.summary.yearlyTotalCents).toBe(monthly * 12);
   });
@@ -269,6 +307,8 @@ describe('POST /subscriptions/suggestions/accept and /dismiss', () => {
       dateRule: { type: 'fixed_day' },
     });
     expect(occurrence?.status).toBe('confirmed');
+    // It is marked as a subscription, with the service the description names.
+    expect(recurrence).toMatchObject({ isSubscription: true, serviceSlug: 'deezer' });
 
     // The three charges are linked to the occurrences of their months.
     const detail = recurrenceDetailDtoSchema.parse(
@@ -301,6 +341,27 @@ describe('POST /subscriptions/suggestions/accept and /dismiss', () => {
       name: 'Clube de leitura',
       categoryId: category.id,
     });
+  });
+
+  it('leaves the service empty when the description names none, and takes the one the request picks', async () => {
+    const outro = createRecurrenceResponseSchema.parse(
+      (
+        await callApi('POST', '/subscriptions/suggestions/accept', {
+          key: await suggestionKey('LEITURA MENSAL'),
+        })
+      ).json,
+    );
+    expect(outro.recurrence).toMatchObject({ isSubscription: true, serviceSlug: null });
+
+    const picked = createRecurrenceResponseSchema.parse(
+      (
+        await callApi('POST', '/subscriptions/suggestions/accept', {
+          key: await suggestionKey('DEEZER PREMIUM'),
+          serviceSlug: 'tidal',
+        })
+      ).json,
+    );
+    expect(picked.recurrence.serviceSlug).toBe('tidal');
   });
 
   it('brings the suggestion back when the accepted recurrence is deleted (the undo)', async () => {

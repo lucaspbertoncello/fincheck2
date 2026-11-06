@@ -14,6 +14,8 @@ import { toInstant } from '#mocks/support/dates/to-instant.util.ts';
 
 interface SubscriptionSeed {
   name: string;
+  // The known service (BR-REC-017); `null` is "Outro" and the row draws the category icon.
+  serviceSlug: MockState.RecurrenceRecord['serviceSlug'];
   matchText: string;
   // What the card statement says.
   description: string;
@@ -33,6 +35,7 @@ interface SubscriptionSeed {
 const SUBSCRIPTIONS: readonly SubscriptionSeed[] = [
   {
     name: 'Spotify',
+    serviceSlug: 'spotify',
     matchText: 'SPOTIFY',
     description: 'SPOTIFY PREMIUM',
     expectedCents: 2190,
@@ -42,6 +45,7 @@ const SUBSCRIPTIONS: readonly SubscriptionSeed[] = [
   },
   {
     name: 'Nuvem+ 200 GB',
+    serviceSlug: null,
     matchText: 'NUVEM MAIS',
     description: 'NUVEM MAIS ARMAZENAMENTO',
     expectedCents: 1990,
@@ -51,6 +55,7 @@ const SUBSCRIPTIONS: readonly SubscriptionSeed[] = [
   },
   {
     name: 'Treina Cursos',
+    serviceSlug: null,
     matchText: 'TREINA CURSOS',
     description: 'TREINA CURSOS ONLINE',
     expectedCents: 7900,
@@ -60,6 +65,7 @@ const SUBSCRIPTIONS: readonly SubscriptionSeed[] = [
   },
   {
     name: 'Revista Digital',
+    serviceSlug: null,
     matchText: 'REVISTA DIGITAL',
     description: 'REVISTA DIGITAL ASSINATURA',
     expectedCents: 3490,
@@ -67,6 +73,17 @@ const SUBSCRIPTIONS: readonly SubscriptionSeed[] = [
     daysAgo: 3,
     thisMonthCents: 3490,
     endedDaysAgo: 12,
+  },
+  {
+    // "Outro" with an expense category whose icon (a book) stands for the row.
+    name: 'Clube do livro',
+    serviceSlug: null,
+    matchText: 'CLUBE DO LIVRO',
+    description: 'CLUBE DO LIVRO MENSAL',
+    expectedCents: 4590,
+    categoryKey: 'educacao',
+    daysAgo: 5,
+    thisMonthCents: 4590,
   },
 ];
 
@@ -174,6 +191,8 @@ export function seedSubscriptions(database: MockState.Database, ids: SeedIds): v
       accountId: acc.nuCartao,
       method: 'credit',
       categoryId: cat[seed.categoryKey],
+      isSubscription: true,
+      serviceSlug: seed.serviceSlug,
       dateRule: {
         type: 'fixed_day',
         day,
@@ -215,6 +234,56 @@ export function seedSubscriptions(database: MockState.Database, ids: SeedIds): v
     );
     // An ended subscription has no occurrence this month: the charge is the surprise.
     if (occurrence) link(occurrence, tx);
+  }
+
+  // A subscription that is not on the card: any method can carry the flag (BR-REC-017). Debited
+  // from the Banco do Brasil account, "Outro" with a leisure category.
+  const debitDay = Math.max(1, today - 6);
+  const debitCreatedAt = toInstant(`${startsMonth}-01`);
+  const debitSubscription: MockState.RecurrenceRecord = {
+    id: newId(),
+    kind: 'expense',
+    name: 'Ioga em casa',
+    expectedAmountCents: 3990,
+    amountMode: 'fixed',
+    counterparty: null,
+    matchText: 'IOGA EM CASA',
+    employmentRegime: null,
+    accountId: acc.brConta,
+    method: 'debit',
+    categoryId: cat.lazer,
+    isSubscription: true,
+    serviceSlug: null,
+    dateRule: {
+      type: 'fixed_day',
+      day: debitDay,
+      businessDayNumber: null,
+      toleranceDays: null,
+      nonBusinessDayShift: 'none',
+    },
+    maxPayments: 1,
+    startsMonth,
+    pausedAt: null,
+    archivedAt: null,
+    createdAt: debitCreatedAt,
+    updatedAt: debitCreatedAt,
+  };
+  database.recurrences.push(debitSubscription);
+  for (const month of [addMonths(CURRENT_MONTH, -3), addMonths(CURRENT_MONTH, -2)]) {
+    occurrenceOf(debitSubscription, month).settledAt = toInstant(dateInMonth(month, 28));
+  }
+  for (const month of [previous, CURRENT_MONTH]) {
+    const tx = makeTransactionRecord({
+      accountId: acc.brConta,
+      method: 'debit',
+      description: 'IOGA EM CASA ASSINATURA',
+      amountCents: -3990,
+      occurredOn: dateInMonth(month, debitDay),
+      categoryId: cat.lazer,
+      categorySource: 'recurrence',
+    });
+    database.transactions.push(tx);
+    link(occurrenceOf(debitSubscription, month), tx);
   }
 
   for (const purchase of REPEATED_PURCHASES) {

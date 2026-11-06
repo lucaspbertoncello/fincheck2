@@ -6,6 +6,7 @@ import { centsSchema, positiveCentsSchema } from '../../common/money/money.schem
 import { queryBooleanSchema } from '../../common/query/query.schema.ts';
 import { transactionMethodSchema } from '../../transactions/transaction/transaction.schema.ts';
 import { occurrenceDtoSchema } from '../occurrence/occurrence.schema.ts';
+import { subscriptionServiceSlugSchema } from '../subscription-service/subscription-service.schema.ts';
 import {
   AMOUNT_MODES,
   BUSINESS_DAY_NUMBER_LIMITS,
@@ -101,6 +102,9 @@ export const recurrenceDtoSchema = z.object({
   accountId: idSchema.nullable(),
   method: transactionMethodSchema.nullable(),
   categoryId: idSchema.nullable(),
+  // BR-REC-017: a subscription is a flag on an expense recurrence, with or without a known service.
+  isSubscription: z.boolean(),
+  serviceSlug: subscriptionServiceSlugSchema.nullable(),
   dateRule: dateRuleSchema,
   maxPayments: maxPaymentsSchema,
   startsMonth: monthSchema,
@@ -142,22 +146,41 @@ export const listRecurrencesQuerySchema = z.object({
 
 export const summaryRecurrencesQuerySchema = z.object({ month: monthSchema });
 
-export const createRecurrenceRequestSchema = z.object({
-  kind: recurrenceKindSchema,
-  name: z.string().trim().min(1).max(80),
-  expectedAmountCents: positiveCentsSchema,
-  amountMode: amountModeSchema.optional(),
-  counterparty: z.string().max(120).optional(),
-  matchText: z.string().max(80).optional(),
-  employmentRegime: employmentRegimeSchema.optional(),
-  accountId: idSchema.optional(),
-  method: transactionMethodSchema.optional(),
-  categoryId: idSchema.optional(),
-  dateRule: dateRuleSchema,
-  maxPayments: maxPaymentsSchema.optional(),
-  startsMonth: monthSchema.optional(),
-  linkTransactionId: idSchema.optional(),
-});
+export const createRecurrenceRequestSchema = z
+  .object({
+    kind: recurrenceKindSchema,
+    name: z.string().trim().min(1).max(80),
+    expectedAmountCents: positiveCentsSchema,
+    amountMode: amountModeSchema.optional(),
+    counterparty: z.string().max(120).optional(),
+    matchText: z.string().max(80).optional(),
+    employmentRegime: employmentRegimeSchema.optional(),
+    accountId: idSchema.optional(),
+    method: transactionMethodSchema.optional(),
+    categoryId: idSchema.optional(),
+    isSubscription: z.boolean().default(false),
+    serviceSlug: subscriptionServiceSlugSchema.nullable().optional(),
+    dateRule: dateRuleSchema,
+    maxPayments: maxPaymentsSchema.optional(),
+    startsMonth: monthSchema.optional(),
+    linkTransactionId: idSchema.optional(),
+  })
+  .superRefine((value, context) => {
+    if (value.isSubscription && value.kind !== 'expense') {
+      context.addIssue({
+        code: 'custom',
+        path: ['isSubscription'],
+        message: 'Only an expense can be a subscription',
+      });
+    }
+    if (value.serviceSlug && !value.isSubscription) {
+      context.addIssue({
+        code: 'custom',
+        path: ['serviceSlug'],
+        message: 'A service only goes with a subscription',
+      });
+    }
+  });
 
 export const createRecurrenceResponseSchema = z.object({
   recurrence: recurrenceDtoSchema,
@@ -175,6 +198,8 @@ export const updateRecurrenceRequestSchema = z
     accountId: idSchema.nullable().optional(),
     method: transactionMethodSchema.nullable().optional(),
     categoryId: idSchema.nullable().optional(),
+    isSubscription: z.boolean().optional(),
+    serviceSlug: subscriptionServiceSlugSchema.nullable().optional(),
     dateRule: dateRuleSchema.optional(),
     maxPayments: maxPaymentsSchema.optional(),
     startsMonth: monthSchema.optional(),
@@ -185,7 +210,11 @@ export const updateRecurrenceRequestSchema = z
     {
       message: 'Send at least one field besides applyFrom',
     },
-  );
+  )
+  .refine((value) => !(value.isSubscription === false && value.serviceSlug), {
+    path: ['serviceSlug'],
+    message: 'A service only goes with a subscription',
+  });
 
 export const previewRecurrenceRequestSchema = z.object({
   dateRule: dateRuleSchema,

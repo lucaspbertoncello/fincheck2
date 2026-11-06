@@ -201,6 +201,9 @@ export const recurrenceMock = [
           accountId: body.accountId ?? null,
           method: body.method ?? null,
           categoryId: body.categoryId ?? null,
+          // The schema already refuses the flag on an income and a service without the flag.
+          isSubscription: body.isSubscription,
+          serviceSlug: body.isSubscription ? (body.serviceSlug ?? null) : null,
           dateRule: normalizeDateRule(body.dateRule),
           maxPayments: body.maxPayments ?? 1,
           startsMonth: body.startsMonth ?? linkedMonth ?? CURRENT_MONTH,
@@ -267,6 +270,15 @@ export const recurrenceMock = [
         if (body.accountId) findAccount(db, body.accountId);
         if (body.categoryId) assertCategoryKind(body.categoryId, record.kind);
         assertRegimeForIncome(record.kind, body.employmentRegime);
+        const isSubscription = body.isSubscription ?? record.isSubscription;
+        if (isSubscription && record.kind !== 'expense')
+          fail(400, 'VALIDATION_FAILED', 'Só uma despesa pode ser assinatura', {
+            issues: [{ path: 'isSubscription', message: 'Only an expense can be a subscription' }],
+          });
+        if (!isSubscription && body.serviceSlug)
+          fail(400, 'VALIDATION_FAILED', 'O serviço só vale para assinatura', {
+            issues: [{ path: 'serviceSlug', message: 'A service only goes with a subscription' }],
+          });
 
         const { applyFrom, ...changes } = body;
         const touched = {
@@ -276,6 +288,13 @@ export const recurrenceMock = [
         Object.assign(record, {
           ...changes,
           ...(changes.dateRule ? { dateRule: normalizeDateRule(changes.dateRule) } : {}),
+          isSubscription,
+          // Turning the flag off clears the service; otherwise a service sent wins.
+          serviceSlug: !isSubscription
+            ? null
+            : changes.serviceSlug === undefined
+              ? record.serviceSlug
+              : changes.serviceSlug,
           matchText:
             changes.matchText === undefined
               ? record.matchText

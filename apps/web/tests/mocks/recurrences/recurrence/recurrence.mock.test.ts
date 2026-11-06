@@ -62,8 +62,8 @@ describe('recurrences routes (reads)', () => {
     );
     expect(summary.incomes.count).toBe(5);
     expect(summary.incomes.expectedCents).toBe(123_000 + 137_000 + 395_000 + 80_000 + 74_000);
-    // 5 fixed expenses plus 3 subscriptions on the card (Spotify, Nuvem+, Treina Cursos).
-    expect(summary.expenses.count).toBe(8);
+    // 5 fixed expenses plus 5 subscriptions (Spotify, Nuvem+, Treina Cursos, Clube do livro, Ioga).
+    expect(summary.expenses.count).toBe(10);
     expect(summary.expenses.differentCount).toBeGreaterThanOrEqual(1);
     expect(summary.expenses.paidCount).toBeGreaterThanOrEqual(2);
   });
@@ -287,5 +287,85 @@ describe('recurrences routes (weekend and holiday shift)', () => {
       dateRule: { type: 'business_day', businessDayNumber: 5, nonBusinessDayShift: 'after' },
     });
     expect(answer.status).toBe(400);
+  });
+});
+
+describe('recurrences routes (subscription flag, BR-REC-017)', () => {
+  const body = {
+    kind: 'expense',
+    name: 'Streaming de teste',
+    expectedAmountCents: 3990,
+    dateRule: { type: 'fixed_day', day: 12 },
+  };
+
+  async function create(extra: Record<string, unknown>) {
+    return callApi('POST', '/recurrences', { ...body, ...extra });
+  }
+
+  it('creates a subscription on any method, with or without a service', async () => {
+    const pix = createRecurrenceResponseSchema.parse(
+      (await create({ method: 'pix', isSubscription: true, serviceSlug: 'netflix' })).json,
+    ).recurrence;
+    expect(pix).toMatchObject({ method: 'pix', isSubscription: true, serviceSlug: 'netflix' });
+
+    const outro = createRecurrenceResponseSchema.parse(
+      (await create({ isSubscription: true })).json,
+    ).recurrence;
+    expect(outro).toMatchObject({ isSubscription: true, serviceSlug: null });
+
+    const plain = createRecurrenceResponseSchema.parse((await create({})).json).recurrence;
+    expect(plain).toMatchObject({ isSubscription: false, serviceSlug: null });
+  });
+
+  it('refuses the flag on an income and a service without the flag', async () => {
+    const income = await create({ kind: 'income', isSubscription: true });
+    expect(income.status).toBe(400);
+    expect(income.json).toMatchObject({ code: 'VALIDATION_FAILED' });
+
+    expect((await create({ serviceSlug: 'netflix' })).status).toBe(400);
+    expect((await create({ isSubscription: true, serviceSlug: 'nope' })).status).toBe(400);
+  });
+
+  it('clears the service when the flag is turned off, and keeps it on other edits', async () => {
+    const { id } = createRecurrenceResponseSchema.parse(
+      (await create({ isSubscription: true, serviceSlug: 'spotify' })).json,
+    ).recurrence;
+
+    const renamed = recurrenceDtoSchema.parse(
+      (await callApi('PATCH', `/recurrences/${id}`, { name: 'Outro nome' })).json,
+    );
+    expect(renamed).toMatchObject({ isSubscription: true, serviceSlug: 'spotify' });
+
+    const other = recurrenceDtoSchema.parse(
+      (await callApi('PATCH', `/recurrences/${id}`, { serviceSlug: null })).json,
+    );
+    expect(other).toMatchObject({ isSubscription: true, serviceSlug: null });
+
+    await callApi('PATCH', `/recurrences/${id}`, { serviceSlug: 'tidal' });
+    const off = recurrenceDtoSchema.parse(
+      (await callApi('PATCH', `/recurrences/${id}`, { isSubscription: false })).json,
+    );
+    expect(off).toMatchObject({ isSubscription: false, serviceSlug: null });
+  });
+
+  it('refuses a service on a recurrence that is not a subscription, and the flag on an income', async () => {
+    const { id } = createRecurrenceResponseSchema.parse((await create({})).json).recurrence;
+    expect((await callApi('PATCH', `/recurrences/${id}`, { serviceSlug: 'tidal' })).status).toBe(
+      400,
+    );
+    expect(
+      (
+        await callApi('PATCH', `/recurrences/${id}`, {
+          isSubscription: false,
+          serviceSlug: 'tidal',
+        })
+      ).status,
+    ).toBe(400);
+
+    const income = (await recurrences()).find((item) => item.name === 'Mesada');
+    if (!income) throw new Error('No Mesada');
+    expect(
+      (await callApi('PATCH', `/recurrences/${income.id}`, { isSubscription: true })).status,
+    ).toBe(400);
   });
 });

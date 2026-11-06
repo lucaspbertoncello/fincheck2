@@ -7,6 +7,7 @@ import {
   createRecurrenceResponseSchema,
   recurrenceListItemSchema,
 } from '../recurrence/recurrence.schema.ts';
+import { subscriptionServiceSlugSchema } from '../subscription-service/subscription-service.schema.ts';
 import { SUBSCRIPTION_STATUSES } from './subscription.constant.ts';
 
 export const subscriptionStatusSchema = z.enum(SUBSCRIPTION_STATUSES);
@@ -67,6 +68,8 @@ export const acceptSubscriptionSuggestionRequestSchema = z.object({
   categoryId: idSchema.optional(),
   counterparty: z.string().max(120).optional(),
   matchText: z.string().max(80).optional(),
+  // Missing: the service the description names, if any. `null` is "Outro".
+  serviceSlug: subscriptionServiceSlugSchema.nullable().optional(),
 });
 
 export const acceptSubscriptionSuggestionResponseSchema = createRecurrenceResponseSchema;

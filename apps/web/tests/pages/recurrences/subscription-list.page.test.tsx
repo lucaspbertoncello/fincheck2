@@ -50,9 +50,9 @@ describe('SubscriptionListPage', () => {
     renderApp(URL);
     await findRow('Netflix');
 
-    const monthly = 4490 + 5499 + 2190 + 1990 + 7900;
+    const monthly = 4490 + 2190 + 1990 + 7900 + 4590 + 3990;
     expect(screen.getByText('Por mês')).toBeInTheDocument();
-    expect(screen.getByText('5 assinaturas ativas')).toBeInTheDocument();
+    expect(screen.getByText('6 assinaturas ativas')).toBeInTheDocument();
     expect(screen.getByText('Por ano')).toBeInTheDocument();
     const format = (cents: number) =>
       new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(cents / 100);
@@ -81,7 +81,8 @@ describe('SubscriptionListPage', () => {
     const streamflix = await findRow('Netflix');
     expect(within(streamflix).getByText('Cobrada')).toBeInTheDocument();
     expect(within(streamflix).getByText(/^Roxinho · dia \d+$/)).toBeInTheDocument();
-    expect(within(await findRow('Plano celular')).getByText('A cobrar')).toBeInTheDocument();
+    expect(within(await findRow('Clube do livro')).getByText('Cobrada')).toBeInTheDocument();
+    expect(within(await findRow('Ioga em casa')).getByText('Cobrada')).toBeInTheDocument();
     expect(within(await findRow('Nuvem+ 200 GB')).getByText('Não cobrou')).toBeInTheDocument();
     // Never more than two chips: the ended one has its state and "Encerrada".
     const revista = await findRow('Revista Digital');
@@ -144,11 +145,11 @@ describe('SubscriptionListPage', () => {
 
     expect(await screen.findByText(/Nuvem\+ 200 GB encerrada/)).toBeInTheDocument();
     await waitFor(() => expect(isFolded(nuvem)).toBe(true));
-    expect(await screen.findByText('4 assinaturas ativas')).toBeInTheDocument();
+    expect(await screen.findByText('5 assinaturas ativas')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Desfazer' }));
     await waitFor(() => expect(isFolded(nuvem)).toBe(false));
-    expect(await screen.findByText('5 assinaturas ativas')).toBeInTheDocument();
+    expect(await screen.findByText('6 assinaturas ativas')).toBeInTheDocument();
   });
 
   it('"Encerrar" is also in the "…" menu, next to "Editar" and "Excluir"', async () => {

@@ -14,6 +14,8 @@ export function createTestRecurrence(overrides: Partial<Recurrence.Dto> = {}): R
     accountId: null,
     method: null,
     categoryId: null,
+    isSubscription: false,
+    serviceSlug: null,
     dateRule: {
       type: 'fixed_day',
       day: 25,

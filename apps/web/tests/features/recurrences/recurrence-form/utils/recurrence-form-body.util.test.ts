@@ -28,6 +28,7 @@ describe('buildCreateBody', () => {
           nonBusinessDayShift: 'none',
         },
         maxPayments: 1,
+        isSubscription: false,
       },
     });
   });

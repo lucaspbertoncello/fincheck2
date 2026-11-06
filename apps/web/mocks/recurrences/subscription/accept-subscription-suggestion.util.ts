@@ -2,6 +2,7 @@ import { normalizeText } from '@fincheck/shared/common/text/normalize-text.util.
 import type { Recurrence } from '@fincheck/shared/recurrences/recurrence/recurrence.type.ts';
 import type { Subscription } from '@fincheck/shared/recurrences/subscription/subscription.type.ts';
 
+import { recognizeServiceSlug } from '#/domain/recurrences/service-logo/rules/recognize-service-slug.rule.ts';
 import { findCategory } from '#mocks/categories/category/find-category.util.ts';
 import { computeOccurrenceWindow } from '#mocks/recurrences/occurrence/compute-occurrence-window.util.ts';
 import { ensureOccurrences } from '#mocks/recurrences/occurrence/ensure-occurrences.util.ts';
@@ -48,6 +49,12 @@ export function acceptSubscriptionSuggestion(
     accountId: suggestion.accountId,
     method: 'credit',
     categoryId: categoryId ?? null,
+    isSubscription: true,
+    // The service the user picked ("Outro" is `null`), else the one the description names.
+    serviceSlug:
+      request.serviceSlug === undefined
+        ? recognizeServiceSlug(suggestion.description)
+        : request.serviceSlug,
     dateRule: {
       type: 'fixed_day',
       day: dayOf(suggestion.lastChargedOn),

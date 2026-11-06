@@ -1,44 +1,11 @@
+import { SUBSCRIPTION_SERVICES } from '@fincheck/shared/recurrences/subscription-service/subscription-service.constant.ts';
 import { ServiceLogo } from '@fincheck/ui';
 
-import { SERVICE_PATTERNS } from '#/domain/recurrences/service-logo/constants/service-patterns.constant.ts';
+import { buildServiceLogoData } from '#/domain/recurrences/service-logo/rules/build-service-logo-data.rule.ts';
 import type { GallerySectionDef } from '#gallery/types/gallery-group.type.ts';
 
-// The order of BR-REC-017 ("Logo oficial"): video, music, AI.
-const GALLERY_ORDER = [
-  'Netflix',
-  'YouTube Premium',
-  'Max',
-  'Disney+',
-  'Prime Video',
-  'Apple TV+',
-  'Globoplay',
-  'Paramount+',
-  'Crunchyroll',
-  'Star+',
-  'Spotify',
-  'YouTube Music',
-  'Apple Music',
-  'Deezer',
-  'Amazon Music',
-  'Tidal',
-  'ChatGPT',
-  'Claude',
-  'Gemini',
-  'DeepSeek',
-  'GLM',
-  'Perplexity',
-  'Grok',
-  'Mistral',
-  'GitHub Copilot',
-  'Midjourney',
-];
-
-const SERVICES = GALLERY_ORDER.map((name) => {
-  const service = SERVICE_PATTERNS.find((item) => item.name === name);
-  if (!service) throw new Error(`Gallery: ${name} is not in the service patterns`);
-
-  return service;
-});
+// The order of BR-REC-017 ("Logo oficial"): video, music, AI. It is the order of the shared list.
+const SERVICES = SUBSCRIPTION_SERVICES.map((service) => buildServiceLogoData(service.slug));
 
 function ServiceLogoGrid() {
   return (

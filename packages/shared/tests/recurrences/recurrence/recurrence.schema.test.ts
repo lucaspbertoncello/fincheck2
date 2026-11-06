@@ -127,6 +127,62 @@ describe('createRecurrenceRequestSchema', () => {
   });
 });
 
+describe('createRecurrenceRequestSchema, subscription (BR-REC-017)', () => {
+  const expense = {
+    kind: 'expense',
+    name: 'Seguro do carro',
+    expectedAmountCents: 15000,
+    dateRule: { type: 'fixed_day', day: 10 },
+  };
+
+  it('is not a subscription unless it says so', () => {
+    const parsed = createRecurrenceRequestSchema.parse(expense);
+    expect(parsed.isSubscription).toBe(false);
+    expect(parsed.serviceSlug).toBeUndefined();
+  });
+
+  it('takes a subscription with a service, or with none (Outro), on any method', () => {
+    expect(
+      createRecurrenceRequestSchema.safeParse({
+        ...expense,
+        method: 'pix',
+        isSubscription: true,
+        serviceSlug: 'netflix',
+      }).success,
+    ).toBe(true);
+    expect(
+      createRecurrenceRequestSchema.safeParse({
+        ...expense,
+        isSubscription: true,
+        serviceSlug: null,
+      }).success,
+    ).toBe(true);
+  });
+
+  it('refuses a subscription that is an income', () => {
+    const result = createRecurrenceRequestSchema.safeParse({
+      ...expense,
+      kind: 'income',
+      isSubscription: true,
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.path).toEqual(['isSubscription']);
+  });
+
+  it('refuses a service without the flag, and an unknown service', () => {
+    const result = createRecurrenceRequestSchema.safeParse({ ...expense, serviceSlug: 'netflix' });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.path).toEqual(['serviceSlug']);
+    expect(
+      createRecurrenceRequestSchema.safeParse({
+        ...expense,
+        isSubscription: true,
+        serviceSlug: 'nope',
+      }).success,
+    ).toBe(false);
+  });
+});
+
 describe('updateRecurrenceRequestSchema', () => {
   it('needs a field besides applyFrom, and never changes the kind', () => {
     expect(updateRecurrenceRequestSchema.safeParse({ applyFrom: 'current_month' }).success).toBe(
@@ -136,6 +192,24 @@ describe('updateRecurrenceRequestSchema', () => {
       updateRecurrenceRequestSchema.safeParse({ name: 'Novo', applyFrom: 'current_month' }).success,
     ).toBe(true);
     expect(updateRecurrenceRequestSchema.safeParse({ kind: 'expense' }).success).toBe(false);
+  });
+
+  it('turns the subscription on or off, with the service apart', () => {
+    expect(updateRecurrenceRequestSchema.safeParse({ isSubscription: true }).success).toBe(true);
+    expect(updateRecurrenceRequestSchema.safeParse({ serviceSlug: 'spotify' }).success).toBe(true);
+    expect(updateRecurrenceRequestSchema.safeParse({ serviceSlug: null }).success).toBe(true);
+    expect(
+      updateRecurrenceRequestSchema.safeParse({ isSubscription: false, serviceSlug: null }).success,
+    ).toBe(true);
+  });
+
+  it('refuses a service together with the flag turned off', () => {
+    const result = updateRecurrenceRequestSchema.safeParse({
+      isSubscription: false,
+      serviceSlug: 'spotify',
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.path).toEqual(['serviceSlug']);
   });
 
   it('clears the employment regime with null', () => {

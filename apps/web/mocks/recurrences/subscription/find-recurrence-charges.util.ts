@@ -3,8 +3,9 @@ import { normalizeText } from '@fincheck/shared/common/text/normalize-text.util.
 import type { MockState } from '#mocks/state/mock-state.type.ts';
 import { countsInAccounts } from '#mocks/transactions/transaction/counts-in-accounts.util.ts';
 
-// The card charges of a recurrence: the ones linked to its occurrences plus the ones on its card
-// whose description carries its match text (or its name). Oldest first.
+// The charges of a recurrence: the ones linked to its occurrences plus the ones on its account, by
+// its method (the card when it has none), whose description carries its match text (or its name).
+// Oldest first.
 export function findRecurrenceCharges(
   database: MockState.Database,
   recurrence: MockState.RecurrenceRecord,
@@ -23,7 +24,7 @@ export function findRecurrenceCharges(
         tx.amountCents < 0 &&
         (linkedIds.has(tx.id) ||
           (tx.accountId === recurrence.accountId &&
-            tx.method === 'credit' &&
+            tx.method === (recurrence.method ?? 'credit') &&
             normalizeText(tx.description).includes(pattern))),
     )
     .sort((a, b) => a.occurredOn.localeCompare(b.occurredOn));

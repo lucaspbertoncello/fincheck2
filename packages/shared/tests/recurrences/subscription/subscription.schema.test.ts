@@ -104,6 +104,18 @@ describe('subscription schemas', () => {
         categoryId: ID,
       }).data?.name,
     ).toBe('Streaming');
+    expect(
+      acceptSubscriptionSuggestionRequestSchema.safeParse({ key: 'A|B', serviceSlug: 'netflix' })
+        .success,
+    ).toBe(true);
+    expect(
+      acceptSubscriptionSuggestionRequestSchema.safeParse({ key: 'A|B', serviceSlug: null })
+        .success,
+    ).toBe(true);
+    expect(
+      acceptSubscriptionSuggestionRequestSchema.safeParse({ key: 'A|B', serviceSlug: 'nope' })
+        .success,
+    ).toBe(false);
     expect(acceptSubscriptionSuggestionRequestSchema.safeParse({}).success).toBe(false);
     expect(dismissSubscriptionSuggestionRequestSchema.safeParse({ key: '' }).success).toBe(false);
   });
