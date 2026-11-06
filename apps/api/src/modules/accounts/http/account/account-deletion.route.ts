@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 
-import { accountIdParamSchema } from '#/modules/accounts/http/account/account-id-param.schema.ts';
+import { idParamSchema } from '@fincheck/shared/common/id/id-param.schema.ts';
 import type { DeleteAccountController } from '#/modules/accounts/http/account/delete-account.controller.ts';
 import type { GetDeletionImpactController } from '#/modules/accounts/http/account/get-deletion-impact.controller.ts';
 import { validateRequest } from '#/shared/http/validate-request.util.ts';
@@ -12,13 +12,10 @@ export function createAccountDeletionRoute(controllers: {
   deleteAccount: DeleteAccountController;
 }) {
   return new Hono()
-    .get(
-      '/accounts/:id/deletion-impact',
-      validateRequest('param', accountIdParamSchema),
-      async (c) =>
-        c.json(await controllers.getDeletionImpact.handle({ params: c.req.valid('param') }), 200),
+    .get('/accounts/:id/deletion-impact', validateRequest('param', idParamSchema), async (c) =>
+      c.json(await controllers.getDeletionImpact.handle({ params: c.req.valid('param') }), 200),
     )
-    .delete('/accounts/:id', validateRequest('param', accountIdParamSchema), async (c) => {
+    .delete('/accounts/:id', validateRequest('param', idParamSchema), async (c) => {
       await controllers.deleteAccount.handle({ params: c.req.valid('param') });
 
       return c.body(null, 204);

@@ -13,14 +13,14 @@ import type { UnitOfWork } from '#/shared/unit-of-work/unit-of-work.interface.ts
 // adjustment, recorded by `transactions` in the same unit of work (BR-ACC-006).
 export class CreateAccountUseCase {
   private readonly accounts: AccountRepository<Kysely<Database>>;
-  private readonly balanceAdjustments: CreateBalanceAdjustment | undefined;
+  private readonly balanceAdjustments: CreateBalanceAdjustment;
   private readonly presenter: AccountPresenter;
   private readonly unitOfWork: UnitOfWork<Kysely<Database>>;
   private readonly clock: Clock;
 
   constructor(
     accounts: AccountRepository<Kysely<Database>>,
-    balanceAdjustments: CreateBalanceAdjustment | undefined,
+    balanceAdjustments: CreateBalanceAdjustment,
     presenter: AccountPresenter,
     unitOfWork: UnitOfWork<Kysely<Database>>,
     clock: Clock,
@@ -38,10 +38,6 @@ export class CreateAccountUseCase {
     return this.unitOfWork.run(async (executor) => {
       await this.accounts.save(account, executor);
       if (input.initialBalanceCents) {
-        // `transactions` is not wired yet: refuse instead of dropping the balance (the unit of work rolls back).
-        if (!this.balanceAdjustments) {
-          throw new Error('The initial balance waits for the transactions context');
-        }
         await this.balanceAdjustments.execute(
           {
             accountId: account.id,

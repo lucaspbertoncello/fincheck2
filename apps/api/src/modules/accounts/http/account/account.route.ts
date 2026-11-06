@@ -6,7 +6,7 @@ import {
 import { Hono } from 'hono';
 
 import type { ArchiveAccountController } from '#/modules/accounts/http/account/archive-account.controller.ts';
-import { accountIdParamSchema } from '#/modules/accounts/http/account/account-id-param.schema.ts';
+import { idParamSchema } from '@fincheck/shared/common/id/id-param.schema.ts';
 import type { CreateAccountController } from '#/modules/accounts/http/account/create-account.controller.ts';
 import type { GetAccountController } from '#/modules/accounts/http/account/get-account.controller.ts';
 import type { ListAccountsController } from '#/modules/accounts/http/account/list-accounts.controller.ts';
@@ -28,7 +28,7 @@ export function createAccountRoute(controllers: {
     .get('/accounts', validateRequest('query', listAccountsQuerySchema), async (c) =>
       c.json(await controllers.listAccounts.handle({ query: c.req.valid('query') }), 200),
     )
-    .get('/accounts/:id', validateRequest('param', accountIdParamSchema), async (c) =>
+    .get('/accounts/:id', validateRequest('param', idParamSchema), async (c) =>
       c.json(await controllers.getAccount.handle({ params: c.req.valid('param') }), 200),
     )
     .post('/accounts', validateRequest('json', createAccountRequestSchema), async (c) =>
@@ -36,7 +36,7 @@ export function createAccountRoute(controllers: {
     )
     .patch(
       '/accounts/:id',
-      validateRequest('param', accountIdParamSchema),
+      validateRequest('param', idParamSchema),
       validateRequest('json', updateAccountRequestSchema),
       async (c) =>
         c.json(
@@ -47,10 +47,10 @@ export function createAccountRoute(controllers: {
           200,
         ),
     )
-    .post('/accounts/:id/archive', validateRequest('param', accountIdParamSchema), async (c) =>
+    .post('/accounts/:id/archive', validateRequest('param', idParamSchema), async (c) =>
       c.json(await controllers.archiveAccount.handle({ params: c.req.valid('param') }), 200),
     )
-    .post('/accounts/:id/unarchive', validateRequest('param', accountIdParamSchema), async (c) =>
+    .post('/accounts/:id/unarchive', validateRequest('param', idParamSchema), async (c) =>
       c.json(await controllers.unarchiveAccount.handle({ params: c.req.valid('param') }), 200),
     );
 }

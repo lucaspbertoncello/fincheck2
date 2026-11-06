@@ -6,7 +6,7 @@ import { generateId } from '#/shared/id/generate-id.util.ts';
 
 const NOW = '2026-11-06T12:00:00.000Z';
 
-// A valid manual checking account straight in the table (no entity yet). Returns its id.
+// A valid manual checking account straight in the table (without going through the entity). Returns its id.
 export async function insertTestAccount(
   db: Kysely<Database>,
   overrides: Partial<Insertable<AccountsTable>> = {},

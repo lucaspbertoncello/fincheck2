@@ -6,17 +6,24 @@ import type { Database } from '#/database/database.type.ts';
 import { KyselyUnitOfWork } from '#/database/unit-of-work/kysely-unit-of-work.service.ts';
 import { handleError } from '#/main/http/handle-error.util.ts';
 import { createLocalTokenMiddleware } from '#/main/http/middlewares/local-token.middleware.ts';
+import { createTransactionsModule } from '#/main/http/create-transactions-module.util.ts';
 import { AccountPresenter } from '#/modules/accounts/application/account/account-presenter.service.ts';
 import { ArchiveAccountUseCase } from '#/modules/accounts/application/account/archive-account.usecase.ts';
+import { AdjustAccountBalanceUseCase } from '#/modules/accounts/application/account/adjust-account-balance.usecase.ts';
 import { CreateAccountUseCase } from '#/modules/accounts/application/account/create-account.usecase.ts';
+import { GetAccountRefQuery } from '#/modules/accounts/application/account/get-account-ref.query.ts';
 import { GetAccountUseCase } from '#/modules/accounts/application/account/get-account.usecase.ts';
+import { GetBalanceHistoryUseCase } from '#/modules/accounts/application/account/get-balance-history.usecase.ts';
 import { ListAccountsUseCase } from '#/modules/accounts/application/account/list-accounts.usecase.ts';
 import { UnarchiveAccountUseCase } from '#/modules/accounts/application/account/unarchive-account.usecase.ts';
 import { UpdateAccountUseCase } from '#/modules/accounts/application/account/update-account.usecase.ts';
+import { AdjustAccountBalanceController } from '#/modules/accounts/http/account/adjust-account-balance.controller.ts';
 import { ArchiveAccountController } from '#/modules/accounts/http/account/archive-account.controller.ts';
+import { createAccountBalanceRoute } from '#/modules/accounts/http/account/account-balance.route.ts';
 import { createAccountRoute } from '#/modules/accounts/http/account/account.route.ts';
 import { CreateAccountController } from '#/modules/accounts/http/account/create-account.controller.ts';
 import { GetAccountController } from '#/modules/accounts/http/account/get-account.controller.ts';
+import { GetBalanceHistoryController } from '#/modules/accounts/http/account/get-balance-history.controller.ts';
 import { ListAccountsController } from '#/modules/accounts/http/account/list-accounts.controller.ts';
 import { UnarchiveAccountController } from '#/modules/accounts/http/account/unarchive-account.controller.ts';
 import { UpdateAccountController } from '#/modules/accounts/http/account/update-account.controller.ts';
@@ -42,20 +49,37 @@ export function createApp({
 
   const getHealth = new GetHealthController(new CheckDatabaseQuery(db));
 
-  // accounts. The manual balance, the Pluggy connection and the balance adjustment belong to
-  // `transactions` and `sync`, which do not exist yet: their ports are left unwired (`undefined`),
-  // so a manual balance and a connection show as null and an initial balance is refused. The routes
-  // that need the owners (balance history, balance adjustment, deletion impact, deletion) have
-  // controllers and routes but are NOT mounted until piece 3 (`transactions`), 4 (`categories`)
-  // and 5 (`invoices`) exist; piece 3 wires `createAccountBalanceRoute` and the ports.
+  // accounts and transactions know each other only through ports: `accounts` asks `transactions`
+  // for the balance, the movement and the adjustment, and `transactions` asks `accounts` which
+  // account a transaction is in. The Pluggy connection belongs to `sync`, which does not exist
+  // yet (its port stays unwired: the connection shows as null). Deletion impact and deletion
+  // (`createAccountDeletionRoute`) have their transactions side ready but also need `invoices` and
+  // `categories`, so they are NOT mounted yet. Likewise `transactions` has no category, tag,
+  // invoice, link or recurrence reader yet: see `createTransactionsModule` for what that leaves
+  // out of the routes.
   const accounts = new KyselyAccountRepository(db);
-  const accountPresenter = new AccountPresenter(undefined, undefined);
+  const transactions = createTransactionsModule({
+    db,
+    unitOfWork,
+    clock,
+    accounts: new GetAccountRefQuery(accounts),
+  });
+  const accountPresenter = new AccountPresenter(
+    transactions.accountPorts.manualBalances,
+    undefined,
+  );
   const listAccounts = new ListAccountsController(
     new ListAccountsUseCase(accounts, accountPresenter),
   );
   const getAccount = new GetAccountController(new GetAccountUseCase(accounts, accountPresenter));
   const createAccount = new CreateAccountController(
-    new CreateAccountUseCase(accounts, undefined, accountPresenter, unitOfWork, clock),
+    new CreateAccountUseCase(
+      accounts,
+      transactions.accountPorts.balanceAdjustments,
+      accountPresenter,
+      unitOfWork,
+      clock,
+    ),
   );
   const updateAccount = new UpdateAccountController(
     new UpdateAccountUseCase(accounts, accountPresenter, unitOfWork, clock),
@@ -66,6 +90,21 @@ export function createApp({
   const unarchiveAccount = new UnarchiveAccountController(
     new UnarchiveAccountUseCase(accounts, accountPresenter, unitOfWork, clock),
   );
+  const accountBalance = createAccountBalanceRoute({
+    getBalanceHistory: new GetBalanceHistoryController(
+      new GetBalanceHistoryUseCase(accounts, transactions.accountPorts.movements, clock),
+    ),
+    adjustAccountBalance: new AdjustAccountBalanceController(
+      new AdjustAccountBalanceUseCase(
+        accounts,
+        transactions.accountPorts.manualBalances,
+        transactions.accountPorts.balanceAdjustments,
+        accountPresenter,
+        unitOfWork,
+        clock,
+      ),
+    ),
+  });
 
   return (
     new Hono()
@@ -87,5 +126,7 @@ export function createApp({
           unarchiveAccount,
         }),
       )
+      .route('/', accountBalance)
+      .route('/', transactions.routes)
   );
 }

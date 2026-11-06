@@ -3,7 +3,7 @@ import { balanceHistoryQuerySchema } from '@fincheck/shared/accounts/balance-his
 import { Hono } from 'hono';
 
 import type { AdjustAccountBalanceController } from '#/modules/accounts/http/account/adjust-account-balance.controller.ts';
-import { accountIdParamSchema } from '#/modules/accounts/http/account/account-id-param.schema.ts';
+import { idParamSchema } from '@fincheck/shared/common/id/id-param.schema.ts';
 import type { GetBalanceHistoryController } from '#/modules/accounts/http/account/get-balance-history.controller.ts';
 import { validateRequest } from '#/shared/http/validate-request.util.ts';
 
@@ -16,7 +16,7 @@ export function createAccountBalanceRoute(controllers: {
   return new Hono()
     .get(
       '/accounts/:id/balance-history',
-      validateRequest('param', accountIdParamSchema),
+      validateRequest('param', idParamSchema),
       validateRequest('query', balanceHistoryQuerySchema),
       async (c) =>
         c.json(
@@ -29,7 +29,7 @@ export function createAccountBalanceRoute(controllers: {
     )
     .post(
       '/accounts/:id/balance-adjustments',
-      validateRequest('param', accountIdParamSchema),
+      validateRequest('param', idParamSchema),
       validateRequest('json', adjustBalanceRequestSchema),
       async (c) =>
         c.json(

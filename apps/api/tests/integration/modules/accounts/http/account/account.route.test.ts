@@ -55,7 +55,7 @@ describe('accounts routes', () => {
         name: 'Nubank',
         institutionCode: 'nubank',
         institutionName: null,
-        balanceCents: null,
+        balanceCents: 0,
         balanceAt: null,
         connection: null,
         creditCard: null,
@@ -144,22 +144,47 @@ describe('accounts routes', () => {
       await expectError(response, 400, 'VALIDATION_FAILED');
     });
 
-    it('has no way to record an initial balance yet (waits for transactions) and rolls back', async () => {
-      const spy = console.error;
-      console.error = () => undefined;
-      try {
-        const response = await send('POST', '/accounts', {
-          type: 'checking',
-          name: 'Nubank',
-          institutionCode: 'nubank',
-          initialBalanceCents: 5000,
-        });
+    it('records the initial balance as the first adjustment and shows it as the balance', async () => {
+      const dto = await create({
+        type: 'checking',
+        name: 'Nubank',
+        institutionCode: 'nubank',
+        initialBalanceCents: 5000,
+      });
+      const wallet = await create({ type: 'wallet', name: 'Carteira', initialBalanceCents: -1500 });
 
-        await expectError(response, 500, 'INTERNAL_ERROR');
-      } finally {
-        console.error = spy;
-      }
-      expect(await database.db.selectFrom('accounts').select('id').execute()).toEqual([]);
+      expect(dto.balanceCents).toBe(5000);
+      expect(wallet.balanceCents).toBe(-1500);
+      const rows = await database.db
+        .selectFrom('transactions')
+        .select(['account_id', 'nature', 'origin', 'description', 'amount_cents', 'occurred_on'])
+        .orderBy('amount_cents', 'desc')
+        .execute();
+      expect(rows).toEqual([
+        {
+          account_id: dto.id,
+          nature: 'balance_adjustment',
+          origin: 'manual',
+          description: 'Ajuste de saldo: Saldo inicial',
+          amount_cents: 5000,
+          occurred_on: '2026-11-06',
+        },
+        {
+          account_id: wallet.id,
+          nature: 'balance_adjustment',
+          origin: 'manual',
+          description: 'Ajuste de saldo: Saldo inicial',
+          amount_cents: -1500,
+          occurred_on: '2026-11-06',
+        },
+      ]);
+    });
+
+    it('records no adjustment when the initial balance is zero or absent', async () => {
+      await create({ type: 'checking', name: 'A', institutionCode: 'nubank' });
+      await create({ type: 'wallet', name: 'B', initialBalanceCents: 0 });
+
+      expect(await database.db.selectFrom('transactions').select('id').execute()).toEqual([]);
     });
   });
 
@@ -432,12 +457,10 @@ describe('accounts routes', () => {
     });
   });
 
-  it('keeps the other routes of the contract out until their owners exist', async () => {
+  it('keeps the routes that wait for invoices and categories out until those owners exist', async () => {
     const { id } = await create({ type: 'wallet', name: 'Carteira' });
 
     for (const [method, path] of [
-      ['GET', `/accounts/${id}/balance-history?month=2026-11`],
-      ['POST', `/accounts/${id}/balance-adjustments`],
       ['GET', `/accounts/${id}/deletion-impact`],
       ['DELETE', `/accounts/${id}`],
     ] as const) {

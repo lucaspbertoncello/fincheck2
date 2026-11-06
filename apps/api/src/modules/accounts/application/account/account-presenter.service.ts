@@ -45,8 +45,9 @@ export class AccountPresenter {
       institutionName: account.institutionName,
       balanceCents: account.isPluggy()
         ? (account.bankBalance?.cents ?? null)
-        : account.hasCalculatedBalance()
-          ? (balances.get(account.id) ?? null)
+        : account.hasCalculatedBalance() && this.manualBalances
+          ? // An account with no transaction has a balance of 0, not "no balance".
+            (balances.get(account.id) ?? 0)
           : null,
       balanceAt: account.isPluggy() ? account.bankBalanceAt : null,
       connection: connections.get(account.id) ?? null,
