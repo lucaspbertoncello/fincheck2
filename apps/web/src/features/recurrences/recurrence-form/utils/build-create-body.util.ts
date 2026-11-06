@@ -6,6 +6,7 @@ import type {
   RecurrenceFormValues,
 } from '#/features/recurrences/recurrence-form/types/recurrence-form.type.ts';
 import { buildDateRule } from '#/features/recurrences/recurrence-form/utils/build-date-rule.util.ts';
+import { resolveServiceSlugBody } from '#/features/recurrences/recurrence-form/utils/resolve-service-slug-body.util.ts';
 import { mapFormIssues } from '#/features/recurrences/recurrence-form/utils/map-form-issues.util.ts';
 
 /** Validates the form with the request schema of `POST /recurrences` and builds the body. */
@@ -17,6 +18,7 @@ export function buildCreateBody(
   const counterparty = values.counterparty.trim();
   const matchText = values.matchText.trim();
   const maxPayments = values.maxPayments.trim();
+  const isSubscription = values.kind === 'expense' && values.isSubscription;
 
   const parsed = createRecurrenceRequestSchema.safeParse({
     kind: values.kind,
@@ -33,6 +35,8 @@ export function buildCreateBody(
     method,
     dateRule: buildDateRule(values),
     maxPayments: maxPayments === '' ? undefined : Number(maxPayments),
+    isSubscription,
+    serviceSlug: isSubscription ? resolveServiceSlugBody(values.serviceSlug) : undefined,
   });
 
   return parsed.success

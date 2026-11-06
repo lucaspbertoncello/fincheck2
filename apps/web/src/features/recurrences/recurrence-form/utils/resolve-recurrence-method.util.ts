@@ -2,8 +2,8 @@ import type { Account } from '@fincheck/shared/accounts/account/account.type.ts'
 
 /**
  * The payment method a recurrence is saved with, from the account it falls on: a credit card makes
- * it `credit` (an expense on the card is a subscription, BR-REC-017); any other account leaves the
- * method alone (`undefined`).
+ * it `credit`; any other account leaves the method alone (`undefined`). Being a subscription is no
+ * longer tied to the card: it is the "É assinatura" flag (BR-REC-017).
  */
 export function resolveRecurrenceMethod(
   accountId: string | null,

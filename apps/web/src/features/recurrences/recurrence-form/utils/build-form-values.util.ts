@@ -1,5 +1,6 @@
 import type { Recurrence } from '@fincheck/shared/recurrences/recurrence/recurrence.type.ts';
 
+import { OTHER_SERVICE } from '#/features/recurrences/recurrence-form/constants/other-service.constant.ts';
 import type { RecurrenceFormValues } from '#/features/recurrences/recurrence-form/types/recurrence-form.type.ts';
 
 /** The form of "Editar recorrência", filled with the saved recurrence. */
@@ -23,5 +24,7 @@ export function buildFormValues(recurrence: Recurrence.Dto): RecurrenceFormValue
     nonBusinessDayShift: dateRule.nonBusinessDayShift ?? 'none',
     maxPayments: String(recurrence.maxPayments),
     applyFrom: 'next_month',
+    isSubscription: recurrence.isSubscription,
+    serviceSlug: recurrence.serviceSlug ?? OTHER_SERVICE,
   };
 }

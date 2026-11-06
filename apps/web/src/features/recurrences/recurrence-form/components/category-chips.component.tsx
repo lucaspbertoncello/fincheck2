@@ -1,6 +1,6 @@
 import { CategoryPicker, Collapse, FieldSet, Icon } from '@fincheck/ui';
 import type { CategoryOption, IconName } from '@fincheck/ui';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Label, Radio, RadioGroup } from 'react-aria-components';
 
 type CategoryChipsProps = {
@@ -13,15 +13,16 @@ type CategoryChipsProps = {
 };
 
 const OTHERS_KEY = 'others';
-const SHOWN = 3;
+const SHOWN = 2;
 
 type ChipOption = { key: string; label: string; icon: IconName };
 
 /**
- * Category as touch shortcuts: the three most used of the type as chips with their icon, then
+ * Category as touch shortcuts: the two most used of the type as chips with their icon, then
  * "Outras…", which opens the search for the rest. A category picked from the search takes the place
- * of the third chip, so the choice is always visible and the group never gets taller. Four compact
- * chips (12 px of side padding, small icon) make two rows in the half-width column of the modal.
+ * of the second chip, so the choice is always visible. The chips stay on ONE row, so the column has
+ * room for "É assinatura" and the modal keeps its height at 1280×720 (Lucas, 06/11/2026): when two
+ * long names do not fit beside "Outras…", only one shortcut shows; no name is ever cut.
  */
 export function CategoryChips({
   label,
@@ -31,6 +32,25 @@ export function CategoryChips({
   className,
 }: CategoryChipsProps) {
   const [searching, setSearching] = useState(false);
+  const rowRef = useRef<HTMLDivElement>(null);
+  // The list and the choice the fit was measured for: when either changes, back to two shortcuts.
+  const fitKey = `${categories.map((category) => category.id).join()}|${value ?? ''}`;
+  const [fit, setFit] = useState({ key: fitKey, limit: SHOWN });
+  const limit = fit.key === fitKey ? fit.limit : SHOWN;
+
+  // Two long names that wrap beside "Outras…" leave one shortcut, so the row never grows.
+  useEffect(() => {
+    const row = rowRef.current;
+    if (!row || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => {
+      const first = row.firstElementChild;
+      if (first && row.scrollHeight > first.getBoundingClientRect().height + 1) {
+        setFit({ key: fitKey, limit: 1 });
+      }
+    });
+    observer.observe(row);
+    return () => observer.disconnect();
+  }, [fitKey]);
 
   if (categories.length === 0) {
     return (
@@ -40,10 +60,10 @@ export function CategoryChips({
     );
   }
 
-  const top = categories.slice(0, SHOWN);
+  const top = categories.slice(0, limit);
   const chosen = categories.find((category) => category.id === value);
   // A category picked from the search takes the last place, so the row keeps its length and height.
-  const shown = chosen && !top.includes(chosen) ? [...top.slice(0, SHOWN - 1), chosen] : top;
+  const shown = chosen && !top.includes(chosen) ? [...top.slice(0, limit - 1), chosen] : top;
   const options: ChipOption[] = shown.map((category) => ({
     key: category.id,
     label: category.name,
@@ -65,7 +85,7 @@ export function CategoryChips({
         className="flex flex-col gap-s4"
       >
         <Label className="text-label text-fg-secondary">{label}</Label>
-        <div className="flex flex-wrap gap-s8">
+        <div ref={rowRef} className="flex flex-wrap gap-s8">
           {options.map((option) => (
             <Radio
               key={option.key}

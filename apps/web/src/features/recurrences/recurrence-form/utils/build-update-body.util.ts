@@ -6,6 +6,7 @@ import type {
   RecurrenceFormValues,
 } from '#/features/recurrences/recurrence-form/types/recurrence-form.type.ts';
 import { buildDateRule } from '#/features/recurrences/recurrence-form/utils/build-date-rule.util.ts';
+import { resolveServiceSlugBody } from '#/features/recurrences/recurrence-form/utils/resolve-service-slug-body.util.ts';
 import { mapFormIssues } from '#/features/recurrences/recurrence-form/utils/map-form-issues.util.ts';
 
 const RULE_FIELDS = [
@@ -57,6 +58,16 @@ export function buildUpdateBody(
   if (RULE_FIELDS.some((field) => rule[field] !== saved.dateRule[field])) draft['dateRule'] = rule;
   if (maxPayments !== String(saved.maxPayments)) {
     draft['maxPayments'] = maxPayments === '' ? undefined : Number(maxPayments);
+  }
+
+  const isSubscription = values.kind === 'expense' && values.isSubscription;
+  const serviceSlug = isSubscription ? resolveServiceSlugBody(values.serviceSlug) : null;
+  if (isSubscription !== saved.isSubscription) {
+    // Turning the flag off also clears the service.
+    draft['isSubscription'] = isSubscription;
+    draft['serviceSlug'] = serviceSlug;
+  } else if (isSubscription && serviceSlug !== saved.serviceSlug) {
+    draft['serviceSlug'] = serviceSlug;
   }
 
   if (Object.keys(draft).length === 0) return { status: 'unchanged' };

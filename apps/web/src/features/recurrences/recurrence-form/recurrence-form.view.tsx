@@ -2,10 +2,13 @@ import {
   AmountField,
   Button,
   ChoiceField,
+  Collapse,
   ConfirmDialog,
   FineNote,
   FormModal,
   FormModalMore,
+  SelectField,
+  Switch,
   TextField,
 } from '@fincheck/ui';
 import type { CategoryOption, ChoiceOption } from '@fincheck/ui';
@@ -38,6 +41,8 @@ type RecurrenceFormViewProps = {
   categories: CategoryOption[];
   /** Accounts as choices (no cards). */
   accounts: AccountChipOption[];
+  /** The services of the Serviço field, each with its logo, "Outro" last. */
+  serviceOptions: ChoiceOption[];
   /** Edit only: the confirmations so far. */
   historyNote?: string;
   paused: boolean;
@@ -101,6 +106,7 @@ export function RecurrenceFormView({
   previewStatus,
   categories,
   accounts,
+  serviceOptions,
   historyNote,
   paused,
   formError,
@@ -137,7 +143,7 @@ export function RecurrenceFormView({
         destructive={editing ? { label: 'Excluir', onPress: onRequestDelete } : undefined}
       >
         <div className="flex flex-col gap-s12 @xl:gap-s16">
-          {/* Desktop: two columns and a band. Left the amount and the name; right the category and the account;
+          {/* Desktop: two columns and a band. Left the amount, the name and the subscription; right the category and the account;
               under both, "Quando cai" across the width; "Mais opções" last, outside the grid, so opening it
               moves nothing that was there. On the phone the columns dissolve and the order classes give:
               type, amount, name, when, category, account, then more. */}
@@ -191,6 +197,36 @@ export function RecurrenceFormView({
                 value={values.accountId}
                 onChange={(accountId) => onChange({ accountId })}
               />
+              {/* "É assinatura" and its service on ONE row under "Sai de": the right column has room
+                  for one row, so the modal keeps its height at 1280×720 (Lucas, 06/11/2026, option 1).
+                  On the phone, `order-2` keeps it right after the name. Only an expense has it. */}
+              <Collapse
+                isOpen={!income}
+                trackClassName="order-2 @xl:order-6 @xl:-mt-s16"
+                contentClassName="pt-s16"
+              >
+                <div className="flex min-h-ctl-touch items-center gap-s16">
+                  <Switch
+                    className="shrink-0"
+                    label="É assinatura"
+                    isSelected={values.isSubscription}
+                    onChange={(isSubscription) => onChange({ isSubscription })}
+                  />
+                  <Collapse isOpen={values.isSubscription} trackClassName="min-w-0 flex-1">
+                    <SelectField
+                      label="Serviço"
+                      hideLabel
+                      options={serviceOptions}
+                      value={values.serviceSlug}
+                      onChange={(serviceSlug) =>
+                        onChange({
+                          serviceSlug: serviceSlug as RecurrenceFormValues['serviceSlug'],
+                        })
+                      }
+                    />
+                  </Collapse>
+                </div>
+              </Collapse>
             </div>
 
             <div className="order-3 @xl:col-span-2">

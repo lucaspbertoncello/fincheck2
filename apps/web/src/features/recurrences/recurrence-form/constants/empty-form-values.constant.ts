@@ -1,4 +1,5 @@
 import type { RecurrenceFormValues } from '#/features/recurrences/recurrence-form/types/recurrence-form.type.ts';
+import { OTHER_SERVICE } from '#/features/recurrences/recurrence-form/constants/other-service.constant.ts';
 import { DEFAULT_RULE_DAY } from '#/features/recurrences/recurrence-form/constants/rule-defaults.constant.ts';
 
 /** The form of "Nova recorrência": an expense on a fixed day. */
@@ -18,4 +19,6 @@ export const EMPTY_FORM_VALUES: RecurrenceFormValues = {
   nonBusinessDayShift: 'none',
   maxPayments: '1',
   applyFrom: 'next_month',
+  isSubscription: false,
+  serviceSlug: OTHER_SERVICE,
 };

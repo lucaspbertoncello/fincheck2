@@ -60,6 +60,11 @@ const MODAL_TARGETS: CaptureTarget[] = [
   { name: 'new transaction modal', path: '/transactions?new=transaction', kind: 'modal' },
   { name: 'new installment modal', path: '/transactions?new=installment', kind: 'modal' },
   { name: 'new recurrence modal', path: '/recurrences?new=recurrence', kind: 'modal' },
+  {
+    name: 'new subscription modal',
+    path: '/recurrences/subscriptions?new=subscription',
+    kind: 'modal',
+  },
   { name: 'new bill modal', path: '/recurrences/bills?new=bill', kind: 'modal' },
   { name: 'new debt modal', path: '/recurrences/bills?new=debt', kind: 'modal' },
   { name: 'connect account modal', path: '/accounts?new=account', kind: 'modal' },

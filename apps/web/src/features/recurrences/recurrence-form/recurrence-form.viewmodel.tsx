@@ -18,9 +18,12 @@ import {
   useRecurrenceRulePreview,
 } from '#/features/recurrences/recurrence-form/recurrence-form.model.ts';
 import { RecurrenceFormView } from '#/features/recurrences/recurrence-form/recurrence-form.view.tsx';
+import { buildServiceOptions } from '#/features/recurrences/recurrence-form/utils/build-service-options.util.tsx';
+import { recognizeSubscriptionFields } from '#/features/recurrences/recurrence-form/utils/recognize-subscription-fields.util.ts';
 import type {
   RecurrenceFormErrors,
   RecurrenceFormValues,
+  SubscriptionTouched,
 } from '#/features/recurrences/recurrence-form/types/recurrence-form.type.ts';
 import { buildCreateBody } from '#/features/recurrences/recurrence-form/utils/build-create-body.util.ts';
 import { buildDateRule } from '#/features/recurrences/recurrence-form/utils/build-date-rule.util.ts';
@@ -47,9 +50,18 @@ function RecurrenceFormSession({ saved, preset }: SessionProps) {
   const { showUndoToast } = useToast();
   const actions = useRecurrenceFormActions();
 
-  const [values, setValues] = useState<RecurrenceFormValues>(() =>
-    saved ? buildFormValues(saved) : EMPTY_FORM_VALUES,
-  );
+  const [values, setValues] = useState<RecurrenceFormValues>(() => {
+    if (saved) return buildFormValues(saved);
+    return preset === 'subscription'
+      ? { ...EMPTY_FORM_VALUES, isSubscription: true }
+      : EMPTY_FORM_VALUES;
+  });
+  // What was touched by hand stops being filled from the name: a saved recurrence keeps what it
+  // has, and the "+" of Assinaturas starts with the switch on (the service still follows the name).
+  const [touched, setTouched] = useState<SubscriptionTouched>({
+    isSubscription: saved !== undefined || preset === 'subscription',
+    serviceSlug: saved !== undefined,
+  });
   const [cardPicked, setCardPicked] = useState(false);
   const [errors, setErrors] = useState<RecurrenceFormErrors>({});
   const [attempt, setAttempt] = useState(0);
@@ -83,15 +95,27 @@ function RecurrenceFormSession({ saved, preset }: SessionProps) {
   });
 
   function handleChange(patch: Partial<RecurrenceFormValues>) {
+    const nextTouched: SubscriptionTouched =
+      'isSubscription' in patch || 'serviceSlug' in patch
+        ? {
+            isSubscription: touched.isSubscription || 'isSubscription' in patch,
+            serviceSlug: touched.serviceSlug || 'serviceSlug' in patch,
+          }
+        : touched;
     setValues((current) => {
       const next = { ...current, ...patch };
       // Income never falls on a credit card: switching to it drops a card that was chosen.
       if (patch.kind === 'income' && resolveRecurrenceMethod(next.accountId, accountItems)) {
         next.accountId = null;
       }
+      // A name (or extract text) of a known service turns the subscription on, until Lucas decides.
+      if ('name' in patch || 'matchText' in patch || 'kind' in patch) {
+        Object.assign(next, recognizeSubscriptionFields(next, nextTouched));
+      }
       // A new rule type opens complete: its numbers come filled with the example of its card.
       return patch.ruleType ? { ...next, ...applyRuleDefaults(next) } : next;
     });
+    if (nextTouched !== touched) setTouched(nextTouched);
     setErrors({});
     setFormError(null);
   }
@@ -168,6 +192,8 @@ function RecurrenceFormSession({ saved, preset }: SessionProps) {
   const accounts = buildAccountChoices(
     accountItems.filter((account) => values.kind === 'expense' || account.type !== 'credit_card'),
   );
+  const chosenCategoryIcon = categories.find((category) => category.id === values.categoryId)?.icon;
+  const serviceOptions = buildServiceOptions(chosenCategoryIcon);
   const saving = actions.create.isPending || actions.update.isPending;
 
   return (
@@ -185,6 +211,7 @@ function RecurrenceFormSession({ saved, preset }: SessionProps) {
       previewStatus={previewStatus}
       categories={categories}
       accounts={accounts}
+      serviceOptions={serviceOptions}
       historyNote={saved ? buildHistoryNote(saved.history, isHidden) : undefined}
       paused={saved?.pausedAt != null}
       formError={formError}

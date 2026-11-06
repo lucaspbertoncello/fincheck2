@@ -21,6 +21,8 @@ import { FieldErrorMessage } from '#/components/forms/field-error-message.compon
 
 type SelectFieldProps = {
   label: string;
+  /** The label is read by screen readers only: a row whose meaning is clear beside it ("É assinatura"). */
+  hideLabel?: boolean;
   options: readonly ChoiceOption[];
   value: string | null;
   onChange: (key: string) => void;
@@ -42,6 +44,7 @@ type SelectFieldProps = {
  */
 export function SelectField({
   label,
+  hideLabel = false,
   options,
   value,
   onChange,
@@ -68,14 +71,26 @@ export function SelectField({
       isInvalid={error ? true : undefined}
       className={cx('flex min-w-0 flex-col gap-s4', className)}
     >
-      <Label className={FIELD_LABEL_CLASS}>{label}</Label>
+      <Label className={hideLabel ? 'sr-only' : FIELD_LABEL_CLASS}>{label}</Label>
       <AriaButton
         className={cx(
           FIELD_BOX_CLASS,
           'flex cursor-pointer items-center justify-between gap-s8 text-left data-[disabled]:cursor-default data-[pressed]:bg-subtle',
         )}
       >
-        <SelectValue className="flex min-w-0 flex-1 items-center gap-s8 truncate data-[placeholder]:text-fg-tertiary" />
+        <SelectValue className="flex min-w-0 flex-1 items-center gap-s8 truncate data-[placeholder]:text-fg-tertiary">
+          {({ defaultChildren, isPlaceholder }) => {
+            const chosen = options.find((option) => option.key === value);
+            if (isPlaceholder || !chosen?.leading) return defaultChildren;
+
+            return (
+              <>
+                {chosen.leading}
+                <span className="truncate">{chosen.label}</span>
+              </>
+            );
+          }}
+        </SelectValue>
         <Icon name="chevron-down" size="sm" className="text-fg-secondary" />
       </AriaButton>
       {description ? (
@@ -93,9 +108,10 @@ export function SelectField({
               textValue={option.label}
               className="group flex min-h-ctl-touch cursor-pointer items-center gap-s12 rounded-input px-s12 text-list text-fg-primary outline-none data-[focused]:bg-subtle data-[hovered]:bg-subtle data-[selected]:text-brand"
             >
-              {option.icon ? (
-                <Icon name={option.icon} size="md" className="text-fg-secondary" />
-              ) : null}
+              {option.leading ??
+                (option.icon ? (
+                  <Icon name={option.icon} size="md" className="text-fg-secondary" />
+                ) : null)}
               <span className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate">{option.label}</span>
                 {option.hint ? (
