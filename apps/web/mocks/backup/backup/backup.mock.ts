@@ -6,6 +6,7 @@ import {
   restoreBackupRequestSchema,
   restoreBackupResponseSchema,
 } from '@fincheck/shared/backup/backup-restore/backup-restore.schema.ts';
+import { backupStatsDtoSchema } from '@fincheck/shared/backup/backup-stats/backup-stats.schema.ts';
 import { backupStatusDtoSchema } from '@fincheck/shared/backup/backup-status/backup-status.schema.ts';
 import type { BackupStatus } from '@fincheck/shared/backup/backup-status/backup-status.type.ts';
 import { listResponseSchema } from '@fincheck/shared/common/list/list.schema.ts';
@@ -60,7 +61,7 @@ export const backupMock = [
       if (db.backup.running) {
         db.backup.running = false;
         db.backup.lastError = null;
-        storeFile(buildBackupFile());
+        storeFile(buildBackupFile(NOW, db.backup.dbSizeBytes));
       }
 
       return status;
@@ -101,6 +102,18 @@ export const backupMock = [
     })),
   ),
 
+  // The numbers of the Dados page: counts come from the mock state, the size from the live database.
+  http.get(
+    '/api/backup/stats',
+    handleRoute({ response: backupStatsDtoSchema }, () => ({
+      dbSizeBytes: db.backup.dbSizeBytes,
+      transactionCount: db.transactions.length,
+      accountCount: db.accounts.filter((account) => !account.archivedAt).length,
+      firstTransactionOn:
+        db.transactions.map((transaction) => transaction.occurredOn).sort()[0] ?? null,
+    })),
+  ),
+
   http.post(
     '/api/backup/restore',
     handleRoute(
@@ -114,7 +127,7 @@ export const backupMock = [
           fail(404, 'BACKUP_FILE_NOT_FOUND', 'O arquivo não está na pasta');
         }
         // The copy of the database in use is kept next to the others, so restoring can be undone.
-        const safetyCopy = buildBackupFile();
+        const safetyCopy = buildBackupFile(NOW, db.backup.dbSizeBytes);
         storeFile(safetyCopy);
 
         return { safetyCopyFileName: safetyCopy.fileName };

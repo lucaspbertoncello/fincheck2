@@ -37,7 +37,7 @@ afterEach(() => {
 
 const TITLE = {
   connections: 'Conexões',
-  backup: 'Backup',
+  data: 'Dados',
   appearance: 'Aparência',
 } as const;
 
@@ -58,8 +58,8 @@ describe('SettingsPage', () => {
       await openPage('connections');
 
       expect(await screen.findByText('Open Finance conectado')).toBeInTheDocument();
-      expect(screen.getByText('Nubank', { selector: 'p' })).toBeInTheDocument();
-      expect(screen.getByText('Bradesco', { selector: 'p' })).toBeInTheDocument();
+      expect(screen.getByText('Nubank', { selector: 'h3' })).toBeInTheDocument();
+      expect(screen.getByText('Bradesco', { selector: 'h3' })).toBeInTheDocument();
       expect(screen.getAllByText(/Atualizado pelo banco há/)).toHaveLength(2);
       expect(screen.getByText('Dados desatualizados')).toBeInTheDocument();
       expect(screen.queryByText(/Sincronizar agora/)).not.toBeInTheDocument();
@@ -90,14 +90,14 @@ describe('SettingsPage', () => {
       await user.click(await screen.findByRole('button', { name: /Desconectar Nubank/ }));
       const dialog = await screen.findByRole('alertdialog');
       expect(within(dialog).getByRole('heading', { name: 'Desconectar o Nubank?' })).toBeVisible();
-      expect(screen.getByText('Nubank', { selector: 'p' })).toBeInTheDocument(); // still there until confirmed
+      expect(screen.getByText('Nubank', { selector: 'h3' })).toBeInTheDocument(); // still there until confirmed
 
       await user.click(within(dialog).getByRole('button', { name: 'Desconectar' }));
 
       await waitFor(() =>
-        expect(screen.queryByText('Nubank', { selector: 'p' })).not.toBeInTheDocument(),
+        expect(screen.queryByText('Nubank', { selector: 'h3' })).not.toBeInTheDocument(),
       );
-      expect(screen.getByText('Bradesco', { selector: 'p' })).toBeInTheDocument();
+      expect(screen.getByText('Bradesco', { selector: 'h3' })).toBeInTheDocument();
     });
 
     it('keeps the bank when the confirmation is cancelled', async () => {
@@ -110,7 +110,7 @@ describe('SettingsPage', () => {
       );
 
       await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
-      expect(screen.getByText('Nubank', { selector: 'p' })).toBeInTheDocument();
+      expect(screen.getByText('Nubank', { selector: 'h3' })).toBeInTheDocument();
     });
 
     it('shows the error beside the action when the disconnect fails', async () => {
@@ -128,7 +128,7 @@ describe('SettingsPage', () => {
       );
 
       expect(await screen.findByText('Essa conexão não existe mais.')).toBeInTheDocument();
-      expect(screen.getByText('Nubank', { selector: 'p' })).toBeInTheDocument();
+      expect(screen.getByText('Nubank', { selector: 'h3' })).toBeInTheDocument();
     });
 
     it('lets the person say which existing account is the reconnected one, or another account', async () => {
@@ -299,9 +299,66 @@ describe('SettingsPage', () => {
     });
   });
 
-  describe('Backup', () => {
+  describe('Dados', () => {
+    it('shows the four numbers of the database at the top', async () => {
+      await openPage('data');
+
+      const figures = (await screen.findByText('Tamanho do banco')).closest('dl')!;
+      const read = (label: string) =>
+        within(figures).getByText(label).closest('div')!.textContent?.replace(label, '');
+      expect(read('Tamanho do banco')).toMatch(/\d+,\d MB/);
+      expect(read('Transações guardadas')).toContain(
+        db.transactions.length.toLocaleString('pt-BR'),
+      );
+      expect(read('Dados desde')).toMatch(/\d{2}\/\d{2}\/\d{4}/);
+      expect(read('Contas e cartões')).toContain(
+        String(db.accounts.filter((account) => !account.archivedAt).length),
+      );
+    });
+
+    it('draws the size of the database at each of the last 30 backups', async () => {
+      await openPage('data');
+
+      const chart = await screen.findByRole('region', {
+        name: 'Tamanho do banco nos últimos backups',
+      });
+      expect(within(chart).getAllByRole('row')).toHaveLength(31); // the header and 30 backups
+      expect(screen.getByText('Últimos 30')).toBeInTheDocument();
+    });
+
+    it('keeps the numbers when there is no folder, and leaves the chart out', async () => {
+      db.backup.folderPath = null;
+      await openPage('data');
+
+      expect(await screen.findByText('Transações guardadas')).toBeInTheDocument();
+      expect(await screen.findByText('Escolha a pasta dos backups')).toBeInTheDocument();
+      expect(
+        screen.queryByRole('region', { name: 'Tamanho do banco nos últimos backups' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('says when the numbers do not load without hiding the backup', async () => {
+      server.use(
+        http.get('/api/backup/stats', () =>
+          HttpResponse.json({ code: 'UNKNOWN_ERROR', message: 'x' }, { status: 500 }),
+        ),
+      );
+      await openPage('data');
+
+      expect(await screen.findByText('Não deu para ler os números do banco.')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Fazer backup agora' })).toBeInTheDocument();
+    });
+
+    it('draws "Restaurar" as a real button on every backup of the list', async () => {
+      await openPage('data');
+
+      const buttons = await screen.findAllByRole('button', { name: /^Restaurar o backup de/ });
+      expect(buttons).toHaveLength(5);
+      for (const button of buttons) expect(button.tagName).toBe('BUTTON');
+    });
+
     it('shows the last backup that worked, the next one and the folder as plain text', async () => {
-      await openPage('backup');
+      await openPage('data');
 
       expect(await screen.findByText('Ontem às 03:00', { selector: 'p' })).toBeInTheDocument();
       expect(screen.getByText('Deu certo')).toBeInTheDocument();
@@ -314,7 +371,7 @@ describe('SettingsPage', () => {
 
     it('says when the last attempt failed and why', async () => {
       db.backup.lastError = { at: new Date().toISOString(), code: 'BACKUP_DISK_FULL' };
-      await openPage('backup');
+      await openPage('data');
 
       expect(await screen.findByText('Falhou')).toBeInTheDocument();
       expect(screen.getByText('O último backup falhou: o disco está cheio.')).toBeInTheDocument();
@@ -322,14 +379,14 @@ describe('SettingsPage', () => {
     });
 
     it('lists the latest backups, the newest marked', async () => {
-      await openPage('backup');
+      await openPage('data');
 
       const list = await screen.findByRole('list', { name: 'Backups da pasta' });
       const rows = within(list).getAllByRole('listitem');
       expect(rows).toHaveLength(5);
       expect(within(rows[0]!).getByText('Mais recente')).toBeInTheDocument();
       expect(within(rows[1]!).queryByText('Mais recente')).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /Mostrar todos/ })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Mostrar todos (30)' })).toBeInTheDocument();
     });
 
     it('shows only the latest five and opens the rest on request', async () => {
@@ -340,7 +397,7 @@ describe('SettingsPage', () => {
         fileName: `fincheck-2026-10-${String(20 - index).padStart(2, '0')}-030000.db`,
         createdAt: new Date(Date.UTC(2026, 9, 20 - index, 6)).toISOString(),
       }));
-      await openPage('backup');
+      await openPage('data');
 
       const list = await screen.findByRole('list', { name: 'Backups da pasta' });
       const more = screen.getByRole('button', { name: 'Mostrar todos (8)' });
@@ -357,7 +414,7 @@ describe('SettingsPage', () => {
 
     it('changes the folder through a text field that the API checks', async () => {
       const user = createUser();
-      await openPage('backup');
+      await openPage('data');
 
       await user.click(await screen.findByRole('button', { name: 'Trocar pasta' }));
       const field = screen.getByLabelText('Caminho da pasta');
@@ -372,7 +429,7 @@ describe('SettingsPage', () => {
 
     it('rejects a relative path before sending it', async () => {
       const user = createUser();
-      await openPage('backup');
+      await openPage('data');
 
       await user.click(await screen.findByRole('button', { name: 'Trocar pasta' }));
       const field = screen.getByLabelText('Caminho da pasta');
@@ -386,7 +443,7 @@ describe('SettingsPage', () => {
 
     it('shows the API reason when the folder does not exist', async () => {
       const user = createUser();
-      await openPage('backup');
+      await openPage('data');
 
       await user.click(await screen.findByRole('button', { name: 'Trocar pasta' }));
       const field = screen.getByLabelText('Caminho da pasta');
@@ -400,7 +457,7 @@ describe('SettingsPage', () => {
 
     it('makes a backup now and shows it as the latest one', async () => {
       const user = createUser();
-      await openPage('backup');
+      await openPage('data');
 
       await user.click(
         await screen.findByRole('button', { name: 'Fazer backup agora' }, { timeout: 5000 }),
@@ -427,7 +484,7 @@ describe('SettingsPage', () => {
         }),
       );
       const user = createUser();
-      await openPage('backup');
+      await openPage('data');
 
       const restoreButtons = await screen.findAllByRole('button', {
         name: /^Restaurar o backup de/,
@@ -450,7 +507,7 @@ describe('SettingsPage', () => {
 
     it('restores the chosen backup after the confirmation', async () => {
       const user = createUser();
-      await openPage('backup');
+      await openPage('data');
 
       const restoreButtons = await screen.findAllByRole('button', {
         name: /^Restaurar o backup de/,
@@ -477,7 +534,7 @@ describe('SettingsPage', () => {
         ),
       );
       const user = createUser();
-      await openPage('backup');
+      await openPage('data');
 
       await user.click(
         (await screen.findAllByRole('button', { name: /^Restaurar o backup de/ }))[0]!,
@@ -493,7 +550,7 @@ describe('SettingsPage', () => {
     it('asks to choose a folder when there is none', async () => {
       db.backup.folderPath = null;
       const user = createUser();
-      await openPage('backup');
+      await openPage('data');
 
       await user.click(await screen.findByRole('button', { name: 'Escolher pasta' }));
       expect(screen.getByLabelText('Caminho da pasta')).toBeInTheDocument();
@@ -506,7 +563,7 @@ describe('SettingsPage', () => {
           HttpResponse.json({ code: 'UNKNOWN_ERROR', message: 'x' }, { status: 500 }),
         ),
       );
-      await openPage('backup');
+      await openPage('data');
 
       expect(
         await screen.findByText('Não deu para carregar o estado do backup.'),
@@ -520,7 +577,7 @@ describe('SettingsPage', () => {
           HttpResponse.json({ code: 'BACKUP_FOLDER_INVALID', message: 'x' }, { status: 422 }),
         ),
       );
-      await openPage('backup');
+      await openPage('data');
 
       expect(await screen.findByText('Não deu para ler a pasta dos backups.')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Fazer backup agora' })).toBeInTheDocument();
@@ -564,7 +621,7 @@ describe('SettingsPage', () => {
   describe('páginas', () => {
     it.each([
       ['connections', 'Conexões'],
-      ['backup', 'Backup'],
+      ['data', 'Dados'],
       ['appearance', 'Aparência'],
     ] as const)(
       '/settings/%s opens its own page with the item %s marked',
@@ -585,10 +642,10 @@ describe('SettingsPage', () => {
     );
 
     it('shows a title and one line of description on every page', async () => {
-      await openPage('backup');
+      await openPage('data');
 
       expect(
-        screen.getByText('Uma cópia do banco por dia, na pasta que você escolher.'),
+        screen.getByText('O que o app guarda, o tamanho do banco e as cópias de segurança.'),
       ).toBeInTheDocument();
     });
 
@@ -598,12 +655,12 @@ describe('SettingsPage', () => {
       await openPage('connections');
 
       const nav = await screen.findByRole('navigation', { name: 'Páginas de Configurações' });
-      await user.click(within(nav).getByRole('link', { name: /Backup/ }));
+      await user.click(within(nav).getByRole('link', { name: /Dados/ }));
 
-      expect(await screen.findByRole('heading', { level: 1, name: 'Backup' })).toBeInTheDocument();
-      expect(window.location.pathname).toBe('/settings/backup');
+      expect(await screen.findByRole('heading', { level: 1, name: 'Dados' })).toBeInTheDocument();
+      expect(window.location.pathname).toBe('/settings/data');
       expect(window.location.hash).toBe('');
-      expect(within(nav).getByRole('link', { name: /Backup/ })).toHaveAttribute(
+      expect(within(nav).getByRole('link', { name: /Dados/ })).toHaveAttribute(
         'aria-current',
         'page',
       );
@@ -637,7 +694,8 @@ describe('SettingsPage', () => {
 
     it.each([
       ['#connections', '/settings/connections', 'Conexões'],
-      ['#backup', '/settings/backup', 'Backup'],
+      ['#backup', '/settings/data', 'Dados'],
+      ['#data', '/settings/data', 'Dados'],
       ['#appearance', '/settings/appearance', 'Aparência'],
     ])('sends the old link /settings%s to %s', async (hash, path, title) => {
       renderApp(`/settings${hash}`);
@@ -647,11 +705,22 @@ describe('SettingsPage', () => {
       expect(window.location.hash).toBe('');
     });
 
+    it.each([
+      ['/settings/backup', ''],
+      ['/settings/backup?month=2026-09', 'month=2026-09'],
+    ])('sends the old address %s to Dados, keeping the search', async (url, search) => {
+      renderApp(url);
+
+      expect(await screen.findByRole('heading', { level: 1, name: 'Dados' })).toBeInTheDocument();
+      expect(window.location.pathname).toBe('/settings/data');
+      if (search) expect(window.location.search).toContain(search);
+    });
+
     it('keeps the month of the URL when it redirects', async () => {
       renderApp('/settings?month=2026-09#backup');
 
-      expect(await screen.findByRole('heading', { level: 1, name: 'Backup' })).toBeInTheDocument();
-      expect(window.location.pathname).toBe('/settings/backup');
+      expect(await screen.findByRole('heading', { level: 1, name: 'Dados' })).toBeInTheDocument();
+      expect(window.location.pathname).toBe('/settings/data');
       expect(window.location.search).toContain('month=2026-09');
     });
   });
@@ -668,7 +737,7 @@ describe('SettingsPage', () => {
         within(nav)
           .getAllByRole('link')
           .map((link) => link.getAttribute('href')),
-      ).toEqual(['/settings/connections', '/settings/backup', '/settings/appearance']);
+      ).toEqual(['/settings/connections', '/settings/data', '/settings/appearance']);
       expect(window.location.pathname).toBe('/settings');
       expect(
         screen.getByText('Tokens e chaves ficam criptografados neste PC.'),
@@ -685,8 +754,8 @@ describe('SettingsPage', () => {
       const user = createUser();
       renderApp('/settings');
 
-      await user.click(await screen.findByRole('link', { name: /Backup/ }));
-      expect(await screen.findByRole('heading', { level: 1, name: 'Backup' })).toBeInTheDocument();
+      await user.click(await screen.findByRole('link', { name: /Dados/ }));
+      expect(await screen.findByRole('heading', { level: 1, name: 'Dados' })).toBeInTheDocument();
       const back = within(screen.getByRole('main')).getByRole('link', { name: 'Configurações' });
       expect(back).toHaveAttribute('href', '/settings');
       // A page on the phone has no menu and no notes of its own.
@@ -712,7 +781,7 @@ describe('SettingsPage', () => {
           .map((link) => link.textContent),
       ).toEqual([
         expect.stringContaining('Conexões'),
-        expect.stringContaining('Backup'),
+        expect.stringContaining('Dados'),
         expect.stringContaining('Aparência'),
       ]);
       expect(await within(nav).findByText('Open Finance, Bradesco e Nubank')).toBeInTheDocument();

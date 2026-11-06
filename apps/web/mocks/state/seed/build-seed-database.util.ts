@@ -30,7 +30,7 @@ export function buildSeedDatabase(): MockState.Database {
     connections: [],
     runs: [],
     syncSettings: null,
-    backup: { folderPath: null, files: [], running: false, lastError: null },
+    backup: { folderPath: null, files: [], dbSizeBytes: 0, running: false, lastError: null },
     profile: {
       name: 'Davi Moreira',
       initials: 'DM',

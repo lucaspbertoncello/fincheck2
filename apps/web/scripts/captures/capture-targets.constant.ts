@@ -50,7 +50,7 @@ export const SCREEN_TARGETS: CaptureTarget[] = [
   // `/settings` is the list on the phone and goes to Conexões on the desktop.
   { name: 'settings menu', path: '/settings', kind: 'screen' },
   { name: 'settings connections', path: '/settings/connections', kind: 'screen' },
-  { name: 'settings backup', path: '/settings/backup', kind: 'screen' },
+  { name: 'settings data', path: '/settings/data', kind: 'screen' },
   { name: 'settings appearance', path: '/settings/appearance', kind: 'screen' },
   // The gallery group with the 26 service logos side by side (18 logos, 8 initials), to check them.
   { name: 'service logos gallery', path: '/gallery.html#service-logos', kind: 'screen' },

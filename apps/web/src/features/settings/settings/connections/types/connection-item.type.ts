@@ -1,4 +1,4 @@
-import type { BankThemeKey } from '@fincheck/ui';
+import type { BankThemeKey, IconName } from '@fincheck/ui';
 
 type PendingMatchChoice = {
   /** The account the person can pick: its id, and the line that describes it. */
@@ -11,6 +11,15 @@ export type PendingMatchItem = {
   /** "Conta corrente final 1234". */
   title: string;
   choices: PendingMatchChoice[];
+};
+
+/** An account or card the bank brings, ready to draw as a chip. */
+type ConnectionAccountItem = {
+  id: string;
+  name: string;
+  /** "Conta corrente", "Poupança", "Cartão de crédito". */
+  kindLabel: string;
+  icon: IconName;
 };
 
 /** One bank of the "Conexões" list, ready to draw. */
@@ -26,5 +35,6 @@ export type ConnectionItem = {
   isStale: boolean;
   /** "Buscando o histórico (120 transações)" while the first fetch runs. */
   historyLine: string | null;
+  accounts: ConnectionAccountItem[];
   pendingMatches: PendingMatchItem[];
 };

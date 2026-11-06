@@ -1,3 +1,5 @@
+import { BACKUP_KEEP_COUNT } from '@fincheck/shared/backup/backup-file/backup-file.constant.ts';
+
 import { newId } from '#mocks/state/mock-id.store.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
 import type { SeedIds } from '#mocks/state/seed/build-seed-ids.util.ts';
@@ -267,17 +269,22 @@ export function seedBillsAndRules(database: MockState.Database, ids: SeedIds): v
     status: 'dismissed',
   });
 
-  const backupFiles = [1, 2, 3, 4, 5].map((back) => {
+  // One backup a day for the last 30 days (BR-BKP-001), growing with the data: the oldest is the
+  // smallest, with a little wobble so the Dados chart does not look drawn with a ruler.
+  const backupFiles = Array.from({ length: BACKUP_KEEP_COUNT }, (_, index) => {
+    const back = index + 1;
     const day = addDays(TODAY, -back);
     return {
       fileName: `fincheck-${day}-030000.db` as const,
       createdAt: `${day}T06:00:00.000Z`,
-      sizeBytes: 2_400_000 + back * 18_000,
+      sizeBytes: 2_010_000 + (BACKUP_KEEP_COUNT - back) * 19_500 + ((back * 37) % 11) * 900,
     };
   });
   database.backup = {
     folderPath: 'D:\\Backups\\fincheck',
     files: backupFiles,
+    // A little over the newest backup: the live database has the writes of today.
+    dbSizeBytes: (backupFiles[0]?.sizeBytes ?? 0) + 61_440,
     running: false,
     lastError: null,
   };

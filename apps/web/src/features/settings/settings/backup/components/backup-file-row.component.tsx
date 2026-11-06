@@ -10,7 +10,7 @@ type BackupFileRowProps = {
 
 /**
  * One backup of the list on the standard list row: when it was made (with "Mais recente"), its size
- * as the detail and "Restaurar" on the strip, which only asks first.
+ * as the detail and "Restaurar" on the strip as a real (secondary) button, which only asks first.
  */
 export function BackupFileRow({ file, isDisabled, onRestore }: BackupFileRowProps) {
   return (
@@ -29,7 +29,13 @@ export function BackupFileRow({ file, isDisabled, onRestore }: BackupFileRowProp
       detail={<span className="tabular-nums">{file.size}</span>}
       detailTitle={file.size}
       actions={
-        <Button variant="tertiary" size="sm" isDisabled={isDisabled} onPress={onRestore}>
+        <Button
+          variant="secondary"
+          size="sm"
+          icon="history"
+          isDisabled={isDisabled}
+          onPress={onRestore}
+        >
           Restaurar <span className="sr-only">o backup de {file.moment}</span>
         </Button>
       }

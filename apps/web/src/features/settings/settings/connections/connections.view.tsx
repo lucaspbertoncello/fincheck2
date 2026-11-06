@@ -1,18 +1,12 @@
-import {
-  Collapse,
-  Chip,
-  ConfirmDialog,
-  EmptyState,
-  ErrorState,
-  FineNote,
-  Section,
-} from '@fincheck/ui';
+import { Collapse, ConfirmDialog, EmptyState, ErrorState, Section } from '@fincheck/ui';
 
 import type { PluggySetupProps } from '#/features/settings/settings/connections/types/pluggy-setup-props.type.ts';
 import { SettingsPageFrame } from '#/features/settings/settings/components/settings-page-frame.component.tsx';
 import { SETTINGS_SECTION } from '#/shared/constants/settings/settings-sections.constant.ts';
 import { SectionSkeleton } from '#/shared/components/states/section-skeleton.component.tsx';
-import { ConnectionRow } from '#/features/settings/settings/connections/components/connection-row.component.tsx';
+import { AutoRefreshCard } from '#/features/settings/settings/connections/components/auto-refresh-card.component.tsx';
+import { ConnectionCard } from '#/features/settings/settings/connections/components/connection-card.component.tsx';
+import { OpenFinanceSummary } from '#/features/settings/settings/connections/components/open-finance-summary.component.tsx';
 import { PendingMatches } from '#/features/settings/settings/connections/components/pending-matches.component.tsx';
 import { PluggySetup } from '#/features/settings/settings/connections/components/pluggy-setup.component.tsx';
 import type { ConnectionItem } from '#/features/settings/settings/connections/types/connection-item.type.ts';
@@ -101,55 +95,55 @@ export function ConnectionsView({
         />
       ) : null}
       {state === 'ready' && items.length > 0 ? (
-        <Section
-          title="Bancos conectados"
-          divider={false}
-          action={
-            <Chip tone="ok" icon="check">
-              Open Finance conectado
-            </Chip>
-          }
-        >
-          <ul className="flex flex-col">
-            {items.map((item) => (
-              <ConnectionRow
-                key={item.id}
-                item={item}
-                onDisconnect={() => onAskDisconnect(item.id)}
-                pending={
-                  item.pendingMatches.length > 0 ? (
-                    <PendingMatches
-                      bankName={item.name}
-                      matches={item.pendingMatches}
-                      choices={choices}
-                      onChoose={onChoose}
-                      isSaving={isSavingMatches}
-                      onConfirm={() => onConfirmMatches(item.id)}
-                    />
-                  ) : undefined
-                }
-              />
-            ))}
-          </ul>
-          <Collapse
-            isOpen={Boolean(actionError)}
-            trackClassName="-mt-s16"
-            contentClassName="pt-s16"
-          >
-            {actionError ? (
-              <p role="alert" className="text-meta text-loss">
-                {actionError}
-              </p>
-            ) : null}
-          </Collapse>
-        </Section>
+        <>
+          <Section title="Conexão" divider={false}>
+            <OpenFinanceSummary
+              bankCount={items.length}
+              accountCount={items.reduce((total, item) => total + item.accounts.length, 0)}
+              attentionCount={
+                items.filter((item) => item.status === 'error' || item.isStale).length
+              }
+            />
+          </Section>
+          <Section title="Bancos conectados">
+            <ul className="flex flex-col gap-s16">
+              {items.map((item) => (
+                <ConnectionCard
+                  key={item.id}
+                  item={item}
+                  onDisconnect={() => onAskDisconnect(item.id)}
+                  pending={
+                    item.pendingMatches.length > 0 ? (
+                      <PendingMatches
+                        bankName={item.name}
+                        matches={item.pendingMatches}
+                        choices={choices}
+                        onChoose={onChoose}
+                        isSaving={isSavingMatches}
+                        onConfirm={() => onConfirmMatches(item.id)}
+                      />
+                    ) : undefined
+                  }
+                />
+              ))}
+            </ul>
+            <Collapse
+              isOpen={Boolean(actionError)}
+              trackClassName="-mt-s16"
+              contentClassName="pt-s16"
+            >
+              {actionError ? (
+                <p role="alert" className="text-meta text-loss">
+                  {actionError}
+                </p>
+              ) : null}
+            </Collapse>
+          </Section>
+        </>
       ) : null}
       {state === 'ready' ? (
         <Section title="Atualização">
-          <FineNote icon="clock">
-            O app busca os dados de hora em hora, sozinho. Para voltar a receber de um banco com
-            erro, reconecte no Open Finance.
-          </FineNote>
+          <AutoRefreshCard />
         </Section>
       ) : null}
       <ConfirmDialog

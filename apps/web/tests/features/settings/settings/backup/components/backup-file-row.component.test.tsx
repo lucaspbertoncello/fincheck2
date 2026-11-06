@@ -38,6 +38,16 @@ describe('BackupFileRow', () => {
     expect(html).not.toContain('col-start-3 row-start-1');
   });
 
+  it('draws "Restaurar" as a real secondary button, with no destructive color', () => {
+    const html = renderToStaticMarkup(
+      <BackupFileRow file={FILE} isDisabled={false} onRestore={noop} />,
+    );
+
+    expect(html).toContain('<button');
+    expect(html).toContain('border border-line text-fg-primary');
+    expect(html).not.toContain('text-loss');
+  });
+
   it('has no badge on an older backup', () => {
     const html = renderToStaticMarkup(
       <BackupFileRow file={{ ...FILE, isLatest: false }} isDisabled onRestore={noop} />,

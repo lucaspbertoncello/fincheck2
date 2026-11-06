@@ -3,8 +3,12 @@ import {
   type SettingsSectionDefinition,
 } from '#/shared/constants/settings/settings-sections.constant.ts';
 
-/** The section named by an old anchor (`#backup`), or undefined when the hash names none. */
+// `Backup` became `Dados` (Polimento 13): the old anchor still lands on the page.
+const RENAMED_KEY: Record<string, string> = { backup: 'data' };
+
+/** The section named by an anchor (`#data`, or the old `#backup`), or undefined when it names none. */
 export function findSectionByHash(hash: string): SettingsSectionDefinition | undefined {
-  const key = hash.replace(/^#/, '');
+  const anchor = hash.replace(/^#/, '');
+  const key = RENAMED_KEY[anchor] ?? anchor;
   return SETTINGS_SECTIONS.find((section) => section.key === key);
 }

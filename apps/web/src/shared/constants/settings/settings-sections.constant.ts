@@ -1,6 +1,6 @@
 import type { IconName } from '@fincheck/ui';
 
-type SettingsSectionKey = 'connections' | 'backup' | 'appearance';
+type SettingsSectionKey = 'connections' | 'data' | 'appearance';
 
 export type SettingsSectionDefinition = {
   key: SettingsSectionKey;
@@ -26,12 +26,12 @@ export const SETTINGS_SECTION: Record<SettingsSectionKey, SettingsSectionDefinit
     subtitle: 'Open Finance e bancos',
     icon: 'plug',
   },
-  backup: {
-    key: 'backup',
-    path: '/settings/backup',
-    title: 'Backup',
-    description: 'Uma cópia do banco por dia, na pasta que você escolher.',
-    subtitle: 'Pasta, restaurar',
+  data: {
+    key: 'data',
+    path: '/settings/data',
+    title: 'Dados',
+    description: 'O que o app guarda, o tamanho do banco e as cópias de segurança.',
+    subtitle: 'Números, backup, restaurar',
     icon: 'database',
   },
   appearance: {
@@ -47,6 +47,6 @@ export const SETTINGS_SECTION: Record<SettingsSectionKey, SettingsSectionDefinit
 /** The pages in the order of the menu. */
 export const SETTINGS_SECTIONS: SettingsSectionDefinition[] = [
   SETTINGS_SECTION.connections,
-  SETTINGS_SECTION.backup,
+  SETTINGS_SECTION.data,
   SETTINGS_SECTION.appearance,
 ];

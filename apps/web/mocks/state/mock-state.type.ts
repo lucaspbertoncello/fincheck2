@@ -157,6 +157,8 @@ export namespace MockState {
   export interface BackupRecord {
     folderPath: string | null;
     files: BackupFile.Dto[];
+    // The size of the live database: a new backup copies it.
+    dbSizeBytes: number;
     running: boolean;
     lastError: BackupStatus.LastError | null;
   }

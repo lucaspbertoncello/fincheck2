@@ -8,9 +8,13 @@ import {
   FineNote,
   OkLine,
   Section,
+  ValueTrendChart,
+  type ValueTrendPoint,
 } from '@fincheck/ui';
 
 import type { FolderModalProps } from '#/features/settings/settings/backup/types/folder-modal-props.type.ts';
+import { DataFigures } from '#/features/settings/settings/backup/components/data-figures.component.tsx';
+import type { DataFigureItem } from '#/features/settings/settings/backup/types/data-figure-item.type.ts';
 import { BackupFileRow } from '#/features/settings/settings/backup/components/backup-file-row.component.tsx';
 import { BackupStatusBlock } from '#/features/settings/settings/backup/components/backup-status-block.component.tsx';
 import { FolderModal } from '#/features/settings/settings/backup/components/folder-modal.component.tsx';
@@ -21,12 +25,25 @@ import { SectionSkeleton } from '#/shared/components/states/section-skeleton.com
 import { SettingsPageFrame } from '#/features/settings/settings/components/settings-page-frame.component.tsx';
 import { SETTINGS_SECTION } from '#/shared/constants/settings/settings-sections.constant.ts';
 
-const PAGE = SETTINGS_SECTION.backup;
+const PAGE = SETTINGS_SECTION.data;
 
 type BackupViewProps = {
   state: 'loading' | 'error' | 'ready';
   onRetry: () => void;
   folderPath: string | null;
+  /** The four numbers of the database; read in every state, with or without a folder. */
+  stats: {
+    isLoading: boolean;
+    isError: boolean;
+    onRetry: () => void;
+    figures: DataFigureItem[];
+  };
+  /** The size of the database at each of the last backups (oldest first), in megabytes. */
+  sizeChart: {
+    points: ValueTrendPoint[];
+    formatValue: (megabytes: number) => string;
+    formatAxisValue: (megabytes: number) => string;
+  };
   /** The last backup that worked; null when there is none. */
   last: { moment: string; size: string } | null;
   /** Why the last attempt failed, when it did. */
@@ -65,14 +82,17 @@ type BackupViewProps = {
 };
 
 /**
- * "Backup": the last backup (when and whether it worked), the next one, "Fazer backup agora", the
- * folder, the latest backups and the restore. Restoring is the delicate gesture: the button of a
- * row only asks, and the dialog that ends the gesture says what will be replaced.
+ * "Dados" (BR-BKP-003): the four numbers of the database, the size of the database at each backup,
+ * the backup itself (last, next, "Fazer backup agora", folder), the latest backups and the restore.
+ * Restoring is the delicate gesture: the button of a row only asks, and the dialog that ends the
+ * gesture says what will be replaced.
  */
 export function BackupView({
   state,
   onRetry,
   folderPath,
+  stats,
+  sizeChart,
   last,
   failure,
   nextMoment,
@@ -87,8 +107,15 @@ export function BackupView({
 }: BackupViewProps) {
   return (
     <SettingsPageFrame title={PAGE.title} description={PAGE.description}>
+      <Section title="O banco" divider={false}>
+        {stats.isError ? (
+          <SectionError message="Não deu para ler os números do banco." onRetry={stats.onRetry} />
+        ) : (
+          <DataFigures figures={stats.figures} isLoading={stats.isLoading} />
+        )}
+      </Section>
       {state === 'loading' ? (
-        <Section title="Situação" divider={false}>
+        <Section title="Backup">
           <SectionSkeleton label="Carregando o backup" rows={2} />
         </Section>
       ) : null}
@@ -114,8 +141,32 @@ export function BackupView({
       {state === 'ready' && folderPath !== null ? (
         <>
           <Section
-            title="Situação"
-            divider={false}
+            title="Tamanho do banco a cada backup"
+            action={
+              sizeChart.points.length > 0 ? <Chip>Últimos {sizeChart.points.length}</Chip> : null
+            }
+          >
+            <div className="glass p-s16 lg:p-s24">
+              {files.isLoading ? (
+                <SectionSkeleton label="Carregando o gráfico" rows={2} />
+              ) : files.isError ? (
+                <FineNote icon="warning">O gráfico volta quando a pasta abrir de novo.</FineNote>
+              ) : sizeChart.points.length === 0 ? (
+                <FineNote icon="database">O gráfico aparece com o primeiro backup.</FineNote>
+              ) : (
+                <ValueTrendChart
+                  title="Tamanho do banco nos últimos backups"
+                  valueLabel="Tamanho"
+                  points={sizeChart.points}
+                  formatValue={sizeChart.formatValue}
+                  formatAxisValue={sizeChart.formatAxisValue}
+                />
+              )}
+            </div>
+          </Section>
+
+          <Section
+            title="Backup"
             action={
               <Button
                 icon="database"
@@ -128,29 +179,34 @@ export function BackupView({
               </Button>
             }
           >
-            <div className="grid gap-s24 sm:grid-cols-2">
-              <BackupStatusBlock label="Último backup" value={last?.moment ?? 'Nenhum ainda'}>
-                {failure ? (
-                  <>
-                    <Chip tone="warn" icon="warning">
-                      Falhou
-                    </Chip>
-                    <span>{failure}</span>
-                  </>
-                ) : last ? (
-                  <>
-                    <Chip tone="ok" icon="check">
-                      Deu certo
-                    </Chip>
-                    <span className="tabular-nums">{last.size}</span>
-                  </>
-                ) : (
-                  <span>O primeiro sai no próximo horário.</span>
-                )}
-              </BackupStatusBlock>
-              <BackupStatusBlock label="Próximo backup" value={nextMoment ?? 'Sem horário'}>
-                <span>Um por dia, os últimos {keepCount} ficam guardados.</span>
-              </BackupStatusBlock>
+            <div className="glass flex flex-col gap-s16 p-s16 lg:gap-s24 lg:p-s24">
+              <div className="grid gap-s24 sm:grid-cols-2">
+                <BackupStatusBlock label="Último backup" value={last?.moment ?? 'Nenhum ainda'}>
+                  {failure ? (
+                    <>
+                      <Chip tone="warn" icon="warning">
+                        Falhou
+                      </Chip>
+                      <span>{failure}</span>
+                    </>
+                  ) : last ? (
+                    <>
+                      <Chip tone="ok" icon="check">
+                        Deu certo
+                      </Chip>
+                      <span className="tabular-nums">{last.size}</span>
+                    </>
+                  ) : (
+                    <span>O primeiro sai no próximo horário.</span>
+                  )}
+                </BackupStatusBlock>
+                <BackupStatusBlock label="Próximo backup" value={nextMoment ?? 'Sem horário'}>
+                  <span>Um por dia, os últimos {keepCount} ficam guardados.</span>
+                </BackupStatusBlock>
+              </div>
+              <div className="border-t border-line pt-s16 lg:pt-s24">
+                <FolderRow folderPath={folderPath} onChange={folder.onStartEditing} />
+              </div>
             </div>
             {safetyCopy ? (
               <OkLine>Backup restaurado. A cópia de segurança ficou em {safetyCopy}.</OkLine>
@@ -166,10 +222,6 @@ export function BackupView({
                 </p>
               ) : null}
             </Collapse>
-          </Section>
-
-          <Section title="Pasta">
-            <FolderRow folderPath={folderPath} onChange={folder.onStartEditing} />
           </Section>
 
           <Section title="Últimos backups">

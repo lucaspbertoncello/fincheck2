@@ -15,6 +15,7 @@ import { rulesRoute } from '#/router/routes/rules.route.tsx';
 import { subscriptionsRoute } from '#/router/routes/subscriptions.route.tsx';
 import { settingsAppearanceRoute } from '#/router/routes/settings-appearance.route.tsx';
 import { settingsBackupRoute } from '#/router/routes/settings-backup.route.tsx';
+import { settingsDataRoute } from '#/router/routes/settings-data.route.tsx';
 import { settingsConnectionsRoute } from '#/router/routes/settings-connections.route.tsx';
 import { settingsIndexRoute } from '#/router/routes/settings-index.route.tsx';
 import { settingsProfileRoute } from '#/router/routes/settings-profile.route.tsx';
@@ -42,6 +43,7 @@ export function createAppRouter(queryClient: QueryClient) {
         settingsIndexRoute,
         settingsProfileRoute,
         settingsConnectionsRoute,
+        settingsDataRoute,
         settingsBackupRoute,
         settingsAppearanceRoute,
       ]),

@@ -28,7 +28,7 @@ const SCREENS = [
   '/profile',
   '/settings',
   '/settings/connections',
-  '/settings/backup',
+  '/settings/data',
   '/settings/appearance',
 ];
 

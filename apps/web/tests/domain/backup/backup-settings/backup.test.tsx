@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { useBackupFiles } from '#/domain/backup/backup-file/hooks/use-backup-files.hook.ts';
+import { useBackupStats } from '#/domain/backup/backup-stats/hooks/use-backup-stats.hook.ts';
 import { useUpdateBackupSettings } from '#/domain/backup/backup-settings/hooks/use-update-backup-settings.hook.ts';
 import { useBackupStatus } from '#/domain/backup/backup-status/hooks/use-backup-status.hook.ts';
 import { createQueryWrapper } from '#tests/support/api/create-query-wrapper.util.tsx';
@@ -21,6 +22,16 @@ describe('backup domain', () => {
     });
 
     expect(result.current.files.data?.items.length).toBeGreaterThan(0);
+  });
+
+  it('reads the numbers of the database', async () => {
+    const { wrapper } = createQueryWrapper();
+    const { result } = renderHook(() => useBackupStats(), { wrapper });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(result.current.data?.dbSizeBytes).toBeGreaterThan(0);
+    expect(result.current.data?.transactionCount).toBeGreaterThan(0);
+    expect(result.current.data?.accountCount).toBeGreaterThan(0);
   });
 
   it('changes the folder and the status read follows', async () => {

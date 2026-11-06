@@ -49,7 +49,8 @@ describe('formatFileSize', () => {
 
 describe('findSectionByHash', () => {
   it('reads the section of an old anchor and says nothing for the rest', () => {
-    expect(findSectionByHash('#backup')?.path).toBe('/settings/backup');
+    expect(findSectionByHash('#backup')?.path).toBe('/settings/data'); // the old anchor
+    expect(findSectionByHash('#data')?.path).toBe('/settings/data');
     expect(findSectionByHash('#appearance')?.path).toBe('/settings/appearance');
     expect(findSectionByHash('#connections')?.path).toBe('/settings/connections');
     // Perfil left Configurações: its old anchor is redirected by the route, not found here.
@@ -61,8 +62,8 @@ describe('findSectionByHash', () => {
 
 describe('findSectionByPathname', () => {
   it('finds the section of a page, with or without the trailing slash, and none for the list', () => {
-    expect(findSectionByPathname('/settings/backup')?.key).toBe('backup');
-    expect(findSectionByPathname('/settings/backup/')?.key).toBe('backup');
+    expect(findSectionByPathname('/settings/data')?.key).toBe('data');
+    expect(findSectionByPathname('/settings/data/')?.key).toBe('data');
     expect(findSectionByPathname('/settings')).toBeUndefined();
   });
 });

@@ -38,7 +38,7 @@ describe('settingsIndexRoute', () => {
 
   it('still sends the old anchors to their page and #profile to Perfil', () => {
     media = stubMatchMedia({ desktop: true });
-    expect(redirectTarget(beforeLoadAt('backup'))).toBe('/settings/backup');
+    expect(redirectTarget(beforeLoadAt('backup'))).toBe('/settings/data');
     expect(redirectTarget(beforeLoadAt('#profile'))).toBe('/profile');
   });
 });

@@ -7,7 +7,7 @@ import { IncomeSourceRow } from '#/features/profile/profile/components/income-so
 import { SubscriptionRow } from '#/features/recurrences/subscription-list/components/subscription-row.component.tsx';
 import type { SubscriptionRowData } from '#/features/recurrences/subscription-list/types/subscription-list.type.ts';
 import { BackupFileRow } from '#/features/settings/settings/backup/components/backup-file-row.component.tsx';
-import { ConnectionRow } from '#/features/settings/settings/connections/components/connection-row.component.tsx';
+import { ConnectionCard } from '#/features/settings/settings/connections/components/connection-card.component.tsx';
 import { PendingMatches } from '#/features/settings/settings/connections/components/pending-matches.component.tsx';
 import type { ConnectionItem } from '#/features/settings/settings/connections/types/connection-item.type.ts';
 
@@ -62,6 +62,10 @@ const CONNECTIONS: ConnectionItem[] = [
     errorReason: null,
     isStale: false,
     historyLine: null,
+    accounts: [
+      { id: 'ac-n1', name: 'Nubank', kindLabel: 'Conta corrente', icon: 'wallet' },
+      { id: 'ac-n2', name: 'Nubank', kindLabel: 'Cartão de crédito', icon: 'card' },
+    ],
     pendingMatches: [],
   },
   {
@@ -73,6 +77,7 @@ const CONNECTIONS: ConnectionItem[] = [
     errorReason: 'login com erro',
     isStale: true,
     historyLine: null,
+    accounts: [{ id: 'ac-b1', name: 'Conta BB', kindLabel: 'Poupança', icon: 'coins' }],
     pendingMatches: [],
   },
   {
@@ -84,6 +89,7 @@ const CONNECTIONS: ConnectionItem[] = [
     errorReason: null,
     isStale: false,
     historyLine: 'Buscando o histórico (120 transações)',
+    accounts: [],
     pendingMatches: [
       {
         pluggyAccountId: 'pa-1',
@@ -236,9 +242,9 @@ export const LIST_ROWS_SECTIONS: GallerySectionDef[] = [
             caption={`${width}: ativa, com erro, pendência`}
             width={width}
           >
-            <Rows>
+            <ul className="m-0 flex list-none flex-col gap-s16 p-0">
               {CONNECTIONS.map((item) => (
-                <ConnectionRow
+                <ConnectionCard
                   key={item.id}
                   item={item}
                   onDisconnect={noop}
@@ -256,7 +262,7 @@ export const LIST_ROWS_SECTIONS: GallerySectionDef[] = [
                   }
                 />
               ))}
-            </Rows>
+            </ul>
           </GalleryVariant>
         ))}
       </>

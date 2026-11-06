@@ -148,9 +148,11 @@ export {
   CategoryDonut,
   MonthBarsChart,
   MonthSpendChart,
+  ValueTrendChart,
   type MonthBar,
   type ChartPoint,
   type DonutSlice,
+  type ValueTrendPoint,
 } from '#/components/charts/index.ts';
 export {
   Banner,

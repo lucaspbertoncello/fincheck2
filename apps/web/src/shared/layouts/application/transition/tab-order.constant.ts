@@ -25,7 +25,7 @@ export const SUB_SCREEN_ORDER: readonly ScreenKey[] = [
 /** Order of the Configurações pages, left to right in the side menu: a later page slides forward. */
 export const SETTINGS_PAGE_ORDER = [
   '/settings/connections',
-  '/settings/backup',
+  '/settings/data',
   '/settings/appearance',
 ] as const;
 

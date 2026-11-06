@@ -4,6 +4,7 @@ import { resolveBankThemeKey } from '@fincheck/ui';
 import { useRouter } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 
+import { CONNECTION_ACCOUNT_KIND } from '#/features/settings/settings/connections/constants/connection-account-kind.constant.ts';
 import { CONNECTION_ERROR_REASON } from '#/features/settings/settings/connections/constants/connection-error-reason.constant.ts';
 import { useConnectionsModel } from '#/features/settings/settings/connections/connections.model.ts';
 import { ConnectionsView } from '#/features/settings/settings/connections/connections.view.tsx';
@@ -49,6 +50,12 @@ function toItem(connection: Connection.Dto, now: Date): ConnectionItem {
       history.status === 'done'
         ? null
         : `Buscando o histórico (${history.transactionCount} transações)`,
+    accounts: connection.accounts.map((account) => ({
+      id: account.accountId,
+      name: account.name,
+      kindLabel: CONNECTION_ACCOUNT_KIND[account.type].label,
+      icon: CONNECTION_ACCOUNT_KIND[account.type].icon,
+    })),
     pendingMatches: toPendingMatches(connection),
   };
 }

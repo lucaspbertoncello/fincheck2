@@ -1,15 +1,20 @@
+import { BACKUP_KEEP_COUNT } from '@fincheck/shared/backup/backup-file/backup-file.constant.ts';
 import { updateBackupSettingsRequestSchema } from '@fincheck/shared/backup/backup-settings/backup-settings.schema.ts';
 import { useEffect, useState } from 'react';
 
 import { waitForHealthy } from '#/domain/health/health/services/wait-for-healthy.service.ts';
 import { useBackupModel } from '#/features/settings/settings/backup/backup.model.ts';
+import { BYTES_PER_MEGABYTE } from '#/features/settings/settings/backup/constants/bytes-per-megabyte.constant.ts';
 import { BackupView } from '#/features/settings/settings/backup/backup.view.tsx';
 import type { BackupFileItem } from '#/features/settings/settings/backup/types/backup-file-item.type.ts';
 import { capitalize } from '#/shared/utils/text/capitalize.util.ts';
+import { buildSizePoints } from '#/features/settings/settings/backup/utils/build-size-points.util.ts';
 import { describeBackupError } from '#/features/settings/settings/backup/utils/describe-backup-error.util.ts';
 import { formatBackupDay } from '#/features/settings/settings/backup/utils/format-backup-day.util.ts';
 import { formatBackupMoment } from '#/features/settings/settings/backup/utils/format-backup-moment.util.ts';
+import { formatAxisSize } from '#/features/settings/settings/backup/utils/format-axis-size.util.ts';
 import { formatFileSize } from '#/features/settings/settings/backup/utils/format-file-size.util.ts';
+import { formatFirstDay } from '#/features/settings/settings/backup/utils/format-first-day.util.ts';
 import { focusFirstInvalid } from '#/features/settings/settings/utils/focus-first-invalid.util.ts';
 import { getActionErrorMessage } from '#/features/settings/settings/utils/get-action-error-message.util.ts';
 import { reloadApp } from '#/shared/utils/reload-app.util.ts';
@@ -20,7 +25,7 @@ const FOLDER_FORMAT_ERROR =
 /** How many backups the list shows before "Mostrar todos". */
 const SHORT_LIST_COUNT = 5;
 
-/** Adapts the backup status, the folder form, the list and the restore to the page. */
+/** Adapts the database numbers, the backup status, the size chart, the folder form, the list and the restore to the Dados page. */
 export function BackupViewModel() {
   const [targetFile, setTargetFile] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -30,7 +35,7 @@ export function BackupViewModel() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [safetyCopy, setSafetyCopy] = useState<string | null>(null);
 
-  const { status, files, startRun, updateSettings, restore } = useBackupModel();
+  const { status, stats, files, startRun, updateSettings, restore } = useBackupModel();
 
   useEffect(() => {
     if (folderError) focusFirstInvalid();
@@ -47,6 +52,8 @@ export function BackupViewModel() {
     day: formatBackupDay(file.createdAt),
     isLatest: index === 0,
   }));
+  const sizePoints = buildSizePoints(files.data?.items ?? [], now, BACKUP_KEEP_COUNT);
+  const numbers = stats.data;
   const target = allItems.find((item) => item.fileName === targetFile) ?? null;
 
   function startEditingFolder() {
@@ -111,6 +118,42 @@ export function BackupViewModel() {
       state={status.isPending ? 'loading' : status.isError ? 'error' : 'ready'}
       onRetry={() => void status.refetch()}
       folderPath={folderPath}
+      stats={{
+        isLoading: stats.isPending,
+        isError: stats.isError,
+        onRetry: () => void stats.refetch(),
+        figures: numbers
+          ? [
+              {
+                label: 'Tamanho do banco',
+                value: formatFileSize(numbers.dbSizeBytes),
+                caption: 'Agora, no disco',
+              },
+              {
+                label: 'Transações guardadas',
+                value: numbers.transactionCount.toLocaleString('pt-BR'),
+                caption: 'Lançadas e importadas',
+              },
+              {
+                label: 'Dados desde',
+                value: numbers.firstTransactionOn
+                  ? formatFirstDay(numbers.firstTransactionOn)
+                  : 'Ainda não há',
+                caption: 'A transação mais antiga',
+              },
+              {
+                label: 'Contas e cartões',
+                value: String(numbers.accountCount),
+                caption: 'Sem as arquivadas',
+              },
+            ]
+          : [],
+      }}
+      sizeChart={{
+        points: sizePoints,
+        formatValue: (megabytes: number) => formatFileSize(megabytes * BYTES_PER_MEGABYTE),
+        formatAxisValue: formatAxisSize,
+      }}
       last={
         data?.lastBackup
           ? {

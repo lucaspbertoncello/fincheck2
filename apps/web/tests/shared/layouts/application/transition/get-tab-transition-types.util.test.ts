@@ -71,11 +71,7 @@ describe('getTabTransitionTypes', () => {
       '/categories/rules',
     ]) {
       expect(getTabTransitionTypes(change(from, '/settings'))).toEqual(['tab', 'fwd', 'edge']);
-      expect(getTabTransitionTypes(change(from, '/settings/backup'))).toEqual([
-        'tab',
-        'fwd',
-        'edge',
-      ]);
+      expect(getTabTransitionTypes(change(from, '/settings/data'))).toEqual(['tab', 'fwd', 'edge']);
     }
   });
 
@@ -103,7 +99,7 @@ describe('getTabTransitionTypes', () => {
     expect(getTabTransitionTypes(change('/profile', '/categories/rules'))).toEqual(['tab', 'back']);
     // The edge flag is about the left column of Configurações, which Perfil does not have.
     expect(getTabTransitionTypes(change('/profile', '/settings'))).toEqual(['tab', 'fwd', 'edge']);
-    expect(getTabTransitionTypes(change('/settings/backup', '/profile'))).toEqual([
+    expect(getTabTransitionTypes(change('/settings/data', '/profile'))).toEqual([
       'tab',
       'back',
       'edge',
@@ -118,7 +114,7 @@ describe('getTabTransitionTypes', () => {
     })) as unknown as typeof window.matchMedia;
     try {
       expect(getTabTransitionTypes(change('/', '/settings'))).toEqual(['reduce', 'fwd', 'edge']);
-      expect(getTabTransitionTypes(change('/settings/backup', '/'))).toEqual([
+      expect(getTabTransitionTypes(change('/settings/data', '/'))).toEqual([
         'reduce',
         'back',
         'edge',
@@ -163,6 +159,6 @@ describe('getTabTransitionTypes', () => {
       'tab',
       'back',
     ]);
-    expect(getTabTransitionTypes(change('/settings/backup', '/settings/backup'))).toBe(false);
+    expect(getTabTransitionTypes(change('/settings/data', '/settings/data'))).toBe(false);
   });
 });

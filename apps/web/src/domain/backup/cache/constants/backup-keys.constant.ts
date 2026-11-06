@@ -4,4 +4,5 @@ export const backupKeys = {
   all: ['backup'] as const,
   status: () => ['backup', 'status'] as const,
   files: () => ['backup', 'files'] as const,
+  stats: () => ['backup', 'stats'] as const,
 };
