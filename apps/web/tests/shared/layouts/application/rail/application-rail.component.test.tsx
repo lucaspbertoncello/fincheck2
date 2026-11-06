@@ -186,11 +186,15 @@ describe('ApplicationRail', () => {
     expect(await screen.findByRole('tooltip')).toHaveTextContent('Configurações');
   });
 
-  it('centers the icons in the rail, which the shell stretches to the height of the panel', async () => {
+  it('pins the logo to the top and Configurações to the bottom, with the tabs in the middle', async () => {
     renderDesktop('/');
     await screen.findByRole('heading', { level: 1, name: 'Visão geral' });
 
-    expect(rail()).toHaveClass('flex', 'flex-col', 'items-center', 'justify-center');
+    expect(rail()).toHaveClass('flex', 'flex-col', 'items-center', 'justify-between');
+    expect(rail().firstElementChild).toContainElement(
+      screen.getByRole('link', { name: 'fincheck, Visão geral' }),
+    );
+    expect(rail().lastElementChild).toHaveAccessibleName('Configurações');
     // the rail and the left box are siblings in one sticky pair that stretches both to one height
     const pair = rail().parentElement!;
     expect(pair).toHaveClass('sticky', 'flex', 'gap-s8');

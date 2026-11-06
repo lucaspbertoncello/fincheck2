@@ -17,12 +17,13 @@ function RailDivider() {
 /**
  * Navigation of the desktop (1024 px and up): a rail of icons, 56 px wide, that never opens. The
  * name of each icon is a tip on hover and keyboard focus. It is the left half of the pair the
- * shell draws (rail + panel): the shell stretches it to the height of the panel, and the icons
- * are one group centered in that height, so it reads as "icons in the middle" whatever the panel
- * height. Top to bottom: the logo, the six tabs (the five and Perfil, below Categorias) with the
- * sliding capsule and Configurações (it opens its first page, Conexões, straight away: the
- * desktop has no list, and a redirect hop would break the page transition), split by a hairline each. The "+" is not here: it floats at the bottom right
- * of the window (see `ApplicationLayout`). Same surface as the panel (`glass`).
+ * shell draws (rail + panel): the shell stretches it to the height of the panel. Three parts, top
+ * to bottom: the logo pinned at the top, the six tabs (the five and Perfil, below Categorias)
+ * with the sliding capsule between two hairlines, centered in the height, and Configurações pinned
+ * at the bottom (it opens its first page, Conexões, straight away: the desktop has no list, and a
+ * redirect hop would break the page transition). The logo and the gear have the same cell, so the
+ * tabs stay in the middle. The "+" is not here: it floats at the bottom right of the window (see
+ * `ApplicationLayout`). Same surface as the panel (`glass`).
  */
 export function ApplicationRail({ screen, monthParam }: ApplicationRailProps) {
   const items = buildNavigationItems(monthParam);
@@ -30,21 +31,23 @@ export function ApplicationRail({ screen, monthParam }: ApplicationRailProps) {
   return (
     <nav
       aria-label="Principal"
-      className="glass flex w-14 shrink-0 flex-col items-center justify-center gap-s4 p-s8"
+      className="glass flex w-14 shrink-0 flex-col items-center justify-between p-s8"
     >
       <RailLogo homeHref={buildHref('/', monthParam)} />
-      <RailDivider />
-      {items.map((item) => (
-        <RailLink
-          key={item.key}
-          href={item.href}
-          label={item.label}
-          icon={item.icon}
-          active={item.key === screen.tab}
-          slides
-        />
-      ))}
-      <RailDivider />
+      <div className="flex flex-col items-center gap-s4">
+        <RailDivider />
+        {items.map((item) => (
+          <RailLink
+            key={item.key}
+            href={item.href}
+            label={item.label}
+            icon={item.icon}
+            active={item.key === screen.tab}
+            slides
+          />
+        ))}
+        <RailDivider />
+      </div>
       <RailLink
         href={buildHref(SETTINGS_SECTION.connections.path, monthParam)}
         label="Configurações"
