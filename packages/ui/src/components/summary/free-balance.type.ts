@@ -23,10 +23,6 @@ export type FreeBalanceLine = {
 export type FreeBalanceAccount = {
   id: string;
   name: string;
-  /** "Sincronizado há 12 min". */
-  subtitle: string;
-  /** "warn" paints the subtitle in the attention color with an alert icon (failed sync). */
-  subtitleTone?: 'normal' | 'warn';
   balanceCents: number;
   /** Bank mark (36 px circle). Without it the panel draws the initial of the name. */
   mark?: ReactNode;

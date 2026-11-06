@@ -10,14 +10,12 @@ import type {
 } from '@fincheck/ui';
 
 import { buildPartialNotice } from '#/shared/layouts/application/summary/utils/build-partial-notice.util.ts';
-import { describeUpdateTime } from '#/shared/layouts/application/summary/utils/describe-update-time.util.ts';
 
 type BuildFreeBalanceInput = {
   freeBalance: FreeBalance.Dto;
   accounts: readonly Account.Dto[];
   /** `/accounts` with the selected month: where "Ver mais" leads. */
   accountsHref: string;
-  now: Date;
 };
 
 const PRESUMED_NOTE = 'pago, falta vincular';
@@ -66,17 +64,7 @@ function buildLines({ freeBalance }: BuildFreeBalanceInput): FreeBalanceLine[] {
   ];
 }
 
-function buildAccounts({
-  freeBalance,
-  accounts,
-  now,
-}: BuildFreeBalanceInput): FreeBalanceAccount[] {
-  const staleConnections = new Set(
-    freeBalance.dataFreshness
-      .filter((entry) => entry.isStale || entry.status === 'error')
-      .map((entry) => entry.connectionId),
-  );
-
+function buildAccounts({ freeBalance, accounts }: BuildFreeBalanceInput): FreeBalanceAccount[] {
   return freeBalance.accounts.items.map((item) => {
     const account = accounts.find((candidate) => candidate.id === item.accountId);
     const mark = (
@@ -86,24 +74,9 @@ function buildAccounts({
         size={36}
       />
     );
-    if (item.source === 'manual' || !account?.connection) {
-      return {
-        id: item.accountId,
-        name: item.name,
-        subtitle: item.source === 'manual' ? 'Saldo manual' : 'Sem conexão',
-        balanceCents: item.balanceCents,
-        mark,
-      };
-    }
-    const hasError = account.connection.status === 'error';
-    const isStale = staleConnections.has(account.connection.connectionId);
     return {
       id: item.accountId,
       name: item.name,
-      subtitle: hasError
-        ? 'Conexão com erro'
-        : describeUpdateTime(account.connection.lastBankUpdateAt, now),
-      subtitleTone: hasError || isStale ? 'warn' : 'normal',
       balanceCents: item.balanceCents,
       mark,
     };

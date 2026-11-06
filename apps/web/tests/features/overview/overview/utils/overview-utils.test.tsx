@@ -226,6 +226,14 @@ describe('buildAlerts', () => {
   });
 
   it('shows at most two', () => {
-    expect(buildAlerts([alert({}), alert({}), alert({})], hrefs)).toHaveLength(2);
+    const late = alert({ type: 'connection_error' });
+
+    expect(buildAlerts([late, late, late], hrefs)).toHaveLength(2);
+  });
+
+  it('leaves stale data out: the account row already says it', () => {
+    const alerts = buildAlerts([alert({}), alert({ type: 'connection_error' })], hrefs);
+
+    expect(alerts.map((entry) => entry.message)).toEqual(['Conexão com erro no Nubank']);
   });
 });

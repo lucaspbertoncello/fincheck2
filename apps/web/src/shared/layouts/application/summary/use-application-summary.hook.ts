@@ -36,7 +36,6 @@ export function useApplicationSummary(): ApplicationSummary {
       freeBalance: freeBalance.data,
       accounts: accountItems,
       accountsHref: buildHref('/accounts', month),
-      now: new Date(),
     }),
   };
 }

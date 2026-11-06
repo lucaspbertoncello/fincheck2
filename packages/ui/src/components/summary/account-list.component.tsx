@@ -38,8 +38,6 @@ export function AccountList({ title, items, moreHref }: AccountListProps) {
             key={account.id}
             mark={account.mark ?? <InitialMark name={account.name} />}
             name={account.name}
-            subtitle={account.subtitle}
-            warn={account.subtitleTone === 'warn'}
             cents={account.balanceCents}
           />
         ))}

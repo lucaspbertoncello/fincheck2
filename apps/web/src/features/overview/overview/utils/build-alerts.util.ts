@@ -14,20 +14,24 @@ function describe(alert: MonthSummary.Alert): string {
   if (alert.type === 'connection_error') {
     return `Conexão com erro no ${alert.institutionName ?? 'banco'}`;
   }
-  if (alert.type === 'stale_data') {
-    return `Dado do ${alert.institutionName ?? 'banco'} parado`;
-  }
   return `${alert.recurrenceName ?? 'Recorrência'} atrasado${describeDaysLate(alert.daysLate)}`;
 }
 
-/** Texts and targets of the amber lines. Connection problems go to Configurações, late items to Recorrentes. */
+/**
+ * Texts and targets of the amber notices. Connection problems go to Configurações, late items to
+ * Recorrentes. Stale data is not an alert here: the account row and its date already say it
+ * (Polimento 13, item 10).
+ */
 export function buildAlerts(
   alerts: readonly MonthSummary.Alert[],
   hrefs: { settings: string; recurrences: string },
 ): OverviewAlert[] {
-  return alerts.slice(0, MAX_ALERTS).map((alert, index) => ({
-    key: `${alert.type}:${alert.connectionId ?? alert.occurrenceId ?? index}`,
-    message: describe(alert),
-    href: alert.type === 'late_occurrence' ? hrefs.recurrences : hrefs.settings,
-  }));
+  return alerts
+    .filter((alert) => alert.type !== 'stale_data')
+    .slice(0, MAX_ALERTS)
+    .map((alert, index) => ({
+      key: `${alert.type}:${alert.connectionId ?? alert.occurrenceId ?? index}`,
+      message: describe(alert),
+      href: alert.type === 'late_occurrence' ? hrefs.recurrences : hrefs.settings,
+    }));
 }

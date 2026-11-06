@@ -6,7 +6,7 @@ type PageHeaderProps = {
   title: string;
   /** The date line under the title (`DateLine`). */
   date: ReactNode;
-  /** Extra line under the date (only the Visão geral has one). */
+  /** Extra block of the date row (only the Visão geral has one): right of the date on the desktop, under it on the phone. */
   extra?: ReactNode;
   /** Month picker and sub-tabs. Desktop: right of the title, centered on its line. Mobile: own line below. */
   actions?: ReactNode;
@@ -15,7 +15,7 @@ type PageHeaderProps = {
 /**
  * Header of every page: title with the card dot, the date line, and, where the month filters,
  * the picker (components.md 1.4). The picker is centered on the title line on every screen
- * (ui adjustment 5).
+ * (ui adjustment 5). The `extra` block shares the date row, aligned to the right (Polimento 13).
  */
 export function PageHeader({ title, date, extra, actions }: PageHeaderProps) {
   return (
@@ -24,8 +24,14 @@ export function PageHeader({ title, date, extra, actions }: PageHeaderProps) {
         <CardDot />
         {title}
       </h1>
-      <div className="lg:col-span-2">{date}</div>
-      {extra ? <div className="lg:col-span-2">{extra}</div> : null}
+      <div className={extra ? 'lg:col-start-1 lg:row-start-2 lg:self-center' : 'lg:col-span-2'}>
+        {date}
+      </div>
+      {extra ? (
+        <div className="mt-s8 lg:col-start-2 lg:row-start-2 lg:mt-0 lg:self-center lg:justify-self-end">
+          {extra}
+        </div>
+      ) : null}
       {actions ? (
         <div className="mt-s12 flex flex-wrap items-center gap-s12 lg:col-start-2 lg:row-start-1 lg:mt-0 lg:self-center">
           {actions}

@@ -6,8 +6,6 @@ import { buildPartialNotice } from '#/shared/layouts/application/summary/utils/b
 import { computeFreeBalance } from '#mocks/dashboard/free-balance/compute-free-balance.util.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
 
-const NOW = new Date('2026-10-30T15:00:00-03:00');
-
 function base(): FreeBalance.Dto {
   return structuredClone(computeFreeBalance(db));
 }
@@ -17,7 +15,6 @@ function build(freeBalance: FreeBalance.Dto) {
     freeBalance,
     accounts: [],
     accountsHref: '/accounts?month=2026-10',
-    now: NOW,
   });
 }
 
@@ -76,7 +73,6 @@ describe('buildFreeBalanceData, partial balance (R2)', () => {
       freeBalance,
       accounts: [{ id: 'a1', name: 'Nubank' }] as never,
       accountsHref: '/accounts',
-      now: NOW,
     });
 
     expect(data.partialNote).toBe('Saldo parcial: falta o saldo do Nubank');

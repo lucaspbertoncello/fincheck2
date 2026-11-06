@@ -31,16 +31,14 @@ const DATA: FreeBalanceData = {
     },
   ],
   accounts: [
-    { id: 'nu', name: 'Nubank', subtitle: 'Sincronizado há 12 min', balanceCents: 341258 },
+    { id: 'nu', name: 'Nubank', balanceCents: 341258 },
     {
       id: 'brad',
       name: 'Bradesco',
-      subtitle: 'Ontem, 18:40',
-      subtitleTone: 'warn',
       balanceCents: 187640,
     },
-    { id: 'wal', name: 'Carteira', subtitle: 'Saldo manual', balanceCents: 5000 },
-    { id: 'inv', name: 'Corretora', subtitle: 'Saldo manual', balanceCents: 9000 },
+    { id: 'wal', name: 'Carteira', balanceCents: 5000 },
+    { id: 'inv', name: 'Corretora', balanceCents: 9000 },
   ],
   moreAccountsHref: '/accounts?month=2026-10',
 };
@@ -163,14 +161,24 @@ describe('FreeBalancePanel', () => {
 });
 
 describe('FreeBalancePanel rows', () => {
-  it('draws the accounts as standard rows: name 16, detail truncated with a title, amount with the sign column', () => {
+  it('draws the accounts as standard rows: name 16, amount with the sign column, no detail line', () => {
     const html = render(DATA);
 
     expect(html).toContain('grid-cols-[auto_minmax(0,1fr)_auto_auto]');
-    expect(html).toContain('title="Sincronizado há 12 min"');
     expect(html).toContain('w-sign-col');
     expect(html).toContain('py-s8!');
     expect(html).toContain('text-body font-emphasis');
+  });
+
+  it('shows each account with icon, name and value only: no sync line and no warning', () => {
+    const html = render(DATA);
+    const accounts = html.slice(html.indexOf('aria-label="Contas"'));
+
+    expect(accounts).toContain('Nubank');
+    expect(accounts).toContain('Bradesco');
+    expect(accounts).not.toContain('Sincronizado');
+    expect(accounts).not.toContain('Ontem, 18:40');
+    expect(accounts).not.toContain('text-caution');
   });
 
   it('truncates the subtitle of the receivable and payable lines with a title', () => {

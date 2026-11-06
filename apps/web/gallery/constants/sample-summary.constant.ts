@@ -65,17 +65,14 @@ export const FREE_BALANCE: FreeBalanceData = {
     {
       id: 'fa-1',
       name: 'Banco Aurora',
-      subtitle: 'Sincronizado há 12 min',
       balanceCents: 420000,
     },
     {
       id: 'fa-2',
       name: 'Rio Azul',
-      subtitle: 'Falhou ontem às 18:40',
-      subtitleTone: 'warn',
       balanceCents: 220000,
     },
-    { id: 'fa-3', name: 'Carteira', subtitle: 'Saldo manual', balanceCents: 12000 },
+    { id: 'fa-3', name: 'Carteira', balanceCents: 12000 },
   ],
   moreAccountsHref: '#accounts',
 };
@@ -108,18 +105,15 @@ export const FREE_BALANCE_LONG: FreeBalanceData = {
     {
       id: 'fl-a1',
       name: 'Banco Aurora Internacional Prime',
-      subtitle: 'Sincronizado há 12 min',
       balanceCents: 9500000,
     },
     {
       id: 'fl-a2',
       name: 'Rio Azul Investimentos e Previdência',
-      subtitle: 'Falhou ontem às 18:40',
-      subtitleTone: 'warn',
       balanceCents: 500000,
     },
-    { id: 'fl-a3', name: 'Carteira', subtitle: 'Saldo manual', balanceCents: 12000 },
-    { id: 'fl-a4', name: 'Reserva', subtitle: 'Saldo manual', balanceCents: 12000 },
+    { id: 'fl-a3', name: 'Carteira', balanceCents: 12000 },
+    { id: 'fl-a4', name: 'Reserva', balanceCents: 12000 },
   ],
 };
 

@@ -25,9 +25,12 @@ const CARD_VARIANTS = {
 };
 
 /**
- * "Semana" view of "Até o fim do mês" (BR-DSH-014): the weeks that are left, each one a card with
- * what comes in, what goes out and the projected balance at the end of the week. The week that
- * holds today is marked. The cards enter one after the other (opacity and 8 px of lift, 200 ms);
+ * "Semana" view of "Até o fim do mês" (BR-DSH-014): the weeks that are left, each one a card whose
+ * main number is the projected balance at the end of the week, with what comes in and goes out
+ * small under it (sign and color; zero is a "—"). The week that holds today has a tinted surface,
+ * a brand border and the "Esta semana" label. All cards have the same width and height in one
+ * row that fills the box and scrolls sideways (with snap) when the weeks do not fit, so the grid
+ * never leaves a hole (Polimento 13, item 9). The cards enter one after the other (opacity and 8 px of lift, 200 ms);
  * with reduced motion the lift goes away and only the fade stays.
  */
 export function WeekCards<TItem>({ weeks, onSelectWeek, label }: WeekCardsProps<TItem>) {
@@ -37,27 +40,27 @@ export function WeekCards<TItem>({ weeks, onSelectWeek, label }: WeekCardsProps<
       variants={LIST_VARIANTS}
       initial="hidden"
       animate="visible"
-      className="m-0 grid list-none gap-s12 p-0 sm:grid-cols-2 lg:grid-cols-3"
+      className="-m-s4 grid min-w-0 list-none auto-cols-[minmax(15rem,1fr)] grid-flow-col snap-x gap-s12 overflow-x-auto overscroll-x-contain p-s4 pb-s12"
     >
       {weeks.map((week) => {
         const range = dayRangeLabel(week.startDate, week.endDate);
 
         return (
-          <motion.li key={week.key} variants={CARD_VARIANTS} className="flex">
+          <motion.li key={week.key} variants={CARD_VARIANTS} className="flex snap-start">
             <Button
               aria-label={`${week.isCurrent ? 'Esta semana, ' : ''}${range}. Ver os dias`}
               onPress={() => onSelectWeek(week)}
               className={cx(
-                'flex w-full cursor-pointer flex-col gap-s16 rounded-panel border bg-glass p-s16 text-left outline-none',
+                'flex w-full cursor-pointer flex-col gap-s16 rounded-panel border p-s16 text-left outline-none',
                 'transition-[background-color,border-color,transform] duration-(--duration-fast) motion-reduce:transition-none',
                 'data-[hovered]:bg-brand-weak data-[pressed]:scale-98 data-[focus-visible]:outline-2 data-[focus-visible]:outline-offset-2 data-[focus-visible]:outline-brand',
-                week.isCurrent ? 'border-brand' : 'border-line',
+                week.isCurrent ? 'border-brand bg-brand-weak' : 'border-line bg-glass',
               )}
             >
-              <span className="flex flex-wrap items-center justify-between gap-x-s8 gap-y-s4">
+              <span className="flex min-h-7 flex-wrap items-center justify-between gap-x-s8 gap-y-s4">
                 <span className="font-title text-label font-heading text-fg-primary">{range}</span>
                 {week.isCurrent ? (
-                  <span className="rounded-capsule bg-brand-weak px-s8 py-s4 text-meta font-emphasis text-brand">
+                  <span className="rounded-capsule border border-brand px-s8 py-s4 text-meta font-emphasis whitespace-nowrap text-brand">
                     Esta semana
                   </span>
                 ) : null}
@@ -68,7 +71,7 @@ export function WeekCards<TItem>({ weeks, onSelectWeek, label }: WeekCardsProps<
                 balanceCents={week.endBalanceCents}
                 balanceLabel="Saldo ao fim"
                 layout="rows"
-                className="text-money-sm"
+                className="text-money-md"
               />
             </Button>
           </motion.li>

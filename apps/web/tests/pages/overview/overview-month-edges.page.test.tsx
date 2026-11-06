@@ -39,8 +39,8 @@ describe('OverviewPage on the last day of the month', () => {
     setTestClock(LAST_DAY);
     renderApp('/');
 
-    const remaining = await screen.findByText(/^Faltam/);
-    expect(remaining).toHaveTextContent('Faltam 1 dia');
+    const remaining = await screen.findByLabelText('O que falta no mês');
+    expect(remaining).toHaveTextContent('Faltam1 dia');
     expect(remaining).not.toHaveTextContent('1 dias');
     expect(await screen.findByText('Sobra no fim do mês')).toBeInTheDocument();
     expect(screen.getByText(/≈.*hoje/)).toBeInTheDocument();
@@ -78,7 +78,7 @@ describe('OverviewPage on the first day of the month', () => {
     setTestClock(FIRST_DAY_DAWN);
     renderApp('/');
 
-    expect(await screen.findByText(/^Faltam/)).toHaveTextContent('Faltam 30 dias');
+    expect(await screen.findByLabelText('O que falta no mês')).toHaveTextContent('Faltam30 dias');
     expect(screen.getByText('Domingo, 1 de novembro')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText('Dia 1 de 30')).toBeInTheDocument());
   });

@@ -1,5 +1,6 @@
 import { CategoriesSection } from '#/features/overview/overview/components/categories-section.component.tsx';
 import { DayStripBlock } from '#/features/overview/overview/components/day-strip-block.component.tsx';
+import { OverviewAlerts } from '#/features/overview/overview/components/overview-alerts.component.tsx';
 import { OverviewHeaderExtra } from '#/features/overview/overview/components/overview-header-extra.component.tsx';
 import { SectionError } from '#/features/overview/overview/components/states/section-error.component.tsx';
 import { SectionSkeleton } from '#/features/overview/overview/components/states/section-skeleton.component.tsx';
@@ -21,9 +22,15 @@ export function OverviewView(model: OverviewModel) {
   return (
     <ScreenFrame
       screen={SCREENS.overview}
-      extra={<OverviewHeaderExtra remaining={model.remaining} alerts={model.alerts} />}
+      extra={<OverviewHeaderExtra remaining={model.remaining} />}
     >
       <div className="flex flex-col gap-s24">
+        {model.alerts.length > 0 ? (
+          <div className="order-0">
+            <OverviewAlerts alerts={model.alerts} />
+          </div>
+        ) : null}
+
         <div className="order-2 lg:order-1">
           {summary.status === 'loading' ? (
             <SectionSkeleton label="Carregando o resumo do mês" bodyClassName="h-32" />

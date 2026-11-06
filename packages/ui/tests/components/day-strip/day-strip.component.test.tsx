@@ -188,8 +188,33 @@ describe('DayStripSection, projection, Semana view', () => {
     expect(html).toContain('5.485,00');
   });
 
-  it('marks the week that holds today and leaves the day list out', () => {
+  it('makes the balance the main number and colors in and out with their signs', () => {
+    expect(html).toContain('Saldo ao fim');
+    expect(html).toContain('text-money-md');
+    expect(html).toContain('text-gain');
+    expect(html).toContain('+');
+    expect(html).toContain('text-loss');
+    expect(html).toContain('−');
+  });
+
+  it('shows a zero flow as a discreet dash, not as R$ 0,00', () => {
+    const [first] = html.split('<li').slice(1);
+
+    // Both flows of the first week are zero (the balance of 0,00 is the main number, not a flow).
+    expect(first?.match(/aria-hidden="true">—</g)).toHaveLength(2);
+    expect(first).not.toContain('+');
+  });
+
+  it('fills the row with equal cards that scroll sideways instead of leaving a hole', () => {
+    expect(html).toContain('grid-flow-col');
+    expect(html).toContain('auto-cols-[minmax(15rem,1fr)]');
+    expect(html).toContain('overflow-x-auto');
+    expect(html).not.toContain('lg:grid-cols-3');
+  });
+
+  it('marks the week that holds today with a tinted surface and the label, and leaves the day list out', () => {
     expect(html).toContain('Esta semana');
+    expect(html).toContain('border-brand bg-brand-weak');
     expect(html).not.toContain('Nada neste dia');
     expect(html).not.toContain('Pix da Ana');
   });
