@@ -38,6 +38,11 @@ const FORBIDDEN_PACKAGES = {
   shared: /^(hono|@hono\/|kysely|better-sqlite3)/,
 };
 
+// `shared/http/` is the HTTP glue every module's `http` layer reaches (the request validator), so it
+// may import Hono; the rest of `shared/` may not. Only `http` and `main` import it back.
+const SHARED_HTTP_ALLOWED_PACKAGES = /^(kysely|better-sqlite3)/;
+const SHARED_HTTP_IMPORTERS = new Set(['http', 'main']);
+
 const apiBoundaries = {
   meta: {
     type: 'problem',
@@ -46,6 +51,7 @@ const apiBoundaries = {
       relative: 'Use the `#/` alias instead of a relative import.',
       layer: 'Layer `{{from}}` cannot import from layer `{{to}}`.',
       package: 'Layer `{{from}}` cannot import `{{source}}`.',
+      sharedHttp: 'Layer `{{from}}` cannot import `shared/http/`; only `http` and `main` can.',
       context:
         'Module `{{from}}` cannot import the `{{layer}}` of module `{{to}}`; read through its query and change through its use case.',
     },
@@ -54,6 +60,7 @@ const apiBoundaries = {
     const match = API_SOURCE.exec(context.filename);
     if (!match) return {};
     const from = describeApiPath(match[1]);
+    const inSharedHttp = /^shared[\\/]http[\\/]/.test(match[1]);
 
     return {
       ImportDeclaration(node) {
@@ -63,9 +70,21 @@ const apiBoundaries = {
           return;
         }
         if (!source.startsWith('#/')) {
-          if (FORBIDDEN_PACKAGES[from.kind]?.test(source)) {
+          const forbidden = inSharedHttp
+            ? SHARED_HTTP_ALLOWED_PACKAGES
+            : FORBIDDEN_PACKAGES[from.kind];
+          if (forbidden?.test(source)) {
             context.report({ node, messageId: 'package', data: { from: from.kind, source } });
           }
+          return;
+        }
+
+        if (
+          source.startsWith('#/shared/http/') &&
+          !inSharedHttp &&
+          !SHARED_HTTP_IMPORTERS.has(from.kind)
+        ) {
+          context.report({ node, messageId: 'sharedHttp', data: { from: from.kind } });
           return;
         }
 

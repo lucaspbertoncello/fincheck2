@@ -2,8 +2,7 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "workspaces": {
     "apps/api": {
-      "project": ["src/**/*.ts", "tests/**/*.ts"],
-      "ignoreDependencies": ["@hono/zod-validator"]
+      "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
     "apps/web": {
       "entry": ["gallery/main.tsx", "scripts/**/*.script.ts", "mocks/**/*.ts"],

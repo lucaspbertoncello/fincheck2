@@ -194,10 +194,10 @@ packages/ui/
 | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `modules/<contexto>/domain/`      | Entidades ricas, objetos de valor, erros de domínio (`.error.ts`), interfaces de repositório (portas)                                                              |
 | `modules/<contexto>/application/` | Casos de uso, queries (leitura direta com Kysely, sem entidade) e as portas que o caso de uso precisa                                                             |
-| `modules/<contexto>/infra/`       | Repositórios Kysely, `.item.ts`, tipos das tabelas do contexto, gateways e translators (Pluggy, Telegram)                                                         |
+| `modules/<contexto>/infra/`       | Repositórios Kysely, `.item.ts`, gateways e translators (Pluggy, Telegram)                                                                                              |
 | `modules/<contexto>/http/`        | Controllers (sem framework: recebem e devolvem dado) e o `.route.ts` que registra as rotas no Hono                                                               |
-| `shared/`                         | Núcleo compartilhado: `errors/` (a base e as famílias), `config/` e, quando chegarem, `Money`, `BusinessDate`, `Clock` e a unidade de trabalho                    |
-| `database/`                       | Conexão (`sqlite.client.ts`), `database.type.ts` (junta os tipos das tabelas), `migrate-to-latest.util.ts` e `migrations/`                                        |
+| `shared/`                         | Núcleo compartilhado: `errors/`, `config/`, `money/`, `date/` (`BusinessDate`, `Month`), `clock/`, `calendar/`, `text/`, `id/`, `local-token/`, `unit-of-work/` (a porta) e `http/` (o validador; só `http` e `main` importam) |
+| `database/`                       | Conexão (`sqlite.client.ts`), `database.type.ts` (junta os tipos das tabelas), `tables/<contexto>/<tabela>-table.type.ts` (o tipo de cada tabela; o dono é a pasta), `unit-of-work/` (implementação Kysely), `migrate-to-latest.util.ts` e `migrations/` |
 | `main/`                           | `main.ts` (sobe tudo), `http/` (`create-app.util.ts` monta os controllers à mão e as rotas; `app.type.ts`; `handle-error.util.ts`; `middlewares/`) e `schedules/` |
 
 - **A dependência aponta para dentro:** `http` → `application` → `domain`; `infra` implementa as portas do `domain` e do `application`. O `domain` não importa Kysely, Hono, Zod nem `node:`. Só o `main` monta tudo (injeção à mão, sem container). A lint barra.
@@ -238,21 +238,21 @@ apps/api/                                                          (exemplo)
 │  │  ├─ invoices/
 │  │  │  ├─ domain/invoice/          invoice.entity.ts · invoice-already-closed.error.ts · invoice-repository.interface.ts
 │  │  │  ├─ application/invoice/     close-invoice.usecase.ts · list-invoices.query.ts
-│  │  │  ├─ infra/invoice/           invoice.repository.ts · invoice.item.ts · invoices-table.type.ts
+│  │  │  ├─ infra/invoice/           invoice.repository.ts · invoice.item.ts
 │  │  │  └─ http/invoice/            close-invoice.controller.ts · invoice.route.ts
 │  │  ├─ sync/infra/pluggy/          pluggy.client.ts · pluggy.gateway.ts · pluggy-transaction.translator.ts
 │  │  └─ health/                     application/health/check-database.query.ts · http/health/get-health.controller.ts · health.route.ts
-│  ├─ shared/                        errors/ (application · domain · not-found · conflict · validation) · config/
-│  ├─ database/                      sqlite.client.ts · database.type.ts · migrate-to-latest.util.ts · migrations/202611051430-create-invoices.ts
+│  ├─ shared/                        errors/ · config/ · money/ · date/ · clock/ · calendar/ · text/ · id/ · local-token/ · unit-of-work/ · http/
+│  ├─ database/                      sqlite.client.ts · database.type.ts · tables/invoices/invoices-table.type.ts · unit-of-work/ · migrate-to-latest.util.ts · migrations/202611051430-create-invoices.ts
 │  └─ main/                          main.ts · http/ (create-app.util.ts · app.type.ts · handle-error.util.ts · middlewares/) · schedules/
 └─ tests/                            unit/ · integration/ · e2e/, cada uma com o mesmo caminho do src/
    ├─ unit/modules/invoices/domain/invoice/       invoice.entity.test.ts
    ├─ integration/modules/health/http/health/     health.route.test.ts
-   └─ support/                       app/ · database/ · e, por módulo e assunto: invoices/invoice/create-test-invoice.util.ts
+   └─ support/                       app/ · database/ · e, por módulo e assunto: invoices/invoice/create-test-invoice.util.ts · shared/clock/ (o relógio fixo)
 ```
 
 - As tarefas do relógio (sincronizar o Pluggy, avisar no Telegram, backup diário) moram na API, em `main/schedules/`. Cada `.schedule.ts` só diz quando e chama o caso de uso. A API sobe com o Windows.
-- A API só escuta em `127.0.0.1` e confere um token local (`main/http/middlewares/local-token.middleware.ts`, a criar). Não há login, permissão nem auditoria.
+- A API só escuta em `127.0.0.1` e confere um token local (`main/http/middlewares/local-token.middleware.ts`). Não há login, permissão nem auditoria.
 
 ### Pacote de contrato (`packages/shared`)
 
@@ -307,7 +307,7 @@ Etapa 0 (29/10/2026). A stack está no vault (`architecture/stack.md`); os coman
 | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Monorepo                   | pnpm workspaces, sem orquestrador de tarefas.                                                                                                                   |
 | Sufixos do back (Hono)     | `.controller.ts` por rota (sem framework: recebe e devolve dado), `.route.ts` registra as rotas de um assunto no Hono, `.middleware.ts` roda antes da rota. Sem `.plugin.ts`, `.module`, `.pipe`, `.filter`. `.hook.ts` só no front. |
-| Camada de banco (Kysely)   | Sem `.table.ts`: cada tabela é um tipo (`<tabela>-table.type.ts`) no `infra/` do módulo dono, juntado em `src/database/database.type.ts`. Migração escrita à mão, nome na seção Sufixos. |
+| Camada de banco (Kysely)   | Sem `.table.ts`: cada tabela é um tipo (`<tabela>-table.type.ts`) em `src/database/tables/<contexto dono>/`, juntado em `src/database/database.type.ts` (fora do `infra/` do módulo porque a lint barra `database` importando `modules/*/infra`; o `database.type.ts` precisa alcançar todos). Migração escrita à mão, nome na seção Sufixos. |
 | Lint e formatação          | ESLint + Prettier. A lint barra: a camada errada (`http` → `application` → `domain`; o domínio não importa Kysely, Hono, Zod nem `node:`), o `domain`, o `infra` e o `http` de outro módulo, barrel fora do `packages/ui`, import relativo nos apps, `mocks/` no `src/` do web, na View, `domain`, `router` e as bibliotecas de rota e cache, uma feature do web importando outra por dentro, e o `packages/ui` importando o contrato, o cache ou a rota. |
 | Runtime e imports          | Node 26, que roda o TypeScript direto (só sintaxe apagável: sem `enum`, sem `namespace` com valor, sem propriedade no parâmetro do construtor). Imports na seção Imports. |
 

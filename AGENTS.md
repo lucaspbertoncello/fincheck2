@@ -68,8 +68,9 @@ O que a lint barra (regra em `eslint.config.js`):
 ## API e web
 
 - A API só escuta em `127.0.0.1` (RNF-003). Porta em `API_PORT` (padrão 3333). Variáveis locais em `apps/api/.env` (fora do Git), lidas se existirem.
+- **Token local:** toda rota, menos `GET /health`, exige o cabeçalho `X-Fincheck-Token` (sem ele ou errado: 401 `LOCAL_TOKEN_INVALID`). A API lê o token de `LOCAL_TOKEN` ou do arquivo `local-token` na pasta de dados (`apps/api/data/`, fora do Git); sem nenhum dos dois, gera um aleatório e grava lá.
 - O web chama a API por `/api`, que o Vite repassa para `127.0.0.1:3333` sem o prefixo.
-- Contrato: o esquema fica em `packages/shared/src/<contexto>/<recurso>/`; a API valida a entrada com ele (`@hono/zod-validator`); o web chama pelo cliente tipado (`hono/client`), cujo tipo vem de `@fincheck/api/main/http/app.type.ts`.
+- Contrato: o esquema fica em `packages/shared/src/<contexto>/<recurso>/`; a API valida a entrada com ele (`validateRequest`, em `shared/http/`, que lança `ValidationError`); o web chama pelo cliente tipado (`hono/client`), cujo tipo vem de `@fincheck/api/main/http/app.type.ts`.
 - Rota nova na API: query ou caso de uso em `modules/<contexto>/application/<assunto>/` → controller (sem framework) e `.route.ts` em `modules/<contexto>/http/<assunto>/` → em `main/http/create-app.util.ts`, monta o controller à mão e faz `.route()`. Modelo: o `/health`.
 - **Erros:** toda exceção de propósito estende uma família de `apps/api/src/shared/errors/` (`DomainError` 422, `NotFoundError` 404, `ConflictError` 409, `ValidationError` 400) com um `code` estável. `main/http/handle-error.util.ts` traduz para o corpo `{ code, message, details? }` (`@fincheck/shared/common/api-error/`); o resto vira 500 genérico. Regra de negócio nunca lança erro HTTP nem `Error` solto.
 

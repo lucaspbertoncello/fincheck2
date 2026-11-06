@@ -1,3 +1,61 @@
-// Joins the table types from `types/<context>/<subject>/`. Tables arrive with the first feature.
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface Database {}
+// Joins the table types of `tables/<context>/`: one per table, 28 in all (`erd.md`). Column names
+// stay in snake_case, as in SQL; the entity and the row only meet in each context's `.item.ts`.
+import type { AccountsTable } from '#/database/tables/accounts/accounts-table.type.ts';
+import type { BackupSettingsTable } from '#/database/tables/backup/backup-settings-table.type.ts';
+import type { BillPaymentDismissalsTable } from '#/database/tables/bills/bill-payment-dismissals-table.type.ts';
+import type { BillPaymentsTable } from '#/database/tables/bills/bill-payments-table.type.ts';
+import type { BillsTable } from '#/database/tables/bills/bills-table.type.ts';
+import type { CategoriesTable } from '#/database/tables/categories/categories-table.type.ts';
+import type { CategoryRuleTagsTable } from '#/database/tables/categories/category-rule-tags-table.type.ts';
+import type { CategoryRulesTable } from '#/database/tables/categories/category-rules-table.type.ts';
+import type { CreditCardsTable } from '#/database/tables/accounts/credit-cards-table.type.ts';
+import type { InstallmentPlansTable } from '#/database/tables/transactions/installment-plans-table.type.ts';
+import type { InvoicePaymentDismissalsTable } from '#/database/tables/invoices/invoice-payment-dismissals-table.type.ts';
+import type { InvoicePaymentsTable } from '#/database/tables/invoices/invoice-payments-table.type.ts';
+import type { InvoicesTable } from '#/database/tables/invoices/invoices-table.type.ts';
+import type { OccurrencePaymentsTable } from '#/database/tables/recurrences/occurrence-payments-table.type.ts';
+import type { ProfileTable } from '#/database/tables/profile/profile-table.type.ts';
+import type { RecurrenceOccurrencesTable } from '#/database/tables/recurrences/recurrence-occurrences-table.type.ts';
+import type { RecurrencesTable } from '#/database/tables/recurrences/recurrences-table.type.ts';
+import type { RuleSuggestionsTable } from '#/database/tables/categories/rule-suggestions-table.type.ts';
+import type { SubscriptionSuggestionDismissalsTable } from '#/database/tables/recurrences/subscription-suggestion-dismissals-table.type.ts';
+import type { SyncAccountLinksTable } from '#/database/tables/sync/sync-account-links-table.type.ts';
+import type { SyncConnectionsTable } from '#/database/tables/sync/sync-connections-table.type.ts';
+import type { SyncRunsTable } from '#/database/tables/sync/sync-runs-table.type.ts';
+import type { SyncSettingsTable } from '#/database/tables/sync/sync-settings-table.type.ts';
+import type { SyncTransactionLinksTable } from '#/database/tables/sync/sync-transaction-links-table.type.ts';
+import type { TagsTable } from '#/database/tables/categories/tags-table.type.ts';
+import type { TransactionSplitsTable } from '#/database/tables/transactions/transaction-splits-table.type.ts';
+import type { TransactionTagsTable } from '#/database/tables/transactions/transaction-tags-table.type.ts';
+import type { TransactionsTable } from '#/database/tables/transactions/transactions-table.type.ts';
+
+export interface Database {
+  accounts: AccountsTable;
+  backup_settings: BackupSettingsTable;
+  bill_payment_dismissals: BillPaymentDismissalsTable;
+  bill_payments: BillPaymentsTable;
+  bills: BillsTable;
+  categories: CategoriesTable;
+  category_rule_tags: CategoryRuleTagsTable;
+  category_rules: CategoryRulesTable;
+  credit_cards: CreditCardsTable;
+  installment_plans: InstallmentPlansTable;
+  invoice_payment_dismissals: InvoicePaymentDismissalsTable;
+  invoice_payments: InvoicePaymentsTable;
+  invoices: InvoicesTable;
+  occurrence_payments: OccurrencePaymentsTable;
+  profile: ProfileTable;
+  recurrence_occurrences: RecurrenceOccurrencesTable;
+  recurrences: RecurrencesTable;
+  rule_suggestions: RuleSuggestionsTable;
+  subscription_suggestion_dismissals: SubscriptionSuggestionDismissalsTable;
+  sync_account_links: SyncAccountLinksTable;
+  sync_connections: SyncConnectionsTable;
+  sync_runs: SyncRunsTable;
+  sync_settings: SyncSettingsTable;
+  sync_transaction_links: SyncTransactionLinksTable;
+  tags: TagsTable;
+  transaction_splits: TransactionSplitsTable;
+  transaction_tags: TransactionTagsTable;
+  transactions: TransactionsTable;
+}
