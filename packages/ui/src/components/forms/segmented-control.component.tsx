@@ -21,6 +21,13 @@ const DOT_TONE_CLASS: Record<SegmentedTone, string> = {
   gain: 'text-gain',
 };
 
+/** Fixed icon colors: they stay the same whether the option is selected or not. */
+const ICON_TONE_CLASS: Record<SegmentedTone, string> = {
+  neutral: 'text-fg-secondary',
+  loss: 'text-loss',
+  gain: 'text-gain',
+};
+
 type SegmentedControlProps = {
   options: SegmentedOption[];
   value: string;
@@ -30,7 +37,7 @@ type SegmentedControlProps = {
   isDisabled?: boolean;
   /**
    * The main-control version (Todas | Despesas | Receitas): fills the width at every size, equal
-   * segments (the slide never resizes them), a tilted card-dot before each label and the tone of
+   * segments (the slide never resizes them), a tilted card-dot before each label (unless the option has an icon) and the tone of
    * each option on the slide. The same language as Despesa | Receita in the new-transaction form.
    */
   direction?: boolean;
@@ -91,7 +98,7 @@ export function SegmentedControl({
                     tone={direction ? option.tone : undefined}
                   />
                 ) : null}
-                {direction ? (
+                {direction && !option.icon ? (
                   <span
                     aria-hidden="true"
                     className={cx(
@@ -100,7 +107,13 @@ export function SegmentedControl({
                     )}
                   />
                 ) : null}
-                {option.icon ? <Icon name={option.icon} size="md" className="relative" /> : null}
+                {option.icon ? (
+                  <Icon
+                    name={option.icon}
+                    size="md"
+                    className={cx('relative', option.iconTone && ICON_TONE_CLASS[option.iconTone])}
+                  />
+                ) : null}
                 <span className="relative truncate" title={option.label}>
                   {option.label}
                 </span>

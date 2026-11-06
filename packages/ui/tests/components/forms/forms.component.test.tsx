@@ -155,6 +155,47 @@ describe('SegmentedControl', () => {
     expect(html).not.toContain('lg:inline-flex');
   });
 
+  it('keeps the icon tone of an option that is not selected, and drops the dot for it', () => {
+    const withIcons = [
+      { key: 'all', label: 'Todas', icon: 'list' as const, iconTone: 'neutral' as const },
+      {
+        key: 'expense',
+        label: 'Despesas',
+        tone: 'loss' as const,
+        icon: 'arrow-down-right' as const,
+        iconTone: 'loss' as const,
+      },
+      {
+        key: 'income',
+        label: 'Receitas',
+        tone: 'gain' as const,
+        icon: 'arrow-up-right' as const,
+        iconTone: 'gain' as const,
+      },
+    ];
+    const html = renderToStaticMarkup(
+      <SegmentedControl direction options={withIcons} value="all" onChange={noop} label="Tipo" />,
+    );
+
+    expect(html).toContain('text-loss');
+    expect(html).toContain('text-gain');
+    expect(html).not.toContain('-rotate-8');
+  });
+
+  it('an icon without iconTone follows the label color', () => {
+    const html = renderToStaticMarkup(
+      <SegmentedControl
+        options={[{ key: 'list', label: 'Lista', icon: 'list' }]}
+        value="list"
+        onChange={noop}
+        label="Visão"
+      />,
+    );
+
+    expect(html).not.toContain('text-loss');
+    expect(html).not.toContain('text-gain');
+  });
+
   it('without direction it keeps the white pill and no dots', () => {
     const html = renderToStaticMarkup(
       <SegmentedControl options={options} value="all" onChange={noop} label="Tipo" />,

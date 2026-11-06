@@ -7,6 +7,11 @@ export type SegmentedOption = {
   /** 18 px icon before the label ("Lista | Por categoria"). */
   icon?: IconName;
   /**
+   * Fixed color of the icon, kept when the option is not selected (arrows red and green). Without
+   * it the icon follows the label color.
+   */
+  iconTone?: SegmentedTone;
+  /**
    * Direction tone (`direction` mode): the slide takes the soft red or green and the tilted
    * card-dot the strong one; "neutral" keeps the white pill and a gray dot.
    */

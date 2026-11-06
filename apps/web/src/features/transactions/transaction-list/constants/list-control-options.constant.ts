@@ -6,7 +6,7 @@ export const VIEW_OPTIONS: SegmentedOption[] = [
 ];
 
 export const TYPE_OPTIONS: SegmentedOption[] = [
-  { key: 'all', label: 'Todas', tone: 'neutral' },
-  { key: 'expense', label: 'Despesas', tone: 'loss' },
-  { key: 'income', label: 'Receitas', tone: 'gain' },
+  { key: 'all', label: 'Todas', tone: 'neutral', icon: 'list', iconTone: 'neutral' },
+  { key: 'expense', label: 'Despesas', tone: 'loss', icon: 'arrow-down-right', iconTone: 'loss' },
+  { key: 'income', label: 'Receitas', tone: 'gain', icon: 'arrow-up-right', iconTone: 'gain' },
 ];
