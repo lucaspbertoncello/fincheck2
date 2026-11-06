@@ -66,13 +66,12 @@ function DifferenceLine({ differenceCents }: { differenceCents: number }) {
       <span className="flex flex-col">
         <span>
           Vai lançar um ajuste de{' '}
-          <span className={`font-emphasis ${isGain ? 'text-gain' : 'text-loss'}`}>
-            <Money
-              cents={Math.abs(differenceCents)}
-              sign={isGain ? 'plus' : 'minus'}
-              weight="plain"
-            />
-          </span>
+          <Money
+            cents={Math.abs(differenceCents)}
+            sign={isGain ? 'plus' : 'minus'}
+            tone={isGain ? 'income' : 'expense'}
+            weight="emphasis"
+          />
         </span>
         <span className="text-meta text-fg-secondary">Com a data de hoje, sem mexer no resto.</span>
       </span>

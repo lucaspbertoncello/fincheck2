@@ -2,8 +2,8 @@ import { Button } from '#/components/buttons/button.component.tsx';
 import type { ButtonProps } from '#/components/buttons/button.type.ts';
 
 type CardActionProps = Pick<ButtonProps, 'onPress' | 'isDisabled'> & {
-  /** "link" is the quiet text action; "solid" is the primary gradient (failed sync: "Renovar"). */
-  variant: 'link' | 'solid';
+  /** "tertiary" is the quiet text action; "solid" is the primary gradient (failed sync: "Renovar"). */
+  variant: 'tertiary' | 'solid';
   children: string;
   className?: string;
 };

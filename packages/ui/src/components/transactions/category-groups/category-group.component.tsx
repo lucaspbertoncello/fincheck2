@@ -67,7 +67,9 @@ export function CategoryGroup({
   return (
     <div className={cx('border-b border-line last:border-b-0', className)}>
       <div className="flex items-start gap-s12 py-s12 lg:gap-s16 lg:py-s16">
-        <CategoryIcon icon={group.icon} dashed={group.uncategorized} />
+        <span className="self-center">
+          <CategoryIcon icon={group.icon} dashed={group.uncategorized} />
+        </span>
         <div className="flex min-w-0 flex-1 flex-col gap-s4">
           {expandable ? (
             <AriaButton
@@ -81,7 +83,7 @@ export function CategoryGroup({
           ) : (
             <span className="flex min-h-ctl-sm items-center gap-s8">{trigger}</span>
           )}
-          <p className="text-meta text-fg-secondary lg:text-label">{detail}</p>
+          <p className="text-meta whitespace-nowrap text-fg-secondary lg:text-label">{detail}</p>
           <span
             aria-hidden="true"
             className="mt-s4 block h-1 w-full max-w-90 overflow-hidden rounded-capsule bg-track"
@@ -101,7 +103,7 @@ export function CategoryGroup({
             cents={group.totalCents}
             sign={kind === 'income' ? 'plus' : 'minus'}
             weight="light"
-            tone={kind === 'income' ? 'income' : 'inherit'}
+            tone={kind}
             className="text-money-row"
           />
           {group.uncategorized && onReview ? (

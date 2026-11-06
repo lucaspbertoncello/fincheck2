@@ -42,7 +42,7 @@ export function ExpenseSummaryCard({
       icon="receipt"
       label={label}
       badge={variationPercent === null ? null : <VariationBadge percent={variationPercent} />}
-      value={<Money cents={spentCents} sign="none" />}
+      value={<Money cents={spentCents} sign="none" tone="expense" />}
       subtext={
         deltaCents === 0 ? (
           `igual a ${previousMonthLabel}`

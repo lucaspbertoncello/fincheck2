@@ -27,6 +27,7 @@ export function InvoiceHighlights({ data }: InvoiceHighlightsProps) {
                 <Money
                   cents={data.largest.cents}
                   sign="none"
+                  tone="expense"
                   weight="plain"
                   className="text-money-row"
                 />
@@ -41,7 +42,13 @@ export function InvoiceHighlights({ data }: InvoiceHighlightsProps) {
               badges={[<Chip key="part">{item.partLabel}</Chip>]}
               detail="Última parcela: termina nesta fatura"
               value={
-                <Money cents={item.cents} sign="none" weight="plain" className="text-money-row" />
+                <Money
+                  cents={item.cents}
+                  sign="none"
+                  tone="expense"
+                  weight="plain"
+                  className="text-money-row"
+                />
               }
             />
           ))}
@@ -60,8 +67,9 @@ export function InvoiceHighlights({ data }: InvoiceHighlightsProps) {
             <Money
               cents={data.nextCents}
               sign="none"
+              tone="expense"
               weight="emphasis"
-              className="text-body text-fg-primary"
+              className="text-body"
             />
             <span>em parcelas e assinaturas.</span>
           </>

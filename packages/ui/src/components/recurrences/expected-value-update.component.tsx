@@ -9,6 +9,8 @@ type ExpectedValueUpdateProps = {
   keptCents: number;
   onUpdate: () => void;
   onKeep: () => void;
+  /** Money flow of the recurrence: "income" paints the values green, the default is red. */
+  flow?: 'income' | 'expense';
   className?: string;
 };
 
@@ -18,19 +20,21 @@ export function ExpectedValueUpdate({
   keptCents,
   onUpdate,
   onKeep,
+  flow = 'expense',
   className,
 }: ExpectedValueUpdateProps) {
   return (
     <div className={cx('flex flex-wrap items-center gap-x-s12 gap-y-s8', className)}>
       <p className="text-label text-fg-primary">
         Atualizar o valor esperado para{' '}
-        <Money cents={newCents} sign="none" weight="plain" className="text-label" />?
+        <Money cents={newCents} sign="none" weight="plain" tone={flow} className="text-label" />?
       </p>
       <Button size="sm" variant="secondary" onPress={onUpdate}>
         Atualizar
       </Button>
       <Button size="sm" variant="tertiary" onPress={onKeep}>
-        Manter <Money cents={keptCents} sign="none" weight="plain" className="text-label" />
+        Manter{' '}
+        <Money cents={keptCents} sign="none" weight="plain" tone={flow} className="text-label" />
       </Button>
     </div>
   );

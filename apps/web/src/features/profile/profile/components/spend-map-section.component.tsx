@@ -144,7 +144,7 @@ export function SpendMapSection({
                       label="Maior dia"
                       value={
                         summary.peak ? (
-                          <Money cents={summary.peak.totalCents} sign="none" />
+                          <Money cents={summary.peak.totalCents} sign="none" tone="expense" />
                         ) : (
                           <span>Nenhum gasto</span>
                         )
@@ -153,7 +153,7 @@ export function SpendMapSection({
                     />
                     <HeatmapStat
                       label="Média por dia"
-                      value={<Money cents={summary.averageCents} sign="none" />}
+                      value={<Money cents={summary.averageCents} sign="none" tone="expense" />}
                       hint={`${summary.dayCount} dias`}
                     />
                     <HeatmapStat

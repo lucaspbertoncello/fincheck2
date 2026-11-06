@@ -40,8 +40,9 @@ function DebtNoteText({ note }: { note: DebtNote }) {
     );
   }
 
-  const left = <Money cents={note.remainingCents} sign="none" weight="plain" />;
-  const pix = <Money cents={note.pixCents} sign="none" weight="plain" />;
+  const tone = note.mode === 'owe' ? 'expense' : 'income';
+  const left = <Money cents={note.remainingCents} sign="none" weight="plain" tone={tone} />;
+  const pix = <Money cents={note.pixCents} sign="none" weight="plain" tone={tone} />;
 
   return note.mode === 'owe' ? (
     <>
@@ -155,6 +156,7 @@ export function DebtCreateView({
         {origin ? (
           <CandidateRowsField
             label="Transação que você pagou"
+            tone="expense"
             optional
             options={origin.options}
             value={origin.selected}
@@ -172,6 +174,7 @@ export function DebtCreateView({
           />
           <CandidateRowsField
             label={isOwe ? 'Pix de volta já feito' : 'Pix já recebido'}
+            tone={isOwe ? 'expense' : 'income'}
             optional
             options={pix.options}
             value={pix.selected}

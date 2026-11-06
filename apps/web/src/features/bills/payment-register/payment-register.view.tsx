@@ -73,8 +73,8 @@ export function PaymentRegisterView({
               ) : null}
             </div>
             <FineNote icon="calendar">
-              Falta <Money cents={remainingCents} sign="none" weight="plain" />. Pode registrar só
-              uma parte: o restante continua {isIncome ? 'a receber' : 'a pagar'}.
+              Falta <Money cents={remainingCents} sign="none" weight="plain" tone={flow} />. Pode
+              registrar só uma parte: o restante continua {isIncome ? 'a receber' : 'a pagar'}.
             </FineNote>
           </>
         }
@@ -89,6 +89,7 @@ export function PaymentRegisterView({
         {candidates ? (
           <CandidateRowsField
             label={isIncome ? 'Pix recebido' : 'Pix já feito'}
+            tone={flow}
             optional
             options={candidates.options}
             value={candidates.selected}

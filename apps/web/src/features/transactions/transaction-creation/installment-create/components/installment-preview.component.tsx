@@ -33,17 +33,17 @@ export function InstallmentPreview({ preview }: InstallmentPreviewProps) {
               <>
                 <span className="money-numeric">{preview.count}×</span>
                 <span className="text-label text-fg-secondary">de</span>
-                <Money cents={preview.firstCents} sign="none" />
+                <Money cents={preview.firstCents} sign="none" tone="expense" />
               </>
             ) : (
               <>
                 <span className="money-numeric">1×</span>
                 <span className="text-label text-fg-secondary">de</span>
-                <Money cents={preview.firstCents} sign="none" />
+                <Money cents={preview.firstCents} sign="none" tone="expense" />
                 <span className="text-label text-fg-secondary">e</span>
                 <span className="money-numeric">{preview.count - 1}×</span>
                 <span className="text-label text-fg-secondary">de</span>
-                <Money cents={preview.restCents} sign="none" />
+                <Money cents={preview.restCents} sign="none" tone="expense" />
               </>
             )}
           </p>
@@ -53,8 +53,9 @@ export function InstallmentPreview({ preview }: InstallmentPreviewProps) {
             <Money
               cents={preview.totalCents}
               sign="none"
+              tone="expense"
               weight="plain"
-              className="text-label text-fg-primary"
+              className="text-label"
             />
             .
           </p>
@@ -79,7 +80,7 @@ export function InstallmentPreview({ preview }: InstallmentPreviewProps) {
               <span>
                 {row.number}/{preview.count} · fatura de {lower(row.monthLabel)}
               </span>
-              <Money cents={row.cents} sign="none" weight="plain" className="text-fg-primary" />
+              <Money cents={row.cents} sign="none" weight="plain" tone="expense" />
             </li>
           ))}
         </ul>

@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { Button } from '#/components/buttons/index.ts';
+import { Button, LinkButton } from '#/components/buttons/index.ts';
 
 describe('Button', () => {
   it('renders the label as a button that does not submit by default', () => {
@@ -68,5 +68,22 @@ describe('Button', () => {
 
     expect(html).toContain('disabled');
     expect(html).toContain('w-full');
+  });
+});
+
+describe('LinkButton', () => {
+  it('is a real link with the pill look of the button', () => {
+    const html = renderToStaticMarkup(
+      <LinkButton href="https://example.com" target="_blank" variant="secondary">
+        Reconectar
+      </LinkButton>,
+    );
+
+    expect(html).toContain('<a ');
+    expect(html).toContain('href="https://example.com"');
+    expect(html).toContain('rel="noreferrer"');
+    expect(html).toContain('rounded-capsule');
+    expect(html).toContain('border-line');
+    expect(html).toContain('Reconectar');
   });
 });

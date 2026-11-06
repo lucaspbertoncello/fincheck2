@@ -299,6 +299,7 @@ export function TransactionListViewModel() {
       ? {
           transactionId: splitting.transactionId,
           totalCents: splitting.totalCents,
+          kind: splitting.kind,
           parts: splitting.parts,
           check: splitting.check,
           onAmountChange: splitting.changeAmount,

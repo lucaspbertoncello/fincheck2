@@ -86,6 +86,7 @@ export function SubscriptionRow({ row, first, onAction }: SubscriptionRowProps) 
           cents={row.amountCents}
           sign="minus"
           signColumn
+          tone="expense"
           weight="plain"
           className="text-money-row"
         />

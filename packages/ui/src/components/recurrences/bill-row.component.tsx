@@ -110,7 +110,7 @@ export function BillRow({
         partial ? (
           <>
             {detailParts} · falta{' '}
-            <Money cents={amountCents - settledCents} sign="none" weight="plain" />
+            <Money cents={amountCents - settledCents} sign="none" weight="plain" tone={flow} />
           </>
         ) : (
           detailParts
@@ -123,7 +123,7 @@ export function BillRow({
           sign={sign}
           signColumn
           weight="plain"
-          tone={settled ? 'faded' : flow === 'income' ? 'income' : 'inherit'}
+          tone={settled ? 'faded' : flow}
           className="text-money-row"
         />
       }

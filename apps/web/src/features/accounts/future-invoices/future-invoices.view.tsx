@@ -72,7 +72,7 @@ export function FutureInvoicesView({
               </header>
               <div className="flex flex-col gap-s4">
                 <p className="text-money-lg text-fg-primary">
-                  <Money cents={item.totalCents} sign="none" />
+                  <Money cents={item.totalCents} sign="none" tone="expense" />
                 </p>
                 <p className="text-label text-fg-secondary">{item.dueLine}</p>
               </div>
@@ -82,7 +82,7 @@ export function FutureInvoicesView({
                     <li key={part.key} className="flex flex-col gap-s4">
                       <span className="flex items-center justify-between gap-s12 text-label text-fg-primary">
                         <span className="text-fg-secondary">{part.label}</span>
-                        <Money cents={part.cents} sign="none" weight="plain" />
+                        <Money cents={part.cents} sign="none" weight="plain" tone="expense" />
                       </span>
                       <span
                         aria-hidden="true"

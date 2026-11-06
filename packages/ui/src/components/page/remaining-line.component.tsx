@@ -30,8 +30,7 @@ export function RemainingLine({ data }: RemainingLineProps) {
           ainda entram <Money cents={incomeCents} sign="none" tone="income" weight="emphasis" />
         </span>
         <span className={FRAGMENT}>
-          ainda saem{' '}
-          <Money cents={expenseCents} sign="none" weight="emphasis" className="text-fg-primary" />
+          ainda saem <Money cents={expenseCents} sign="none" tone="expense" weight="emphasis" />
         </span>
       </span>
     </p>

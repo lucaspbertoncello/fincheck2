@@ -43,6 +43,7 @@ export function CategoryGroupList({
         countLabel={countLabel(count, noun.singular, noun.plural)}
         totalCents={totalCents}
         sign={kind === 'income' ? 'plus' : 'minus'}
+        tone={kind}
       />
       <div className="flex flex-col">{children}</div>
     </section>

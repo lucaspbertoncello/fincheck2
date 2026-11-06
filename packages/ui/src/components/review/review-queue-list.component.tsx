@@ -31,7 +31,7 @@ export function ReviewQueueList({
           key={item.id}
           className="flex list-none flex-col gap-s8 border-t border-line py-s12 first:border-t-0 lg:py-s16"
         >
-          <div className="flex items-start gap-s12 lg:gap-s16">
+          <div className="flex items-center gap-s12 lg:gap-s16">
             <CategoryIcon icon={item.icon} type={item.kind} />
             <div className="flex min-w-0 flex-1 flex-col gap-s4">
               <span className="text-body font-emphasis text-fg-primary">{item.name}</span>
@@ -48,7 +48,7 @@ export function ReviewQueueList({
               cents={item.amountCents}
               sign={item.amountCents > 0 ? 'plus' : 'minus'}
               weight="plain"
-              tone={item.amountCents > 0 ? 'income' : 'inherit'}
+              tone={item.amountCents > 0 ? 'income' : 'expense'}
               className="text-money-row"
             />
           </div>

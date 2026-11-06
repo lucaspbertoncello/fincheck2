@@ -1,6 +1,4 @@
-import { Link } from 'react-aria-components';
-
-import { Icon } from '#/components/icons/icon.component.tsx';
+import { LinkButton } from '#/components/buttons/link-button.component.tsx';
 import type { FreeBalanceAccount } from '#/components/summary/free-balance.type.ts';
 import { PanelListRow } from '#/components/summary/panel-list-row.component.tsx';
 
@@ -47,13 +45,9 @@ export function AccountList({ title, items, moreHref }: AccountListProps) {
         ))}
       </ul>
       {rest > 0 && moreHref ? (
-        <Link
-          href={moreHref}
-          className="flex w-fit cursor-pointer items-center gap-s4 rounded-input py-s4 text-label font-emphasis text-brand no-underline outline-none transition-colors duration-(--duration-fast) data-[focus-visible]:outline-2 data-[focus-visible]:outline-offset-2 data-[focus-visible]:outline-brand data-[hovered]:text-fg-primary"
-        >
+        <LinkButton href={moreHref} trailingIcon="chevron-right" className="self-start">
           Ver mais · {rest} {rest === 1 ? 'conta' : 'contas'}
-          <Icon name="chevron-right" size="xs" />
-        </Link>
+        </LinkButton>
       ) : null}
     </section>
   );

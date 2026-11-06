@@ -79,6 +79,8 @@ export type TransactionEditorView = {
 export type TransactionSplitterView = {
   transactionId: string;
   totalCents: number;
+  /** Whether the transaction being split is money in or out; paints the total. */
+  kind: 'income' | 'expense';
   parts: SplitPart[];
   /** The parts checked against the total: validity, difference and empty parts. */
   check: SplitCheck;

@@ -46,12 +46,16 @@ export function ResultSummaryCard({
         positive ? (
           <Money cents={resultCents} sign="plus" tone="income" />
         ) : (
-          <Money cents={resultCents} sign="auto" />
+          <Money cents={resultCents} sign="auto" tone="expense" />
         )
       }
       subtext={
         <>
-          {capitalize(previousMonthLabel)} neste ponto: <SignedMoney cents={previousResultCents} />
+          {capitalize(previousMonthLabel)} neste ponto:{' '}
+          <SignedMoney
+            cents={previousResultCents}
+            tone={previousResultCents < 0 ? 'expense' : 'income'}
+          />
         </>
       }
       bar={<SummaryBar segments={barSegments} label="Despesas e o que sobrou do que entrou" />}

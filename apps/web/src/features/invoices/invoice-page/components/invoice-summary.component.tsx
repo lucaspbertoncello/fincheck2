@@ -30,7 +30,7 @@ export function InvoiceSummary({ data, onRegisterPayment, onCorrect }: InvoiceSu
           </p>
         ) : (
           <p className="text-money-lg text-fg-primary">
-            <Money cents={data.totalCents} sign="none" />
+            <Money cents={data.totalCents} sign="none" tone="expense" />
           </p>
         )}
         <p className="flex flex-wrap items-baseline gap-x-s8 text-label text-fg-secondary">
@@ -52,7 +52,8 @@ export function InvoiceSummary({ data, onRegisterPayment, onCorrect }: InvoiceSu
 
       {data.canRegisterPayment ? (
         <p className="text-label text-fg-primary">
-          Falta pagar <Money cents={data.remainingCents} sign="none" weight="emphasis" />
+          Falta pagar{' '}
+          <Money cents={data.remainingCents} sign="none" weight="emphasis" tone="expense" />
         </p>
       ) : null}
 

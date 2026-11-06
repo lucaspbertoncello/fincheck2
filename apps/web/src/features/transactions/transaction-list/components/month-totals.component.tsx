@@ -7,7 +7,7 @@ type TotalProps = {
   label: string;
   cents: number;
   sign: 'plus' | 'minus' | 'none';
-  tone?: 'income' | 'inherit';
+  tone?: 'income' | 'expense' | 'inherit';
 };
 
 function Total({ icon, label, cents, sign, tone = 'inherit' }: TotalProps) {
@@ -33,7 +33,13 @@ type MonthTotalsProps = {
 export function MonthTotals({ totals }: MonthTotalsProps) {
   return (
     <section aria-label={totals.label} className="flex flex-wrap gap-x-s48 gap-y-s16">
-      <Total icon="arrow-down-right" label="Despesas" cents={totals.expensesCents} sign="minus" />
+      <Total
+        icon="arrow-down-right"
+        label="Despesas"
+        cents={totals.expensesCents}
+        sign="minus"
+        tone="expense"
+      />
       <Total
         icon="arrow-up-right"
         label="Receitas"

@@ -20,7 +20,7 @@ type CategoryRowProps = {
 /**
  * Row of an active category on the standard list row (components.md 10.0): icon, the name (a
  * button that opens the category), the detail "N regras · último uso ...", the transaction count at
- * the right end ("221" over "transações", the composed value) and the "…" menu. This screen never
+ * the right end ("221 transações" on one line) and the "…" menu. This screen never
  * shows money, so the count is the value.
  */
 export function CategoryRow({ category, onEdit, onOpen, onArchive }: CategoryRowProps) {
@@ -39,11 +39,10 @@ export function CategoryRow({ category, onEdit, onOpen, onArchive }: CategoryRow
       detail={detail}
       detailTitle={detail}
       value={
-        <span className="text-money-row font-plain text-fg-primary tabular-nums">
-          {transactionCount}
+        <span className="text-list whitespace-nowrap text-fg-primary tabular-nums">
+          {countLabel(transactionCount, 'transação', 'transações')}
         </span>
       }
-      valueNote={transactionCount === 1 ? 'transação' : 'transações'}
       menu={
         <OverflowMenu
           label={`Ações de ${name}`}

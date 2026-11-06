@@ -118,11 +118,13 @@ function ReadyContent({
       <div className="grid gap-s16 lg:grid-cols-2 lg:gap-s24">
         <TotalCard
           label="Por mês"
+          tone="expense"
           totalCents={summary.monthlyTotalCents}
           caption={countLabel(summary.activeCount)}
         />
         <TotalCard
           label="Por ano"
+          tone="expense"
           totalCents={summary.yearlyTotalCents}
           caption="O total do mês vezes 12"
         />

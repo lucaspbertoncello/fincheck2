@@ -1,9 +1,8 @@
-import { CategoryDonut, Collapse, Icon, Section } from '@fincheck/ui';
+import { CategoryDonut, Collapse, Icon, LinkButton, Section } from '@fincheck/ui';
 import { useId, useState, type ReactNode } from 'react';
 import { Button, Heading } from 'react-aria-components';
 
 import { CategoryInsightCard } from '#/features/overview/overview/components/category-insight-card.component.tsx';
-import { OverviewLink } from '#/features/overview/overview/components/overview-link.component.tsx';
 import type { CategoriesData } from '#/features/overview/overview/overview.model.ts';
 
 type CategoriesSectionProps = {
@@ -74,7 +73,7 @@ export function CategoriesSection({
   isCollapsible,
   allCategoriesHref,
 }: CategoriesSectionProps) {
-  const link = <OverviewLink href={allCategoriesHref}>Ver todas</OverviewLink>;
+  const link = <LinkButton href={allCategoriesHref}>Ver todas</LinkButton>;
 
   if (!isCollapsible) {
     return (

@@ -33,6 +33,7 @@ export function CategoryGroupItems({ items, kind, totalCount, onSeeAll }: Catego
               cents={item.cents}
               sign={kind === 'income' ? 'plus' : 'minus'}
               weight="light"
+              tone={kind}
               className="text-list"
             />
           </li>

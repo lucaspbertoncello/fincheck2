@@ -62,7 +62,7 @@ export function InvoiceCard({
             </p>
           ) : (
             <p className="text-money-md text-fg-primary">
-              <Money cents={totalCents} sign="none" />
+              <Money cents={totalCents} sign="none" tone="expense" />
             </p>
           )}
           <CardTag tone={tone}>{label}</CardTag>
@@ -76,7 +76,7 @@ export function InvoiceCard({
         <div className="flex items-center justify-between gap-s12 pb-s8">
           <h3 className="text-label font-normal text-fg-secondary">Próximas parcelas</h3>
           {onOpenFuture ? (
-            <CardAction variant="link" onPress={onOpenFuture}>
+            <CardAction variant="tertiary" onPress={onOpenFuture}>
               Faturas futuras
             </CardAction>
           ) : null}
@@ -97,7 +97,7 @@ export function InvoiceCard({
                   {item.partLabel}
                 </span>
                 <span className="flex shrink-0 flex-col items-end">
-                  <Money cents={item.cents} sign="none" weight="plain" />
+                  <Money cents={item.cents} sign="none" weight="plain" tone="expense" />
                   <span className="text-meta text-fg-secondary lg:hidden">{item.partLabel}</span>
                 </span>
               </li>

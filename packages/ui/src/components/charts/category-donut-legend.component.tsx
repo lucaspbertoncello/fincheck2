@@ -44,6 +44,7 @@ export function CategoryDonutLegend({
             cents={slice.cents}
             sign="none"
             showCents
+            tone="expense"
             className="justify-self-end text-label whitespace-nowrap tabular-nums"
           />
           <span className="flex whitespace-nowrap">{slice.badge}</span>

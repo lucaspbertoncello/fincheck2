@@ -1,5 +1,4 @@
-import { Link } from 'react-aria-components';
-
+import { LinkButton } from '#/components/buttons/link-button.component.tsx';
 import { Icon } from '#/components/icons/icon.component.tsx';
 import { cx } from '#/utils/class-names.util.ts';
 
@@ -23,14 +22,9 @@ export function ConnectionErrorNotice({ reason, href, className }: ConnectionErr
       <Icon name="warning" size="sm" className="text-caution" />
       <span>Conexão com erro{reason ? `, ${reason}` : ''}</span>
       <span aria-hidden="true">·</span>
-      <Link
-        href={href}
-        target="_blank"
-        rel="noreferrer"
-        className="focus-ring cursor-pointer rounded-tiny font-emphasis text-brand underline underline-offset-2 data-[hovered]:no-underline"
-      >
+      <LinkButton href={href} target="_blank" variant="secondary">
         Reconectar no Open Finance
-      </Link>
+      </LinkButton>
     </p>
   );
 }

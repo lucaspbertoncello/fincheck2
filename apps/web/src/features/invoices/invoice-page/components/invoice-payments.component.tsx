@@ -53,6 +53,7 @@ export function InvoicePayments({
                 <Money
                   cents={payment.cents}
                   sign="none"
+                  tone="expense"
                   weight="plain"
                   className="text-money-row"
                 />

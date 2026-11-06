@@ -46,7 +46,7 @@ type CorrectInvoiceViewProps = {
 
 /** A value that can be a credit: a negative total reads "crédito de R$ X", never a minus (R5). */
 function ReferenceValue({ cents }: { cents: number }) {
-  if (cents >= 0) return <Money cents={cents} sign="none" weight="plain" />;
+  if (cents >= 0) return <Money cents={cents} sign="none" weight="plain" tone="expense" />;
   return (
     <span className="flex items-baseline gap-s4">
       <span className="text-fg-secondary">crédito de</span>
@@ -63,13 +63,12 @@ function DifferenceNote({ differenceCents }: { differenceCents: number }) {
   const isMore = differenceCents > 0;
   return (
     <p aria-live="polite" className="flex items-baseline gap-s4 text-meta text-fg-secondary">
-      <span className={isMore ? 'text-loss' : 'text-gain'}>
-        <Money
-          cents={Math.abs(differenceCents)}
-          sign={isMore ? 'plus' : 'minus'}
-          weight="emphasis"
-        />
-      </span>
+      <Money
+        cents={Math.abs(differenceCents)}
+        sign={isMore ? 'plus' : 'minus'}
+        weight="emphasis"
+        tone={isMore ? 'expense' : 'income'}
+      />
       {isMore ? 'a mais' : 'a menos'} que o app calculou
     </p>
   );

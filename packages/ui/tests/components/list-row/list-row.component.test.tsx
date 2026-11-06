@@ -29,6 +29,13 @@ describe('ListRow', () => {
     expect(html).toContain('col-start-4');
   });
 
+  it('centers the mark against the name and detail block, not the first line', () => {
+    const mark = /<div class="([^"]*)"><span data-testid="mark">/.exec(render());
+    expect(mark?.[1]).toContain('self-center');
+    expect(mark?.[1]).toContain('row-span-2');
+    expect(mark?.[1]).not.toContain('self-start');
+  });
+
   it('puts the actions on a strip of their own, aligned with the text and not with the mark', () => {
     const html = render({ actions: <button type="button">Registrar pagamento</button> });
 
@@ -94,10 +101,10 @@ describe('ListRow', () => {
     expect(html).not.toMatch(/(sm|md|lg):grid-cols/);
   });
 
-  it('keeps the mark at the top and lets the detail run to the right edge, under the value', () => {
+  it('keeps the mark in the first column and lets the detail run to the right edge, under the value', () => {
     const html = render({ menu: <button type="button">MENU</button> });
 
-    expect(html).toContain('row-start-1 mr-s12 self-start');
+    expect(html).toContain('col-start-1 row-start-1 mr-s12 self-center');
     expect(html).toMatch(/<p[^>]*col-start-2 row-start-2[^>]*-col-end-1/);
   });
 

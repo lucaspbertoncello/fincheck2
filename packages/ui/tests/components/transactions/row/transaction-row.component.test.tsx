@@ -98,6 +98,14 @@ describe('TransactionRow', () => {
     expect(html).not.toContain('title="Restaurantes');
   });
 
+  it('paints the expense amount red with "−", the R$ prefix too, and leaves ignored ones faded', () => {
+    const html = row();
+    const money = /<span class="money-numeric[^"]*text-loss[^"]*">.*?<\/span><\/span>/.exec(html);
+
+    expect(money?.[0].match(/text-loss/g)).toHaveLength(2);
+    expect(row({ ignored: true })).not.toMatch(/money-numeric[^"]*text-loss/);
+  });
+
   it('shows income with "+" in the income color and a green type badge', () => {
     const html = row({ kind: 'income', amountCents: 260000, name: 'Salário' });
 

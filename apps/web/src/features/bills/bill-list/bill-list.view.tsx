@@ -48,9 +48,13 @@ export function BillListView({
         ) : null}
       </BannerSlot>
       <div className="grid items-start gap-s16 lg:grid-cols-2 lg:gap-s24">
-        {[payable, friends].map((card) => (
+        {[
+          { card: payable, tone: 'expense' as const },
+          { card: friends, tone: 'income' as const },
+        ].map(({ card, tone }) => (
           <TotalCard
             key={card.label}
+            tone={tone}
             label={card.label}
             totalCents={card.totalCents}
             caption={card.caption}

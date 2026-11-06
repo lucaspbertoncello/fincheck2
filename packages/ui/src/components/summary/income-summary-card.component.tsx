@@ -39,10 +39,10 @@ export function IncomeSummaryCard({
           {percent}%
         </Chip>
       }
-      value={<Money cents={receivedCents} sign="none" />}
+      value={<Money cents={receivedCents} sign="none" tone="income" />}
       subtext={
         <>
-          de <Money cents={expectedCents} sign="none" weight="plain" />
+          de <Money cents={expectedCents} sign="none" weight="plain" tone="income" />
           {pendingNote ? `; ${pendingNote}` : null}
         </>
       }

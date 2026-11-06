@@ -58,6 +58,7 @@ export {
 export { useMediaQuery } from '#/hooks/viewport/index.ts';
 export {
   Button,
+  LinkButton,
   PlusButton,
   PlusMenu,
   type ButtonProps,

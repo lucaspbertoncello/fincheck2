@@ -18,6 +18,8 @@ type TotalCardProps = {
   items?: readonly TotalCardItem[];
   /** Label of the composition footer. */
   totalLabel?: string;
+  /** Color of the values: "expense" for what goes out, "income" for what comes in. */
+  tone?: 'inherit' | 'income' | 'expense';
   className?: string;
 };
 
@@ -25,6 +27,7 @@ function Head({
   label,
   totalCents,
   caption,
+  tone,
   expandable,
   isOpen = false,
 }: TotalCardProps & { expandable: boolean; isOpen?: boolean }) {
@@ -32,7 +35,7 @@ function Head({
     <>
       <span className="block text-label text-fg-secondary">{label}</span>
       <span className="mt-s4 flex items-center gap-s8">
-        <Money cents={totalCents} sign="none" className="text-money-md" />
+        <Money cents={totalCents} sign="none" tone={tone} className="text-money-md" />
         {expandable ? (
           <Icon
             name="chevron-down"
@@ -44,7 +47,11 @@ function Head({
           />
         ) : null}
       </span>
-      {caption ? <span className="mt-s8 block text-label text-fg-secondary">{caption}</span> : null}
+      {caption ? (
+        <span className="mt-s8 block text-label whitespace-nowrap text-fg-secondary">
+          {caption}
+        </span>
+      ) : null}
     </>
   );
 }
@@ -60,12 +67,19 @@ export function TotalCard({
   caption,
   items,
   totalLabel = 'Total',
+  tone,
   className,
 }: TotalCardProps) {
   if (!items) {
     return (
       <div className={cx('glass p-s16 lg:px-s24', className)}>
-        <Head label={label} totalCents={totalCents} caption={caption} expandable={false} />
+        <Head
+          label={label}
+          totalCents={totalCents}
+          caption={caption}
+          tone={tone}
+          expandable={false}
+        />
       </div>
     );
   }
@@ -77,6 +91,7 @@ export function TotalCard({
       caption={caption}
       items={items}
       totalLabel={totalLabel}
+      tone={tone}
       className={className}
     />
   );
@@ -88,6 +103,7 @@ function ExpandableTotalCard({
   caption,
   items = [],
   totalLabel = 'Total',
+  tone,
   className,
 }: TotalCardProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -106,6 +122,7 @@ function ExpandableTotalCard({
             label={label}
             totalCents={totalCents}
             caption={caption}
+            tone={tone}
             expandable
             isOpen={isOpen}
           />
@@ -121,13 +138,13 @@ function ExpandableTotalCard({
                   <span className="block text-meta text-fg-secondary">{item.note}</span>
                 ) : null}
               </span>
-              <Money cents={item.cents} sign="none" weight="plain" />
+              <Money cents={item.cents} sign="none" weight="plain" tone={tone} />
             </li>
           ))}
         </ul>
         <p className="flex items-center justify-between gap-s16 border-t border-line pt-s12 text-meta text-fg-secondary">
           <span>{totalLabel}</span>
-          <Money cents={totalCents} sign="none" weight="plain" />
+          <Money cents={totalCents} sign="none" weight="plain" tone={tone} />
         </p>
       </Collapse>
     </div>

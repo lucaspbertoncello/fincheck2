@@ -49,7 +49,13 @@ export function InvoiceLinkView({
               {dateText}
             </span>
           </div>
-          <Money cents={amountCents} sign="none" weight="emphasis" className="text-money-md" />
+          <Money
+            cents={amountCents}
+            sign="none"
+            tone="expense"
+            weight="emphasis"
+            className="text-money-md"
+          />
         </div>
       </FormModalGroup>
       <FormModalGroup label="Ao vincular">

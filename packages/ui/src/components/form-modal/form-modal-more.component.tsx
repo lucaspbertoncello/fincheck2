@@ -1,6 +1,6 @@
 import { useId, useState, type ReactNode } from 'react';
-import { Button as AriaButton } from 'react-aria-components';
 
+import { Button } from '#/components/buttons/button.component.tsx';
 import { Collapse } from '#/components/disclosure/collapse.component.tsx';
 import { Icon } from '#/components/icons/icon.component.tsx';
 import { cx } from '#/utils/class-names.util.ts';
@@ -63,11 +63,13 @@ export function FormModalMore({
   return (
     <section className={cx('flex min-w-0 flex-col', className)}>
       <div className="flex items-center gap-s12">
-        <AriaButton
+        <Button
+          variant="tertiary"
+          size="sm"
           aria-expanded={open}
           aria-controls={panelId}
           onPress={toggle}
-          className="focus-ring -ml-s4 flex min-h-ctl-sm cursor-pointer items-center gap-s4 rounded-capsule px-s4 text-label font-emphasis whitespace-nowrap text-brand data-[hovered]:bg-brand-weak"
+          className="-ml-s12 gap-s4"
         >
           <Icon
             name="chevron-right"
@@ -78,7 +80,7 @@ export function FormModalMore({
             )}
           />
           {label}
-        </AriaButton>
+        </Button>
         <span aria-hidden="true" className="h-px flex-1 bg-line" />
         {summary && !open ? <span className="text-meta text-fg-tertiary">{summary}</span> : null}
       </div>

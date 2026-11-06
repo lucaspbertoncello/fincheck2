@@ -38,7 +38,7 @@ export function InvoiceItemRow({ row }: InvoiceItemRowProps) {
               sign={isRefund ? 'plus' : 'minus'}
               signColumn
               weight="plain"
-              tone={row.expected ? 'faded' : isRefund ? 'income' : 'inherit'}
+              tone={row.expected ? 'faded' : isRefund ? 'income' : 'expense'}
               className="text-money-row"
             />
           }

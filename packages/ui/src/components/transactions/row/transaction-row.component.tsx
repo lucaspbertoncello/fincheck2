@@ -33,7 +33,7 @@ const MAX_CHIPS = 2;
 
 function moneyTone(transaction: TransactionRowData) {
   if (transaction.ignored || transaction.outOfAccount) return 'faded' as const;
-  return transaction.amountCents > 0 ? ('income' as const) : ('inherit' as const);
+  return transaction.amountCents > 0 ? ('income' as const) : ('expense' as const);
 }
 
 /**

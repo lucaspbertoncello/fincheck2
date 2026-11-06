@@ -87,8 +87,15 @@ export function ListRow({
         className,
       )}
     >
-      <div className="col-start-1 row-start-1 mr-s12 self-start">{mark}</div>
-      <div className="col-start-2 row-start-1 flex min-w-0 flex-wrap items-center gap-x-s8 gap-y-s4">
+      <div
+        className={cx(
+          'col-start-1 row-start-1 mr-s12 self-center',
+          detail || hasNote ? 'row-span-2' : undefined,
+        )}
+      >
+        {mark}
+      </div>
+      <div className="col-start-2 row-start-1 flex min-w-0 flex-wrap items-center self-baseline gap-x-s8 gap-y-s4">
         {onOpen ? (
           <button
             type="button"
@@ -114,7 +121,7 @@ export function ListRow({
         ))}
       </div>
       {value ? (
-        <div className="col-start-3 row-start-1 ml-s12 shrink-0 self-start text-right whitespace-nowrap">
+        <div className="col-start-3 row-start-1 ml-s12 shrink-0 self-baseline text-right whitespace-nowrap">
           {value}
         </div>
       ) : null}

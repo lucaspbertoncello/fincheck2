@@ -1,7 +1,6 @@
-import { Chip, type DayStripMode, DayStripSection, Money } from '@fincheck/ui';
+import { Chip, type DayStripMode, DayStripSection, LinkButton, Money } from '@fincheck/ui';
 
 import { DayItems } from '#/features/overview/overview/components/day-items.component.tsx';
-import { OverviewLink } from '#/features/overview/overview/components/overview-link.component.tsx';
 import type { StripData } from '#/features/overview/overview/overview.model.ts';
 
 type DayStripBlockProps = {
@@ -36,7 +35,7 @@ export function DayStripBlock({
       today={data.today}
       selectedDate={selectedDate}
       onSelectDate={onSelectDate}
-      action={<OverviewLink href={billsHref}>A pagar e receber</OverviewLink>}
+      action={<LinkButton href={billsHref}>A pagar e receber</LinkButton>}
       renderDay={(day) => <DayItems items={day.items} />}
       emptyDayLabel="Nada previsto para este dia."
       footer={
@@ -48,7 +47,8 @@ export function DayStripBlock({
                   Atrasado: {item.title},{' '}
                   <Money
                     cents={item.amountCents}
-                    sign={item.flow === 'in' ? 'plus' : 'none'}
+                    sign={item.flow === 'in' ? 'plus' : 'minus'}
+                    tone={item.flow === 'in' ? 'income' : 'expense'}
                     weight="plain"
                   />
                 </Chip>
@@ -61,6 +61,7 @@ export function DayStripBlock({
                   <Money
                     cents={item.amountCents}
                     sign={item.flow === 'in' ? 'plus' : 'minus'}
+                    tone={item.flow === 'in' ? 'income' : 'expense'}
                     weight="plain"
                   />
                 </Chip>

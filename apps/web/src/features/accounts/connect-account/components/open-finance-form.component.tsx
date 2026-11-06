@@ -1,7 +1,7 @@
 import {
   FormModalGroup,
   FormModalSplit,
-  Icon,
+  LinkButton,
   Skeleton,
   Steps,
   TextField,
@@ -85,15 +85,15 @@ export function OpenFinanceForm({
           guide: isLoading ? null : (
             <FormModalGroup label="Como conectar">
               <Steps label="Passos para conectar pelo Open Finance" items={buildSteps(code)} />
-              <a
+              <LinkButton
                 href={OPEN_FINANCE_SITE_URL}
                 target="_blank"
-                rel="noreferrer noopener"
-                className="focus-ring inline-flex items-center gap-s8 self-start rounded-tiny text-label font-emphasis whitespace-nowrap text-brand underline underline-offset-2 hover:no-underline"
+                variant="secondary"
+                icon="link"
+                className="self-start"
               >
-                <Icon name="link" size="sm" />
                 Abrir o site do Open Finance
-              </a>
+              </LinkButton>
               <TextField
                 label="Código da conexão"
                 value={code}

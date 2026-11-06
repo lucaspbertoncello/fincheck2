@@ -74,7 +74,7 @@ export function RecurrenceRow({
   const dismissed = status === 'dismissed';
   const partial = status === 'partial' && totalCents !== undefined;
   const sign = flow === 'income' ? 'plus' : 'minus';
-  const tone = dismissed ? 'faded' : flow === 'income' ? 'income' : 'inherit';
+  const tone = dismissed ? 'faded' : flow;
   const detail = (detailMode === 'reason' ? [statusNote] : [statusNote, rule, account]).filter(
     (part): part is string => Boolean(part),
   );

@@ -1,5 +1,4 @@
-import { Button, Steps, TextField, type StepItem } from '@fincheck/ui';
-import { Link } from 'react-aria-components';
+import { Button, LinkButton, Steps, TextField, type StepItem } from '@fincheck/ui';
 
 import type { PluggySetupProps } from '#/features/settings/settings/connections/types/pluggy-setup-props.type.ts';
 import { MEU_PLUGGY_URL } from '#/features/settings/settings/connections/constants/meu-pluggy-url.constant.ts';
@@ -35,14 +34,15 @@ export function PluggySetup({
     <div className="flex flex-col gap-s24">
       <div className="flex flex-col gap-s12">
         <Steps items={SETUP_STEPS} label="Passos para conectar o Open Finance" />
-        <Link
+        <LinkButton
           href={MEU_PLUGGY_URL}
           target="_blank"
-          rel="noreferrer"
-          className="focus-ring cursor-pointer self-start rounded-tiny text-label font-emphasis text-brand underline underline-offset-2 data-[hovered]:no-underline"
+          variant="secondary"
+          icon="link"
+          className="self-start"
         >
           Abrir o site do Open Finance
-        </Link>
+        </LinkButton>
       </div>
       <form
         noValidate

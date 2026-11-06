@@ -35,7 +35,9 @@ function CategoryRow({ row, dimmed, onToggle }: RowProps) {
         <span className="flex min-w-0 flex-col gap-s4">
           <span className="flex min-w-0 items-baseline gap-s8">
             <span className="truncate text-body font-emphasis text-fg-primary">{row.name}</span>
-            <span className="shrink-0 text-meta text-fg-secondary">{row.countLabel}</span>
+            <span className="shrink-0 text-meta whitespace-nowrap text-fg-secondary">
+              {row.countLabel}
+            </span>
           </span>
           <span
             aria-hidden="true"
@@ -48,7 +50,13 @@ function CategoryRow({ row, dimmed, onToggle }: RowProps) {
           </span>
         </span>
         <span className="flex flex-col items-end gap-s4 text-right whitespace-nowrap">
-          <Money cents={row.totalCents} sign="none" weight="plain" className="text-money-row" />
+          <Money
+            cents={row.totalCents}
+            sign="none"
+            tone="expense"
+            weight="plain"
+            className="text-money-row"
+          />
           <span className="text-meta text-fg-secondary tabular-nums">{row.shareLabel}</span>
         </span>
       </button>

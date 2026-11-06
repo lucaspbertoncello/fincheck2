@@ -18,6 +18,16 @@ describe('Money', () => {
     expect(renderToStaticMarkup(<Money cents={1000} sign="none" />)).not.toMatch(/[+−]/);
   });
 
+  it('paints the expense tone red, the R$ prefix included, like income gets green', () => {
+    const expense = renderToStaticMarkup(<Money cents={-1000} tone="expense" />);
+    const income = renderToStaticMarkup(<Money cents={1000} sign="plus" tone="income" />);
+
+    expect(expense.match(/text-loss/g)).toHaveLength(2);
+    expect(expense).not.toContain('text-fg-secondary');
+    expect(income.match(/text-gain/g)).toHaveLength(2);
+    expect(renderToStaticMarkup(<Money cents={1000} />)).not.toContain('text-loss');
+  });
+
   it('rounds to whole reais without cents', () => {
     expect(renderToStaticMarkup(<Money cents={58549} showCents={false} />)).toContain('585');
     expect(renderToStaticMarkup(<Money cents={58549} showCents={false} />)).not.toContain('585,');

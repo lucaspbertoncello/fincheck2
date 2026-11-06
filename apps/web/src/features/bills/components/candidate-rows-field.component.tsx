@@ -1,4 +1,4 @@
-import { Collapse, FieldSet, Icon, Money } from '@fincheck/ui';
+import { Button, Collapse, FieldSet, Icon, Money } from '@fincheck/ui';
 import { useState } from 'react';
 import { ToggleButton } from 'react-aria-components';
 
@@ -20,6 +20,8 @@ type CandidateRowsFieldProps = {
   emptyText: string;
   isLoading?: boolean;
   error?: string;
+  /** Direction of the amounts: money out (red) or money in (green). */
+  tone: 'income' | 'expense';
 };
 
 /**
@@ -36,6 +38,7 @@ export function CandidateRowsField({
   emptyText,
   isLoading = false,
   error,
+  tone,
 }: CandidateRowsFieldProps) {
   const [expanded, setExpanded] = useState(false);
   const chosenIndex = options.findIndex((option) => option.transactionId === value);
@@ -69,7 +72,7 @@ export function CandidateRowsField({
                     {option.counterparty ? ` · ${option.counterparty}` : ''}
                   </span>
                 </span>
-                <Money cents={option.amountCents} sign="none" weight="plain" />
+                <Money cents={option.amountCents} sign="none" weight="plain" tone={tone} />
               </ToggleButton>
             </li>
           );
@@ -95,13 +98,9 @@ export function CandidateRowsField({
                 {renderRows(options.slice(VISIBLE_ROWS))}
               </Collapse>
               <Collapse isOpen={!showAll} contentClassName="pt-s4">
-                <button
-                  type="button"
-                  onClick={() => setExpanded(true)}
-                  className="focus-ring self-start rounded-capsule px-s4 text-label font-emphasis whitespace-nowrap text-brand"
-                >
+                <Button variant="tertiary" size="sm" onPress={() => setExpanded(true)}>
                   Ver todas ({options.length})
-                </button>
+                </Button>
               </Collapse>
             </>
           ) : null}

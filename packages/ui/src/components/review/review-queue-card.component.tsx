@@ -61,7 +61,7 @@ export function ReviewQueueCard({
       aria-label="Transação em revisão"
       className={cx('glass flex flex-col gap-s24 p-s16 lg:p-s24', className)}
     >
-      <header className="flex items-start gap-s12 lg:gap-s16">
+      <header className="flex items-center gap-s12 lg:gap-s16">
         <CategoryIcon icon={transaction.icon} type={transaction.kind} size="lg" />
         <div className="flex min-w-0 flex-1 flex-col gap-s4">
           <h2 className="text-subsection font-emphasis break-words text-fg-primary">
@@ -72,7 +72,7 @@ export function ReviewQueueCard({
         <Money
           cents={transaction.amountCents}
           sign={transaction.amountCents > 0 ? 'plus' : 'minus'}
-          tone={transaction.amountCents > 0 ? 'income' : 'inherit'}
+          tone={transaction.amountCents > 0 ? 'income' : 'expense'}
           className="text-money-sm"
         />
       </header>

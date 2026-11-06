@@ -26,7 +26,7 @@ export function DayOccurrenceList({ items }: { items: readonly OccurrenceRowData
               sign={item.flow === 'income' ? 'plus' : 'minus'}
               signColumn
               weight="plain"
-              tone={item.flow === 'income' ? 'income' : 'inherit'}
+              tone={item.flow}
               className="text-money-row"
             />
           }

@@ -87,7 +87,7 @@ export function CategorySummary({
                 <Money
                   cents={figures.totalCents}
                   sign="none"
-                  tone={isExpense ? 'inherit' : 'income'}
+                  tone={isExpense ? 'expense' : 'income'}
                   className="text-money-md"
                 />
               ) : (
@@ -112,7 +112,7 @@ export function CategorySummary({
                 <Money
                   cents={figures.monthlyAverageCents}
                   sign="none"
-                  tone={isExpense ? 'inherit' : 'income'}
+                  tone={isExpense ? 'expense' : 'income'}
                   className="text-money-md"
                 />
               )

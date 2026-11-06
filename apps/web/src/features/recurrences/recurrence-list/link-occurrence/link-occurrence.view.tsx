@@ -104,7 +104,7 @@ export function LinkOccurrenceView({
                   sign={candidate.flow === 'income' ? 'plus' : 'minus'}
                   signColumn
                   weight="plain"
-                  tone={candidate.flow === 'income' ? 'income' : 'inherit'}
+                  tone={candidate.flow}
                   className="text-money-row"
                 />
               </Radio>

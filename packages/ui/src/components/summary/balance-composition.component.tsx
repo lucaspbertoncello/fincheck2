@@ -9,6 +9,11 @@ import type { FreeBalanceData, FreeBalanceLine } from '#/components/summary/free
 import { PANEL_LABELS } from '#/components/summary/panel-labels.constant.ts';
 import { cx } from '#/utils/class-names.util.ts';
 
+const LINE_TONE = { receivable: 'income', payable: 'expense' } as const satisfies Record<
+  FreeBalanceLine['key'],
+  'income' | 'expense'
+>;
+
 const LINE_ICON: Record<FreeBalanceLine['key'], { icon: IconName; tone: string }> = {
   receivable: { icon: 'hand-money', tone: 'bg-gain-weak text-gain' },
   payable: { icon: 'receipt', tone: 'bg-subtle text-fg-secondary' },
@@ -62,7 +67,13 @@ function LineRow({
               ) : null}
             </span>
             <span className="flex items-center gap-s4">
-              <Money cents={line.cents} sign={line.sign} signColumn className="text-money-row" />
+              <Money
+                cents={line.cents}
+                sign={line.sign}
+                signColumn
+                tone={LINE_TONE[line.key]}
+                className="text-money-row"
+              />
               <Icon
                 name="chevron-right"
                 size="sm"
@@ -90,7 +101,7 @@ function LineRow({
                   </span>
                 ) : null}
               </span>
-              <Money cents={item.cents} sign="none" weight="plain" />
+              <Money cents={item.cents} sign="none" weight="plain" tone={LINE_TONE[line.key]} />
             </li>
           ))}
           {rest > 0 ? <li className="text-meta text-fg-secondary">e mais {rest}</li> : null}

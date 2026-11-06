@@ -21,7 +21,7 @@ function ExpenseCardWithoutComparison({ spentCents }: { spentCents: number }) {
     <MonthSummaryCard
       icon="receipt"
       label="Despesas"
-      value={<Money cents={spentCents} sign="none" />}
+      value={<Money cents={spentCents} sign="none" tone="expense" />}
       subtext="Sem período anterior para comparar"
       bar={
         <SummaryBar
@@ -48,7 +48,7 @@ function IncomeCardOfPeriod({
     <MonthSummaryCard
       icon="trend"
       label="Receitas"
-      value={<Money cents={receivedCents} sign="none" />}
+      value={<Money cents={receivedCents} sign="none" tone="income" />}
       subtext={sourceCount === 1 ? 'de 1 fonte' : `de ${sourceCount} fontes`}
       bar={<SummaryBar segments={[{ percent: 100, tone: 'gain' }]} label={legend} />}
       barLegend={legend}

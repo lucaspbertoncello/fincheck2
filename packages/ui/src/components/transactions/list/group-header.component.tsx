@@ -13,6 +13,8 @@ type GroupHeaderProps = {
   totalCents: number;
   /** "plus" for income groups, which have no negative values. */
   sign?: 'auto' | 'plus' | 'minus';
+  /** Color of the total: "income" or "expense" for one-kind groups; neutral for a net day total. */
+  tone?: 'inherit' | 'income' | 'expense';
 };
 
 /**
@@ -26,6 +28,7 @@ export function GroupHeader({
   countLabel,
   totalCents,
   sign = 'auto',
+  tone = 'inherit',
 }: GroupHeaderProps) {
   return (
     <header className="flex flex-wrap items-baseline justify-between gap-x-s16 gap-y-s4 border-b border-line pb-s12">
@@ -36,8 +39,8 @@ export function GroupHeader({
         {subtitle ? <span className="text-list text-fg-secondary">{subtitle}</span> : null}
       </h3>
       <p className="flex items-baseline gap-s12 text-meta text-fg-secondary">
-        <span>{countLabel}</span>
-        <Money cents={totalCents} sign={sign} weight="plain" className="text-list" />
+        <span className="whitespace-nowrap">{countLabel}</span>
+        <Money cents={totalCents} sign={sign} tone={tone} weight="plain" className="text-list" />
       </p>
     </header>
   );

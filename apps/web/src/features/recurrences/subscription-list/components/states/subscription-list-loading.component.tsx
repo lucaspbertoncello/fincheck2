@@ -22,7 +22,7 @@ export function SubscriptionListLoading() {
           {ROW_KEYS.map((key) => (
             <div
               key={key}
-              className="flex items-start gap-s12 border-t border-line py-s12 first:border-t-0"
+              className="flex items-center gap-s12 border-t border-line py-s12 first:border-t-0"
             >
               <Skeleton className="size-ctl-tab shrink-0" />
               <div className="flex min-w-0 flex-1 flex-col gap-s8">

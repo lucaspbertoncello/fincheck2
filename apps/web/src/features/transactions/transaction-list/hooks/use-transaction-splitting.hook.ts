@@ -83,6 +83,7 @@ export function useTransactionSplitting({ model, lookups, transaction, close }: 
   return {
     transactionId: transaction.id,
     totalCents: total,
+    kind: transaction.amountCents > 0 ? ('income' as const) : ('expense' as const),
     parts,
     check: checkSplit(total, amounts),
     changeAmount: (index: number, amountCents: number) => {

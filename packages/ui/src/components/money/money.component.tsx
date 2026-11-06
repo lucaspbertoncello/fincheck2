@@ -12,6 +12,7 @@ const WEIGHT_CLASS = {
 const TONE_CLASS = {
   inherit: '',
   income: 'text-gain',
+  expense: 'text-loss',
   faded: 'text-fg-tertiary',
 } as const;
 
@@ -75,7 +76,7 @@ export function Money({
       <span
         aria-hidden={hidden || undefined}
         className={cx(
-          tone === 'income' ? 'text-gain' : 'text-fg-secondary',
+          tone === 'income' || tone === 'expense' ? TONE_CLASS[tone] : 'text-fg-secondary',
           currency === 'fixed' ? 'text-money-sm' : 'money-currency-proportional',
         )}
       >

@@ -24,9 +24,14 @@ type BuildHighlightItemsInput = {
 
 type Parts = { value: HighlightItem['value']; context: HighlightContext };
 
-function describePix(pix: Profile.PixHighlight, preposition: 'para' | 'de', today: string): Parts {
+function describePix(
+  pix: Profile.PixHighlight,
+  preposition: 'para' | 'de',
+  today: string,
+  tone: 'income' | 'expense',
+): Parts {
   return {
-    value: <Money cents={pix.amountCents} sign="none" />,
+    value: <Money cents={pix.amountCents} sign="none" tone={tone} />,
     context: {
       lead: pix.counterparty
         ? `${preposition} ${formatCounterpartyName(pix.counterparty)}`
@@ -44,18 +49,18 @@ function describe(
   switch (key) {
     case 'largestPixSent':
       return highlights.largestPixSent
-        ? describePix(highlights.largestPixSent, 'para', input.today)
+        ? describePix(highlights.largestPixSent, 'para', input.today, 'expense')
         : null;
     case 'largestPixReceived':
       return highlights.largestPixReceived
-        ? describePix(highlights.largestPixReceived, 'de', input.today)
+        ? describePix(highlights.largestPixReceived, 'de', input.today, 'income')
         : null;
     case 'topCategory': {
       const top = highlights.topCategory;
       if (!top) return null;
 
       return {
-        value: <Money cents={top.totalCents} sign="none" />,
+        value: <Money cents={top.totalCents} sign="none" tone="expense" />,
         context: {
           lead: input.categoryName(top.categoryId) ?? 'Sem categoria',
           tail: `${top.sharePercent.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}% do gasto`,
@@ -67,7 +72,7 @@ function describe(
 
       return month
         ? {
-            value: <Money cents={month.totalCents} sign="none" />,
+            value: <Money cents={month.totalCents} sign="none" tone="expense" />,
             context: { tail: formatHighlightMonth(month.month) },
           }
         : null;
@@ -77,7 +82,7 @@ function describe(
 
       return weekday
         ? {
-            value: <Money cents={weekday.averageCents} sign="none" />,
+            value: <Money cents={weekday.averageCents} sign="none" tone="expense" />,
             context: { lead: WEEKDAY_NAME[weekday.weekday], tail: 'média por dia' },
           }
         : null;

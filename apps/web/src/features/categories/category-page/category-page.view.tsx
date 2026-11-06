@@ -131,7 +131,11 @@ export function CategoryPageView(props: CategoryPageViewProps) {
             <Section
               key={month.key}
               title={month.label}
-              action={<span className="text-meta text-fg-secondary">{month.countLabel}</span>}
+              action={
+                <span className="text-meta whitespace-nowrap text-fg-secondary">
+                  {month.countLabel}
+                </span>
+              }
             >
               <DayList
                 days={month.days}

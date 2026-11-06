@@ -1,5 +1,4 @@
-import { Button } from 'react-aria-components';
-
+import { Button } from '#/components/buttons/button.component.tsx';
 import { ArchivedCategoryRow } from '#/components/categories/archived-category-row.component.tsx';
 import { CategoryRow } from '#/components/categories/category-row.component.tsx';
 import type { ManagedCategory } from '#/components/categories/managed-category.type.ts';
@@ -69,10 +68,7 @@ export function CategoryList({
         </ul>
       )}
       {onCreate ? (
-        <Button
-          onPress={onCreate}
-          className="focus-ring flex min-h-ctl-touch w-fit cursor-pointer items-center gap-s12 rounded-capsule py-s12 pr-s16 text-body font-emphasis text-brand"
-        >
+        <Button variant="tertiary" onPress={onCreate} className="gap-s12 self-start pl-s4">
           <PlusMark />
           {createLabel}
         </Button>

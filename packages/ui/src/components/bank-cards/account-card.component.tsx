@@ -117,7 +117,7 @@ export function AccountCard({
           )}
         </div>
         {actionLabel && onAction ? (
-          <CardAction variant={failed ? 'solid' : 'link'} onPress={onAction}>
+          <CardAction variant={failed ? 'solid' : 'tertiary'} onPress={onAction}>
             {actionLabel}
           </CardAction>
         ) : null}

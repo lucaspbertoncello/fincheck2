@@ -40,7 +40,7 @@ export function DayItems({ items }: DayItemsProps) {
               sign={item.flow === 'in' ? 'plus' : 'minus'}
               signColumn
               weight="plain"
-              tone={item.flow === 'in' ? 'income' : 'inherit'}
+              tone={item.flow === 'in' ? 'income' : 'expense'}
               className="text-money-row"
             />
           }

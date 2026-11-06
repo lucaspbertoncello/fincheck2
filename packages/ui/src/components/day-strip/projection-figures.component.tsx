@@ -79,9 +79,9 @@ export function ProjectionFigures({
           <Money
             cents={outCents}
             sign={outCents > 0 ? 'minus' : 'none'}
-            tone={outCents > 0 ? 'inherit' : 'faded'}
+            tone={outCents > 0 ? 'expense' : 'faded'}
             weight="plain"
-            className={cx(size, outCents > 0 && 'text-fg-primary')}
+            className={size}
           />
         </Figure>
         {balanceCents === undefined ? null : (

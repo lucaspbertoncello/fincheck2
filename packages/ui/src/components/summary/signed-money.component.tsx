@@ -3,7 +3,7 @@ import { Money } from '#/components/money/money.component.tsx';
 type SignedMoneyProps = {
   /** Signed integer cents: zero or more shows "+", less than zero shows "−". */
   cents: number;
-  tone?: 'inherit' | 'income';
+  tone?: 'inherit' | 'income' | 'expense';
   className?: string;
 };
 

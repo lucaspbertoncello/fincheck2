@@ -50,7 +50,7 @@ export function TransactionSplitModal({ splitter }: TransactionSplitModalProps) 
     >
       <p className="flex items-baseline justify-between gap-s12 rounded-panel bg-subtle px-s16 py-s12">
         <span className="text-label text-fg-secondary">Total a dividir</span>
-        <Money cents={totalCents} sign="none" className="text-money-md text-fg-primary" />
+        <Money cents={totalCents} sign="none" tone={splitter.kind} className="text-money-md" />
       </p>
       <FormModalGroup columns={2}>
         {parts.map((part, index) => (

@@ -134,8 +134,8 @@ function ReadyContent({
       ) : null}
 
       <div className="grid gap-s16 lg:grid-cols-2 lg:gap-s24">
-        <TotalCard {...incomeCard} />
-        <TotalCard {...expenseCard} />
+        <TotalCard {...incomeCard} tone="income" />
+        <TotalCard {...expenseCard} tone="expense" />
       </div>
 
       <DayStripSection

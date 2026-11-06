@@ -70,9 +70,9 @@ describe('CategoryList', () => {
     expect(html).toContain('aria-label="Categorias de despesa"');
     expect(html).toContain('2 regras · último uso ontem');
     expect(html).toContain('Sem regras · último uso 3 out.');
-    expect(html).toContain('>221<');
-    expect(html).toContain('>transações<');
-    expect(html).toContain('>transação<');
+    expect(html).toContain('>221 transações<');
+    expect(html).toContain('>1 transação<');
+    expect(html).not.toContain('>221<');
   });
 
   it('is a plain list of standard rows, not a table: the count is the value at the right end', () => {
