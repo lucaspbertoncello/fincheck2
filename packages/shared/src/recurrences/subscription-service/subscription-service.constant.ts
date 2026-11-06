@@ -61,3 +61,44 @@ export const SUBSCRIPTION_SERVICES = [
   slug: (typeof SUBSCRIPTION_SERVICE_SLUGS)[number];
   name: string;
 }[];
+
+// Card descriptions that are never a subscription, however regular (BR-REC-017, Lucas, 06/11/2026):
+// delivery, restaurants, groceries, ride apps and fuel. Tested on the normalized description
+// (`normalizeText`: capitals, no accents, single spaces), so "Ifood *restaurante" is caught. A
+// matching purchase never becomes an automatic suggestion; marking a recurrence by hand still works.
+export const SUBSCRIPTION_SUGGESTION_EXCLUSIONS: readonly RegExp[] = [
+  // Delivery. iFood Clube and Uber One are memberships, so they stay out of the list.
+  /\bIFOOD\b(?! ?CLUBE)/,
+  /\bIFD\*/,
+  /\bRAPPI\b/,
+  /\bUBER ?EATS\b/,
+  /\bAIQFOME\b/,
+  /\bZE ?DELIVERY\b/,
+  /\bDELIVERY\b/,
+  // Restaurants
+  /\bRESTAURANTES?\b/,
+  /\bLANCHONETE\b/,
+  /\bPIZZARIA\b/,
+  /\bHAMBURGUERIA\b/,
+  /\bPADARIA\b/,
+  /\bBAR\b/,
+  // Groceries
+  /\bSUPERMERCADOS?\b/,
+  // Not Mercado Pago or Mercado Livre, which charge real subscriptions.
+  /\bMERCADO\b(?! ?(LIVRE|PAGO))/,
+  /\bHORTIFRUTI\b/,
+  /\bATACAD(AO|ISTA)\b/,
+  // Ride apps
+  /\bUBER\b(?! ?(ONE|EATS))/,
+  // "99" alone only at the start: anywhere else it is a price ("9.99").
+  /^99\b/,
+  /\b99 ?(APP|POP|TAXI|TECNOLOGIA)\b/,
+  /\bCABIFY\b/,
+  /\bINDRIVE\b/,
+  // Fuel
+  /\bPOSTO\b/,
+  /\bCOMBUSTIVE(L|IS)\b/,
+  /\bSHELL\b/,
+  /\bIPIRANGA\b/,
+  /\bPETROBRAS\b/,
+];

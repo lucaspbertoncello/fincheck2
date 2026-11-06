@@ -1,5 +1,6 @@
 import { normalizeText } from '@fincheck/shared/common/text/normalize-text.util.ts';
 import { SUBSCRIPTION_SUGGESTION_LIMITS } from '@fincheck/shared/recurrences/subscription/subscription.constant.ts';
+import { isExcludedFromSuggestions } from '@fincheck/shared/recurrences/subscription-service/is-excluded-from-suggestions.util.ts';
 import type { Subscription } from '@fincheck/shared/recurrences/subscription/subscription.type.ts';
 
 import { buildSubscriptionKey } from '#mocks/recurrences/subscription/build-subscription-key.util.ts';
@@ -29,7 +30,8 @@ function isCovered(database: MockState.Database, accountId: string, description:
 
 // BR-REC-017: the same normalized description on a card, one charge a month, in 2 months in a row,
 // each within 15% of the amount after it and within 5 days of its day, and no recurrence on the
-// card that already covers it. The last charge is in this month or the one before.
+// card that already covers it, and not on the exclusion list (delivery, restaurant, groceries,
+// ride apps, fuel). The last charge is in this month or the one before.
 export function listSubscriptionSuggestions(database: MockState.Database): SuggestionCandidate[] {
   const { amountTolerance, dayTolerance, minMonths } = SUBSCRIPTION_SUGGESTION_LIMITS;
   const linkedToLiveRecurrence = new Set(
@@ -53,6 +55,7 @@ export function listSubscriptionSuggestions(database: MockState.Database): Sugge
       tx.amountCents >= 0 ||
       tx.installment ||
       !countsInAccounts(tx) ||
+      isExcludedFromSuggestions(tx.description) ||
       linkedToLiveRecurrence.has(tx.id)
     )
       continue;

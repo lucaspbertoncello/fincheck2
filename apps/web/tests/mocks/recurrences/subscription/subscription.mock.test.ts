@@ -207,6 +207,25 @@ describe('GET /subscriptions (suggestions)', () => {
     expect(seeded(data, 'REVISTA DIGITAL')).toBeUndefined();
   });
 
+  it('never suggests delivery, restaurant, groceries, ride apps or fuel, however regular', async () => {
+    // The seed has "IFOOD *RESTAURANTE" twice in a row on the card: it would pass the limits.
+    expect(seeded(await readSubscriptions(), 'IFOOD')).toBeUndefined();
+
+    for (const text of ['UBER *TRIP', 'POSTO SHELL CENTRO', 'SUPERMERCADO BOM PRECO']) {
+      addTestCardCharge(text, `${AUGUST}-10`, 5000);
+      addTestCardCharge(text, `${SEPTEMBER}-10`, 5000);
+    }
+    // A membership with a delivery name is still a subscription.
+    addTestCardCharge('IFOOD CLUBE', `${AUGUST}-10`, 1290);
+    addTestCardCharge('IFOOD CLUBE', `${SEPTEMBER}-10`, 1290);
+
+    const data = await readSubscriptions();
+    expect(seeded(data, 'UBER')).toBeUndefined();
+    expect(seeded(data, 'POSTO')).toBeUndefined();
+    expect(seeded(data, 'SUPERMERCADO')).toBeUndefined();
+    expect(seeded(data, 'IFOOD CLUBE')).toMatchObject({ lastAmountCents: 1290, monthsSeen: 2 });
+  });
+
   it('accepts a difference of up to 15% and refuses more', async () => {
     // Measured on the last amount (10.000): 15% is 1.500 apart.
     addTestCardCharge('SERVICO A', `${AUGUST}-10`, 8500);
