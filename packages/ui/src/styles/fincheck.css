@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import './tokens.css';
 @import './scrollbar.css';
+@import './shared-card-transition.css';
 
 @source '../';
 

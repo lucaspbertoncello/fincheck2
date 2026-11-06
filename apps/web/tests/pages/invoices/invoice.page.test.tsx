@@ -251,3 +251,30 @@ describe('Fatura, página (BR-INV-006)', () => {
     expect(current.some((link) => /Contas/.test(link.textContent ?? ''))).toBe(true);
   });
 });
+
+describe('Fatura, página: o cartão no topo', () => {
+  it('draws the bank card on top, before the summary, with the name of the transition', async () => {
+    const { id } = await openInvoice('Roxinho');
+
+    const bankCard = screen.getByRole('img', { name: /Roxinho, final 4821/ });
+    const summary = screen.getByRole('region', { name: 'Resumo da fatura' });
+    expect(
+      bankCard.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(bankCard.style.getPropertyValue('--card-vt-name')).toBe(`card-${id}`);
+    expect(document.querySelectorAll('[data-shared-card]')).toHaveLength(1);
+  });
+
+  it('keeps one named card (the same one) when the arrows change the invoice', async () => {
+    const { id, month } = await openInvoice('Roxinho');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fatura anterior' }));
+    expect(
+      await screen.findByRole('heading', { level: 1, name: titleOf(addMonths(month, -1)) }),
+    ).toBeInTheDocument();
+
+    const named = document.querySelectorAll<HTMLElement>('[data-shared-card]');
+    expect(named).toHaveLength(1);
+    expect(named[0]!.style.getPropertyValue('--card-vt-name')).toBe(`card-${id}`);
+  });
+});

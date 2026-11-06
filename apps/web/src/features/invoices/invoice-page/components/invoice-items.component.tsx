@@ -57,7 +57,7 @@ export function InvoiceItems({
 
   if (totalCount === 0) {
     return (
-      <Section title="Lançamentos">
+      <Section title="Lançamentos" variant="glass">
         <EmptyState
           icon="receipt"
           title="Nenhum lançamento nesta fatura"
@@ -71,6 +71,7 @@ export function InvoiceItems({
   return (
     <Section
       title="Lançamentos"
+      variant="glass"
       action={
         <span className="text-meta text-fg-secondary tabular-nums">
           {shownCount === totalCount

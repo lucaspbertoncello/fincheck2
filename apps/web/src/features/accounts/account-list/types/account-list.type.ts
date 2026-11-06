@@ -52,6 +52,8 @@ export type CardBlockData = {
   last4: string;
   dueLabel: string;
   bankName?: string;
+  /** View-transition name of the card; only the one that was clicked has it. */
+  transitionName?: string;
   invoice: InvoiceBlockData | null;
   installments: readonly InvoiceInstallment[];
   menuItems: OverflowMenuItem[];

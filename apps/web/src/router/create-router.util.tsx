@@ -20,6 +20,7 @@ import { settingsIndexRoute } from '#/router/routes/settings-index.route.tsx';
 import { settingsProfileRoute } from '#/router/routes/settings-profile.route.tsx';
 import { settingsRoute } from '#/router/routes/settings.route.tsx';
 import { transactionsRoute } from '#/router/routes/transactions.route.tsx';
+import { getCardTransitionTypes } from '#/router/card-transition/get-card-transition-types.util.ts';
 import { getTabTransitionTypes } from '#/shared/layouts/application/transition/get-tab-transition-types.util.ts';
 
 export function createAppRouter(queryClient: QueryClient) {
@@ -47,8 +48,11 @@ export function createAppRouter(queryClient: QueryClient) {
     ]),
     context: { queryClient },
     defaultPreload: 'intent',
-    // Page transition between tabs (motion.md 1); the types give the direction.
-    defaultViewTransition: { types: getTabTransitionTypes },
+    // Page transition between tabs (motion.md 1) and the card that travels to its invoice (1.6); the
+    // types give the direction.
+    defaultViewTransition: {
+      types: (change) => getCardTransitionTypes(change) || getTabTransitionTypes(change),
+    },
   });
 }
 

@@ -33,11 +33,8 @@ function CategoryRow({ row, dimmed, onToggle }: RowProps) {
       >
         <CategoryIcon icon={row.icon} size="sm" />
         <span className="flex min-w-0 flex-col gap-s4">
-          <span className="flex min-w-0 items-baseline gap-s8">
-            <span className="truncate text-body font-emphasis text-fg-primary">{row.name}</span>
-            <span className="shrink-0 text-meta whitespace-nowrap text-fg-secondary">
-              {row.countLabel}
-            </span>
+          <span title={row.name} className="truncate text-body font-emphasis text-fg-primary">
+            {row.name}
           </span>
           <span
             aria-hidden="true"
@@ -48,6 +45,7 @@ function CategoryRow({ row, dimmed, onToggle }: RowProps) {
               style={{ width: `${Math.max(2, row.share)}%` }}
             />
           </span>
+          <span className="text-meta whitespace-nowrap text-fg-secondary">{row.countLabel}</span>
         </span>
         <span className="flex flex-col items-end gap-s4 text-right whitespace-nowrap">
           <Money
@@ -84,6 +82,7 @@ export function InvoiceCategoryComposition({
   return (
     <Section
       title="Para onde foi"
+      variant="glass"
       action={
         selected ? (
           <Button variant="tertiary" size="sm" onPress={onClear}>

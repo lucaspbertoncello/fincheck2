@@ -11,7 +11,7 @@ import { buildBalanceCurve } from '#/features/accounts/account-list/utils/build-
 import { buildAccountMenuItems } from '#/features/accounts/account-list/utils/build-account-menu-items.util.ts';
 import { describeConnectionError } from '#/features/accounts/account-list/utils/describe-connection-error.util.ts';
 import { formatSyncAge } from '#/features/accounts/account-list/utils/format-sync-age.util.ts';
-import { resolveAccountTheme } from '#/features/accounts/utils/resolve-account-theme.util.ts';
+import { resolveAccountTheme } from '#/domain/accounts/account/rules/resolve-account-theme.rule.ts';
 
 type BuildAccountTileInput = {
   account: Account.Dto;

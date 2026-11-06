@@ -5,7 +5,7 @@ import { useAccountsSearch } from '#/shared/hooks/accounts/use-accounts-search.h
 import { useAdjustBalanceModel } from '#/features/accounts/adjust-balance/adjust-balance.model.ts';
 import { AdjustBalanceView } from '#/features/accounts/adjust-balance/adjust-balance.view.tsx';
 import { describeAdjustError } from '#/features/accounts/adjust-balance/utils/describe-adjust-error.util.ts';
-import { resolveAccountTheme } from '#/features/accounts/utils/resolve-account-theme.util.ts';
+import { resolveAccountTheme } from '#/domain/accounts/account/rules/resolve-account-theme.rule.ts';
 
 /** "Ajustar saldo" (manual account) and "Atualizar saldo" (wallet). Opens by `?adjust=<accountId>`. */
 export function AdjustBalanceViewModel() {

@@ -27,15 +27,32 @@ export function CardBlock({
     />
   );
 
+  const card = (
+    <BankCard
+      theme={data.theme}
+      nickname={data.nickname}
+      last4={data.last4}
+      dueLabel={data.dueLabel}
+      bankName={data.bankName}
+      transitionName={data.transitionName}
+    />
+  );
   return (
     <div className="flex min-w-0 flex-col gap-s16">
-      <BankCard
-        theme={data.theme}
-        nickname={data.nickname}
-        last4={data.last4}
-        dueLabel={data.dueLabel}
-        bankName={data.bankName}
-      />
+      {invoice ? (
+        // The card itself opens the invoice too (a mouse shortcut; "Ver fatura" is the button).
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-label={`Ver fatura do cartão ${data.nickname}`}
+          onClick={() => onViewInvoice(data.id, invoice.month)}
+          className="block w-full cursor-pointer rounded-panel text-left"
+        >
+          {card}
+        </button>
+      ) : (
+        card
+      )}
       {invoice ? (
         <InvoiceCard
           status={invoice.status}

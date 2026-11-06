@@ -90,6 +90,17 @@ describe('BankCard', () => {
     );
     expect(html).toContain('role="img"');
   });
+
+  it('carries the view-transition name only when the screen gives one', () => {
+    const named = renderToStaticMarkup(
+      <BankCard theme="c6" nickname="a" last4="1" dueLabel="b" transitionName="card-abc" />,
+    );
+    const plain = renderToStaticMarkup(<BankCard theme="c6" nickname="a" last4="1" dueLabel="b" />);
+    expect(named).toContain('data-shared-card=""');
+    expect(named).toContain('--card-vt-name:card-abc');
+    expect(plain).not.toContain('data-shared-card');
+    expect(plain).not.toContain('--card-vt-name');
+  });
 });
 
 describe('BankAvatar', () => {

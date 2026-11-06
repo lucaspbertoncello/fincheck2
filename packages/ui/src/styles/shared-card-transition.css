@@ -1,0 +1,38 @@
+/* The card that travels between Contas e cartões and its invoice page (motion.md 1.6).
+   `BankCard` carries `data-shared-card` and `--card-vt-name` (`card-<id>`, unique per card) when
+   the screen gives it a transition name. The name only exists while a `card` transition runs, so a
+   card never keeps a name that could repeat on the page, and with reduced motion (type `reduce`,
+   decided by the router) or in a browser without View Transitions nothing is named and nothing
+   morphs. Chrome and Edge 125+. Only transform and opacity move. */
+
+html:active-view-transition-type(card) [data-shared-card] {
+  view-transition-name: var(--card-vt-name);
+  view-transition-class: shared-card;
+}
+
+/* The card glides and resizes from the list to the top of the page (or back). */
+html:active-view-transition-type(card)::view-transition-group(*.shared-card) {
+  animation-duration: var(--duration-slide);
+  animation-timing-function: var(--ease-standard);
+}
+
+/* The rest of the page crosses over without any slide, so the eye stays on the card. */
+html:active-view-transition-type(card)::view-transition-old(content) {
+  animation: 120ms var(--ease-standard) both card-page-out;
+}
+
+html:active-view-transition-type(card)::view-transition-new(content) {
+  animation: 180ms var(--ease-standard) 80ms both card-page-in;
+}
+
+@keyframes card-page-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes card-page-in {
+  from {
+    opacity: 0;
+  }
+}

@@ -2,6 +2,7 @@ import { Banner, BannerSlot, EmptyState } from '@fincheck/ui';
 
 import { InvoiceCategoryComposition } from '#/features/invoices/invoice-page/components/invoice-category-composition.component.tsx';
 import { InvoiceHighlights } from '#/features/invoices/invoice-page/components/invoice-highlights.component.tsx';
+import { InvoiceHero } from '#/features/invoices/invoice-page/components/invoice-hero.component.tsx';
 import { InvoiceItems } from '#/features/invoices/invoice-page/components/invoice-items.component.tsx';
 import { InvoicePageSkeleton } from '#/features/invoices/invoice-page/components/invoice-page-skeleton.component.tsx';
 import { InvoicePayments } from '#/features/invoices/invoice-page/components/invoice-payments.component.tsx';
@@ -12,11 +13,12 @@ import { BackPageFrame } from '#/shared/components/page/back-page-frame.componen
 import type { InvoicePageViewProps } from '#/features/invoices/invoice-page/types/invoice-page.type.ts';
 
 /**
- * The invoice of a card as a page (BR-INV-006): the way back, the title with the arrows, the top
- * (total, due, state and cycle, variation), the payment the app found, the payments, where the
- * money went by category, the highlights and the lines by day. Every state is here: loading (a
- * skeleton the size of the page), error, an invoice that does not exist and the ready page, which
- * has its own empty state for an invoice with no lines. Everything arrives ready in props.
+ * The invoice of a card as a page (BR-INV-006): the way back, the title with the arrows, the bank
+ * card on top with the summary beside it (state, total, due, cycle, variation, what is left), the
+ * payment the app found, highlights and "Para onde foi" side by side, the payments and the lines by
+ * day. Every state is here: loading (a skeleton the size of the page, with the card already on
+ * top), error, an invoice that does not exist and the ready page, which has its own empty state for
+ * an invoice with no lines. Everything arrives ready in props.
  */
 export function InvoicePageView(props: InvoicePageViewProps) {
   const { status } = props;
@@ -40,7 +42,7 @@ export function InvoicePageView(props: InvoicePageViewProps) {
         backLabel={props.backLabel}
         actions={status === 'not-found' ? undefined : switcher}
       >
-        {status === 'loading' ? <InvoicePageSkeleton /> : null}
+        {status === 'loading' ? <InvoicePageSkeleton card={props.card} /> : null}
         {status === 'error' ? (
           <Banner
             variant="error"
@@ -64,6 +66,8 @@ export function InvoicePageView(props: InvoicePageViewProps) {
 
   const { summary, paymentForm } = props;
   const showPayments = props.payments.length > 0 || paymentForm.registering;
+  const hasCategories = props.categoryRows.length > 0;
+  const hasHighlights = props.highlights !== null;
 
   return (
     <BackPageFrame
@@ -84,13 +88,15 @@ export function InvoicePageView(props: InvoicePageViewProps) {
         ) : null}
       </BannerSlot>
 
-      {summary ? (
-        <InvoiceSummary
-          data={summary}
-          onRegisterPayment={props.onRegisterPayment}
-          onCorrect={props.onCorrect}
-        />
-      ) : null}
+      <InvoiceHero card={props.card}>
+        {summary ? (
+          <InvoiceSummary
+            data={summary}
+            onRegisterPayment={props.onRegisterPayment}
+            onCorrect={props.onCorrect}
+          />
+        ) : null}
+      </InvoiceHero>
 
       {props.suggestion ? (
         <PaymentSuggestion
@@ -99,6 +105,21 @@ export function InvoicePageView(props: InvoicePageViewProps) {
           onLink={props.onLinkSuggestion}
           onDismiss={props.onDismissSuggestion}
         />
+      ) : null}
+
+      {hasCategories || hasHighlights ? (
+        <div
+          className={`grid grid-cols-1 gap-s16 lg:gap-s24 ${hasCategories && hasHighlights ? 'lg:grid-cols-2' : ''}`}
+        >
+          {props.highlights ? <InvoiceHighlights data={props.highlights} /> : null}
+          {hasCategories ? (
+            <InvoiceCategoryComposition
+              rows={props.categoryRows}
+              onToggle={props.onToggleCategory}
+              onClear={props.onClearCategory}
+            />
+          ) : null}
+        </div>
       ) : null}
 
       {showPayments ? (
@@ -117,16 +138,6 @@ export function InvoicePageView(props: InvoicePageViewProps) {
           onCancel={paymentForm.onCancel}
         />
       ) : null}
-
-      {props.categoryRows.length > 0 ? (
-        <InvoiceCategoryComposition
-          rows={props.categoryRows}
-          onToggle={props.onToggleCategory}
-          onClear={props.onClearCategory}
-        />
-      ) : null}
-
-      {props.highlights ? <InvoiceHighlights data={props.highlights} /> : null}
 
       <InvoiceItems
         groups={props.items.groups}

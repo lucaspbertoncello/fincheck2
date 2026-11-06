@@ -1,8 +1,19 @@
-import type { IconName, ServiceLogoData } from '@fincheck/ui';
+import type { BankThemeKey, IconName, ServiceLogoData } from '@fincheck/ui';
 
 export type InvoiceTone = 'accent' | 'neutral' | 'ok' | 'warn';
 
 export type InvoiceSortKey = 'date' | 'amount';
+
+/** The card drawn at the top of the page: the same face as on Contas e cartões. */
+export type InvoiceCardData = {
+  theme: BankThemeKey;
+  nickname: string;
+  last4: string;
+  dueLabel: string;
+  bankName?: string;
+  /** Its view-transition name, shared with the card on the list. */
+  transitionName: string;
+};
 
 /** The payment the app found and offers to link. */
 export type InvoiceSuggestionData = {
@@ -124,6 +135,8 @@ export type InvoicePageViewProps = {
   onBack: () => void;
   /** "Fatura de outubro 2026". */
   title: string;
+  /** The card at the top; null until the card loads. */
+  card: InvoiceCardData | null;
   /** The card: "Roxinho". */
   description: string;
   switcher: {

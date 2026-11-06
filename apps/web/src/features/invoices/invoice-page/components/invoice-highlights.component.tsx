@@ -15,7 +15,7 @@ export function InvoiceHighlights({ data }: InvoiceHighlightsProps) {
   const hasRows = data.largest !== null || data.ending.length > 0;
 
   return (
-    <Section title="Destaques">
+    <Section title="Destaques" variant="glass">
       {hasRows ? (
         <ul className="m-0 flex list-none flex-col divide-y divide-line p-0">
           {data.largest ? (
@@ -58,7 +58,7 @@ export function InvoiceHighlights({ data }: InvoiceHighlightsProps) {
           Nenhuma compra em destaque e nenhuma parcela termina nesta fatura.
         </p>
       )}
-      <p className="flex flex-wrap items-baseline gap-x-s8 gap-y-s4 rounded-panel bg-subtle p-s16 text-label text-fg-secondary">
+      <p className="flex flex-wrap items-baseline gap-x-s8 gap-y-s4 mt-auto rounded-panel bg-subtle p-s16 text-label text-fg-secondary">
         {data.nextCents === 0 ? (
           <span>A próxima fatura ainda não tem parcelas nem assinaturas previstas.</span>
         ) : (

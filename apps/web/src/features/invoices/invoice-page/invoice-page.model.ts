@@ -20,6 +20,7 @@ export function useInvoicePageModel(accountId: string, month: string) {
 
   return {
     invoice: invoice.data,
+    card: card.data,
     cardName: card.data?.name ?? '',
     categories: categories.data?.items ?? [],
     listedMonths: (listed.data?.items ?? []).map((item) => item.month),

@@ -1,7 +1,7 @@
 import type { Account } from '@fincheck/shared/accounts/account/account.type.ts';
 import { describe, expect, it } from 'vitest';
 
-import { resolveAccountTheme } from '#/features/accounts/utils/resolve-account-theme.util.ts';
+import { resolveAccountTheme } from '#/domain/accounts/account/rules/resolve-account-theme.rule.ts';
 
 function card(code: Account.Dto['institutionCode'], themeId: string | null): Account.Dto {
   return {

@@ -39,7 +39,7 @@ export function InvoicePayments({
   onCancel,
 }: InvoicePaymentsProps) {
   return (
-    <Section title="Pagamentos">
+    <Section title="Pagamentos" variant="glass">
       {payments.length === 0 ? (
         <p className="text-label text-fg-secondary">Nenhum pagamento ainda.</p>
       ) : (

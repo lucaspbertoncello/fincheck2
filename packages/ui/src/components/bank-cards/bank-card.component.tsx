@@ -27,6 +27,12 @@ type BankCardProps = {
   bankName?: string;
   /** Main color of the bank, drawn as a stripe on the fallback theme ("#3FA110"). */
   stripeColor?: string;
+  /**
+   * View-transition name of this card (`card-<id>`), unique per card: the card on the list and the
+   * same card on its invoice page share it, so the browser moves one into the other. Only applied
+   * while a `card` transition runs (shared-card-transition.css).
+   */
+  transitionName?: string;
   /** Tilts with the pointer (fine pointer and motion allowed only). On by default. */
   tilt?: boolean;
   className?: string;
@@ -43,6 +49,7 @@ export function BankCard({
   dueLabel,
   bankName,
   stripeColor,
+  transitionName,
   tilt = true,
   className,
 }: BankCardProps) {
@@ -52,7 +59,8 @@ export function BankCard({
   const name = bankName ?? theme.name;
   const label = `Cartão ${name}, ${nickname}, final ${last4}, ${dueLabel}, ${BANK_NETWORK_LABEL[theme.network]}`;
 
-  const cardStyle: CSSProperties = {
+  const cardStyle: CSSProperties & Record<'--card-vt-name', string | undefined> = {
+    '--card-vt-name': transitionName,
     aspectRatio: '85.6 / 53.98',
     color: theme.text,
     background: `${theme.art},linear-gradient(${theme.gradient.angle},${from},${mid} 55%,${to})`,
@@ -73,6 +81,7 @@ export function BankCard({
         '@container relative w-full max-w-full overflow-hidden rounded-panel',
         className,
       )}
+      data-shared-card={transitionName ? '' : undefined}
       style={cardStyle}
     >
       <span

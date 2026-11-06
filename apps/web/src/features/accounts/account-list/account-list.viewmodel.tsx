@@ -3,6 +3,9 @@ import { useToast } from '@fincheck/ui';
 import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 
+import { buildCardTransitionName } from '#/router/card-transition/build-card-transition-name.util.ts';
+import { markSharedCard } from '#/router/card-transition/mark-shared-card.util.ts';
+import { useSharedCardId } from '#/router/card-transition/use-shared-card-id.hook.ts';
 import { useAccountsSearch } from '#/shared/hooks/accounts/use-accounts-search.hook.ts';
 import { useAccountListModel } from '#/features/accounts/account-list/account-list.model.ts';
 import { AccountListView } from '#/features/accounts/account-list/account-list.view.tsx';
@@ -26,6 +29,7 @@ export function AccountListViewModel() {
   const { search, update } = useAccountsSearch();
   const toast = useToast();
   const navigate = useNavigate();
+  const sharedCardId = useSharedCardId();
   const [actionError, setActionError] = useState<string | null>(null);
   const now = new Date();
   const today = getBusinessDate(now);
@@ -37,9 +41,18 @@ export function AccountListViewModel() {
   const active = model.accounts.filter((account) => !account.archivedAt);
   const cards = active
     .filter((account) => account.type === 'credit_card')
-    .map((card) =>
-      buildCardBlock({ card, invoice: invoicesByCard.get(card.id), plans: model.plans, today }),
-    );
+    .map((card) => {
+      const block = buildCardBlock({
+        card,
+        invoice: invoicesByCard.get(card.id),
+        plans: model.plans,
+        today,
+      });
+      // Only the card that was clicked carries the name of the transition (a repeat would abort it).
+      return block.id === sharedCardId
+        ? { ...block, transitionName: buildCardTransitionName(block.id) }
+        : block;
+    });
   const toTile = (account: Account.Dto) =>
     buildAccountTile({
       account,
@@ -85,8 +98,9 @@ export function AccountListViewModel() {
       };
     });
 
-  /** "Ver fatura": the page of the invoice, which leads back here. */
-  function openInvoice(cardId: string, month: string) {
+  /** "Ver fatura": the page of the invoice, which leads back here. The card travels with it. */
+  function openInvoice(cardId: string, month: string, options?: { withCard?: boolean }) {
+    if (options?.withCard) markSharedCard(cardId);
     void navigate({
       to: '/cards/$accountId/invoices/$month',
       params: { accountId: cardId, month },
@@ -161,7 +175,7 @@ export function AccountListViewModel() {
         ) : undefined
       }
       onConnect={() => update({ new: 'account' })}
-      onViewInvoice={openInvoice}
+      onViewInvoice={(cardId, month) => openInvoice(cardId, month, { withCard: true })}
       onCorrectInvoice={(cardId, month) => update({ correct: `${cardId}:${month}` })}
       onOpenFuture={(cardId) => update({ future: cardId })}
       onCardMenuAction={handleMenuAction}

@@ -4,6 +4,8 @@ import { useToast } from '@fincheck/ui';
 import { useNavigate, useParams, useRouter } from '@tanstack/react-router';
 import { useState } from 'react';
 
+import { buildCardFace } from '#/domain/accounts/account/rules/build-card-face.rule.ts';
+import { buildCardTransitionName } from '#/router/card-transition/build-card-transition-name.util.ts';
 import { useAccountsSearch } from '#/shared/hooks/accounts/use-accounts-search.hook.ts';
 import { useInvoicePageOrigin } from '#/features/invoices/invoice-page/hooks/use-invoice-page-origin.hook.ts';
 import { useInvoicePageModel } from '#/features/invoices/invoice-page/invoice-page.model.ts';
@@ -171,6 +173,9 @@ function InvoicePageContent({ accountId, month }: ContentProps) {
     backLabel: back.label,
     onBack: () => navigateToHref(router, backHref),
     title: isMonthValid ? `Fatura de ${monthLabel.toLowerCase()} ${yearLabel}` : 'Fatura',
+    card: model.card
+      ? { ...buildCardFace(model.card), transitionName: buildCardTransitionName(accountId) }
+      : null,
     description: model.cardName || ' ',
     switcher: {
       hasPrevious: neighbors.previous !== null,

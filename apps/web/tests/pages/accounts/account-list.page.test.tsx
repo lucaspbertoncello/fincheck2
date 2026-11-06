@@ -1,8 +1,9 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse, http } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { server } from '#mocks/setup/server.util.ts';
+import { sharedCardStore } from '#/router/card-transition/shared-card.store.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
 import { renderApp } from '#tests/support/app/render-app.util.tsx';
@@ -257,5 +258,45 @@ describe('AccountListPage, invoice with more refund than purchases (R5)', () => 
     const invoice = await screen.findByRole('region', { name: 'Fatura aberta' });
     expect(within(invoice).getByText('crédito de')).toBeInTheDocument();
     expect(within(invoice).getByText(/45,00/)).toBeInTheDocument();
+  });
+});
+
+describe('AccountListPage, card that travels to its invoice', () => {
+  beforeEach(() => sharedCardStore.set(null));
+
+  function namedCards() {
+    return Array.from(document.querySelectorAll<HTMLElement>('[data-shared-card]'));
+  }
+
+  it('names no card until one is clicked', async () => {
+    await openAccounts();
+    await screen.findByRole('img', { name: /Roxinho, final 4821/ });
+
+    expect(namedCards()).toHaveLength(0);
+  });
+
+  it('gives the transition name only to the card that was navigated', async () => {
+    const roxinho = db.accounts.find((item) => item.name === 'Roxinho')!;
+    sharedCardStore.set(roxinho.id);
+    await openAccounts();
+    await screen.findByRole('img', { name: /Bradesco Black, final 7733/ });
+
+    const named = namedCards();
+    expect(named).toHaveLength(1);
+    expect(named[0]!.style.getPropertyValue('--card-vt-name')).toBe(`card-${roxinho.id}`);
+    expect(named[0]).toHaveAccessibleName(/Roxinho, final 4821/);
+    sharedCardStore.set(null);
+  });
+
+  it('marks the clicked card when the invoice opens, from the button and from the card', async () => {
+    const roxinho = db.accounts.find((item) => item.name === 'Roxinho')!;
+    await openAccounts();
+    await screen.findByRole('heading', { name: 'Cartões de crédito' });
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Ver fatura do cartão Roxinho' }));
+
+    expect(await screen.findByRole('heading', { level: 1, name: /Fatura de/ })).toBeInTheDocument();
+    expect(sharedCardStore.getSnapshot()).toBe(roxinho.id);
+    sharedCardStore.set(null);
   });
 });

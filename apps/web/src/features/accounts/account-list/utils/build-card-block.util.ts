@@ -7,7 +7,7 @@ import type {
   InvoiceBlockData,
 } from '#/features/accounts/account-list/types/account-list.type.ts';
 import { buildAccountMenuItems } from '#/features/accounts/account-list/utils/build-account-menu-items.util.ts';
-import { resolveAccountTheme } from '#/features/accounts/utils/resolve-account-theme.util.ts';
+import { buildCardFace } from '#/domain/accounts/account/rules/build-card-face.rule.ts';
 import { buildInvoiceDueLine } from '#/domain/invoices/invoice/rules/build-invoice-due-line.rule.ts';
 import { getCycleProgress } from '#/domain/invoices/invoice/rules/get-cycle-progress.rule.ts';
 import { mapInvoiceStatus } from '#/domain/invoices/invoice/rules/map-invoice-status.rule.ts';
@@ -48,7 +48,6 @@ export function buildCardBlock({
   plans,
   today,
 }: BuildCardBlockInput): CardBlockData {
-  const details = card.creditCard;
   const installments = plans
     .filter((plan) => plan.accountId === card.id && plan.nextInstallment)
     .sort((a, b) =>
@@ -64,11 +63,7 @@ export function buildCardBlock({
 
   return {
     id: card.id,
-    theme: resolveAccountTheme(card),
-    nickname: card.name,
-    last4: details?.last4 ?? '',
-    dueLabel: `Vence dia ${String(details?.dueDay ?? 0).padStart(2, '0')}`,
-    bankName: card.institutionName ?? undefined,
+    ...buildCardFace(card),
     invoice: invoice ? buildInvoiceBlock(invoice, today) : null,
     installments,
     menuItems: buildAccountMenuItems(Boolean(card.archivedAt)),
