@@ -205,16 +205,18 @@ describe('NeedsAttentionStrip', () => {
 });
 
 describe('ExpectedValueUpdate', () => {
-  it('asks to update and offers to keep the current amount', () => {
+  it('offers to update or keep the amount with two pill buttons, primary first', () => {
     const html = renderToStaticMarkup(
       <ExpectedValueUpdate newCents={2390} keptCents={2190} onUpdate={noop} onKeep={noop} />,
     );
 
-    expect(html).toContain('Atualizar o valor esperado para');
+    expect(html).toContain('Atualizar para');
     expect(html).toContain('23,90');
-    expect(html).toContain('Atualizar');
     expect(html).toContain('Manter');
     expect(html).toContain('21,90');
+    // The amount is one piece: "R$" takes the size and color of the label.
+    expect(html).not.toContain('money-currency-proportional');
+    expect(html).not.toContain('text-brand');
   });
 });
 

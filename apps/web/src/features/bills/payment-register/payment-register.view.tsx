@@ -73,8 +73,8 @@ export function PaymentRegisterView({
               ) : null}
             </div>
             <FineNote icon="calendar">
-              Falta <Money cents={remainingCents} sign="none" weight="plain" />. Pode registrar só
-              uma parte: o restante continua {isIncome ? 'a receber' : 'a pagar'}.
+              Falta <Money cents={remainingCents} sign="none" weight="plain" currency="inline" />.
+              Pode registrar só uma parte: o restante continua {isIncome ? 'a receber' : 'a pagar'}.
             </FineNote>
           </>
         }

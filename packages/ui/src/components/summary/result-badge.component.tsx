@@ -26,8 +26,7 @@ export function ResultBadge({ deltaCents }: ResultBadgeProps) {
         sign="none"
         weight="emphasis"
         showCents={false}
-        tone={rising ? 'income' : 'inherit'}
-        className="text-meta"
+        currency="inline"
       />
     </span>
   );

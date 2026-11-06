@@ -28,8 +28,11 @@ type MoneyProps = {
   signColumn?: boolean;
   weight?: keyof typeof WEIGHT_CLASS;
   tone?: keyof typeof TONE_CLASS;
-  /** "proportional" is 0.8 of the number; "fixed" is 20 px (the Livre hero). */
-  currency?: 'proportional' | 'fixed';
+  /**
+   * "proportional" is 0.8 of the number; "fixed" is 20 px (the Livre hero); "inline" is money inside
+   * a sentence or a button label: "R$" with the size and color of the text around it, one piece.
+   */
+  currency?: 'proportional' | 'fixed' | 'inline';
   /** The hidden dots shrink to 0.64 of the number (the Livre hero). */
   smallDots?: boolean;
   /** False rounds to whole reais ("≈ R$ 585 por dia"). */
@@ -84,10 +87,14 @@ export function Money({
       ) : null}
       <span
         aria-hidden={hidden || undefined}
-        className={cx(
-          tone === 'income' || tone === 'expense' ? TONE_CLASS[tone] : 'text-fg-secondary',
-          currency === 'fixed' ? 'text-money-sm' : 'money-currency-proportional',
-        )}
+        className={
+          currency === 'inline'
+            ? undefined
+            : cx(
+                tone === 'income' || tone === 'expense' ? TONE_CLASS[tone] : 'text-fg-secondary',
+                currency === 'fixed' ? 'text-money-sm' : 'money-currency-proportional',
+              )
+        }
       >
         R$
       </span>

@@ -101,13 +101,14 @@ export function buildTransactionRowFlags(transaction: TransactionRowData): Trans
       key: 'debt',
       chip: (
         <Chip tone="ok" icon="hand-money">
-          Abateu <Money cents={debtPaidCents} sign="none" weight="plain" className="text-meta" />{' '}
+          Abateu <Money cents={debtPaidCents} sign="none" weight="plain" currency="inline" />{' '}
           {suffix}
         </Chip>
       ),
       node: (
         <>
-          Abateu <Money cents={debtPaidCents} sign="none" weight="plain" /> {suffix}
+          Abateu <Money cents={debtPaidCents} sign="none" weight="plain" currency="inline" />{' '}
+          {suffix}
         </>
       ),
     });

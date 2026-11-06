@@ -52,7 +52,8 @@ type RecurrenceRowProps = {
  * Recurrence row (components.md 10.2) on the standard list row: category icon with type badge, name
  * and the status chip, one detail line (state, rule, account), the amount at the right end (a
  * partial one in two lines, "R$ 400" over "de R$ 800", with the bar), the "…" menu and the
- * decision buttons on a strip of their own.
+ * decision buttons on a strip of their own: the first one primary, the others secondary, all the
+ * same size (no text-look action beside a pill).
  */
 export function RecurrenceRow({
   name,
@@ -130,11 +131,11 @@ export function RecurrenceRow({
       actions={
         decision ??
         (inlineActions?.length
-          ? inlineActions.map((action) => (
+          ? inlineActions.map((action, index) => (
               <Button
                 key={action}
                 size="sm"
-                variant={action === 'edit-expected' ? 'tertiary' : 'secondary'}
+                variant={index === 0 ? 'primary' : 'secondary'}
                 onPress={() => onAction(action)}
               >
                 {recurrenceActionLabel(action, flow)}

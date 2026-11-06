@@ -153,7 +153,7 @@ export function BillRow({
               </Button>
             ) : null}
             {secondaryAction ? (
-              <Button size="sm" variant="tertiary" onPress={secondaryAction.onPress}>
+              <Button size="sm" variant="secondary" onPress={secondaryAction.onPress}>
                 {secondaryAction.label}
               </Button>
             ) : null}

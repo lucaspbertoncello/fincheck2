@@ -29,19 +29,19 @@ export function BankChangedNotice({
         <Icon name="warning" size="base" className="text-caution" />
         <span>
           O banco mudou o valor de{' '}
-          <Money cents={previousCents} sign="none" weight="plain" className="text-label" /> para{' '}
-          <Money cents={currentCents} sign="none" weight="plain" className="text-label" /> depois da
-          sua edição. Qual vale?
+          <Money cents={previousCents} sign="none" weight="plain" currency="inline" /> para{' '}
+          <Money cents={currentCents} sign="none" weight="plain" currency="inline" /> depois da sua
+          edição. Qual vale?
         </span>
       </p>
       <div className="mt-s8 flex flex-col gap-s8 lg:flex-row lg:flex-wrap lg:items-center">
-        <Button variant="secondary" size="sm" onPress={onUseBank}>
+        <Button variant="primary" size="sm" onPress={onUseBank}>
           Usar o valor do banco
         </Button>
         <Button variant="secondary" size="sm" onPress={onKeepMine}>
           Manter o meu
         </Button>
-        <Button variant="tertiary" size="sm" onPress={onShowDifference}>
+        <Button variant="secondary" size="sm" onPress={onShowDifference}>
           Ver diferença
         </Button>
       </div>

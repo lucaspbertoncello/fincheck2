@@ -12,7 +12,12 @@ type ExpectedValueUpdateProps = {
   className?: string;
 };
 
-/** "Atualizar o valor esperado para R$ 23,90?" with "Atualizar" and "Manter R$ 21,90" (10.1). It goes on the action strip of the row (`RecurrenceRow` `decision`). */
+/**
+ * The decision of a different amount (10.1): "Atualizar para R$ 23,90" (primary) and "Manter
+ * R$ 21,90" (secondary), the same pill buttons as every other action strip. The row detail already
+ * says what was charged; the amounts in the labels are one piece, in the color of the label.
+ * It goes on the action strip of the row (`RecurrenceRow` `decision`).
+ */
 export function ExpectedValueUpdate({
   newCents,
   keptCents,
@@ -21,16 +26,16 @@ export function ExpectedValueUpdate({
   className,
 }: ExpectedValueUpdateProps) {
   return (
-    <div className={cx('flex flex-wrap items-center gap-x-s12 gap-y-s8', className)}>
-      <p className="text-label text-fg-primary">
-        Atualizar o valor esperado para{' '}
-        <Money cents={newCents} sign="none" weight="plain" className="text-label" />?
-      </p>
-      <Button size="sm" variant="secondary" onPress={onUpdate}>
-        Atualizar
+    <div className={cx('flex flex-wrap items-center gap-s8', className)}>
+      <Button size="sm" variant="primary" onPress={onUpdate}>
+        <span>
+          Atualizar para <Money cents={newCents} sign="none" weight="plain" currency="inline" />
+        </span>
       </Button>
-      <Button size="sm" variant="tertiary" onPress={onKeep}>
-        Manter <Money cents={keptCents} sign="none" weight="plain" className="text-label" />
+      <Button size="sm" variant="secondary" onPress={onKeep}>
+        <span>
+          Manter <Money cents={keptCents} sign="none" weight="plain" currency="inline" />
+        </span>
       </Button>
     </div>
   );

@@ -75,7 +75,7 @@ export function Banner({
   const secondary =
     secondaryActionLabel && onSecondaryAction ? (
       <Button
-        variant="tertiary"
+        variant="secondary"
         size={below ? 'sm' : 'md'}
         onPress={onSecondaryAction}
         className={below ? undefined : 'w-full lg:w-auto'}

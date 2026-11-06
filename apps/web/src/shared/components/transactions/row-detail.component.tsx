@@ -59,7 +59,7 @@ export function RowDetail({ transactionId, detail, selectionMode, handlers }: Ro
         </p>
         <div className="mt-s8 flex flex-col gap-s8 lg:flex-row lg:items-center">
           <Button
-            variant="secondary"
+            variant="primary"
             size="sm"
             onPress={() => handlers.onResolveBankChange(transactionId, 'mine')}
           >
@@ -115,7 +115,7 @@ export function RowDetail({ transactionId, detail, selectionMode, handlers }: Ro
         </p>
         <div className="mt-s8 flex flex-col gap-s8 lg:flex-row lg:flex-wrap lg:items-center">
           <Button
-            variant="secondary"
+            variant="primary"
             size="sm"
             onPress={() => handlers.onResolveBankChange(transactionId, 'bank')}
           >
@@ -129,7 +129,7 @@ export function RowDetail({ transactionId, detail, selectionMode, handlers }: Ro
             Manter o meu
           </Button>
           <Button
-            variant="tertiary"
+            variant="secondary"
             size="sm"
             aria-expanded={showDifference}
             onPress={() => setShowDifference((current) => !current)}

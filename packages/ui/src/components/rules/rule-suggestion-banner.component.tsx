@@ -36,12 +36,12 @@ export function RuleSuggestionBanner({
         <span>{message}</span>
       </p>
       <div className="flex items-center gap-s8 self-end lg:self-auto">
+        <Button onPress={onCreate}>{actionLabel}</Button>
         {onDismiss ? (
-          <Button variant="tertiary" onPress={onDismiss}>
+          <Button variant="secondary" onPress={onDismiss}>
             {dismissLabel}
           </Button>
         ) : null}
-        <Button onPress={onCreate}>{actionLabel}</Button>
       </div>
     </div>
   );

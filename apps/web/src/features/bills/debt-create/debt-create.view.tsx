@@ -40,8 +40,8 @@ function DebtNoteText({ note }: { note: DebtNote }) {
     );
   }
 
-  const left = <Money cents={note.remainingCents} sign="none" weight="plain" />;
-  const pix = <Money cents={note.pixCents} sign="none" weight="plain" />;
+  const left = <Money cents={note.remainingCents} sign="none" weight="plain" currency="inline" />;
+  const pix = <Money cents={note.pixCents} sign="none" weight="plain" currency="inline" />;
 
   return note.mode === 'owe' ? (
     <>

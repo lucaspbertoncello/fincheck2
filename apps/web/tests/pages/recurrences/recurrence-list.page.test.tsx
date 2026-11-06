@@ -74,7 +74,7 @@ describe('RecurrenceListPage', () => {
     );
   });
 
-  it('answers the different amount with "Atualizar" and the row leaves the strip', async () => {
+  it('answers the different amount with "Atualizar para" and the row leaves the strip', async () => {
     renderApp(URL);
     const attention = await findAttentionStrip();
 
@@ -82,7 +82,7 @@ describe('RecurrenceListPage', () => {
     const internet = attention.getByText('Internet').closest('li');
     if (!internet) throw new Error('No row for Internet');
 
-    fireEvent.click(within(internet).getByRole('button', { name: 'Atualizar' }));
+    fireEvent.click(within(internet).getByRole('button', { name: /^Atualizar para/ }));
 
     await waitFor(() => expect(attention.queryByText('Internet')).not.toBeInTheDocument());
   });
@@ -231,11 +231,9 @@ describe('RecurrenceListPage', () => {
     renderApp(URL);
     const attention = await findAttentionStrip();
 
-    fireEvent.click(
-      within(attention.getByText('Diarista').closest('li')!).getByRole('button', {
-        name: 'Editar valor esperado',
-      }),
-    );
+    // Two buttons at most on the strip: editing the expected amount lives in the "…" menu.
+    fireEvent.click(attention.getByRole('button', { name: 'Ações de Diarista' }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Editar valor esperado' }));
 
     const dialog = await screen.findByRole('dialog', { name: 'Editar valor esperado' });
     fireEvent.change(within(dialog).getByRole('textbox', { name: 'Valor esperado' }), {

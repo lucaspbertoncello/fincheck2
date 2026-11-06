@@ -131,11 +131,10 @@ describe('getOccurrenceRowStatus', () => {
 });
 
 describe('getOccurrenceInlineActions', () => {
-  it('offers the three actions on a late occurrence and none on an expected expense', () => {
+  it('offers two actions on a late occurrence and none on an expected expense', () => {
     expect(getOccurrenceInlineActions(createTestOccurrence({ status: 'late' }))).toEqual([
       'mark-done',
       'link',
-      'edit-expected',
     ]);
     expect(getOccurrenceInlineActions(createTestOccurrence())).toEqual([]);
   });
@@ -144,11 +143,10 @@ describe('getOccurrenceInlineActions', () => {
     expect(getOccurrenceInlineActions(createTestOccurrence({ kind: 'income' }))).toEqual([
       'link',
       'mark-done',
-      'edit-expected',
     ]);
     expect(
       getOccurrenceInlineActions(createTestOccurrence({ kind: 'income', status: 'partial' })),
-    ).toEqual(['link', 'edit-expected']);
+    ).toEqual(['link']);
   });
 });
 

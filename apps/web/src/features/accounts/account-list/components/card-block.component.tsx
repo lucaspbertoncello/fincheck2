@@ -72,7 +72,7 @@ export function CardBlock({
               </Button>
               {invoice.isEditable ? (
                 <Button
-                  variant="tertiary"
+                  variant="secondary"
                   size="sm"
                   onPress={() => onCorrectInvoice(data.id, invoice.month)}
                 >

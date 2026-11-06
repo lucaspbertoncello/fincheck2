@@ -42,7 +42,7 @@ export function SplitSumIndicator({ status, differenceCents, className }: SplitS
             cents={Math.abs(differenceCents)}
             sign="none"
             weight="emphasis"
-            className="text-label"
+            currency="inline"
           />{' '}
           para fechar o total
         </span>
