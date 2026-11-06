@@ -1131,3 +1131,119 @@ describe('previous state of a bulk action', () => {
     expect(transaction).toMatchObject({ categoryId: 'food', categoryRuleId: null });
   });
 });
+
+describe('Transaction.applyRule (BR-CAT-006)', () => {
+  const RULE = { id: 'rule-1', category: FOOD, tagIds: ['trip'] };
+  const NONE: ReadonlySet<string> = new Set();
+
+  it('sets the category as the rule did and adds the tags it lacks', () => {
+    const transaction = buildTestTransaction({ tagIds: ['mine'] });
+
+    const changed = transaction.applyRule(RULE, NONE, LATER);
+
+    expect(changed).toBe(true);
+    expect(transaction).toMatchObject({
+      categoryId: 'food',
+      categorySource: 'rule',
+      categoryRuleId: 'rule-1',
+      tagIds: ['mine', 'trip'],
+      updatedAt: LATER,
+    });
+  });
+
+  it('answers false and touches nothing when there is nothing to change', () => {
+    const transaction = buildTestTransaction({
+      categoryId: 'food',
+      categorySource: 'rule',
+      categoryRuleId: 'rule-0',
+      tagIds: ['trip'],
+    });
+
+    expect(transaction.applyRule(RULE, NONE, LATER)).toBe(false);
+    expect(transaction).toMatchObject({ categoryRuleId: 'rule-0', updatedAt: TEST_NOW });
+  });
+
+  it('never overwrites a category that Lucas, a recurrence or a bill put, and adds nothing then', () => {
+    for (const source of ['user', 'recurrence', 'bill'] as const) {
+      const transaction = buildTestTransaction({ categoryId: 'market', categorySource: source });
+
+      expect(transaction.applyRule(RULE, NONE, LATER)).toBe(false);
+      expect(transaction).toMatchObject({
+        categoryId: 'market',
+        categorySource: source,
+        tagIds: [],
+      });
+    }
+  });
+
+  it('keeps what an older rule categorized, and takes over from a younger one', () => {
+    const owned = (ruleId: string) =>
+      buildTestTransaction({
+        categoryId: 'market',
+        categorySource: 'rule',
+        categoryRuleId: ruleId,
+      });
+
+    expect(owned('older').applyRule(RULE, new Set(['older']), LATER)).toBe(false);
+    const taken = owned('younger');
+    expect(taken.applyRule(RULE, new Set(['older']), LATER)).toBe(true);
+    expect(taken).toMatchObject({ categoryId: 'food', categoryRuleId: 'rule-1' });
+  });
+
+  it('does not touch a split, an ignored, an outside-the-month nature or the other kind', () => {
+    const split = buildTestTransaction({
+      splits: [
+        new TransactionSplit({
+          id: 'part-1',
+          position: 1,
+          amount: cents(-1000),
+          nature: 'expense',
+          categoryId: null,
+          description: null,
+        }),
+        new TransactionSplit({
+          id: 'part-2',
+          position: 2,
+          amount: cents(-250),
+          nature: 'expense',
+          categoryId: null,
+          description: null,
+        }),
+      ],
+    });
+    const cases = [
+      split,
+      buildTestTransaction({ ignoredAt: TEST_NOW }),
+      buildTestTransaction({ nature: 'transfer' }),
+      buildTestTransaction({ nature: 'income', amount: cents(1250) }),
+    ];
+
+    for (const transaction of cases) {
+      expect(transaction.applyRule(RULE, NONE, LATER)).toBe(false);
+      expect(transaction.categoryId).toBeNull();
+      expect(transaction.tagIds).toEqual([]);
+    }
+  });
+
+  it('adds only the tags when the rule has no category, but never to what was put by hand', () => {
+    const free = buildTestTransaction({ categoryId: 'market', categorySource: 'rule' });
+    expect(free.applyRule({ id: 'rule-2', category: null, tagIds: ['trip'] }, NONE, LATER)).toBe(
+      true,
+    );
+    expect(free).toMatchObject({
+      categoryId: 'market',
+      categorySource: 'rule',
+      categoryRuleId: null,
+      tagIds: ['trip'],
+    });
+
+    for (const source of ['user', 'recurrence', 'bill'] as const) {
+      const byHand = buildTestTransaction({ categoryId: 'market', categorySource: source });
+
+      expect(
+        byHand.applyRule({ id: 'rule-2', category: null, tagIds: ['trip'] }, NONE, LATER),
+      ).toBe(false);
+      expect(byHand.tagIds).toEqual([]);
+    }
+  });
+});

@@ -2,7 +2,10 @@ import type { TransactionBulk } from '@fincheck/shared/transactions/transaction-
 import type { Kysely } from 'kysely';
 
 import type { Database } from '#/database/database.type.ts';
+import type { TransactionReferenceResolver } from '#/modules/transactions/application/transaction/transaction-reference-resolver.service.ts';
+import { RequestValidationError } from '#/shared/errors/request-validation.error.ts';
 import type { CategoryRuleReader } from '#/modules/transactions/application/transaction/category-rule-reader.interface.ts';
+import type { Transaction } from '#/modules/transactions/domain/transaction/transaction.entity.ts';
 import type { TransactionRepository } from '#/modules/transactions/domain/transaction/transaction-repository.interface.ts';
 import type { Clock } from '#/shared/clock/clock.interface.ts';
 import type { UnitOfWork } from '#/shared/unit-of-work/unit-of-work.interface.ts';
@@ -13,17 +16,20 @@ import type { UnitOfWork } from '#/shared/unit-of-work/unit-of-work.interface.ts
 export class RestoreBulkTransactionsUseCase {
   private readonly transactions: TransactionRepository<Kysely<Database>>;
   private readonly rules: CategoryRuleReader;
+  private readonly references: TransactionReferenceResolver;
   private readonly unitOfWork: UnitOfWork<Kysely<Database>>;
   private readonly clock: Clock;
 
   constructor(
     transactions: TransactionRepository<Kysely<Database>>,
     rules: CategoryRuleReader,
+    references: TransactionReferenceResolver,
     unitOfWork: UnitOfWork<Kysely<Database>>,
     clock: Clock,
   ) {
     this.transactions = transactions;
     this.rules = rules;
+    this.references = references;
     this.unitOfWork = unitOfWork;
     this.clock = clock;
   }
@@ -41,6 +47,7 @@ export class RestoreBulkTransactionsUseCase {
           )
         ).map((transaction) => [transaction.id, transaction]),
       );
+      await this.assertReferences(input.items, found, executor);
       const aliveRules = await this.rules.existingRuleIds(
         [...new Set(input.items.flatMap((item) => item.categoryRuleId ?? []))],
         executor,
@@ -61,6 +68,50 @@ export class RestoreBulkTransactionsUseCase {
       }
 
       return { restoredCount };
+    });
+  }
+
+  // The body is the state a previous action returned, but nothing proves it: a category or a tag
+  // that does not exist is the 404 of its owner, a category without origin or of the wrong kind is
+  // a 400. A transaction whose nature changed since (it no longer takes a category) is not an
+  // error: its category is dropped on restore.
+  private async assertReferences(
+    items: RestoreBulkTransactionsUseCase.Input['items'],
+    found: Map<string, Transaction>,
+    executor: Kysely<Database>,
+  ): Promise<void> {
+    const categories = await this.references.categoriesById(
+      [...new Set(items.flatMap((item) => (item.categoryId === null ? [] : [item.categoryId])))],
+      executor,
+    );
+    await this.references.tagsById([...new Set(items.flatMap((item) => item.tagIds))], executor);
+
+    items.forEach((item, index) => {
+      if (item.categoryId === null) return;
+      if (item.categorySource === null) {
+        throw new RequestValidationError([
+          {
+            path: `items.${String(index)}.categorySource`,
+            message: 'A category needs its origin.',
+          },
+        ]);
+      }
+      const transaction = found.get(item.transactionId);
+      const category = categories.get(item.categoryId);
+      if (
+        transaction &&
+        category &&
+        transaction.hasCountedNature() &&
+        !transaction.isSplit() &&
+        category.kind !== transaction.nature
+      ) {
+        throw new RequestValidationError([
+          {
+            path: `items.${String(index)}.categoryId`,
+            message: 'The category is of the other kind.',
+          },
+        ]);
+      }
     });
   }
 }

@@ -4,8 +4,8 @@ import type { Database } from '#/database/database.type.ts';
 
 // Port to the suggestions of category for the review queue ("Parece Restaurantes"): up to three
 // active categories of the right kind, those Lucas already used for the same description first
-// (`history`), then the ones a rule points to (`rule`). The owner is `categories` (not built yet:
-// unwired in the `main`, there are no suggestions, which is the truth without categories).
+// (`history`), then the ones a rule points to (`rule`). The owner is `categories`, which plugs
+// its query in at `createApp` (unwired, there would be no suggestions).
 export interface CategorySuggestionReader {
   suggestionsFor(
     items: CategorySuggestionReader.Item[],

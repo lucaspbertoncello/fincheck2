@@ -1,3 +1,5 @@
+import { CATEGORY_ICONS } from '@fincheck/shared/categories/category/category.constant.ts';
+import { idSchema } from '@fincheck/shared/common/id/id.schema.ts';
 import { sql } from 'kysely';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -84,9 +86,25 @@ describe('database migrations', () => {
     expect(updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
   });
 
-  it('seeds nothing else (the categories come with their own feature)', async () => {
-    for (const table of ['categories', 'tags', 'accounts', 'transactions'] as const) {
+  it('seeds only the default categories', async () => {
+    for (const table of ['tags', 'accounts', 'transactions', 'category_rules'] as const) {
       expect(await database.db.selectFrom(table).selectAll().execute()).toEqual([]);
+    }
+  });
+
+  it('seeds the ready-made categories, all default and active, with valid ids and icons', async () => {
+    const rows = await database.db.selectFrom('categories').selectAll().execute();
+
+    expect(rows.filter((row) => row.kind === 'expense')).toHaveLength(11);
+    expect(rows.filter((row) => row.kind === 'income')).toHaveLength(4);
+    expect(rows.map((row) => row.name)).toEqual(
+      expect.arrayContaining(['Restaurantes', 'Delivery', 'Mercado', 'Salário', 'Outras receitas']),
+    );
+    for (const row of rows) {
+      expect(row.is_default).toBe(1);
+      expect(row.archived_at).toBeNull();
+      expect(idSchema.safeParse(row.id).success).toBe(true);
+      expect(CATEGORY_ICONS).toContain(row.icon);
     }
   });
 
@@ -107,7 +125,7 @@ describe('database migrations', () => {
       undone++;
     }
 
-    expect(undone).toBe(6);
+    expect(undone).toBe(7);
     expect(await listTables()).toEqual([]);
   });
 

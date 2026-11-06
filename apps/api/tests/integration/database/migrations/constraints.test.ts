@@ -230,13 +230,13 @@ describe('database constraints', () => {
     });
 
     it('refuses a category name that repeats in the same kind, whatever the case', async () => {
-      await insertTestCategory(db(), { kind: 'expense', name: 'Restaurantes' });
+      await insertTestCategory(db(), { kind: 'expense', name: 'Pet shop' });
 
+      await expect(insertTestCategory(db(), { kind: 'expense', name: 'PET SHOP' })).rejects.toThrow(
+        /UNIQUE constraint failed/,
+      );
       await expect(
-        insertTestCategory(db(), { kind: 'expense', name: 'RESTAURANTES' }),
-      ).rejects.toThrow(/UNIQUE constraint failed/);
-      await expect(
-        insertTestCategory(db(), { kind: 'income', name: 'Restaurantes' }),
+        insertTestCategory(db(), { kind: 'income', name: 'Pet shop' }),
       ).resolves.toBeDefined();
     });
 

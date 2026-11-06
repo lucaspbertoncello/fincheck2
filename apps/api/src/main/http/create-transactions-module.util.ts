@@ -66,7 +66,7 @@ import type { Clock } from '#/shared/clock/clock.interface.ts';
 import type { UnitOfWork } from '#/shared/unit-of-work/unit-of-work.interface.ts';
 
 // Builds the `transactions` module by hand: its routes and the ports `accounts` asks it for. The
-// readers of the contexts that are not built yet (`categories`, `invoices`, `recurrences`, `bills`)
+// readers of the contexts that are not all built (`categories` is; `invoices`, `recurrences` and `bills` are not)
 // are optional: without them the routes that do not need them work as they are, a request that
 // names a category, a tag or a card purchase is refused with a 400, and the routes that cannot work
 // at all without them (`bulk`, `installment-plans` list and creation) are not built. When each
@@ -185,7 +185,7 @@ export function createTransactionsModule(deps: {
       }),
     );
 
-  // Waits for `categories`: the category, the tag and the rules it writes.
+  // Needs the readers of `categories`: the category, the tag and the rules it writes.
   const bulkRoute =
     readers.categories && readers.tags && readers.categoryRules
       ? createTransactionBulkRoute({
@@ -196,6 +196,7 @@ export function createTransactionsModule(deps: {
             new RestoreBulkTransactionsUseCase(
               transactions,
               readers.categoryRules,
+              references,
               unitOfWork,
               clock,
             ),

@@ -215,23 +215,13 @@ describe('transactions routes (mounted in main)', () => {
       expect(await database.db.selectFrom('transactions').select('id').execute()).toEqual([]);
     });
 
-    it('refuses a category or a tag while categories does not exist, and stores nothing', async () => {
+    it('takes a category and a tag now that categories is wired in main', async () => {
       const category = await insertTestCategory(database.db);
       const tag = await insertTestTag(database.db);
 
-      for (const extra of [{ categoryId: category }, { tagIds: [tag] }]) {
-        const response = await send('POST', '/transactions', {
-          type: 'expense',
-          accountId,
-          method: 'pix',
-          description: 'x',
-          amountCents: 100,
-          occurredOn: '2026-11-05',
-          ...extra,
-        });
-        await expectError(response, 400, 'VALIDATION_FAILED');
-      }
-      expect(await database.db.selectFrom('transactions').select('id').execute()).toEqual([]);
+      const dto = await create({ categoryId: category, tagIds: [tag] });
+
+      expect(dto).toMatchObject({ categoryId: category, categorySource: 'user', tagIds: [tag] });
     });
 
     it('refuses what the schema refuses', async () => {
@@ -857,9 +847,11 @@ describe('transactions routes (mounted in main)', () => {
       const category = await insertTestCategory(database.db);
       const id = await insertTestTransaction(database.db, accountId, { nature: 'transfer' });
 
-      // With categories unwired the request is refused before; the rule itself is tested with the
-      // owner standing in (transaction-with-owners.route.test.ts).
-      await expectError(await patch(id, { categoryId: category }), 400, 'VALIDATION_FAILED');
+      await expectError(
+        await patch(id, { categoryId: category }),
+        422,
+        'TRANSACTION_CATEGORY_NOT_ALLOWED',
+      );
     });
 
     it('refuses a split transaction a new value, nature or category', async () => {
@@ -1061,15 +1053,15 @@ describe('transactions routes (mounted in main)', () => {
       );
     });
 
-    it('refuses a category in a part while categories does not exist', async () => {
+    it('takes a category in a part now that categories is wired in main', async () => {
       const { id } = await create({});
       const category = await insertTestCategory(database.db);
 
-      await expectError(
+      const dto = await dtoOf(
         await split(id, [{ amountCents: 1000, categoryId: category }, { amountCents: 250 }]),
-        400,
-        'VALIDATION_FAILED',
       );
+
+      expect(dto.splits.map((part) => part.categoryId)).toEqual([category, null]);
     });
 
     it('answers 404 and refuses a number of parts other than two', async () => {
@@ -1284,10 +1276,8 @@ describe('transactions routes (mounted in main)', () => {
   });
 
   describe('what main keeps out until its owners exist', () => {
-    it('does not mount bulk, nor the creation and the list of installment plans', async () => {
+    it('does not mount the creation and the list of installment plans', async () => {
       for (const [method, path] of [
-        ['POST', '/transactions/bulk'],
-        ['POST', '/transactions/bulk/restore'],
         ['GET', '/installment-plans'],
         ['POST', '/installment-plans'],
       ] as const) {

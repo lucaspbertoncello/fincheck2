@@ -3,6 +3,7 @@ import { TRANSACTION_SPLIT_LIMITS } from '@fincheck/shared/transactions/transact
 import type { TransactionBulk } from '@fincheck/shared/transactions/transaction-bulk/transaction-bulk.type.ts';
 import type { Transaction as TransactionContract } from '@fincheck/shared/transactions/transaction/transaction.type.ts';
 
+import { canRuleSetCategory } from '#/modules/transactions/domain/transaction/can-rule-set-category.util.ts';
 import { computeCompetenceOn } from '#/modules/transactions/domain/transaction/compute-competence-on.util.ts';
 import { TransactionAccountArchivedError } from '#/modules/transactions/domain/transaction/transaction-account-archived.error.ts';
 import { TransactionAlreadyIgnoredError } from '#/modules/transactions/domain/transaction/transaction-already-ignored.error.ts';
@@ -450,6 +451,42 @@ export class Transaction {
     this.updatedAt = now;
 
     return true;
+  }
+
+  // A rule of `categories` run over the history (BR-CAT-006): sets its category when this one is
+  // free for it (`canRuleSetCategory`) and adds the tags it has that are missing. Never touches a
+  // split or ignored transaction, nor one outside expense and income. A rule with a category is
+  // blind to a transaction of the other kind. Answers whether anything changed.
+  applyRule(
+    rule: { id: string; category: Transaction.CategoryRef | null; tagIds: string[] },
+    olderRuleIds: ReadonlySet<string>,
+    now: string,
+  ): boolean {
+    if (this.isSplit() || this.ignoredAt !== null || !this.hasCountedNature()) return false;
+
+    // Put by Lucas, a recurrence or a bill: no rule touches it, category or tags.
+    if (this.categorySource !== null && this.categorySource !== 'rule') return false;
+
+    let changed = false;
+    if (rule.category !== null) {
+      if (rule.category.kind !== this.nature) return false;
+      if (!canRuleSetCategory(this, olderRuleIds)) return false;
+      if (this.categoryId !== rule.category.id) {
+        this.categoryId = rule.category.id;
+        this.categorySource = 'rule';
+        this.categoryRuleId = rule.id;
+        changed = true;
+      }
+    }
+
+    const missing = rule.tagIds.filter((tagId) => !this.tagIds.includes(tagId));
+    if (missing.length > 0) {
+      this.tagIds = [...this.tagIds, ...missing];
+      changed = true;
+    }
+    if (changed) this.updatedAt = now;
+
+    return changed;
   }
 
   ignore(now: string): void {

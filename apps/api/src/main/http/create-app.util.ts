@@ -6,6 +6,8 @@ import type { Database } from '#/database/database.type.ts';
 import { KyselyUnitOfWork } from '#/database/unit-of-work/kysely-unit-of-work.service.ts';
 import { handleError } from '#/main/http/handle-error.util.ts';
 import { createLocalTokenMiddleware } from '#/main/http/middlewares/local-token.middleware.ts';
+import { createCategoriesModule } from '#/main/http/create-categories-module.util.ts';
+import { createTransactionsCategoryPorts } from '#/main/http/create-transactions-category-ports.util.ts';
 import { createTransactionsModule } from '#/main/http/create-transactions-module.util.ts';
 import { AccountPresenter } from '#/modules/accounts/application/account/account-presenter.service.ts';
 import { ArchiveAccountUseCase } from '#/modules/accounts/application/account/archive-account.usecase.ts';
@@ -49,21 +51,37 @@ export function createApp({
 
   const getHealth = new GetHealthController(new CheckDatabaseQuery(db));
 
-  // accounts and transactions know each other only through ports: `accounts` asks `transactions`
-  // for the balance, the movement and the adjustment, and `transactions` asks `accounts` which
-  // account a transaction is in. The Pluggy connection belongs to `sync`, which does not exist
-  // yet (its port stays unwired: the connection shows as null). Deletion impact and deletion
-  // (`createAccountDeletionRoute`) have their transactions side ready but also need `invoices` and
-  // `categories`, so they are NOT mounted yet. Likewise `transactions` has no category, tag,
-  // invoice, link or recurrence reader yet: see `createTransactionsModule` for what that leaves
-  // out of the routes.
+  // The contexts know each other only through ports. accounts asks transactions for the balance,
+  // the movement and the adjustment, and transactions asks accounts which account a transaction is
+  // in. categories asks transactions for the use of each category, tag and rule, the history a rule
+  // previews and recategorizes, and what Lucas categorized by hand; transactions asks categories for
+  // the category, the tag, the rules still alive and the suggestions of the review queue. The Pluggy
+  // connection belongs to sync, which does not exist yet (its port stays unwired: the connection
+  // shows as null). Deletion impact and deletion (createAccountDeletionRoute) have their
+  // transactions side ready but also need invoices, so they are NOT mounted yet; likewise
+  // transactions has no invoice, link or recurrence reader yet: see createTransactionsModule for
+  // what that leaves out of the routes.
   const accounts = new KyselyAccountRepository(db);
+  const accountRefs = new GetAccountRefQuery(accounts);
+  const categories = createCategoriesModule({
+    db,
+    unitOfWork,
+    clock,
+    accounts: accountRefs,
+    transactionPorts: createTransactionsCategoryPorts({ db, clock }),
+  });
   const transactions = createTransactionsModule({
     db,
     unitOfWork,
     clock,
-    accounts: new GetAccountRefQuery(accounts),
+    accounts: accountRefs,
+    readers: categories.transactionReaders,
   });
+  // bulkRoute exists when the readers of categories are plugged in, which they are just above.
+  // Failing to start is better than a silent 404 on POST /transactions/bulk.
+  if (transactions.bulkRoute === undefined) {
+    throw new Error('The bulk route needs the readers of categories');
+  }
   const accountPresenter = new AccountPresenter(
     transactions.accountPorts.manualBalances,
     undefined,
@@ -127,6 +145,8 @@ export function createApp({
         }),
       )
       .route('/', accountBalance)
+      .route('/', categories.routes)
       .route('/', transactions.routes)
+      .route('/', transactions.bulkRoute)
   );
 }
