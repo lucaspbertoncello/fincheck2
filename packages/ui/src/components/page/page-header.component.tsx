@@ -26,7 +26,7 @@ export function PageHeader({ title, date, extra, actions }: PageHeaderProps) {
         <CardDot />
         {title}
       </h1>
-      <div className={extra ? 'lg:col-start-1 lg:row-start-2 lg:self-center' : 'lg:col-span-2'}>
+      <div className={extra ? 'lg:col-start-1 lg:row-start-2 lg:self-start' : 'lg:col-span-2'}>
         {date}
       </div>
       {extra ? (
