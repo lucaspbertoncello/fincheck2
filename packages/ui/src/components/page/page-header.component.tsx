@@ -15,7 +15,9 @@ type PageHeaderProps = {
 /**
  * Header of every page: title with the card dot, the date line, and, where the month filters,
  * the picker (components.md 1.4). The picker is centered on the title line on every screen
- * (ui adjustment 5). The `extra` block shares the date row, aligned to the right (Polimento 13).
+ * (ui adjustment 5), pinned to the right edge so it sits in the same place on every screen, also
+ * where the `extra` block widens the column. The `extra` block shares the date row, aligned to the
+ * right (Polimento 13).
  */
 export function PageHeader({ title, date, extra, actions }: PageHeaderProps) {
   return (
@@ -33,7 +35,7 @@ export function PageHeader({ title, date, extra, actions }: PageHeaderProps) {
         </div>
       ) : null}
       {actions ? (
-        <div className="mt-s12 flex flex-wrap items-center gap-s12 lg:col-start-2 lg:row-start-1 lg:mt-0 lg:self-center">
+        <div className="mt-s12 flex flex-wrap items-center gap-s12 lg:col-start-2 lg:row-start-1 lg:mt-0 lg:self-center lg:justify-self-end">
           {actions}
         </div>
       ) : null}
