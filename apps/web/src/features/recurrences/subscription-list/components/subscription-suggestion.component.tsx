@@ -23,7 +23,7 @@ export function SubscriptionSuggestion({
       variant="suggestion"
       mark={
         suggestion.service ? (
-          <ServiceLogo slug={suggestion.service.slug} name={suggestion.service.name} />
+          <ServiceLogo slug={suggestion.service.slug} />
         ) : (
           <span
             aria-hidden="true"

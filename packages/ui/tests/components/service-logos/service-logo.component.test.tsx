@@ -21,7 +21,7 @@ describe('ServiceLogo', () => {
   });
 
   it('draws the symbol in the official color over the subtle circle', () => {
-    const html = renderToStaticMarkup(<ServiceLogo slug="netflix" name="Netflix" />);
+    const html = renderToStaticMarkup(<ServiceLogo slug="netflix" />);
 
     expect(html).toContain('bg-subtle');
     expect(html).toContain('size-9 shrink-0');
@@ -33,7 +33,7 @@ describe('ServiceLogo', () => {
   });
 
   it('draws a near-black brand in the text color of the theme, with no inline color', () => {
-    const html = renderToStaticMarkup(<ServiceLogo slug="tidal" name="Tidal" />);
+    const html = renderToStaticMarkup(<ServiceLogo slug="tidal" />);
 
     expect(html).toContain('text-fg-primary');
     expect(html).not.toContain('color:#');
@@ -41,7 +41,7 @@ describe('ServiceLogo', () => {
 
   it('gives every logo the same circle and the same share of it', () => {
     const shapes = SLUGS.map((slug) => {
-      const html = renderToStaticMarkup(<ServiceLogo slug={slug} name={slug} />);
+      const html = renderToStaticMarkup(<ServiceLogo slug={slug} />);
 
       return [
         html.match(/class="([^"]*)"/)?.[1]?.replace(/text-fg-primary/, ''),
@@ -53,14 +53,5 @@ describe('ServiceLogo', () => {
       expect(shape[0]?.trim()).toBe(shapes[0]?.[0]?.trim());
       expect(shape[1]).toBe('width:56%');
     }
-  });
-
-  it('writes the initial in the same circle when the service has no logo file', () => {
-    const html = renderToStaticMarkup(<ServiceLogo slug={null} name="Disney+" />);
-
-    expect(html).toContain('size-9 shrink-0');
-    expect(html).toContain('bg-subtle');
-    expect(html).toContain('>D<');
-    expect(html).not.toContain('<svg');
   });
 });

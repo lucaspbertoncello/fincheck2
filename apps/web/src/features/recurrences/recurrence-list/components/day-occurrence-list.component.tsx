@@ -11,7 +11,7 @@ export function DayOccurrenceList({ items }: { items: readonly OccurrenceRowData
           key={item.occurrenceId}
           mark={
             item.service ? (
-              <ServiceLogo slug={item.service.slug} name={item.service.name} />
+              <ServiceLogo slug={item.service.slug} />
             ) : (
               <CategoryIcon icon={item.icon} type={item.flow} />
             )

@@ -21,7 +21,7 @@ import type {
 type RecurrenceRowProps = {
   name: string;
   icon: IconName;
-  /** A recognized subscription service: its logo replaces the category icon. */
+  /** A subscription service with a logo: its logo replaces the category icon. */
   service?: ServiceLogoData | null;
   flow: RecurrenceFlow;
   /** Date rule in Portuguese: "Todo dia 20", "Por volta do dia 25", "Até o 5º dia útil". */
@@ -83,11 +83,7 @@ export function RecurrenceRow({
   return (
     <ListRow
       mark={
-        service ? (
-          <ServiceLogo slug={service.slug} name={service.name} />
-        ) : (
-          <CategoryIcon icon={icon} type={flow} />
-        )
+        service ? <ServiceLogo slug={service.slug} /> : <CategoryIcon icon={icon} type={flow} />
       }
       name={name}
       nameClassName={dismissed ? 'text-fg-tertiary line-through' : undefined}

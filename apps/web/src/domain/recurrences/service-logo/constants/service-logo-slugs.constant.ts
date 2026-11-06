@@ -3,7 +3,7 @@ import type { ServiceLogoSlug } from '@fincheck/ui';
 
 /**
  * The logo file each subscription service draws (Simple Icons), or `null` when the design system has
- * none yet: the circle then writes the initial.
+ * none yet: the row then shows its category icon.
  */
 export const SERVICE_LOGO_SLUGS: Record<SubscriptionService.Slug, ServiceLogoSlug | null> = {
   netflix: 'netflix',

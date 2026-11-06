@@ -104,12 +104,10 @@ describe('buildInvoiceItemGroups', () => {
     );
     const marks = groups.flatMap((group) => group.rows.map((row) => [row.title, row.mark]));
 
-    expect(marks).toEqual([
+    // ChatGPT has no logo file: the line keeps its category icon, never an initial.
+    expect(marks).toMatchObject([
       ['NETFLIX.COM', { kind: 'subscription', service: { name: 'Netflix', slug: 'netflix' } }],
-      [
-        'OPENAI *CHATGPT SUBSCR',
-        { kind: 'subscription', service: { name: 'ChatGPT', slug: null } },
-      ],
+      ['OPENAI *CHATGPT SUBSCR', { kind: 'category', type: 'expense' }],
       ['Spotify', { kind: 'subscription', service: { name: 'Spotify', slug: 'spotify' } }],
     ]);
   });

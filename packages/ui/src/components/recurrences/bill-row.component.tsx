@@ -14,7 +14,7 @@ import { cx } from '#/utils/class-names.util.ts';
 type BillRowProps = {
   name: string;
   icon: IconName;
-  /** A recognized subscription service (a recurring charge): its logo replaces the category icon. */
+  /** A subscription service with a logo (a recurring charge): its logo replaces the category icon. */
   service?: ServiceLogoData | null;
   /** "expense" is a bill to pay, "income" is something to receive (friend debt, refund). */
   flow: RecurrenceFlow;
@@ -93,11 +93,7 @@ export function BillRow({
   return (
     <ListRow
       mark={
-        service ? (
-          <ServiceLogo slug={service.slug} name={service.name} />
-        ) : (
-          <CategoryIcon icon={icon} type={flow} />
-        )
+        service ? <ServiceLogo slug={service.slug} /> : <CategoryIcon icon={icon} type={flow} />
       }
       name={name}
       onOpen={onEdit}

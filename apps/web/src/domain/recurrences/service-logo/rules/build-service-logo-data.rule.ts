@@ -4,9 +4,11 @@ import type { ServiceLogoData } from '@fincheck/ui';
 
 import { SERVICE_LOGO_SLUGS } from '#/domain/recurrences/service-logo/constants/service-logo-slugs.constant.ts';
 
-/** The name and the logo a subscription service draws with. */
-export function buildServiceLogoData(slug: SubscriptionService.Slug): ServiceLogoData {
+/** The name and the logo a subscription service draws with, or `null` when it has no logo file. */
+export function buildServiceLogoData(slug: SubscriptionService.Slug): ServiceLogoData | null {
+  const logo = SERVICE_LOGO_SLUGS[slug];
+  if (!logo) return null;
   const service = SUBSCRIPTION_SERVICES.find((item) => item.slug === slug);
 
-  return { name: service?.name ?? slug, slug: SERVICE_LOGO_SLUGS[slug] };
+  return { name: service?.name ?? slug, slug: logo };
 }

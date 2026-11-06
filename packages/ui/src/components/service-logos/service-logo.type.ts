@@ -1,7 +1,7 @@
 import type { ServiceLogoSlug } from '#/components/service-logos/service-logo-art.constant.ts';
 
-/** A recognized subscription service: its name and the logo file, `null` when there is none. */
+/** A subscription service that has a logo file: its name and the logo. */
 export type ServiceLogoData = {
   name: string;
-  slug: ServiceLogoSlug | null;
+  slug: ServiceLogoSlug;
 };

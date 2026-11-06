@@ -73,6 +73,10 @@ describe('SubscriptionListPage', () => {
     expect(banner.querySelector('[data-service="deezer"]')).not.toBeNull();
     expect(nuvem.querySelector('[data-service]')).toBeNull();
     expect(nuvem.querySelector('[data-type="expense"]')).not.toBeNull();
+    // "Outro" subscriptions keep the category icon, never an initial.
+    for (const name of ['Clube do livro', 'Ioga em casa']) {
+      expect((await findRow(name)).querySelector('[data-service]')).toBeNull();
+    }
   });
 
   it('lists each subscription with the card, the day and the state of the month', async () => {

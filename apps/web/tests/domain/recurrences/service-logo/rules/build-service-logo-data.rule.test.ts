@@ -11,8 +11,8 @@ describe('buildServiceLogoData', () => {
     });
   });
 
-  it('gives a null logo to a service the design system has no logo for', () => {
-    expect(buildServiceLogoData('disneyplus')).toEqual({ name: 'Disney+', slug: null });
-    expect(buildServiceLogoData('midjourney')).toEqual({ name: 'Midjourney', slug: null });
+  it('gives null to a service the design system has no logo for', () => {
+    expect(buildServiceLogoData('disneyplus')).toBeNull();
+    expect(buildServiceLogoData('midjourney')).toBeNull();
   });
 });

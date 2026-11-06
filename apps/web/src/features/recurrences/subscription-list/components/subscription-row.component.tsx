@@ -61,7 +61,7 @@ export function SubscriptionRow({ row, first, onAction }: SubscriptionRowProps) 
     <ListRow
       mark={
         row.service ? (
-          <ServiceLogo slug={row.service.slug} name={row.service.name} />
+          <ServiceLogo slug={row.service.slug} />
         ) : (
           <CategoryIcon icon={row.icon} type="expense" />
         )

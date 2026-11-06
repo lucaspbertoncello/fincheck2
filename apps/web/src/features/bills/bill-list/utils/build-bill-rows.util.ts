@@ -1,15 +1,16 @@
 import type { Agenda } from '@fincheck/shared/dashboard/agenda/agenda.type.ts';
-import type { BillBadge, IconName } from '@fincheck/ui';
+import type { BillBadge, IconName, ServiceLogoData } from '@fincheck/ui';
 
 import type { BillRowModel } from '#/features/bills/bill-list/bill-list.model.ts';
 import { describeDueDate } from '#/features/bills/bill-list/utils/describe-due-date.util.ts';
-import { recognizeService } from '#/domain/recurrences/service-logo/rules/recognize-service.rule.ts';
 import { resolveRowStatus } from '#/domain/bills/bill/rules/resolve-row-status.rule.ts';
 
 type RowContext = {
   today: string;
   categoryIcons: ReadonlyMap<string, IconName>;
   accountNames: ReadonlyMap<string, string>;
+  /** Recurrence id -> its logo (BR-REC-017); a recurrence with no logo is not in the map. */
+  serviceLogos: ReadonlyMap<string, ServiceLogoData>;
 };
 
 function resolveBadges(item: Agenda.Item): BillBadge[] {
@@ -36,6 +37,13 @@ function resolveIcon(item: Agenda.Item, context: RowContext): IconName {
   return 'receipt';
 }
 
+/** The logo of the recurrence behind a recurring item, or 
+ull (the category icon stays). */
+function resolveServiceLogo(item: Agenda.Item, context: RowContext): ServiceLogoData | null {
+  const recurrenceId = item.badge === 'recurring' ? item.source.recurrenceId : null;
+  return recurrenceId ? (context.serviceLogos.get(recurrenceId) ?? null) : null;
+}
+
 function describeFoundPayment(item: Agenda.Item, context: RowContext): string | undefined {
   if (!item.paymentFound) return undefined;
   const account = context.accountNames.get(item.paymentFound.accountId);
@@ -51,7 +59,7 @@ export function buildBillRows(items: readonly Agenda.Item[], context: RowContext
       key: item.key,
       name: item.title,
       icon: resolveIcon(item, context),
-      service: item.badge === 'recurring' ? recognizeService(item.title) : null,
+      service: resolveServiceLogo(item, context),
       flow: item.flow === 'in' ? 'income' : 'expense',
       status,
       badges: resolveBadges(item),

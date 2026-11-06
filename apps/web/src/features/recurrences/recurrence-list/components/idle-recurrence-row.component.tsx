@@ -14,7 +14,7 @@ export function IdleRecurrenceRow({ recurrence, onResume, onEdit }: IdleRecurren
     <ListRow
       mark={
         recurrence.service ? (
-          <ServiceLogo slug={recurrence.service.slug} name={recurrence.service.name} />
+          <ServiceLogo slug={recurrence.service.slug} />
         ) : (
           <CategoryIcon icon={recurrence.icon} type={recurrence.flow} />
         )

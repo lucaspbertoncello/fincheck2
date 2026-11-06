@@ -8,7 +8,7 @@ import { describeDateRule } from '#/shared/utils/recurrences/describe-date-rule.
 import { getOccurrenceAmount } from '#/domain/recurrences/occurrence/rules/get-occurrence-amount.rule.ts';
 import { getOccurrenceInlineActions } from '#/domain/recurrences/occurrence/rules/get-occurrence-inline-actions.rule.ts';
 import { getOccurrenceRowStatus } from '#/domain/recurrences/occurrence/rules/get-occurrence-row-status.rule.ts';
-import { recognizeService } from '#/domain/recurrences/service-logo/rules/recognize-service.rule.ts';
+import { resolveRecurrenceServiceLogo } from '#/domain/recurrences/service-logo/rules/resolve-recurrence-service-logo.rule.ts';
 import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 
 /** One occurrence of the month as the data of a `RecurrenceRow`. */
@@ -33,7 +33,7 @@ export function presentOccurrenceRow(
     recurrenceId: occurrence.recurrenceId,
     name: occurrence.recurrenceName,
     icon: mapCategoryIcon(categoryIcon, 'repeat'),
-    service: recognizeService(occurrence.recurrenceName, recurrence?.matchText),
+    service: recurrence ? resolveRecurrenceServiceLogo(recurrence) : null,
     flow: occurrence.kind,
     rule: recurrence ? describeDateRule(recurrence.dateRule, recurrence.maxPayments) : '',
     account: recurrence ? buildRecurrenceAccountLabel(recurrence, accountName) : undefined,

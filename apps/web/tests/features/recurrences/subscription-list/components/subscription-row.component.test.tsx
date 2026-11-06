@@ -88,18 +88,9 @@ describe('SubscriptionRow', () => {
     expect(html).not.toContain('data-type=');
   });
 
-  it('writes the initial of a service that has no logo file, and keeps the icon of an unknown one', () => {
-    const initial = renderToStaticMarkup(
-      <SubscriptionRow
-        row={{ ...ROW, name: 'Disney+', service: { name: 'Disney+', slug: null } }}
-        first
-        onAction={noop}
-      />,
-    );
+  it('keeps the category icon when the row has no service logo, never an initial', () => {
     const unknown = renderToStaticMarkup(<SubscriptionRow row={ROW} first onAction={noop} />);
 
-    expect(initial).toContain('data-service="initial"');
-    expect(initial).toContain('>D<');
     expect(unknown).toContain('data-type="expense"');
     expect(unknown).not.toContain('data-service');
   });

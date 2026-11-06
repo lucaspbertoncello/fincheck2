@@ -132,9 +132,9 @@ const SUBSCRIPTIONS: SubscriptionRowData[] = [
   },
   {
     recurrenceId: 'sb-initial',
-    name: 'Disney+',
-    icon: 'wifi',
-    service: { name: 'Disney+', slug: null },
+    name: 'Clube do livro',
+    icon: 'book',
+    service: null,
     detail: 'Roxinho · dia 16',
     status: 'upcoming',
     ended: false,

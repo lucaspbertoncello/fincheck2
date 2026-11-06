@@ -12,7 +12,7 @@ type InvoiceItemMarkProps = {
  */
 export function InvoiceItemMark({ mark }: InvoiceItemMarkProps) {
   if (mark.kind === 'subscription') {
-    return <ServiceLogo slug={mark.service.slug} name={mark.service.name} />;
+    return <ServiceLogo slug={mark.service.slug} />;
   }
 
   return <CategoryIcon icon={mark.icon} type={mark.type} dashed={mark.uncategorized} />;

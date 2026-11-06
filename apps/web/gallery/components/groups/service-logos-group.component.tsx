@@ -5,7 +5,10 @@ import { buildServiceLogoData } from '#/domain/recurrences/service-logo/rules/bu
 import type { GallerySectionDef } from '#gallery/types/gallery-group.type.ts';
 
 // The order of BR-REC-017 ("Logo oficial"): video, music, AI. It is the order of the shared list.
-const SERVICES = SUBSCRIPTION_SERVICES.map((service) => buildServiceLogoData(service.slug));
+// Only the services with a logo file are drawn; the others show the category icon in the rows.
+const SERVICES = SUBSCRIPTION_SERVICES.map((service) => buildServiceLogoData(service.slug)).filter(
+  (service) => service !== null,
+);
 
 function ServiceLogoGrid() {
   return (
@@ -15,11 +18,9 @@ function ServiceLogoGrid() {
           key={service.name}
           className="flex flex-col items-center gap-s8 rounded-input border border-line p-s12"
         >
-          <ServiceLogo slug={service.slug} name={service.name} />
+          <ServiceLogo slug={service.slug} />
           <span className="text-caption text-center text-fg-primary">{service.name}</span>
-          <span className="text-caption text-center text-fg-tertiary">
-            {service.slug ?? 'inicial'}
-          </span>
+          <span className="text-caption text-center text-fg-tertiary">{service.slug}</span>
         </li>
       ))}
     </ul>
@@ -29,7 +30,7 @@ function ServiceLogoGrid() {
 export const SERVICE_LOGOS_SECTIONS: GallerySectionDef[] = [
   {
     id: 'service-logo-grid',
-    title: `ServiceLogo: os ${SERVICES.length} serviços (${SERVICES.filter((service) => service.slug).length} logos e ${SERVICES.filter((service) => !service.slug).length} iniciais)`,
+    title: `ServiceLogo: os ${SERVICES.length} serviços com logo`,
     content: <ServiceLogoGrid />,
   },
 ];

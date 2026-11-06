@@ -44,8 +44,8 @@ const CASES = [
 ] as const;
 
 describe('recognizeService', () => {
-  it.each(CASES)('reads "%s" as %s', (text, name, slug) => {
-    expect(recognizeService(text)).toEqual({ name, slug });
+  it.each(CASES)('reads "%s" as %s (null when it has no logo file)', (text, name, slug) => {
+    expect(recognizeService(text)).toEqual(slug ? { name, slug } : null);
   });
 
   it('has a case for each of the 26 services', () => {

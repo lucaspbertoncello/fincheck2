@@ -21,9 +21,7 @@ export function buildServiceOptions(otherIcon: IconName = 'tag'): ChoiceOption[]
       return {
         key: service.slug,
         label: service.name,
-        leading: logo ? (
-          <ServiceLogo slug={logo} name={service.name} className={MARK_CLASS} />
-        ) : undefined,
+        leading: logo ? <ServiceLogo slug={logo} className={MARK_CLASS} /> : undefined,
       };
     }),
     {

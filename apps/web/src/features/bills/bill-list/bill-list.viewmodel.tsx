@@ -1,11 +1,13 @@
 import type { Agenda } from '@fincheck/shared/dashboard/agenda/agenda.type.ts';
-import { type IconName, useToast } from '@fincheck/ui';
+import { type IconName, type ServiceLogoData, useToast } from '@fincheck/ui';
 import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 
 import { useAccounts } from '#/domain/accounts/account/hooks/use-accounts.hook.ts';
 import { useCategories } from '#/domain/categories/category/hooks/use-categories.hook.ts';
 import { useAgenda } from '#/domain/dashboard/agenda/hooks/use-agenda.hook.ts';
+import { useRecurrences } from '#/domain/recurrences/recurrence/hooks/use-recurrences.hook.ts';
+import { resolveRecurrenceServiceLogo } from '#/domain/recurrences/service-logo/rules/resolve-recurrence-service-logo.rule.ts';
 import { useSettleOccurrence } from '#/domain/recurrences/occurrence/hooks/use-settle-occurrence.hook.ts';
 import { useUnsettleOccurrence } from '#/domain/recurrences/occurrence/hooks/use-unsettle-occurrence.hook.ts';
 import { BillFormModal } from '#/features/bills/bill-form/bill-form.viewmodel.tsx';
@@ -50,6 +52,7 @@ export function BillList() {
   const agendaQuery = useAgenda(month);
   const categories = useCategories({ status: 'all' });
   const accounts = useAccounts();
+  const recurrences = useRecurrences(month);
   const search = useBillSearch();
   const navigate = useNavigate();
   const { showUndoToast } = useToast();
@@ -71,7 +74,13 @@ export function BillList() {
       account.institutionName ?? account.name,
     ]),
   );
-  const context = { today: getBusinessDate(), categoryIcons, accountNames };
+  // While the recurrences load there is no logo: the rows keep the category icon, same size.
+  const serviceLogos = new Map<string, ServiceLogoData>();
+  for (const recurrence of recurrences.data?.items ?? []) {
+    const logo = resolveRecurrenceServiceLogo(recurrence);
+    if (logo) serviceLogos.set(recurrence.id, logo);
+  }
+  const context = { today: getBusinessDate(), categoryIcons, accountNames, serviceLogos };
   const endOfMonth = getEndOfMonth(month);
 
   async function markOccurrencePaid(item: Agenda.Item, occurrenceId: string) {
