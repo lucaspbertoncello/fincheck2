@@ -8,16 +8,16 @@ const GROUPS = {
   recurrences: {
     label: 'Seções de Recorrentes',
     items: [
-      { key: 'recurrences', label: 'Recorrências' },
-      { key: 'bills', label: 'A pagar e receber' },
-      { key: 'subscriptions', label: 'Assinaturas' },
+      { key: 'recurrences', label: 'Recorrências', icon: 'repeat' },
+      { key: 'bills', label: 'A pagar e receber', icon: 'calendar' },
+      { key: 'subscriptions', label: 'Assinaturas', icon: 'subscription' },
     ],
   },
   categories: {
     label: 'Seções de Categorias',
     items: [
-      { key: 'categories', label: 'Categorias' },
-      { key: 'rules', label: 'Regras' },
+      { key: 'categories', label: 'Categorias', icon: 'tag' },
+      { key: 'rules', label: 'Regras', icon: 'magic' },
     ],
   },
 } as const;
@@ -33,6 +33,7 @@ export function ScreenSubNav({ group }: ScreenSubNavProps) {
   const links: SegmentedNavItem[] = items.map((item) => ({
     key: item.key,
     label: item.label,
+    icon: item.icon,
     href: buildHref(SCREENS[item.key].path, monthParam),
   }));
 

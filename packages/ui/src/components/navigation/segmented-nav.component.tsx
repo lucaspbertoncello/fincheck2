@@ -1,6 +1,7 @@
 import { MotionConfig } from 'motion/react';
 import { Link } from 'react-aria-components';
 
+import { Icon } from '#/components/icons/icon.component.tsx';
 import { SegmentedIndicator } from '#/components/forms/segmented-indicator.component.tsx';
 import {
   SEGMENTED_ITEM_ACTIVE_CLASS,
@@ -20,7 +21,8 @@ type SegmentedNavProps = {
 };
 
 /**
- * Segmented control made of links (Recorrências | A pagar e receber, Categorias | Regras).
+ * Segmented control made of links (Recorrências | A pagar e receber, Categorias | Regras), each
+ * with its icon in the label color, like the Transações controls.
  * The white indicator slides between items (220 ms). Each sub-screen mounts its own copy of this
  * control, so a Motion layout animation has nothing to start from when the page changes: the
  * indicator is also its own view-transition group (`segment-ind`), which slides it from the old
@@ -56,6 +58,7 @@ export function SegmentedNav({ items, activeKey, label, className }: SegmentedNa
                   <SegmentedIndicator layoutId={indicatorId} />
                 </span>
               ) : null}
+              {item.icon ? <Icon name={item.icon} size="md" className="relative" /> : null}
               <span className="relative">{item.label}</span>
             </Link>
           );
