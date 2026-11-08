@@ -23,7 +23,7 @@ import {
 } from '#/features/bills/hooks/use-category-options.hook.ts';
 import { INVALID_FIELD_OR_DATE_SEGMENT_SELECTOR } from '#/shared/constants/form/invalid-field-selector.constant.ts';
 import { useFocusFirstInvalid } from '#/shared/hooks/form/use-focus-first-invalid.hook.ts';
-import { collectFieldErrors } from '#/features/bills/utils/collect-field-errors.util.ts';
+import { collectFieldErrors } from '#/shared/utils/forms/collect-field-errors.util.ts';
 import { describeApiError } from '#/features/bills/utils/describe-api-error.util.ts';
 import { formatDayMonth } from '#/features/bills/utils/format-day-month.util.ts';
 

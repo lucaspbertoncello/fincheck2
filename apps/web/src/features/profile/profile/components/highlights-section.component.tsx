@@ -19,7 +19,7 @@ export function HighlightsSection({ state, items, onRetry }: HighlightsSectionPr
   return (
     <Section title="Curiosidades">
       {state === 'error' ? (
-        <SectionError message="Não deu para carregar as curiosidades." onRetry={onRetry} />
+        <SectionError what="as curiosidades" onRetry={onRetry} />
       ) : (
         <div
           role={state === 'loading' ? 'status' : undefined}

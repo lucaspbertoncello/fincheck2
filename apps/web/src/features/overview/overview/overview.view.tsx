@@ -2,7 +2,7 @@ import { CategoriesSection } from '#/features/overview/overview/components/categ
 import { DayStripBlock } from '#/features/overview/overview/components/day-strip-block.component.tsx';
 import { OverviewAlerts } from '#/features/overview/overview/components/overview-alerts.component.tsx';
 import { OverviewHeaderExtra } from '#/features/overview/overview/components/overview-header-extra.component.tsx';
-import { SectionError } from '#/features/overview/overview/components/states/section-error.component.tsx';
+import { SectionError } from '#/shared/components/states/section-error.component.tsx';
 import { SectionSkeleton } from '#/features/overview/overview/components/states/section-skeleton.component.tsx';
 import { SpendSection } from '#/features/overview/overview/components/spend-section.component.tsx';
 import { SummaryCardsSection } from '#/features/overview/overview/components/summary-cards-section.component.tsx';

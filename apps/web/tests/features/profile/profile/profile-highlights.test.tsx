@@ -183,12 +183,12 @@ describe('Perfil: curiosidades', () => {
     );
     await openSection();
 
-    const alert = await screen.findByText('Não deu para carregar as curiosidades.');
+    const alert = await screen.findByText('Não deu para carregar as curiosidades');
     expect(alert).toBeInTheDocument();
     fail = false;
     await user.click(screen.getByRole('button', { name: 'Tentar de novo' }));
 
     await waitFor(() => expect(screen.getAllByText('Ainda sem dado')).toHaveLength(6));
-    expect(screen.queryByText('Não deu para carregar as curiosidades.')).toBeNull();
+    expect(screen.queryByText('Não deu para carregar as curiosidades')).toBeNull();
   });
 });

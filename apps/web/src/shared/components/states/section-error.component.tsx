@@ -1,19 +1,20 @@
-import { Button, FineNote } from '@fincheck/ui';
+import { Banner } from '@fincheck/ui';
 
 type SectionErrorProps = {
-  /** "Não deu para carregar as conexões." */
-  message: string;
+  /** What failed to load, in the title ("o gasto do mês"). */
+  what: string;
   onRetry: () => void;
 };
 
-/** Error state of one section: the sentence and "Tentar de novo". */
-export function SectionError({ message, onRetry }: SectionErrorProps) {
+/** A section or panel that could not load: says which one and offers "Tentar de novo". */
+export function SectionError({ what, onRetry }: SectionErrorProps) {
   return (
-    <div role="alert" className="flex flex-col items-start gap-s12">
-      <FineNote icon="warning">{message}</FineNote>
-      <Button variant="secondary" size="sm" icon="sync" onPress={onRetry}>
-        Tentar de novo
-      </Button>
-    </div>
+    <Banner
+      variant="error"
+      title={`Não deu para carregar ${what}`}
+      description="Confira se a API está no ar e tente de novo."
+      actionLabel="Tentar de novo"
+      onAction={onRetry}
+    />
   );
 }

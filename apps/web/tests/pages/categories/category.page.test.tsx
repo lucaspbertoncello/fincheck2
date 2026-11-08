@@ -161,7 +161,7 @@ describe('CategoryPage: states', () => {
     await openPage('Mercado');
 
     expect(
-      await screen.findByText('Não deu para carregar as barras.', undefined, LONG_WAIT),
+      await screen.findByText('Não deu para carregar as barras', undefined, LONG_WAIT),
     ).toBeVisible();
     expect(screen.getByRole('heading', { level: 1, name: 'Mercado' })).toBeInTheDocument();
   });

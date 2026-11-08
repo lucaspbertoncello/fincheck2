@@ -22,7 +22,7 @@ import type {
   TransactionCreateErrors,
   TransactionCreateValues,
 } from '#/features/transactions/transaction-creation/transaction-create/types/transaction-create-form.type.ts';
-import { collectFieldErrors } from '#/features/transactions/transaction-creation/utils/collect-field-errors.util.ts';
+import { collectFieldErrors } from '#/shared/utils/forms/collect-field-errors.util.ts';
 
 type Props = {
   /** Called after the modal closed, to clear its draft (the modal is remounted per opening). */
@@ -87,11 +87,9 @@ export function TransactionCreateViewModel({ onClose }: Props) {
     const parsed = createTransactionRequestSchema.safeParse(body);
     if (!parsed.success) {
       setErrors(
-        collectFieldErrors(
-          parsed.error.issues,
-          TRANSACTION_CREATE_FIELDS,
-          (field) => TRANSACTION_CREATE_MESSAGES[field],
-        ),
+        collectFieldErrors(parsed.error, TRANSACTION_CREATE_MESSAGES, {
+          fieldOf: TRANSACTION_CREATE_FIELDS,
+        }),
       );
       focusFirstInvalid();
       return;

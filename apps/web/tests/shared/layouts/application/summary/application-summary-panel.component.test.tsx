@@ -59,7 +59,7 @@ describe('ApplicationSummaryPanel', () => {
     );
     renderApp('/');
 
-    expect(await screen.findByText('Não deu para carregar o saldo.')).toBeInTheDocument();
+    expect(await screen.findByText('Não deu para carregar o saldo')).toBeInTheDocument();
 
     server.resetHandlers();
     fireEvent.click(screen.getByRole('button', { name: 'Tentar de novo' }));

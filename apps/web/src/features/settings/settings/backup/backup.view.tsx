@@ -109,7 +109,7 @@ export function BackupView({
     <SettingsPageFrame title={PAGE.title} description={PAGE.description}>
       <Section title="O banco" divider={false}>
         {stats.isError ? (
-          <SectionError message="Não deu para ler os números do banco." onRetry={stats.onRetry} />
+          <SectionError what="os números do banco" onRetry={stats.onRetry} />
         ) : (
           <DataFigures figures={stats.figures} isLoading={stats.isLoading} />
         )}
@@ -227,10 +227,7 @@ export function BackupView({
           <Section title="Últimos backups">
             {files.isLoading ? <SectionSkeleton label="Carregando os backups" rows={3} /> : null}
             {files.isError ? (
-              <SectionError
-                message="Não deu para ler a pasta dos backups."
-                onRetry={files.onRetry}
-              />
+              <SectionError what="a pasta dos backups" onRetry={files.onRetry} />
             ) : null}
             {!files.isLoading && !files.isError && files.items.length === 0 ? (
               <p className="text-label text-fg-secondary">Ainda não há backups nessa pasta.</p>

@@ -345,7 +345,9 @@ describe('SettingsPage', () => {
       );
       await openPage('data');
 
-      expect(await screen.findByText('Não deu para ler os números do banco.')).toBeInTheDocument();
+      expect(
+        await screen.findByText('Não deu para carregar os números do banco'),
+      ).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Fazer backup agora' })).toBeInTheDocument();
     });
 
@@ -579,7 +581,9 @@ describe('SettingsPage', () => {
       );
       await openPage('data');
 
-      expect(await screen.findByText('Não deu para ler a pasta dos backups.')).toBeInTheDocument();
+      expect(
+        await screen.findByText('Não deu para carregar a pasta dos backups'),
+      ).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Fazer backup agora' })).toBeInTheDocument();
     });
   });

@@ -122,7 +122,7 @@ export function SpendMapSection({
             >
               {state === 'loading' ? <SpendMapSkeleton mode={period.mode} /> : null}
               {state === 'error' ? (
-                <SectionError message="Não deu para carregar o mapa de gastos." onRetry={onRetry} />
+                <SectionError what="o mapa de gastos" onRetry={onRetry} />
               ) : null}
               {state === 'ready' && data && summary ? (
                 <>

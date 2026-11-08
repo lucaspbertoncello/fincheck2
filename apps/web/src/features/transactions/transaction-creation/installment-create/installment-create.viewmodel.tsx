@@ -18,7 +18,7 @@ import { buildInstallmentPreview } from '#/features/transactions/transaction-cre
 import { buildInvoiceMonths } from '#/features/transactions/transaction-creation/installment-create/utils/build-invoice-months.util.ts';
 import { buildAccountChoices } from '#/shared/utils/build-account-choices.util.ts';
 import { rankCategoriesByUse } from '#/features/transactions/utils/rank-categories-by-use.util.ts';
-import { collectFieldErrors } from '#/features/transactions/transaction-creation/utils/collect-field-errors.util.ts';
+import { collectFieldErrors } from '#/shared/utils/forms/collect-field-errors.util.ts';
 
 const FIELDS: Record<string, InstallmentCreateField> = {
   totalCents: 'total',
@@ -94,7 +94,7 @@ export function InstallmentCreateViewModel({ onClose }: Props) {
     };
     const parsed = createInstallmentPlanRequestSchema.safeParse(body);
     if (!parsed.success) {
-      setErrors(collectFieldErrors(parsed.error.issues, FIELDS, (field) => MESSAGES[field]));
+      setErrors(collectFieldErrors(parsed.error, MESSAGES, { fieldOf: FIELDS }));
       focusFirstInvalid();
       return;
     }

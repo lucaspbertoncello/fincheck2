@@ -1,7 +1,7 @@
 import { createBillPaymentRequestSchema } from '@fincheck/shared/bills/bill-payment/bill-payment.schema.ts';
 import { createInvoicePaymentRequestSchema } from '@fincheck/shared/invoices/invoice-payment/invoice-payment.schema.ts';
 
-import { collectFieldErrors } from '#/features/bills/utils/collect-field-errors.util.ts';
+import { collectFieldErrors } from '#/shared/utils/forms/collect-field-errors.util.ts';
 
 type PaymentInput = {
   kind: 'bill' | 'invoice';

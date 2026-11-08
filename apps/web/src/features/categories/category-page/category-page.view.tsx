@@ -1,7 +1,6 @@
 import {
   Banner,
   BannerSlot,
-  Button,
   ConfirmDialog,
   ContentSkeleton,
   EmptyState,
@@ -15,6 +14,7 @@ import { BackPageFrame } from '#/shared/components/page/back-page-frame.componen
 import type { CategoryPageViewProps } from '#/features/categories/category-page/types/category-page-view.type.ts';
 import { DayList } from '#/shared/components/transactions/day-list.component.tsx';
 import { LoadMore } from '#/shared/components/transactions/load-more.component.tsx';
+import { SectionError } from '#/shared/components/states/section-error.component.tsx';
 import { LoadFailed } from '#/shared/components/transactions/load-failed.component.tsx';
 
 const NO_SELECTION: ReadonlySet<string> = new Set();
@@ -101,12 +101,7 @@ export function CategoryPageView(props: CategoryPageViewProps) {
           <div aria-hidden="true" className="skeleton-pulse h-50 w-full rounded-panel bg-track" />
         ) : null}
         {props.trendStatus === 'error' ? (
-          <div className="flex h-50 flex-col items-start justify-center gap-s8">
-            <p className="text-body text-fg-secondary">Não deu para carregar as barras.</p>
-            <Button variant="secondary" size="sm" onPress={props.onRetry}>
-              Tentar de novo
-            </Button>
-          </div>
+          <SectionError what="as barras" onRetry={props.onRetry} />
         ) : null}
       </Section>
 

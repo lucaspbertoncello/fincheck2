@@ -313,7 +313,7 @@ describe('Mapa de gastos', () => {
     expect(
       await screen.findByRole('status', { name: 'Carregando o mapa de gastos' }),
     ).toBeInTheDocument();
-    expect(await screen.findByText('Não deu para carregar o mapa de gastos.')).toBeInTheDocument();
+    expect(await screen.findByText('Não deu para carregar o mapa de gastos')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Tentar de novo' })).toBeInTheDocument();
   });
 

@@ -1,5 +1,6 @@
-import { Button, RulePreview, Skeleton, type RulePreviewData } from '@fincheck/ui';
+import { RulePreview, Skeleton, type RulePreviewData } from '@fincheck/ui';
 
+import { SectionError } from '#/shared/components/states/section-error.component.tsx';
 import type { RulePreviewStatus } from '#/features/rules/rule-form/types/rule-preview-status.type.ts';
 
 type RulePreviewAreaProps = {
@@ -30,14 +31,7 @@ export function RulePreviewArea({ status, preview, onRetry }: RulePreviewAreaPro
   }
 
   if (status === 'error') {
-    return (
-      <div role="alert" className={`${BOX_CLASS} flex flex-col items-start gap-s8`}>
-        <p>Não deu para conferir o histórico agora.</p>
-        <Button variant="secondary" size="sm" onPress={onRetry}>
-          Tentar de novo
-        </Button>
-      </div>
-    );
+    return <SectionError what="o histórico da regra" onRetry={onRetry} />;
   }
 
   if (status === 'empty') {

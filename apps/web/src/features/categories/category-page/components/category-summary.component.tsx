@@ -1,6 +1,8 @@
 import { Button, CategoryIcon, Icon, Money, Skeleton, type IconName } from '@fincheck/ui';
 import type { ReactNode } from 'react';
 
+import { SectionError } from '#/shared/components/states/section-error.component.tsx';
+
 import type {
   CategoryFiguresView,
   CategoryPageKind,
@@ -68,12 +70,7 @@ export function CategorySummary({
       </div>
 
       {status === 'error' ? (
-        <p role="alert" className="text-label text-fg-secondary">
-          Não deu para carregar os totais.{' '}
-          <Button variant="tertiary" size="sm" onPress={onRetry}>
-            Tentar de novo
-          </Button>
-        </p>
+        <SectionError what="os totais" onRetry={onRetry} />
       ) : (
         <div className="grid grid-cols-2 gap-x-s24 gap-y-s16 sm:flex sm:flex-wrap sm:gap-x-s48">
           <div className="col-span-2 sm:col-span-1">
