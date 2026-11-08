@@ -10,4 +10,6 @@ export interface CategoryRuleRepository<Executor> {
   save(rule: CategoryRule, executor?: Executor): Promise<void>;
   // The tags go with it; the transactions it categorized keep the category and lose the link.
   delete(id: string, executor?: Executor): Promise<void>;
+  // Deletes the rules with a condition on the account (deleting the account), with their tags.
+  deleteByAccount(accountId: string, executor?: Executor): Promise<void>;
 }

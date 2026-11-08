@@ -200,19 +200,24 @@ describe('transactions routes (mounted in main)', () => {
       );
     });
 
-    it('refuses a card purchase while invoices does not exist, and stores nothing', async () => {
+    it('works out the invoice month of a card purchase: until the closing day in the month, after it in the next', async () => {
       const card = await insertTestCreditCard(database.db);
-      const response = await send('POST', '/transactions', {
-        type: 'expense',
-        accountId: card,
-        method: 'credit',
-        description: 'Mercado',
-        amountCents: 9000,
-        occurredOn: '2026-11-05',
-      });
+      const purchase = (occurredOn: string) =>
+        send('POST', '/transactions', {
+          type: 'expense',
+          accountId: card,
+          method: 'credit',
+          description: 'Mercado',
+          amountCents: 9000,
+          occurredOn,
+        });
 
-      await expectError(response, 400, 'VALIDATION_FAILED');
-      expect(await database.db.selectFrom('transactions').select('id').execute()).toEqual([]);
+      expect(await dtoOf(await purchase('2026-11-05'), 201)).toMatchObject({
+        invoiceMonth: '2026-11',
+      });
+      expect(await dtoOf(await purchase('2026-11-06'), 201)).toMatchObject({
+        invoiceMonth: '2026-12',
+      });
     });
 
     it('takes a category and a tag now that categories is wired in main', async () => {
@@ -887,15 +892,17 @@ describe('transactions routes (mounted in main)', () => {
       });
     });
 
-    it('refuses a new date on a card purchase while invoices does not exist', async () => {
+    it('moves a card purchase to the next invoice when the new date passes the closing day', async () => {
       const card = await insertTestCreditCard(database.db);
       const id = await insertTestTransaction(database.db, card, {
         method: 'credit',
         invoice_month: '2026-11',
       });
 
-      await expectError(await patch(id, { occurredOn: '2026-11-20' }), 400, 'VALIDATION_FAILED');
-      expect((await dtoOf(await send('GET', `/transactions/${id}`))).occurredOn).toBe('2026-11-05');
+      expect(await dtoOf(await patch(id, { occurredOn: '2026-11-20' }))).toMatchObject({
+        occurredOn: '2026-11-20',
+        invoiceMonth: '2026-12',
+      });
     });
 
     it('answers 404, and 400 for an empty body, an unknown key and a bad value', async () => {
@@ -1272,21 +1279,6 @@ describe('transactions routes (mounted in main)', () => {
         404,
         'TRANSACTION_NOT_FOUND',
       );
-    });
-  });
-
-  describe('what main keeps out until its owners exist', () => {
-    it('does not mount the creation and the list of installment plans', async () => {
-      for (const [method, path] of [
-        ['GET', '/installment-plans'],
-        ['POST', '/installment-plans'],
-      ] as const) {
-        await expectError(
-          await send(method, path, method === 'POST' ? {} : undefined),
-          404,
-          'ROUTE_NOT_FOUND',
-        );
-      }
     });
   });
 

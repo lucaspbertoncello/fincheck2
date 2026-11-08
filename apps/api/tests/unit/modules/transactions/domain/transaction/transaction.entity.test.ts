@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { Transaction } from '#/modules/transactions/domain/transaction/transaction.entity.ts';
+import { TransactionIsSplitError } from '#/modules/transactions/domain/transaction/transaction-is-split.error.ts';
+import { TransactionNatureLockedError } from '#/modules/transactions/domain/transaction/transaction-nature-locked.error.ts';
 import { TransactionSplit } from '#/modules/transactions/domain/transaction/transaction-split.value-object.ts';
 import { BusinessDate } from '#/shared/date/business-date.value-object.ts';
 import { Month } from '#/shared/date/month.value-object.ts';
@@ -1246,4 +1248,159 @@ describe('Transaction.applyRule (BR-CAT-006)', () => {
       expect(byHand.tagIds).toEqual([]);
     }
   });
+});
+
+describe('Transaction.markAsInvoicePayment', () => {
+  it('turns an expense into an invoice payment chosen by the user, clearing the category', () => {
+    const transaction = buildTestTransaction({
+      categoryId: 'food',
+      categorySource: 'rule',
+      categoryRuleId: 'rule-1',
+    });
+
+    transaction.markAsInvoicePayment(LATER);
+
+    expect(transaction).toMatchObject({
+      nature: 'invoice_payment',
+      natureSetBy: 'user',
+      categoryId: null,
+      categorySource: null,
+      categoryRuleId: null,
+      updatedAt: LATER,
+    });
+  });
+
+  it('turns an income into an invoice payment too', () => {
+    const transaction = buildTestTransaction({
+      nature: 'income',
+      amount: cents(5000),
+      natureSetBy: 'system',
+    });
+
+    transaction.markAsInvoicePayment(LATER);
+
+    expect(transaction).toMatchObject({ nature: 'invoice_payment', natureSetBy: 'user' });
+  });
+
+  it('changes nothing in one the system already marked as invoice payment', () => {
+    const transaction = buildTestTransaction({
+      nature: 'invoice_payment',
+      natureSetBy: 'system',
+    });
+
+    transaction.markAsInvoicePayment(LATER);
+
+    expect(transaction).toMatchObject({
+      nature: 'invoice_payment',
+      natureSetBy: 'system',
+      updatedAt: TEST_NOW,
+    });
+  });
+
+  it('refuses a split transaction', () => {
+    const transaction = buildTestTransaction({
+      splits: [
+        new TransactionSplit({
+          id: 's1',
+          position: 1,
+          amount: cents(-625),
+          nature: 'expense',
+          categoryId: null,
+          description: null,
+        }),
+        new TransactionSplit({
+          id: 's2',
+          position: 2,
+          amount: cents(-625),
+          nature: 'expense',
+          categoryId: null,
+          description: null,
+        }),
+      ],
+    });
+
+    expect(() => transaction.markAsInvoicePayment(LATER)).toThrow(TransactionIsSplitError);
+    expect(transaction.nature).toBe('expense');
+  });
+
+  it.each(['transfer', 'lent', 'reimbursed', 'balance_adjustment'] as const)(
+    'refuses the nature %s',
+    (nature) => {
+      const transaction = buildTestTransaction({ nature });
+
+      expect(() => transaction.markAsInvoicePayment(LATER)).toThrow(TransactionNatureLockedError);
+      expect(transaction.nature).toBe(nature);
+      expect(transaction.updatedAt).toBe(TEST_NOW);
+    },
+  );
+});
+
+describe('Transaction.releaseFromInvoicePayment', () => {
+  it('gives an expense back to a negative payment chosen by the user, now decided by the system', () => {
+    const transaction = buildTestTransaction({
+      nature: 'invoice_payment',
+      natureSetBy: 'user',
+      amount: cents(-5000),
+    });
+
+    transaction.releaseFromInvoicePayment({ isCardAccount: false }, LATER);
+
+    expect(transaction).toMatchObject({
+      nature: 'expense',
+      natureSetBy: 'system',
+      updatedAt: LATER,
+    });
+  });
+
+  it('gives an income back to a positive payment in a common account', () => {
+    const transaction = buildTestTransaction({
+      nature: 'invoice_payment',
+      natureSetBy: 'user',
+      amount: cents(5000),
+    });
+
+    transaction.releaseFromInvoicePayment({ isCardAccount: false }, LATER);
+
+    expect(transaction).toMatchObject({ nature: 'income', natureSetBy: 'system' });
+  });
+
+  it('gives an expense back to a positive payment on a card (a credit on a card is no income)', () => {
+    const transaction = buildTestTransaction({
+      accountId: 'card-1',
+      nature: 'invoice_payment',
+      natureSetBy: 'user',
+      amount: cents(5000),
+    });
+
+    transaction.releaseFromInvoicePayment({ isCardAccount: true }, LATER);
+
+    expect(transaction).toMatchObject({ nature: 'expense', natureSetBy: 'system' });
+  });
+
+  it('changes nothing in one the system marked as invoice payment', () => {
+    const transaction = buildTestTransaction({
+      nature: 'invoice_payment',
+      natureSetBy: 'system',
+      amount: cents(-5000),
+    });
+
+    transaction.releaseFromInvoicePayment({ isCardAccount: false }, LATER);
+
+    expect(transaction).toMatchObject({
+      nature: 'invoice_payment',
+      natureSetBy: 'system',
+      updatedAt: TEST_NOW,
+    });
+  });
+
+  it.each(['expense', 'income', 'transfer', 'lent', 'reimbursed', 'balance_adjustment'] as const)(
+    'changes nothing in a transaction of nature %s',
+    (nature) => {
+      const transaction = buildTestTransaction({ nature, natureSetBy: 'user' });
+
+      transaction.releaseFromInvoicePayment({ isCardAccount: false }, LATER);
+
+      expect(transaction).toMatchObject({ nature, natureSetBy: 'user', updatedAt: TEST_NOW });
+    },
+  );
 });

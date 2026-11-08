@@ -9,6 +9,7 @@ import { InstallmentPlan } from '#/modules/transactions/domain/installment-plan/
 import type { InstallmentPlanRepository } from '#/modules/transactions/domain/installment-plan/installment-plan-repository.interface.ts';
 import type { TransactionRepository } from '#/modules/transactions/domain/transaction/transaction-repository.interface.ts';
 import type { Clock } from '#/shared/clock/clock.interface.ts';
+import { assertSupportedMonth } from '#/shared/date/assert-supported-month.util.ts';
 import { BusinessDate } from '#/shared/date/business-date.value-object.ts';
 import { Month } from '#/shared/date/month.value-object.ts';
 import { Money } from '#/shared/money/money.value-object.ts';
@@ -53,13 +54,22 @@ export class CreateInstallmentPlanUseCase {
       const category = await this.references.category(input.categoryId, executor);
       const tags = await this.references.tagsById(input.tagIds ?? [], executor);
 
+      // The first and the last parcel must fall inside the years the API accepts.
+      const firstInvoiceMonth = Month.of(input.firstInvoiceMonth);
+      assertSupportedMonth(firstInvoiceMonth, 'firstInvoiceMonth');
+      let lastInvoiceMonth = firstInvoiceMonth;
+      for (let parcel = 1; parcel < input.installmentCount; parcel++) {
+        lastInvoiceMonth = lastInvoiceMonth.next();
+      }
+      assertSupportedMonth(lastInvoiceMonth, 'installmentCount');
+
       const plan = InstallmentPlan.createManual(
         {
           account,
           description: input.description,
           total: Money.fromCents(input.totalCents),
           installmentCount: input.installmentCount,
-          firstInvoiceMonth: Month.of(input.firstInvoiceMonth),
+          firstInvoiceMonth,
           purchaseOn: BusinessDate.of(input.purchaseOn),
           category,
           tags,

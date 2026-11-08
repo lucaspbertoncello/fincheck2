@@ -100,6 +100,22 @@ describe('updateAccountRequestSchema', () => {
     expect(updateAccountRequestSchema.safeParse({ type: 'wallet' }).success).toBe(false);
     expect(updateAccountRequestSchema.safeParse({ name: 'Novo nome' }).success).toBe(true);
   });
+
+  it('counts an empty creditCard as a missing field', () => {
+    expect(updateAccountRequestSchema.safeParse({ creditCard: {} }).success).toBe(false);
+    expect(
+      updateAccountRequestSchema.safeParse({ creditCard: { closingDay: undefined } }).success,
+    ).toBe(false);
+    expect(updateAccountRequestSchema.safeParse({ creditCard: { closingDay: 12 } }).success).toBe(
+      true,
+    );
+    expect(updateAccountRequestSchema.safeParse({ creditCard: { last4: null } }).success).toBe(
+      true,
+    );
+    expect(
+      updateAccountRequestSchema.safeParse({ name: 'Novo nome', creditCard: {} }).success,
+    ).toBe(true);
+  });
 });
 
 describe('listAccountsQuerySchema', () => {

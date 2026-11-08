@@ -95,10 +95,21 @@ describe('database migrations', () => {
   it('seeds the ready-made categories, all default and active, with valid ids and icons', async () => {
     const rows = await database.db.selectFrom('categories').selectAll().execute();
 
-    expect(rows.filter((row) => row.kind === 'expense')).toHaveLength(11);
-    expect(rows.filter((row) => row.kind === 'income')).toHaveLength(4);
+    expect(rows).toHaveLength(25);
+    expect(rows.filter((row) => row.kind === 'expense')).toHaveLength(19);
+    expect(rows.filter((row) => row.kind === 'income')).toHaveLength(6);
     expect(rows.map((row) => row.name)).toEqual(
-      expect.arrayContaining(['Restaurantes', 'Delivery', 'Mercado', 'Salário', 'Outras receitas']),
+      expect.arrayContaining([
+        'Restaurantes',
+        'Delivery',
+        'Mercado',
+        'Salário',
+        'Outras receitas',
+        'Combustível',
+        'Cuidados pessoais',
+        'Rendimentos',
+        'Vendas',
+      ]),
     );
     for (const row of rows) {
       expect(row.is_default).toBe(1);
@@ -125,7 +136,7 @@ describe('database migrations', () => {
       undone++;
     }
 
-    expect(undone).toBe(7);
+    expect(undone).toBe(8);
     expect(await listTables()).toEqual([]);
   });
 

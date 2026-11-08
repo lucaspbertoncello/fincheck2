@@ -6,6 +6,8 @@ import { ArchiveCategoryUseCase } from '#/modules/categories/application/categor
 import { CategoryPresenter } from '#/modules/categories/application/category/category-presenter.service.ts';
 import { CreateCategoryUseCase } from '#/modules/categories/application/category/create-category.usecase.ts';
 import { GetCategoryRefsQuery } from '#/modules/categories/application/category/get-category-refs.query.ts';
+import { CountAccountRulesQuery } from '#/modules/categories/application/account-deletion/count-account-rules.query.ts';
+import { DeleteAccountRulesUseCase } from '#/modules/categories/application/account-deletion/delete-account-rules.usecase.ts';
 import { ListCategoriesQuery } from '#/modules/categories/application/category/list-categories.query.ts';
 import { UnarchiveCategoryUseCase } from '#/modules/categories/application/category/unarchive-category.usecase.ts';
 import { UpdateCategoryUseCase } from '#/modules/categories/application/category/update-category.usecase.ts';
@@ -181,6 +183,11 @@ export function createCategoriesModule(deps: {
         rules,
         transactionPorts.manualCategorizations,
       ),
+    },
+    // The ports `accounts` declares and `categories` fulfils.
+    accountPorts: {
+      ruleCounts: new CountAccountRulesQuery(db),
+      deleteRules: new DeleteAccountRulesUseCase(rules),
     },
   };
 }

@@ -64,21 +64,29 @@ describe('categories routes', () => {
     it('brings the ready-made categories, active, by name with no difference for accent', async () => {
       const items = await list();
 
-      expect(items).toHaveLength(15);
+      expect(items).toHaveLength(25);
       expect(items.every((item) => item.isDefault && item.archivedAt === null)).toBe(true);
       const expenses = items.filter((item) => item.kind === 'expense').map((item) => item.name);
       expect(expenses).toEqual([
         'Assinaturas',
+        'Combustível',
         'Compras',
+        'Cuidados pessoais',
         'Delivery',
         'Educação',
+        'Esportes',
+        'Impostos e taxas',
         'Lazer',
         'Mercado',
         'Moradia',
         'Outros',
+        'Pets',
+        'Presentes e doações',
         'Restaurantes',
         'Saúde',
+        'Tecnologia',
         'Transporte',
+        'Viagem',
       ]);
       expect(items[0]).toMatchObject({ transactionCount: 0, ruleCount: 0, lastUsedOn: null });
     });
@@ -91,7 +99,7 @@ describe('categories routes', () => {
       expect((await list('?kind=income&status=archived')).map((item) => item.name)).toEqual([
         'Antiga',
       ]);
-      expect(await list('?kind=income&status=all')).toHaveLength(5);
+      expect(await list('?kind=income&status=all')).toHaveLength(7);
       expect(await list('?kind=expense&status=archived')).toEqual([]);
     });
 
@@ -204,12 +212,12 @@ describe('categories routes', () => {
 
   describe('POST /categories', () => {
     it('creates a category that is not a default one, with no use yet', async () => {
-      const dto = await create({ kind: 'expense', name: ' Pets ', icon: 'pet' });
+      const dto = await create({ kind: 'expense', name: ' Marmitas ', icon: 'pet' });
 
       expect(dto).toEqual({
         id: dto.id,
         kind: 'expense',
-        name: 'Pets',
+        name: 'Marmitas',
         icon: 'pet',
         isDefault: false,
         archivedAt: null,
@@ -217,7 +225,7 @@ describe('categories routes', () => {
         ruleCount: 0,
         lastUsedOn: null,
       });
-      expect(await list()).toHaveLength(16);
+      expect(await list()).toHaveLength(26);
     });
 
     it('refuses a name the same kind already has, whatever the case or the accent', async () => {
@@ -267,7 +275,7 @@ describe('categories routes', () => {
         );
       }
       await expectError(await send('POST', '/categories', {}), 400, 'VALIDATION_FAILED');
-      expect(await list()).toHaveLength(15);
+      expect(await list()).toHaveLength(25);
     });
 
     it('takes a name of exactly 40 characters', async () => {
@@ -417,7 +425,7 @@ describe('categories routes', () => {
     const id = await idOf('Mercado');
 
     await expectError(await send('DELETE', `/categories/${id}`), 404, 'ROUTE_NOT_FOUND');
-    expect(await list()).toHaveLength(15);
+    expect(await list()).toHaveLength(25);
   });
 
   it('answers 401 on every route without the local token', async () => {

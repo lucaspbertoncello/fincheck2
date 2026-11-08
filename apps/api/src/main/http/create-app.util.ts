@@ -7,15 +7,20 @@ import { KyselyUnitOfWork } from '#/database/unit-of-work/kysely-unit-of-work.se
 import { handleError } from '#/main/http/handle-error.util.ts';
 import { createLocalTokenMiddleware } from '#/main/http/middlewares/local-token.middleware.ts';
 import { createCategoriesModule } from '#/main/http/create-categories-module.util.ts';
+import { createInvoicesModule } from '#/main/http/create-invoices-module.util.ts';
 import { createTransactionsCategoryPorts } from '#/main/http/create-transactions-category-ports.util.ts';
+import { createTransactionsInvoicePorts } from '#/main/http/create-transactions-invoice-ports.util.ts';
 import { createTransactionsModule } from '#/main/http/create-transactions-module.util.ts';
 import { AccountPresenter } from '#/modules/accounts/application/account/account-presenter.service.ts';
 import { ArchiveAccountUseCase } from '#/modules/accounts/application/account/archive-account.usecase.ts';
 import { AdjustAccountBalanceUseCase } from '#/modules/accounts/application/account/adjust-account-balance.usecase.ts';
 import { CreateAccountUseCase } from '#/modules/accounts/application/account/create-account.usecase.ts';
+import { DeleteAccountUseCase } from '#/modules/accounts/application/account/delete-account.usecase.ts';
 import { GetAccountRefQuery } from '#/modules/accounts/application/account/get-account-ref.query.ts';
 import { GetAccountUseCase } from '#/modules/accounts/application/account/get-account.usecase.ts';
 import { GetBalanceHistoryUseCase } from '#/modules/accounts/application/account/get-balance-history.usecase.ts';
+import { GetCardRefsQuery } from '#/modules/accounts/application/account/get-card-refs.query.ts';
+import { GetDeletionImpactUseCase } from '#/modules/accounts/application/account/get-deletion-impact.usecase.ts';
 import { ListAccountsUseCase } from '#/modules/accounts/application/account/list-accounts.usecase.ts';
 import { UnarchiveAccountUseCase } from '#/modules/accounts/application/account/unarchive-account.usecase.ts';
 import { UpdateAccountUseCase } from '#/modules/accounts/application/account/update-account.usecase.ts';
@@ -23,9 +28,12 @@ import { AdjustAccountBalanceController } from '#/modules/accounts/http/account/
 import { ArchiveAccountController } from '#/modules/accounts/http/account/archive-account.controller.ts';
 import { createAccountBalanceRoute } from '#/modules/accounts/http/account/account-balance.route.ts';
 import { createAccountRoute } from '#/modules/accounts/http/account/account.route.ts';
+import { createAccountDeletionRoute } from '#/modules/accounts/http/account/account-deletion.route.ts';
 import { CreateAccountController } from '#/modules/accounts/http/account/create-account.controller.ts';
+import { DeleteAccountController } from '#/modules/accounts/http/account/delete-account.controller.ts';
 import { GetAccountController } from '#/modules/accounts/http/account/get-account.controller.ts';
 import { GetBalanceHistoryController } from '#/modules/accounts/http/account/get-balance-history.controller.ts';
+import { GetDeletionImpactController } from '#/modules/accounts/http/account/get-deletion-impact.controller.ts';
 import { ListAccountsController } from '#/modules/accounts/http/account/list-accounts.controller.ts';
 import { UnarchiveAccountController } from '#/modules/accounts/http/account/unarchive-account.controller.ts';
 import { UpdateAccountController } from '#/modules/accounts/http/account/update-account.controller.ts';
@@ -55,12 +63,16 @@ export function createApp({
   // the movement and the adjustment, and transactions asks accounts which account a transaction is
   // in. categories asks transactions for the use of each category, tag and rule, the history a rule
   // previews and recategorizes, and what Lucas categorized by hand; transactions asks categories for
-  // the category, the tag, the rules still alive and the suggestions of the review queue. The Pluggy
-  // connection belongs to sync, which does not exist yet (its port stays unwired: the connection
-  // shows as null). Deletion impact and deletion (createAccountDeletionRoute) have their
-  // transactions side ready but also need invoices, so they are NOT mounted yet; likewise
-  // transactions has no invoice, link or recurrence reader yet: see createTransactionsModule for
-  // what that leaves out of the routes.
+  // the category, the tag, the rules still alive and the suggestions of the review queue. invoices
+  // asks accounts for the cycle days of a card and transactions for the lines and sums of the cycle,
+  // the transactions that pay and the candidates of the payment found, and it calls the use cases of
+  // transactions that link and unlink a payment; transactions asks invoices for the invoice month of
+  // a purchase, the open invoice of each card and the link of a payment. The deletion of an account
+  // calls the owners of what hangs on it: invoices, transactions and categories. The Pluggy
+  // connection belongs to sync and the expected recurrences to recurrences, which do not exist yet:
+  // their ports stay unwired (the connection shows as null, no invoice has an expected recurrence),
+  // and transactions has no occurrence or bill link and no recurrence candidate yet: see
+  // createTransactionsModule for what that leaves out.
   const accounts = new KyselyAccountRepository(db);
   const accountRefs = new GetAccountRefQuery(accounts);
   const categories = createCategoriesModule({
@@ -70,17 +82,28 @@ export function createApp({
     accounts: accountRefs,
     transactionPorts: createTransactionsCategoryPorts({ db, clock }),
   });
+  const invoices = createInvoicesModule({
+    db,
+    unitOfWork,
+    clock,
+    cards: new GetCardRefsQuery(accounts),
+    transactionPorts: createTransactionsInvoicePorts({ db, accounts: accountRefs, clock }),
+  });
   const transactions = createTransactionsModule({
     db,
     unitOfWork,
     clock,
     accounts: accountRefs,
-    readers: categories.transactionReaders,
+    readers: { ...categories.transactionReaders, ...invoices.transactionReaders },
   });
   // bulkRoute exists when the readers of categories are plugged in, which they are just above.
   // Failing to start is better than a silent 404 on POST /transactions/bulk.
   if (transactions.bulkRoute === undefined) {
     throw new Error('The bulk route needs the readers of categories');
+  }
+  // Likewise the installment plans: they need the open invoice of each card, from invoices.
+  if (transactions.installmentPlanRoute === undefined) {
+    throw new Error('The installment plan routes need the open invoice reader of invoices');
   }
   const accountPresenter = new AccountPresenter(
     transactions.accountPorts.manualBalances,
@@ -124,6 +147,27 @@ export function createApp({
     ),
   });
 
+  const accountDeletion = createAccountDeletionRoute({
+    getDeletionImpact: new GetDeletionImpactController(
+      new GetDeletionImpactUseCase(
+        accounts,
+        transactions.accountPorts.transactionCounts,
+        invoices.accountPorts.invoiceCounts,
+        categories.accountPorts.ruleCounts,
+        undefined,
+      ),
+    ),
+    deleteAccount: new DeleteAccountController(
+      new DeleteAccountUseCase(
+        accounts,
+        invoices.accountPorts.deleteInvoices,
+        transactions.accountPorts.deleteTransactions,
+        categories.accountPorts.deleteRules,
+        unitOfWork,
+      ),
+    ),
+  });
+
   return (
     new Hono()
       .notFound((c) =>
@@ -145,8 +189,11 @@ export function createApp({
         }),
       )
       .route('/', accountBalance)
+      .route('/', accountDeletion)
       .route('/', categories.routes)
       .route('/', transactions.routes)
       .route('/', transactions.bulkRoute)
+      .route('/', transactions.installmentPlanRoute)
+      .route('/', invoices.routes)
   );
 }

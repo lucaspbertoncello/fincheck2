@@ -1,3 +1,4 @@
+import { deletionImpactDtoSchema } from '@fincheck/shared/accounts/deletion-impact/deletion-impact.schema.ts';
 import { apiErrorSchema } from '@fincheck/shared/common/api-error/api-error.schema.ts';
 import { reviewQueueDtoSchema } from '@fincheck/shared/transactions/review-queue/review-queue.schema.ts';
 import { transactionDtoSchema } from '@fincheck/shared/transactions/transaction/transaction.schema.ts';
@@ -8,6 +9,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { insertTestAccount } from '#tests/support/accounts/account/insert-test-account.util.ts';
+import { insertTestCreditCard } from '#tests/support/accounts/account/insert-test-credit-card.util.ts';
 import { createTestApp } from '#tests/support/app/create-test-app.util.ts';
 import { insertTestCategory } from '#tests/support/categories/category/insert-test-category.util.ts';
 import { insertTestTag } from '#tests/support/categories/tag/insert-test-tag.util.ts';
@@ -236,5 +238,129 @@ describe('createApp wires categories into transactions', () => {
     for (const path of ['/categories', '/tags', '/rules', '/rule-suggestions']) {
       expect((await send('GET', path)).status).toBe(200);
     }
+  });
+});
+
+// The same, for `invoices`: the app `main` builds, not the test app of one module. Each test needs
+// one reader or route that `createApp` has to plug in, and fails if it is left out: the invoice
+// month of a card purchase (`invoiceMonths`), the installment plans (`openInvoiceMonths`), the
+// link of a payment on the transaction (`links`) and the routes of deletion of an account.
+describe('createApp wires invoices into transactions and accounts', () => {
+  let database: Awaited<ReturnType<typeof createTestDatabase>>;
+  let app: ReturnType<typeof createTestApp>;
+  let cardId: string;
+  let checkingId: string;
+
+  beforeEach(async () => {
+    database = await createTestDatabase();
+    app = createTestApp(database.db, { clock: createFixedClock(NOW) });
+    cardId = await insertTestCreditCard(database.db);
+    checkingId = await insertTestAccount(database.db);
+  });
+
+  afterEach(async () => {
+    await database.destroy();
+  });
+
+  const send = (method: string, path: string, body?: unknown) =>
+    app.request(path, {
+      method,
+      ...(body === undefined
+        ? {}
+        : { headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }),
+    });
+
+  it('creates a card purchase with its invoice month: 201 (not the 400 of an unplugged reader)', async () => {
+    const response = await send('POST', '/transactions', {
+      type: 'expense',
+      accountId: cardId,
+      method: 'credit',
+      description: 'Mercado',
+      amountCents: 9000,
+      occurredOn: '2026-11-05',
+    });
+
+    expect(response.status).toBe(201);
+    expect(transactionDtoSchema.parse(await response.json()).invoiceMonth).toBe('2026-11');
+  });
+
+  it('lists and creates installment plans: 200 and 201, not 404', async () => {
+    const list = await send('GET', '/installment-plans');
+    expect(list.status).toBe(200);
+    expect(await list.json()).toEqual({ items: [] });
+
+    const created = await send('POST', '/installment-plans', {
+      accountId: cardId,
+      description: 'Cadeira',
+      totalCents: 30000,
+      installmentCount: 3,
+      firstInvoiceMonth: '2026-12',
+      purchaseOn: '2026-11-05',
+    });
+    expect(created.status).toBe(201);
+    // The next parcel starts from the open invoice, which only `invoices` knows (2026-12 today).
+    expect(await created.json()).toMatchObject({
+      nextInstallment: { number: 1, invoiceMonth: '2026-12' },
+      remainingCents: 30000,
+    });
+  });
+
+  it('answers the deletion impact of an account: 200, not 404', async () => {
+    const response = await send('GET', `/accounts/${cardId}/deletion-impact`);
+
+    expect(response.status).toBe(200);
+    expect(deletionImpactDtoSchema.parse(await response.json())).toMatchObject({
+      transactionCount: 0,
+      invoiceCount: 0,
+      ruleCount: 0,
+    });
+  });
+
+  it('deletes an account: 204', async () => {
+    expect((await send('DELETE', `/accounts/${cardId}`)).status).toBe(204);
+  });
+
+  it('answers the invoices of a card: the three read routes and the open ones', async () => {
+    for (const path of [
+      '/invoices/open',
+      `/cards/${cardId}/invoices`,
+      `/cards/${cardId}/invoices/2026-12`,
+    ]) {
+      expect((await send('GET', path)).status).toBe(200);
+    }
+  });
+
+  it('shows on the transaction the invoice it pays (the links reader)', async () => {
+    const debit = transactionDtoSchema.parse(
+      await (
+        await send('POST', '/transactions', {
+          type: 'expense',
+          accountId: checkingId,
+          method: 'pix',
+          description: 'Fatura',
+          amountCents: 4000,
+          occurredOn: '2026-11-10',
+        })
+      ).json(),
+    );
+    const paid = await send('POST', `/cards/${cardId}/invoices/2026-11/payments`, {
+      amountCents: 4000,
+      paidOn: '2026-11-10',
+      transactionId: debit.id,
+    });
+    expect(paid.status).toBe(201);
+
+    const after = transactionDtoSchema.parse(
+      await (await send('GET', `/transactions/${debit.id}`)).json(),
+    );
+
+    expect(after).toMatchObject({
+      nature: 'invoice_payment',
+      links: { invoicePayment: { accountId: cardId, month: '2026-11' } },
+    });
+    // The link locks the nature (TRANSACTION_NATURE_LOCKED): it only changes by undoing the payment.
+    const locked = await send('PATCH', `/transactions/${debit.id}`, { nature: 'expense' });
+    expect(locked.status).toBe(422);
+    expect(apiErrorSchema.parse(await locked.json()).code).toBe('TRANSACTION_NATURE_LOCKED');
   });
 });

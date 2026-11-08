@@ -95,6 +95,15 @@ export const updateAccountRequestSchema = z
     institutionName: z.string().trim().min(1).max(60).nullable().optional(),
     creditCard: updateCreditCardRequestSchema.optional(),
   })
-  .refine((value) => Object.values(value).some((field) => field !== undefined), {
-    message: 'Send at least one field',
-  });
+  // Any top-level field that is defined counts, a new one included; only an empty `creditCard` ({})
+  // changes nothing, so it counts as a missing field.
+  .refine(
+    (value) => {
+      const { creditCard, ...topLevel } = value;
+      const changesCard =
+        creditCard !== undefined && Object.values(creditCard).some((field) => field !== undefined);
+
+      return changesCard || Object.values(topLevel).some((field) => field !== undefined);
+    },
+    { message: 'Send at least one field' },
+  );

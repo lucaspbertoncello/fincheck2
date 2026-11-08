@@ -8,9 +8,9 @@ const CATEGORIES = [{ id: FOOD, name: 'Mercado', icon: 'cart' }] as Category.Dto
 
 describe('buildInvoiceCategoryRows', () => {
   const breakdown = [
-    { categoryId: FOOD, totalCents: 60_000, sharePercent: 60, itemCount: 4 },
-    { categoryId: null, totalCents: 39_000, sharePercent: 39, itemCount: 1 },
-    { categoryId: FOOD, totalCents: 1000, sharePercent: 0.4, itemCount: 1 },
+    { categoryId: FOOD, isLent: false, totalCents: 60_000, sharePercent: 60, itemCount: 4 },
+    { categoryId: null, isLent: false, totalCents: 39_000, sharePercent: 39, itemCount: 1 },
+    { categoryId: FOOD, isLent: false, totalCents: 1000, sharePercent: 0.4, itemCount: 1 },
   ];
 
   it('names the category, takes its icon and keeps the order of the API', () => {

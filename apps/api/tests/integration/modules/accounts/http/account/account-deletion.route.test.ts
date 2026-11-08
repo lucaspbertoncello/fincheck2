@@ -15,9 +15,9 @@ import { generateId } from '#/shared/id/generate-id.util.ts';
 import { insertTestAccount } from '#tests/support/accounts/account/insert-test-account.util.ts';
 import { createTestDatabase } from '#tests/support/database/create-test-database.util.ts';
 
-// These routes are not mounted in `main` yet (they wait for `transactions`, `invoices` and
-// `categories`): the test mounts them by hand, over the real accounts store and doubles that stand
-// for the owners.
+// The route of the deletion over the real accounts store and doubles that stand for the owners, to
+// check the order and the unit of work of the use case on its own. The routes of `main`, with the
+// real owners, are in `account-deletion-wired.route.test.ts`.
 describe('deletion routes of accounts', () => {
   let database: Awaited<ReturnType<typeof createTestDatabase>>;
   let calls: string[];

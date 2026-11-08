@@ -68,8 +68,11 @@ export const invoiceItemSchema = z.discriminatedUnion('type', [
 
 // Where the money of the invoice went: one entry per category (null: no category), expenses only,
 // refunds taken off, biggest first (BR-INV-006).
+// `isLent` marks the line "Emprestado" (what was lent to a friend), which has no category either:
+// it tells it apart from the purchases with no category. It defaults to false.
 export const invoiceCategoryShareSchema = z.object({
   categoryId: idSchema.nullable(),
+  isLent: z.boolean().default(false),
   totalCents: positiveCentsSchema,
   sharePercent: z.number().min(0).max(100),
   itemCount: z.int().min(1),

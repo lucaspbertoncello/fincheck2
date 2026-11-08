@@ -8,7 +8,8 @@ import type { TransactionRepository } from '#/modules/transactions/domain/transa
 
 // Builds the `InstallmentPlan.Dto`: every parcel in order, the next one and what is still to pay.
 // "Next" and "still to pay" start from the open invoice of the card (the first parcel whose invoice
-// is that month or later), asked to `invoices`.
+// is that month or later), asked to `invoices`. Only the parcels that enter the accounts count, as
+// on the invoice.
 export class InstallmentPlanDtoBuilder {
   private readonly transactions: TransactionRepository<Kysely<Database>>;
   private readonly openMonths: OpenInvoiceMonthReader;
@@ -48,7 +49,15 @@ export class InstallmentPlanDtoBuilder {
         .sort((a, b) => a.number - b.number);
 
       const openMonth = (openMonths.get(plan.accountId) ?? plan.firstInvoiceMonth).value;
-      const upcoming = installments.filter((item) => item.invoiceMonth >= openMonth);
+      // A parcel that does not enter the accounts (ignored, or removed by the bank without an
+      // edit) will not be charged on the invoice, which leaves it out of the sums the same way:
+      // so it is neither the next parcel nor part of what is left to pay. It stays in the list.
+      const entering = new Set(
+        parcels.filter((parcel) => parcel.entersAccounts()).map((parcel) => parcel.id),
+      );
+      const upcoming = installments.filter(
+        (item) => item.invoiceMonth >= openMonth && entering.has(item.transactionId),
+      );
       const next = upcoming[0];
 
       return {

@@ -27,6 +27,8 @@ function buildCategoryBreakdown(items: TransactionItem[]): Invoice.CategoryShare
   return kept
     .map(([categoryId, group]) => ({
       categoryId,
+      // The mock has no lent line yet (piece 12 aligns it with the API).
+      isLent: false,
       totalCents: group.totalCents,
       sharePercent: Math.round((group.totalCents / sum) * 1000) / 10,
       itemCount: group.itemCount,

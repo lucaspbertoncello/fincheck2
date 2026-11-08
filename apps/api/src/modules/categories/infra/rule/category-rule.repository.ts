@@ -75,6 +75,11 @@ export class KyselyCategoryRuleRepository implements CategoryRuleRepository<Kyse
     await executor.deleteFrom('category_rules').where('id', '=', id).execute();
   }
 
+  async deleteByAccount(accountId: string, executor: Kysely<Database> = this.db): Promise<void> {
+    // Same as `delete`: the tags go by `ON DELETE CASCADE`, the transactions keep the category.
+    await executor.deleteFrom('category_rules').where('account_id', '=', accountId).execute();
+  }
+
   private async hydrate(
     rows: Selectable<CategoryRulesTable>[],
     executor: Kysely<Database>,

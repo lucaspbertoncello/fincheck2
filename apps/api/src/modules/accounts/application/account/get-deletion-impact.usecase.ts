@@ -12,20 +12,21 @@ import type { Kysely } from 'kysely';
 import type { Database } from '#/database/database.type.ts';
 
 // What deleting the account takes with it, for the confirmation ("142 transações serão apagadas").
-// A Pluggy account comes back in the next sync while its connection is active (BR-ACC-008).
+// A Pluggy account comes back in the next sync while its connection is active (BR-ACC-008). Without
+// a reader of connections (`sync` is not built yet) no account has an active connection.
 export class GetDeletionImpactUseCase {
   private readonly accounts: AccountRepository<Kysely<Database>>;
   private readonly transactions: AccountTransactionsReader;
   private readonly invoices: AccountInvoicesReader;
   private readonly rules: AccountRulesReader;
-  private readonly connections: AccountConnectionReader;
+  private readonly connections: AccountConnectionReader | undefined;
 
   constructor(
     accounts: AccountRepository<Kysely<Database>>,
     transactions: AccountTransactionsReader,
     invoices: AccountInvoicesReader,
     rules: AccountRulesReader,
-    connections: AccountConnectionReader,
+    connections: AccountConnectionReader | undefined,
   ) {
     this.accounts = accounts;
     this.transactions = transactions;
@@ -42,7 +43,7 @@ export class GetDeletionImpactUseCase {
       this.transactions.countsOf(account.id),
       account.isCard() ? this.invoices.countOf(account.id) : 0,
       this.rules.countOf(account.id),
-      account.isPluggy()
+      account.isPluggy() && this.connections
         ? this.connections.connectionsOf([account.id])
         : new Map<string, Account.Connection>(),
     ]);

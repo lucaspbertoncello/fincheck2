@@ -326,6 +326,25 @@ describe('accounts routes', () => {
       });
     });
 
+    it('refuses a body whose only field is an empty creditCard with 400 (P4-1)', async () => {
+      const card = await create({
+        type: 'credit_card',
+        name: 'Roxinho',
+        institutionCode: 'nubank',
+        creditCard: { brand: 'visa', closingDay: 3, dueDay: 10 },
+      });
+
+      for (const body of [{ creditCard: {} }, {}]) {
+        const response = await send('PATCH', `/accounts/${card.id}`, body);
+        await expectError(response, 400, 'VALIDATION_FAILED');
+      }
+      const unchanged = await send('GET', `/accounts/${card.id}`);
+      expect(accountDtoSchema.parse(await unchanged.json())).toEqual(card);
+      // An empty card next to a real field is harmless.
+      const renamed = await send('PATCH', `/accounts/${card.id}`, { name: 'Novo', creditCard: {} });
+      expect(renamed.status).toBe(200);
+    });
+
     it('lets a Pluggy account be renamed and have its card corrected, but locks its bank', async () => {
       const id = await insertTestAccount(database.db, {
         source: 'pluggy',
@@ -457,14 +476,11 @@ describe('accounts routes', () => {
     });
   });
 
-  it('keeps the routes that wait for invoices and categories out until those owners exist', async () => {
+  it('mounts the deletion routes now that the owners of what hangs on an account exist', async () => {
     const { id } = await create({ type: 'wallet', name: 'Carteira' });
 
-    for (const [method, path] of [
-      ['GET', `/accounts/${id}/deletion-impact`],
-      ['DELETE', `/accounts/${id}`],
-    ] as const) {
-      await expectError(await send(method, path), 404, 'ROUTE_NOT_FOUND');
-    }
+    expect((await send('GET', `/accounts/${id}/deletion-impact`)).status).toBe(200);
+    expect((await send('DELETE', `/accounts/${id}`)).status).toBe(204);
+    await expectError(await send('GET', `/accounts/${id}`), 404, 'ACCOUNT_NOT_FOUND');
   });
 });

@@ -394,6 +394,33 @@ export class Transaction {
     this.updatedAt = now;
   }
 
+  // The transaction pays an invoice (the link of `invoices`): its nature becomes `invoice_payment`,
+  // set by Lucas, and the category goes away (a payment is no spending). One the import detector
+  // already marked keeps its mark and its origin: linking only confirms it, so the undo can tell
+  // whether Lucas changed the nature (`releaseFromInvoicePayment` gives it back) or the detector
+  // did (it stays a payment and is a suggestion again). A split transaction, or one with another
+  // role (transfer, debt, adjustment), cannot pay an invoice.
+  markAsInvoicePayment(now: string): void {
+    if (this.isSplit()) throw new TransactionIsSplitError();
+    if (this.nature === 'invoice_payment') return;
+    if (this.nature !== 'expense' && this.nature !== 'income') {
+      throw new TransactionNatureLockedError();
+    }
+
+    this.nature = 'invoice_payment';
+    this.natureSetBy = 'user';
+    this.clearCategory();
+    this.updatedAt = now;
+  }
+
+  // The link to the invoice was undone: what Lucas had turned into a payment goes back by its sign
+  // (`returnNature`); what the detector had marked stays as it is.
+  releaseFromInvoicePayment(options: { isCardAccount: boolean }, now: string): void {
+    if (this.nature !== 'invoice_payment' || this.natureSetBy !== 'user') return;
+
+    this.returnNature(options, now);
+  }
+
   // Sets or clears the category chosen by Lucas. The category lives on the parts of a split
   // transaction, only `expense` and `income` have one, and its kind is the transaction's.
   assignCategory(category: Transaction.CategoryRef | null, now: string): void {

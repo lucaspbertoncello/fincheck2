@@ -94,6 +94,14 @@ describe('invoiceCategoryShareSchema', () => {
     );
     expect(invoiceCategoryShareSchema.safeParse({ ...share, itemCount: 0 }).success).toBe(false);
   });
+
+  it('marks the line of what was lent with isLent, which defaults to false', () => {
+    expect(invoiceCategoryShareSchema.parse(share).isLent).toBe(false);
+    expect(
+      invoiceCategoryShareSchema.parse({ ...share, categoryId: null, isLent: true }).isLent,
+    ).toBe(true);
+    expect(invoiceCategoryShareSchema.safeParse({ ...share, isLent: 'yes' }).success).toBe(false);
+  });
 });
 
 describe('invoiceHighlightsSchema', () => {

@@ -4,6 +4,7 @@ import type { Database } from '#/database/database.type.ts';
 import type { InvoiceMonthReader } from '#/modules/transactions/application/transaction/invoice-month-reader.interface.ts';
 import { requireWiredReader } from '#/modules/transactions/application/transaction/require-wired-reader.util.ts';
 import type { Transaction } from '#/modules/transactions/domain/transaction/transaction.entity.ts';
+import { assertSupportedDate } from '#/shared/date/assert-supported-date.util.ts';
 import type { BusinessDate } from '#/shared/date/business-date.value-object.ts';
 import type { Month } from '#/shared/date/month.value-object.ts';
 
@@ -24,6 +25,7 @@ export class InvoiceMonthResolver {
     executor: Kysely<Database>,
   ): Promise<Month | null> {
     if (!account.isCard) return null;
+    assertSupportedDate(purchaseOn, 'occurredOn');
 
     return requireWiredReader(this.reader, 'accountId', 'o contexto de faturas').monthFor(
       account.id,
