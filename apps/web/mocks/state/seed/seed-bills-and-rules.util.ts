@@ -242,7 +242,7 @@ export function seedBillsAndRules(database: MockState.Database, ids: SeedIds): v
       accountId: null,
       amountMinCents: null,
       amountMaxCents: null,
-      categoryId: cat.transporte,
+      categoryId: cat.combustivel,
       tagIds: [],
       enabled: true,
       createdAt: toInstant(addDays(TODAY, -100)),

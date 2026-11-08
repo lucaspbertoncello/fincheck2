@@ -35,7 +35,7 @@ export function seedInvoiceShowcase(database: MockState.Database, ids: SeedIds):
   const purchases: Purchase[] = [
     [0, 'PADARIA PAO QUENTE', -1850, cat.restaurantes],
     [1, 'SUPERMERCADO NOVA ERA', -14_290, cat.mercado],
-    [2, 'POSTO BR RODOVIA', -21_000, cat.transporte],
+    [2, 'POSTO BR RODOVIA', -21_000, cat.combustivel],
     [2, 'IFOOD *SUSHI HOUSE', -8990, cat.delivery],
     [3, 'CINEPLEX SHOPPING', -4800, cat.lazer],
     [5, 'HORTIFRUTI DO ZE', -9870, cat.mercado],
@@ -45,7 +45,7 @@ export function seedInvoiceShowcase(database: MockState.Database, ids: SeedIds):
     [11, 'ATACADO PREMIO', -22_760, cat.mercado],
     [13, 'LOJA DE ROUPAS MODA', -18_900, cat.compras],
     [14, 'SPOTIFY', -2190, cat.assinaturas],
-    [16, 'ACADEMIA FORMA', -11_900, cat.saude],
+    [16, 'ACADEMIA FORMA', -11_900, cat.esportes],
     [17, 'SHOW INGRESSOS ONLINE', -24_000, cat.lazer],
     // The refund of a purchase: the bank sends it as a credit on the card (an expense, positive).
     [5, 'ESTORNO LOJA ONLINE VAREJAO', 5990, cat.compras],

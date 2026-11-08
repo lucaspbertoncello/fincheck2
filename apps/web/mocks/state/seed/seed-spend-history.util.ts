@@ -17,7 +17,7 @@ const STORES: ReadonlyArray<readonly [string, CategoryKey, number, number, 'pix'
   ['LANCHES DO ZE', 'restaurantes', 2200, 6800, 'pix'],
   ['RESTAURANTE SABOR CASEIRO', 'restaurantes', 3800, 9500, 'debit'],
   ['APP TRANSPORTE', 'transporte', 1100, 4600, 'debit'],
-  ['POSTO RODOVIA', 'transporte', 8000, 21_000, 'debit'],
+  ['POSTO RODOVIA', 'combustivel', 8000, 21_000, 'debit'],
   ['FARMACIA SAUDE', 'saude', 1500, 14_000, 'debit'],
   ['CINEMA CENTRAL', 'lazer', 3200, 9000, 'pix'],
   ['LIVRARIA PAGINA UM', 'educacao', 3500, 12_000, 'pix'],

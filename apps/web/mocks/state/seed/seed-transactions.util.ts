@@ -156,7 +156,7 @@ export function seedTransactions(database: MockState.Database, ids: SeedIds): vo
     description: 'POSTO BR RODOVIA',
     amountCents: -17_000,
     occurredOn: cur(5),
-    categoryId: cat.transporte,
+    categoryId: cat.combustivel,
     categorySource: 'rule',
     categoryRuleId: rule.posto,
   });

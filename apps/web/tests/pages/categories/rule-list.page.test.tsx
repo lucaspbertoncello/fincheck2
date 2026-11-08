@@ -35,7 +35,7 @@ describe('RuleListPage', () => {
       'Sempre que a descrição contém IFOOD, em despesas, vai para Delivery com a tag delivery.',
     );
     expect(rowOf('IFOOD')).toHaveTextContent('Aplicada 2 vezes');
-    expect(rowOf('POSTO')).toHaveTextContent('vai para Transporte');
+    expect(rowOf('POSTO')).toHaveTextContent('vai para Combustível');
     expect(rowOf('POSTO')).toHaveTextContent('Aplicada 1 vez');
     expect(rowOf('FARMACIA')).toHaveTextContent(/Desativada.*Aplicada 0 vezes/);
     expect(rowOf('FARMACIA')).toHaveTextContent('vai para Saúde');
@@ -580,7 +580,7 @@ describe('RuleListPage', () => {
         'POSTO',
       );
       expect(within(dialog).getByRole('button', { name: 'Categoria da regra' })).toHaveTextContent(
-        'Transporte',
+        'Combustível',
       );
 
       await user.click(within(dialog).getByRole('button', { name: 'Tags da regra' }));
@@ -590,7 +590,7 @@ describe('RuleListPage', () => {
 
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
       await waitFor(() =>
-        expect(rowOf('POSTO')).toHaveTextContent('vai para Transporte com a tag trabalho'),
+        expect(rowOf('POSTO')).toHaveTextContent('vai para Combustível com a tag trabalho'),
       );
     });
 

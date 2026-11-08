@@ -4,7 +4,7 @@ import { toInstant } from '#mocks/support/dates/to-instant.util.ts';
 import { addDays } from '#mocks/support/dates/add-days.util.ts';
 import { TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 
-// Categories and tags: the defaults, one made by Lucas and one archived of each.
+// Categories and tags: the 25 defaults, plus two made by Lucas (one archived) and tags.
 export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
   const { cat } = ids;
   const archivedAt = toInstant(addDays(TODAY, -90));
@@ -43,6 +43,14 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       archivedAt: null,
     },
     {
+      id: cat.combustivel,
+      kind: 'expense',
+      name: 'Combustível',
+      icon: 'fuel',
+      isDefault: true,
+      archivedAt: null,
+    },
+    {
       id: cat.moradia,
       kind: 'expense',
       name: 'Moradia',
@@ -59,10 +67,34 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       archivedAt: null,
     },
     {
+      id: cat.cuidadosPessoais,
+      kind: 'expense',
+      name: 'Cuidados pessoais',
+      icon: 'care',
+      isDefault: true,
+      archivedAt: null,
+    },
+    {
+      id: cat.esportes,
+      kind: 'expense',
+      name: 'Esportes',
+      icon: 'gym',
+      isDefault: true,
+      archivedAt: null,
+    },
+    {
       id: cat.lazer,
       kind: 'expense',
       name: 'Lazer',
       icon: 'fun',
+      isDefault: true,
+      archivedAt: null,
+    },
+    {
+      id: cat.viagem,
+      kind: 'expense',
+      name: 'Viagem',
+      icon: 'plane',
       isDefault: true,
       archivedAt: null,
     },
@@ -91,20 +123,36 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       archivedAt: null,
     },
     {
+      id: cat.tecnologia,
+      kind: 'expense',
+      name: 'Tecnologia',
+      icon: 'phone',
+      isDefault: true,
+      archivedAt: null,
+    },
+    {
       id: cat.pets,
       kind: 'expense',
       name: 'Pets',
       icon: 'pet',
-      isDefault: false,
+      isDefault: true,
       archivedAt: null,
     },
     {
-      id: cat.viagensAntigas,
+      id: cat.presentes,
       kind: 'expense',
-      name: 'Viagem de 2025',
-      icon: 'plane',
-      isDefault: false,
-      archivedAt,
+      name: 'Presentes e doações',
+      icon: 'gift',
+      isDefault: true,
+      archivedAt: null,
+    },
+    {
+      id: cat.impostos,
+      kind: 'expense',
+      name: 'Impostos e taxas',
+      icon: 'receipt',
+      isDefault: true,
+      archivedAt: null,
     },
     {
       id: cat.outros,
@@ -131,18 +179,26 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       archivedAt: null,
     },
     {
-      id: cat.mesada,
-      kind: 'income',
-      name: 'Mesada',
-      icon: 'handmoney',
-      isDefault: false,
-      archivedAt: null,
-    },
-    {
       id: cat.beneficio,
       kind: 'income',
       name: 'Benefícios',
       icon: 'wallet',
+      isDefault: true,
+      archivedAt: null,
+    },
+    {
+      id: cat.rendimentos,
+      kind: 'income',
+      name: 'Rendimentos',
+      icon: 'trend',
+      isDefault: true,
+      archivedAt: null,
+    },
+    {
+      id: cat.vendas,
+      kind: 'income',
+      name: 'Vendas',
+      icon: 'handmoney',
       isDefault: true,
       archivedAt: null,
     },
@@ -152,6 +208,22 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Outras receitas',
       icon: 'dollar',
       isDefault: true,
+      archivedAt: null,
+    },
+    {
+      id: cat.viagensAntigas,
+      kind: 'expense',
+      name: 'Viagem de 2025',
+      icon: 'ticket',
+      isDefault: false,
+      archivedAt: archivedAt,
+    },
+    {
+      id: cat.mesada,
+      kind: 'income',
+      name: 'Mesada',
+      icon: 'handmoney',
+      isDefault: false,
       archivedAt: null,
     },
   );

@@ -256,11 +256,11 @@ describe('TransactionListPage', () => {
     // "Aplicar" waits for a category and says so.
     expect(within(dialog).getByRole('button', { name: 'Aplicar' })).toBeDisabled();
     expect(within(dialog).getByText('Escolha uma categoria.')).toBeInTheDocument();
-    await user.click(within(dialog).getByRole('button', { name: 'Transporte' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Lazer' }));
     await user.click(within(dialog).getByRole('button', { name: 'Aplicar' }));
 
     expect(
-      await screen.findByText(/2 transações foram para Transporte/, undefined, LONG_WAIT),
+      await screen.findByText(/2 transações foram para Lazer/, undefined, LONG_WAIT),
     ).toBeInTheDocument();
     // The selection mode ends and "Desfazer" puts the previous state back.
     expect(screen.getByRole('button', { name: 'Selecionar' })).toBeInTheDocument();

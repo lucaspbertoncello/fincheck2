@@ -31,8 +31,8 @@ describe('CategoryListPage', () => {
     expect(within(table).getByText('Delivery')).toBeInTheDocument();
     expect(within(table).getByText('Mercado')).toBeInTheDocument();
     expect(within(table).queryByText('Viagem de 2025')).not.toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: /Despesas 12/ })).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: /Receitas 5/ })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Despesas 19/ })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Receitas 7/ })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: /Arquivadas 1/ })).toBeInTheDocument();
 
     expect(screen.getByRole('radio', { name: /Tags 3/ })).toBeInTheDocument();
@@ -124,7 +124,7 @@ describe('CategoryListPage', () => {
       await screen.findByText('Delivery arquivada. Sai da escolha de categoria.'),
     ).toBeInTheDocument();
     await waitFor(() => expect(within(table).queryByText('Delivery')).not.toBeInTheDocument());
-    expect(screen.getByRole('radio', { name: /Despesas 11/ })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Despesas 18/ })).toBeInTheDocument();
 
     fireEvent.click(await screen.findByText('Desfazer'));
     await waitFor(() => expect(within(table).getByText('Delivery')).toBeInTheDocument());

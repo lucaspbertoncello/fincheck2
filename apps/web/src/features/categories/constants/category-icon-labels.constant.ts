@@ -26,7 +26,7 @@ export const CATEGORY_ICON_LABELS: Record<Category.Icon, string> = {
   salary: 'Salário',
   coins: 'Moedas',
   dollar: 'Dinheiro',
-  handmoney: 'Mesada',
+  handmoney: 'Dinheiro recebido',
   trend: 'Investimento',
   wallet: 'Carteira',
   tag: 'Etiqueta',

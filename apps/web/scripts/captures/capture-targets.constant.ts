@@ -12,8 +12,8 @@ export type CaptureTarget = {
 // the Nubank card ("Roxinho") and the Bradesco one are always these two; the months are the ones of
 // the frozen date below (22/10/2026): Nubank open in 2026-11 (it closes on the 3rd), paid in 2026-10,
 // with nothing in 2026-04; Bradesco closed in 2026-10 (it closed on the 18th).
-const NUBANK_CARD = '0194f3a0-0000-7000-8000-000000000026';
-const BRADESCO_CARD = '0194f3a0-0000-7000-8000-000000000027';
+const NUBANK_CARD = '0194f3a0-0000-7000-8000-000000000035';
+const BRADESCO_CARD = '0194f3a0-0000-7000-8000-000000000036';
 
 export const SCREEN_TARGETS: CaptureTarget[] = [
   { name: 'overview', path: '/', kind: 'screen' },
