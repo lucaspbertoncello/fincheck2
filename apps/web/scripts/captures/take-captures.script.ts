@@ -78,7 +78,16 @@ async function capture(
 ): Promise<void> {
   await page.goto(`${origin}${target.path}`, { waitUntil: 'load' });
   await page.waitForFunction(() => !document.documentElement.hasAttribute('data-splash'));
-  if (target.kind === 'modal') await page.locator('[role="dialog"]').first().waitFor();
+  if (target.kind === 'modal') {
+    await page.locator('[role="dialog"]').first().waitFor();
+    // The modal slides/scales in and the Open Finance panel starts on a skeleton while the saved
+    // keys load: photograph only after the enter transition is over and no skeleton is left.
+    await page.waitForFunction(
+      () =>
+        document.querySelector('[data-entering], [data-exiting]') === null &&
+        document.querySelector('[role="dialog"] [class*="animate-pulse"]') === null,
+    );
+  }
   await page.waitForLoadState('networkidle');
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(SETTLE_MS);

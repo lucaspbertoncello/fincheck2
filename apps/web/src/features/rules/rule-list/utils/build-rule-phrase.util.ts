@@ -13,10 +13,11 @@ function buildConditionSegments(rule: Rule.Dto): RulePhraseSegment[] {
   if (rule.accountId) segments.push(', numa conta específica');
 
   const { amountMinCents: min, amountMaxCents: max } = rule;
+  const tone = rule.kind ?? undefined;
   if (min !== null && max !== null)
-    segments.push(', de ', { moneyCents: min }, ' a ', { moneyCents: max });
-  else if (min !== null) segments.push(', a partir de ', { moneyCents: min });
-  else if (max !== null) segments.push(', até ', { moneyCents: max });
+    segments.push(', de ', { moneyCents: min, tone }, ' a ', { moneyCents: max, tone });
+  else if (min !== null) segments.push(', a partir de ', { moneyCents: min, tone });
+  else if (max !== null) segments.push(', até ', { moneyCents: max, tone });
 
   return segments;
 }

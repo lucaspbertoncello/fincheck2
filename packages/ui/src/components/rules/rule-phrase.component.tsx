@@ -14,7 +14,13 @@ export function RulePhrase({ segments }: { segments: readonly RulePhraseSegment[
           ) : 'strong' in segment ? (
             <strong className="font-emphasis">{segment.strong}</strong>
           ) : (
-            <Money cents={segment.moneyCents} sign="none" weight="emphasis" currency="inline" />
+            <Money
+              cents={segment.moneyCents}
+              sign="none"
+              weight="emphasis"
+              currency="inline"
+              tone={segment.tone}
+            />
           )}
         </Fragment>
       ))}

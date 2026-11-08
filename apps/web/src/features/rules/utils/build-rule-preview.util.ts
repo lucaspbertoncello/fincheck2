@@ -19,6 +19,7 @@ export function buildRulePreview(source: PreviewSource): RulePreviewData {
       description: example.description,
       dateLabel: formatShortDate(example.occurredOn),
       cents: Math.abs(example.amountCents),
+      tone: example.amountCents < 0 ? ('expense' as const) : ('income' as const),
     })),
     moreCount: Math.max(0, source.willChangeCount - source.examples.length),
   };

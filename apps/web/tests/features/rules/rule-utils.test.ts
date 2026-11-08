@@ -160,7 +160,7 @@ describe('buildRulePreview', () => {
 
     expect(preview.title).toBe('Bate com 14 transações do histórico');
     expect(preview.matches).toEqual([
-      { id: 'x1', description: 'UBER *TRIP', dateLabel: '18/10', cents: 3140 },
+      { id: 'x1', description: 'UBER *TRIP', dateLabel: '18/10', cents: 3140, tone: 'expense' },
     ]);
     expect(preview.moreCount).toBe(13);
   });

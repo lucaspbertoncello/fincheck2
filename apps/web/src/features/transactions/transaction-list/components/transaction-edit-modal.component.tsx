@@ -122,7 +122,11 @@ export function TransactionEditModal({ editor }: TransactionEditModalProps) {
         />
       </FormModalSplit>
       {editor.original ? (
-        <OriginalFromBankNote original={editor.original} onRestore={editor.onRestoreOriginal} />
+        <OriginalFromBankNote
+          original={editor.original}
+          onRestore={editor.onRestoreOriginal}
+          tone={kindOf(values.nature, editor.direction)}
+        />
       ) : null}
       <FormModalMore
         defaultOpen={values.tags.length > 0}

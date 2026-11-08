@@ -1,4 +1,4 @@
-import { Banner, BannerSlot, ConfirmDialog, Section, TotalCard } from '@fincheck/ui';
+import { Banner, BannerSlot, ConfirmDialog, MetricCard, Money, Section } from '@fincheck/ui';
 
 import type { SubscriptionRowAction } from '#/features/recurrences/subscription-list/types/subscription-row-action.type.ts';
 import { Reveal } from '#/features/recurrences/subscription-list/components/reveal.component.tsx';
@@ -116,17 +116,17 @@ function ReadyContent({
       </BannerSlot>
 
       <div className="grid gap-s16 lg:grid-cols-2 lg:gap-s24">
-        <TotalCard
+        <MetricCard
+          icon="calendar"
           label="Por mês"
-          tone="expense"
-          totalCents={summary.monthlyTotalCents}
-          caption={countLabel(summary.activeCount)}
+          value={<Money cents={summary.monthlyTotalCents} sign="none" tone="expense" />}
+          lines={<span className="truncate">{countLabel(summary.activeCount)}</span>}
         />
-        <TotalCard
+        <MetricCard
+          icon="repeat"
           label="Por ano"
-          tone="expense"
-          totalCents={summary.yearlyTotalCents}
-          caption="O total do mês vezes 12"
+          value={<Money cents={summary.yearlyTotalCents} sign="none" tone="expense" />}
+          lines={<span className="truncate">O total do mês vezes 12</span>}
         />
       </div>
 

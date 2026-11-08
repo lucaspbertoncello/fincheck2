@@ -4,7 +4,8 @@ import type { IconName } from '#/components/icons/index.ts';
  * One piece of a rule sentence, already written by the caller: plain text, a token in bold
  * ("IFOOD", "Delivery") or an amount (shown by Money, in bold).
  */
-export type RulePhraseSegment = string | { strong: string } | { moneyCents: number };
+export type RulePhraseSegment =
+  string | { strong: string } | { moneyCents: number; tone?: 'income' | 'expense' };
 
 /** Data of a rule row. */
 export type RuleRowData = {

@@ -13,6 +13,8 @@ type BankDifferenceBoxProps = {
   note?: string;
   onRestoreOriginal: () => void;
   selectionMode?: boolean;
+  /** Flow of the transaction: money turns red (expense) or green (income), with its sign. */
+  tone?: 'income' | 'expense';
 };
 
 /** Edited transaction: "Banco" struck through against "Você", the reason and "Restaurar original". */
@@ -24,6 +26,7 @@ export function BankDifferenceBox({
   note,
   onRestoreOriginal,
   selectionMode,
+  tone,
 }: BankDifferenceBoxProps) {
   return (
     <TransactionDetailBox selectionMode={selectionMode}>
@@ -31,12 +34,12 @@ export function BankDifferenceBox({
         <dt className="text-meta text-fg-secondary">Banco</dt>
         <dd className="min-w-0 text-fg-secondary line-through">{bankName}</dd>
         <dd className="text-right text-fg-secondary line-through">
-          <Money cents={bankCents} sign="none" weight="plain" className="text-label" />
+          <Money cents={bankCents} sign="none" weight="plain" tone={tone} className="text-label" />
         </dd>
         <dt className="text-meta text-fg-secondary">Você</dt>
         <dd className="min-w-0 text-fg-primary">{yourName}</dd>
         <dd className="text-right text-fg-primary">
-          <Money cents={yourCents} sign="none" weight="plain" className="text-label" />
+          <Money cents={yourCents} sign="none" weight="plain" tone={tone} className="text-label" />
         </dd>
       </dl>
       <div className="mt-s12 flex flex-wrap items-center gap-x-s8 border-t border-line pt-s12">

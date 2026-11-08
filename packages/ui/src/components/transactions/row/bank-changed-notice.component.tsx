@@ -12,6 +12,8 @@ type BankChangedNoticeProps = {
   onKeepMine: () => void;
   onShowDifference: () => void;
   selectionMode?: boolean;
+  /** Flow of the transaction: money turns red (expense) or green (income), with its sign. */
+  tone?: 'income' | 'expense';
 };
 
 /** Amber box: the bank changed the amount after the user edited it; which one wins (BR-TRX-005). */
@@ -22,6 +24,7 @@ export function BankChangedNotice({
   onKeepMine,
   onShowDifference,
   selectionMode,
+  tone,
 }: BankChangedNoticeProps) {
   return (
     <TransactionDetailBox tone="warn" selectionMode={selectionMode}>
@@ -29,9 +32,10 @@ export function BankChangedNotice({
         <Icon name="warning" size="base" className="text-caution" />
         <span>
           O banco mudou o valor de{' '}
-          <Money cents={previousCents} sign="none" weight="plain" currency="inline" /> para{' '}
-          <Money cents={currentCents} sign="none" weight="plain" currency="inline" /> depois da sua
-          edição. Qual vale?
+          <Money cents={previousCents} sign="none" weight="plain" currency="inline" tone={tone} />{' '}
+          para{' '}
+          <Money cents={currentCents} sign="none" weight="plain" currency="inline" tone={tone} />{' '}
+          depois da sua edição. Qual vale?
         </span>
       </p>
       <div className="mt-s8 flex flex-col gap-s8 lg:flex-row lg:flex-wrap lg:items-center">

@@ -42,6 +42,7 @@ export function DayList({ days, selectionActive, selectedIds, handlers }: DayLis
                     detail={detail}
                     selectionMode={selectionActive}
                     handlers={handlers}
+                    tone={row.kind === 'transfer' ? undefined : row.kind}
                   />
                 ))}
               </TransactionRow>

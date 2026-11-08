@@ -85,7 +85,7 @@ export function InvoicePayments({
             >
               Salvar pagamento
             </Button>
-            <Button variant="secondary" size="sm" isDisabled={isBusy} onPress={onCancel}>
+            <Button variant="tertiary" size="sm" isDisabled={isBusy} onPress={onCancel}>
               Cancelar
             </Button>
           </div>

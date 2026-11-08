@@ -89,9 +89,9 @@ export function ReviewQueueCard({
               {choice.label}
             </ChoiceChip>
           ))}
-          <ChoiceChip ghost icon="search" selected={false} onChange={onOtherCategory}>
+          <Button variant="tertiary" size="sm" icon="search" onPress={onOtherCategory}>
             Outra
-          </ChoiceChip>
+          </Button>
         </div>
       </div>
       <TagEditor label="Tags" tags={tags} onChange={onTagsChange} />

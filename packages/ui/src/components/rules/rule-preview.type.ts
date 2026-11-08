@@ -4,6 +4,8 @@ export type RulePreviewMatch = {
   /** Already written: "18/10". */
   dateLabel: string;
   cents: number;
+  /** Flow of the transaction: money turns red (expense) or green (income), with its sign. */
+  tone?: 'income' | 'expense';
 };
 
 export type RulePreviewData = {

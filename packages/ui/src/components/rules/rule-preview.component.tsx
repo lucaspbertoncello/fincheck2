@@ -18,7 +18,13 @@ export function RulePreview({
           <li key={match.id} className="grid grid-cols-[1fr_auto_auto] items-baseline gap-x-s16">
             <span className="min-w-0 truncate text-fg-primary">{match.description}</span>
             <span className="text-fg-secondary tabular-nums">{match.dateLabel}</span>
-            <Money cents={match.cents} sign="none" weight="plain" className="justify-self-end" />
+            <Money
+              cents={match.cents}
+              sign="none"
+              weight="plain"
+              tone={match.tone}
+              className="justify-self-end"
+            />
           </li>
         ))}
       </ul>

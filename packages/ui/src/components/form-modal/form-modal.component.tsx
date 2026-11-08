@@ -120,7 +120,7 @@ function FormModalForm({
             ) : null}
             <div className="ml-auto flex items-center gap-s8 lg:order-3 lg:gap-s12">
               <Button
-                variant="secondary"
+                variant="tertiary"
                 isDisabled={isSubmitting}
                 onPress={() => onOpenChange(false)}
               >

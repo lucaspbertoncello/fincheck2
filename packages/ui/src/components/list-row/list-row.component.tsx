@@ -9,7 +9,11 @@ type ListRowProps = {
   mark: ReactNode;
   /** Plain-text name; one line, truncated with a `title` when it does not fit. */
   name: string;
-  /** Makes the name a real button (Enter and Space work), e.g. to open the item to edit. */
+  /**
+   * Makes the name a real button (Enter and Space work), e.g. to open the item to edit. The button
+   * stretches over the whole row, so the row is the target (hover and focus ring on the row); the
+   * menu and the action strip stay above it.
+   */
   onOpen?: () => void;
   /** Accessible name of that button ("Editar Internet Fibra"). */
   openLabel?: string;
@@ -84,6 +88,9 @@ export function ListRow({
       className={cx(
         'grid grid-cols-[auto_minmax(0,1fr)_auto_auto] gap-y-s4 py-s12',
         actions && !foldingStrip ? 'pb-s16' : undefined,
+        // The name button stretches over the whole row: hover and the focus ring draw on the row.
+        onOpen &&
+          'group/row relative rounded-input transition-colors duration-(--duration-fast) hover:bg-subtle has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-(--color-focus-ring)',
         className,
       )}
     >
@@ -104,7 +111,7 @@ export function ListRow({
             title={name}
             className={cx(
               nameClass,
-              'focus-ring -mx-s4 cursor-pointer rounded-input px-s4 text-left hover:underline',
+              '-mx-s4 cursor-pointer rounded-input px-s4 text-left outline-none group-hover/row:underline after:absolute after:inset-0 after:content-[""]',
             )}
           >
             {name}
@@ -143,18 +150,20 @@ export function ListRow({
         </div>
       ) : null}
       {menu ? (
-        <div className="col-start-4 row-start-1 ml-s12 -mr-s8 -mt-s8 self-start">{menu}</div>
+        <div className="relative col-start-4 row-start-1 ml-s12 -mr-s8 -mt-s8 self-start">
+          {menu}
+        </div>
       ) : null}
       {foldingStrip ? (
         <Collapse
           isOpen={actionsOpen}
-          trackClassName="col-start-1 row-start-3 -col-end-1 -mt-s4 lg:col-start-2"
+          trackClassName="relative col-start-1 row-start-3 -col-end-1 -mt-s4 lg:col-start-2"
           contentClassName="pt-s8 pb-s4"
         >
           <div className="flex flex-wrap items-center gap-s8">{actions}</div>
         </Collapse>
       ) : actions ? (
-        <div className="col-start-1 row-start-3 mt-s4 -col-end-1 flex flex-wrap items-center gap-s8 lg:col-start-2">
+        <div className="relative col-start-1 row-start-3 mt-s4 -col-end-1 flex flex-wrap items-center gap-s8 lg:col-start-2">
           {actions}
         </div>
       ) : null}

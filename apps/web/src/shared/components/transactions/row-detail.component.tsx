@@ -19,10 +19,18 @@ type RowDetailProps = {
   detail: RowDetailView;
   selectionMode: boolean;
   handlers: TransactionRowHandlers;
+  /** Flow of the transaction (not a transfer): colors the amounts of the boxes. */
+  tone?: 'income' | 'expense';
 };
 
 /** One box under a row: the bank's original, "banco mudou", "banco removeu" or the category suggestion. */
-export function RowDetail({ transactionId, detail, selectionMode, handlers }: RowDetailProps) {
+export function RowDetail({
+  transactionId,
+  detail,
+  selectionMode,
+  handlers,
+  tone,
+}: RowDetailProps) {
   const [showDifference, setShowDifference] = useState(false);
 
   if (detail.kind === 'edited') {
@@ -35,6 +43,7 @@ export function RowDetail({ transactionId, detail, selectionMode, handlers }: Ro
         note={detail.note}
         onRestoreOriginal={() => handlers.onRestoreOriginal(transactionId)}
         selectionMode={selectionMode}
+        tone={tone}
       />
     );
   }
@@ -86,6 +95,7 @@ export function RowDetail({ transactionId, detail, selectionMode, handlers }: Ro
         yourCents={detail.yourCents}
         onRestoreOriginal={() => handlers.onRestoreOriginal(transactionId)}
         selectionMode={selectionMode}
+        tone={tone}
       />
     </Collapse>
   );
@@ -100,6 +110,7 @@ export function RowDetail({ transactionId, detail, selectionMode, handlers }: Ro
           onKeepMine={() => handlers.onResolveBankChange(transactionId, 'mine')}
           onShowDifference={() => setShowDifference((current) => !current)}
           selectionMode={selectionMode}
+          tone={tone}
         />
         {difference}
       </>
