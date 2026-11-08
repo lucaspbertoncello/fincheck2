@@ -5,10 +5,10 @@ import { CategoryIcon, Icon } from '#/components/icons/index.ts';
 import { ICON_MARKUP } from '#/components/icons/icon-markup.constant.ts';
 
 describe('icon set', () => {
-  it('has the 75 icons of the vault, each with markup', () => {
+  it('has the 76 icons of the vault, each with markup', () => {
     const names = Object.keys(ICON_MARKUP);
 
-    expect(names).toHaveLength(75);
+    expect(names).toHaveLength(76);
     for (const name of names) {
       expect(ICON_MARKUP[name as keyof typeof ICON_MARKUP]).toMatch(/^</);
     }

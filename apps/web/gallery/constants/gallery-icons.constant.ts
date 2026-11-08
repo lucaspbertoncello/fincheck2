@@ -11,6 +11,7 @@ const ICON_SET = {
   'calendar-mark': true,
   car: true,
   card: true,
+  care: true,
   cart: true,
   chart: true,
   check: true,

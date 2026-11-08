@@ -9,6 +9,7 @@ export const CATEGORY_ICON_LABELS: Record<Category.Icon, string> = {
   fuel: 'Combustível',
   house: 'Casa',
   health: 'Saúde',
+  care: 'Cuidados pessoais',
   fun: 'Lazer',
   subs: 'Assinatura',
   phone: 'Telefone',

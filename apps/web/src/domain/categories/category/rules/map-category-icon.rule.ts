@@ -12,6 +12,7 @@ const ICON_BY_CATEGORY_ICON: Record<CategoryIconName, IconName> = {
   fuel: 'fuel',
   house: 'house',
   health: 'health',
+  care: 'care',
   fun: 'fun',
   subs: 'subscription',
   phone: 'phone',

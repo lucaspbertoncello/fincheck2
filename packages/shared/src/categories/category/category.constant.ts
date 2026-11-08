@@ -9,6 +9,7 @@ export const CATEGORY_ICONS = [
   'fuel',
   'house',
   'health',
+  'care',
   'fun',
   'subs',
   'phone',

@@ -186,7 +186,7 @@ describe('CategoryListPage', () => {
     await waitFor(() =>
       expect(within(dialog).getByRole('textbox', { name: 'Nome' })).toHaveFocus(),
     );
-    expect(within(dialog).getAllByRole('radio', { name: /^(?!Despesa|Receita)/ }).length).toBe(27);
+    expect(within(dialog).getAllByRole('radio', { name: /^(?!Despesa|Receita)/ }).length).toBe(28);
 
     await user.click(within(dialog).getByRole('radio', { name: 'Academia' }));
     expect(within(dialog).getByRole('radio', { name: 'Academia' })).toBeChecked();
