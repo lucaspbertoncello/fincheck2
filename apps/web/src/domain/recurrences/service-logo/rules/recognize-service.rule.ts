@@ -5,7 +5,7 @@ import { recognizeServiceSlug } from '#/domain/recurrences/service-logo/rules/re
 
 /**
  * The service a charge description points to, with its name and logo, or `null` when it names none
- * of the 26 or the one it names has no logo file. Same texts as `recognizeServiceSlug`.
+ * of the 25 or the one it names has no logo file. Same texts as `recognizeServiceSlug`.
  */
 export function recognizeService(
   ...texts: readonly (string | null | undefined)[]

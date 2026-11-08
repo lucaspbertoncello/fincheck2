@@ -20,15 +20,14 @@ const CASES = [
   ['GLOBOPLAY', 'Globoplay', null],
   ['PARAMOUNT+', 'Paramount+', 'paramountplus'],
   ['CRUNCHYROLL', 'Crunchyroll', 'crunchyroll'],
-  ['STAR+ MENSAL', 'Star+', null],
   ['SPOTIFY', 'Spotify', 'spotify'],
   ['Spotify AB', 'Spotify', 'spotify'],
   ['APPLE MUSIC', 'Apple Music', 'applemusic'],
   ['DEEZER BRASIL', 'Deezer', 'deezer'],
   ['AMAZON MUSIC UNLIMITED', 'Amazon Music', null],
   ['TIDAL', 'Tidal', 'tidal'],
-  ['OPENAI *CHATGPT SUBSCR', 'ChatGPT', null],
-  ['CHATGPT PLUS', 'ChatGPT', null],
+  ['OPENAI *CHATGPT SUBSCR', 'ChatGPT', 'chatgpt'],
+  ['CHATGPT PLUS', 'ChatGPT', 'chatgpt'],
   ['CLAUDE.AI SUBSCRIPTION', 'Claude', 'claude'],
   ['ANTHROPIC', 'Claude', 'claude'],
   ['GOOGLE *GEMINI ADVANCED', 'Gemini', 'googlegemini'],
@@ -36,11 +35,11 @@ const CASES = [
   ['Z.AI GLM CODING PLAN', 'GLM', 'zdotai'],
   ['ZHIPU AI', 'GLM', 'zdotai'],
   ['PERPLEXITY AI', 'Perplexity', 'perplexity'],
-  ['GROK SUPER', 'Grok', null],
-  ['XAI CORP', 'Grok', null],
+  ['GROK SUPER', 'Grok', 'grok'],
+  ['XAI CORP', 'Grok', 'grok'],
   ['MISTRAL AI', 'Mistral', 'mistralai'],
   ['GITHUB COPILOT', 'GitHub Copilot', 'githubcopilot'],
-  ['MIDJOURNEY INC', 'Midjourney', null],
+  ['MIDJOURNEY INC', 'Midjourney', 'midjourney'],
 ] as const;
 
 describe('recognizeService', () => {
@@ -48,15 +47,15 @@ describe('recognizeService', () => {
     expect(recognizeService(text)).toEqual(slug ? { name, slug } : null);
   });
 
-  it('has a case for each of the 26 services', () => {
-    expect(new Set(CASES.map(([, name]) => name)).size).toBe(26);
-    expect(SERVICE_PATTERNS).toHaveLength(26);
+  it('has a case for each of the 25 services', () => {
+    expect(new Set(CASES.map(([, name]) => name)).size).toBe(25);
+    expect(SERVICE_PATTERNS).toHaveLength(25);
   });
 
-  it('gives 18 services a logo file and 8 only the initial', () => {
+  it('gives 21 services a logo file and 4 the category icon', () => {
     const logos = Object.values(SERVICE_LOGO_SLUGS);
-    expect(logos.filter((logo) => logo !== null)).toHaveLength(18);
-    expect(logos.filter((logo) => logo === null)).toHaveLength(8);
+    expect(logos.filter((logo) => logo !== null)).toHaveLength(21);
+    expect(logos.filter((logo) => logo === null)).toHaveLength(4);
   });
 
   it('points every service to a logo that exists, and every logo to a service', () => {

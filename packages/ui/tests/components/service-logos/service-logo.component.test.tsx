@@ -6,8 +6,8 @@ import { ServiceLogo, SERVICE_LOGO_ART } from '#/components/service-logos/index.
 const SLUGS = Object.keys(SERVICE_LOGO_ART) as (keyof typeof SERVICE_LOGO_ART)[];
 
 describe('ServiceLogo', () => {
-  it('has the 18 logos of Simple Icons, each one path on the 24 box with an official color', () => {
-    expect(SLUGS).toHaveLength(18);
+  it('has the 21 logos, each one path on the 24 box with an official color', () => {
+    expect(SLUGS).toHaveLength(21);
     for (const slug of SLUGS) {
       expect(SERVICE_LOGO_ART[slug].path).toMatch(/^[Mm]/);
       expect(SERVICE_LOGO_ART[slug].hex).toMatch(/^[0-9A-F]{6}$/);
@@ -17,7 +17,16 @@ describe('ServiceLogo', () => {
   it('takes the text color when the brand color is near black, so it holds in both themes', () => {
     const inked = SLUGS.filter((slug) => SERVICE_LOGO_ART[slug].ink);
 
-    expect(inked.sort()).toEqual(['appletv', 'githubcopilot', 'hbomax', 'tidal', 'zdotai']);
+    expect(inked.sort()).toEqual([
+      'appletv',
+      'chatgpt',
+      'githubcopilot',
+      'grok',
+      'hbomax',
+      'midjourney',
+      'tidal',
+      'zdotai',
+    ]);
   });
 
   it('draws the symbol in the official color over the subtle circle', () => {
@@ -37,6 +46,11 @@ describe('ServiceLogo', () => {
 
     expect(html).toContain('text-fg-primary');
     expect(html).not.toContain('color:#');
+  });
+
+  it('draws the even-odd marks with their holes', () => {
+    expect(renderToStaticMarkup(<ServiceLogo slug="grok" />)).toContain('fill-rule="evenodd"');
+    expect(renderToStaticMarkup(<ServiceLogo slug="netflix" />)).not.toContain('fill-rule');
   });
 
   it('gives every logo the same circle and the same share of it', () => {

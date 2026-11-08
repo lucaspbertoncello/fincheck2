@@ -10,7 +10,7 @@ type ServicePattern = {
 };
 
 /**
- * What each of the 26 services of BR-REC-017 looks like in a description, in the order the first
+ * What each of the 25 services of BR-REC-017 looks like in a description, in the order the first
  * match wins: the narrower name comes before the wider one (YouTube Music and Amazon Music before
  * YouTube Premium and Prime Video). The names come from `SUBSCRIPTION_SERVICES`.
  */
@@ -26,7 +26,6 @@ export const SERVICE_PATTERNS: readonly ServicePattern[] = [
   { slug: 'globoplay', patterns: [/\bGLOBO ?PLAY\b/] },
   { slug: 'paramountplus', patterns: [/\bPARAMOUNT\b/] },
   { slug: 'crunchyroll', patterns: [/\bCRUNCHY ?ROLL\b/] },
-  { slug: 'starplus', patterns: [/\bSTAR ?PLUS\b/] },
   { slug: 'spotify', patterns: [/\bSPOTIFY\b/] },
   { slug: 'applemusic', patterns: [/\bAPPLE ?MUSIC\b/] },
   { slug: 'deezer', patterns: [/\bDEEZER\b/] },

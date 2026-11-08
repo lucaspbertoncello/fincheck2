@@ -9,11 +9,20 @@ import { OTHER_SERVICE } from '#/features/recurrences/recurrence-form/constants/
 const MARK_CLASS = 'size-8! lg:size-8!';
 
 /**
- * The options of the Serviço field: the 26 services in screen order, each with its logo (none when
- * the design system has no file for it, never an initial), then "Outro" with a neutral icon, the
- * one of the chosen category when there is one.
+ * The options of the Serviço field: the 25 services in screen order, each with its logo, then
+ * "Outro". A service with no logo file and "Outro" show the icon of the chosen category in the same
+ * circle (never an initial), as the rows of the lists do, so every name starts at the same place.
  */
-export function buildServiceOptions(otherIcon: IconName = 'tag'): ChoiceOption[] {
+export function buildServiceOptions(categoryIcon: IconName = 'tag'): ChoiceOption[] {
+  const categoryMark = (
+    <span
+      aria-hidden="true"
+      className="inline-grid size-8 shrink-0 place-items-center rounded-capsule bg-subtle text-fg-secondary"
+    >
+      <Icon name={categoryIcon} size="sm" />
+    </span>
+  );
+
   return [
     ...SUBSCRIPTION_SERVICES.map((service): ChoiceOption => {
       const logo = SERVICE_LOGO_SLUGS[service.slug];
@@ -21,20 +30,9 @@ export function buildServiceOptions(otherIcon: IconName = 'tag'): ChoiceOption[]
       return {
         key: service.slug,
         label: service.name,
-        leading: logo ? <ServiceLogo slug={logo} className={MARK_CLASS} /> : undefined,
+        leading: logo ? <ServiceLogo slug={logo} className={MARK_CLASS} /> : categoryMark,
       };
     }),
-    {
-      key: OTHER_SERVICE,
-      label: 'Outro',
-      leading: (
-        <span
-          aria-hidden="true"
-          className="inline-grid size-8 shrink-0 place-items-center rounded-capsule bg-subtle text-fg-secondary"
-        >
-          <Icon name={otherIcon} size="sm" />
-        </span>
-      ),
-    },
+    { key: OTHER_SERVICE, label: 'Outro', leading: categoryMark },
   ];
 }

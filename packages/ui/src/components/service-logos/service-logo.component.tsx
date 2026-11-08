@@ -40,7 +40,7 @@ export function ServiceLogo({ slug, className }: ServiceLogoProps) {
         fill="currentColor"
         style={{ width: SYMBOL_SHARE, height: SYMBOL_SHARE }}
       >
-        <path d={art.path} />
+        <path d={art.path} fillRule={'evenOdd' in art && art.evenOdd ? 'evenodd' : undefined} />
       </svg>
     </span>
   );

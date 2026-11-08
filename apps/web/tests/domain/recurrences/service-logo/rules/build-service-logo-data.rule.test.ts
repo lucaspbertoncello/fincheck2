@@ -13,6 +13,6 @@ describe('buildServiceLogoData', () => {
 
   it('gives null to a service the design system has no logo for', () => {
     expect(buildServiceLogoData('disneyplus')).toBeNull();
-    expect(buildServiceLogoData('midjourney')).toBeNull();
+    expect(buildServiceLogoData('primevideo')).toBeNull();
   });
 });

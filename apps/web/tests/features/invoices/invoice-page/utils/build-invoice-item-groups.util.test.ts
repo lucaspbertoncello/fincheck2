@@ -89,7 +89,7 @@ describe('buildInvoiceItemGroups', () => {
     const groups = buildInvoiceItemGroups(
       [
         purchase('NETFLIX.COM', '2026-10-21', -5590),
-        purchase('OPENAI *CHATGPT SUBSCR', '2026-10-21', -10_000),
+        purchase('DISNEY+ ASSINATURA', '2026-10-21', -10_000),
         {
           type: 'expected_recurrence',
           occurrenceId: ID,
@@ -104,10 +104,10 @@ describe('buildInvoiceItemGroups', () => {
     );
     const marks = groups.flatMap((group) => group.rows.map((row) => [row.title, row.mark]));
 
-    // ChatGPT has no logo file: the line keeps its category icon, never an initial.
+    // Disney+ has no logo file: the line keeps its category icon, never an initial.
     expect(marks).toMatchObject([
       ['NETFLIX.COM', { kind: 'subscription', service: { name: 'Netflix', slug: 'netflix' } }],
-      ['OPENAI *CHATGPT SUBSCR', { kind: 'category', type: 'expense' }],
+      ['DISNEY+ ASSINATURA', { kind: 'category', type: 'expense' }],
       ['Spotify', { kind: 'subscription', service: { name: 'Spotify', slug: 'spotify' } }],
     ]);
   });

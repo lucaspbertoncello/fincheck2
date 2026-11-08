@@ -2,7 +2,7 @@ import type { SubscriptionService } from '@fincheck/shared/recurrences/subscript
 import type { ServiceLogoSlug } from '@fincheck/ui';
 
 /**
- * The logo file each subscription service draws (Simple Icons), or `null` when the design system has
+ * The logo file each subscription service draws, or `null` when the design system has
  * none yet: the row then shows its category icon.
  */
 export const SERVICE_LOGO_SLUGS: Record<SubscriptionService.Slug, ServiceLogoSlug | null> = {
@@ -15,21 +15,20 @@ export const SERVICE_LOGO_SLUGS: Record<SubscriptionService.Slug, ServiceLogoSlu
   globoplay: null,
   paramountplus: 'paramountplus',
   crunchyroll: 'crunchyroll',
-  starplus: null,
   spotify: 'spotify',
   youtubemusic: 'youtubemusic',
   applemusic: 'applemusic',
   deezer: 'deezer',
   amazonmusic: null,
   tidal: 'tidal',
-  chatgpt: null,
+  chatgpt: 'chatgpt',
   claude: 'claude',
   googlegemini: 'googlegemini',
   deepseek: 'deepseek',
   zdotai: 'zdotai',
   perplexity: 'perplexity',
-  grok: null,
+  grok: 'grok',
   mistralai: 'mistralai',
   githubcopilot: 'githubcopilot',
-  midjourney: null,
+  midjourney: 'midjourney',
 };

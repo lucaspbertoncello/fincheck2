@@ -5,7 +5,7 @@ import { normalizeServiceText } from '#/domain/recurrences/service-logo/rules/no
 
 /**
  * The subscription service a charge description points to ("NETFLIX.COM", "GOOGLE *YOUTUBEPREMIUM",
- * "OPENAI *CHATGPT"), or `null` when it names none of the 26. Give every text that may name it (the
+ * "OPENAI *CHATGPT"), or `null` when it names none of the 25. Give every text that may name it (the
  * name of the recurrence, then the text it matches); the first one that is recognized wins.
  */
 export function recognizeServiceSlug(
