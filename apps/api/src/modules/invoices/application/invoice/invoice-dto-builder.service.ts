@@ -8,6 +8,7 @@ import type { CardInvoiceTransactionReader } from '#/modules/invoices/applicatio
 import { computeCategoryBreakdown } from '#/modules/invoices/application/invoice/compute-category-breakdown.util.ts';
 import { computeInvoiceHighlights } from '#/modules/invoices/application/invoice/compute-invoice-highlights.util.ts';
 import type { RecurrenceExpectationReader } from '#/modules/invoices/application/invoice/recurrence-expectation-reader.interface.ts';
+import type { LinkedTransactionReader } from '#/modules/invoices/application/invoice-payment/linked-transaction-reader.interface.ts';
 import { computeSettledAmount } from '#/modules/invoices/application/invoice-payment/compute-settled-amount.util.ts';
 import type { InvoicePaymentCandidateReader } from '#/modules/invoices/application/invoice-payment/invoice-payment-candidate-reader.interface.ts';
 import type { PaymentTransactionReader } from '#/modules/invoices/application/invoice-payment/payment-transaction-reader.interface.ts';
@@ -40,6 +41,7 @@ export class InvoiceDtoBuilder {
   private readonly expectations: RecurrenceExpectationReader | undefined;
   private readonly calendar: BusinessCalendar;
   private readonly clock: Clock;
+  private readonly linkedElsewhere: LinkedTransactionReader | undefined;
 
   constructor(
     invoices: InvoiceRepository<Kysely<Database>>,
@@ -49,6 +51,7 @@ export class InvoiceDtoBuilder {
     expectations: RecurrenceExpectationReader | undefined,
     calendar: BusinessCalendar,
     clock: Clock,
+    linkedElsewhere?: LinkedTransactionReader,
   ) {
     this.invoices = invoices;
     this.cardTransactions = cardTransactions;
@@ -57,6 +60,7 @@ export class InvoiceDtoBuilder {
     this.expectations = expectations;
     this.calendar = calendar;
     this.clock = clock;
+    this.linkedElsewhere = linkedElsewhere;
   }
 
   // The invoice of the month that is open today for this card: the one a purchase of today falls in.
@@ -133,6 +137,7 @@ export class InvoiceDtoBuilder {
       this.expectedByMonth(
         card.id,
         months.filter((month) => phaseOf(month) !== 'past'),
+        (date) => cycle.monthFor(date),
         executor,
       ),
     ]);
@@ -237,11 +242,12 @@ export class InvoiceDtoBuilder {
   private async expectedByMonth(
     accountId: string,
     months: Month[],
+    invoiceMonthOf: (date: BusinessDate) => Month,
     executor?: Kysely<Database>,
   ): Promise<Map<string, RecurrenceExpectationReader.Expectation[]>> {
     if (!this.expectations || months.length === 0) return new Map();
 
-    return this.expectations.expectationsOf(accountId, months, executor);
+    return this.expectations.expectationsOf({ accountId, months, invoiceMonthOf }, executor);
   }
 
   // The "Pagamento encontrado": the debits the detectors marked, minus the ones already tied to an
@@ -262,10 +268,12 @@ export class InvoiceDtoBuilder {
       },
       executor,
     );
-    const linked = await this.invoices.findLinkedTransactionIds(
-      found.debits.map((debit) => debit.transactionId),
-      executor,
-    );
+    const debitIds = found.debits.map((debit) => debit.transactionId);
+    const linked = await this.invoices.findLinkedTransactionIds(debitIds, executor);
+    // A debit that already settles an occurrence or a bill is not the payment of the invoice.
+    const linkedElsewhere =
+      (await this.linkedElsewhere?.findLinkedTransactionIds(debitIds, executor)) ??
+      new Set<string>();
     const toDomain = (candidate: InvoicePaymentCandidateReader.Candidate): PaymentCandidate => ({
       transactionId: candidate.transactionId,
       accountId: candidate.accountId,
@@ -280,7 +288,11 @@ export class InvoiceDtoBuilder {
       lacking: statement.unpaid(),
       closesOn,
       dueOn,
-      excludedTransactionIds: new Set([...linked, ...(row?.dismissedTransactionIds ?? [])]),
+      excludedTransactionIds: new Set([
+        ...linked,
+        ...linkedElsewhere,
+        ...(row?.dismissedTransactionIds ?? []),
+      ]),
     });
   }
 }

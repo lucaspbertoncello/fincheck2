@@ -12,20 +12,26 @@ export class BusinessCalendar {
     return isBusinessDay(date.value);
   }
 
-  // The nth business day of a month (the 5th business day of November 2026 is 09/11).
+  // The nth business day of a month (the 5th business day of November 2026 is 09/11). A month that
+  // has fewer than n (the 23rd of February) takes its last business day, the way a day 31 takes
+  // the end of a short month.
   nthBusinessDay(month: Month, n: number): BusinessDate {
     if (!Number.isInteger(n) || n < 1) throw new RangeError('n must be an integer >= 1');
 
     let current = month.firstDay();
     const last = month.lastDay();
     let count = 0;
+    let lastBusinessDay = current;
     while (!last.isBefore(current)) {
-      if (this.isBusinessDay(current)) count++;
-      if (count === n) return current;
+      if (this.isBusinessDay(current)) {
+        count++;
+        lastBusinessDay = current;
+        if (count === n) return current;
+      }
       current = current.addDays(1);
     }
 
-    throw new RangeError(`${month.value} has fewer than ${String(n)} business days`);
+    return lastBusinessDay;
   }
 
   // The date itself when it is a business day; otherwise the first business day after it. Crosses

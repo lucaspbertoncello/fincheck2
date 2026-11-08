@@ -60,7 +60,10 @@ export class GetReviewQueueQuery {
       ? await this.recurrences.candidatesFor(
           built.map(({ dto }) => ({
             transactionId: dto.id,
-            text: normalizeText(`${dto.bank?.counterparty ?? ''} ${dto.description}`),
+            occurredOn: dto.occurredOn,
+            text: normalizeText(
+              `${dto.bank?.counterparty ?? ''} ${dto.bank?.description ?? ''} ${dto.description}`,
+            ),
             amountCents: Math.abs(dto.amountCents),
             kind: dto.amountCents > 0 ? 'income' : 'expense',
           })),

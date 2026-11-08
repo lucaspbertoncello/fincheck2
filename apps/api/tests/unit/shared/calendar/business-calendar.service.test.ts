@@ -66,10 +66,19 @@ describe('BusinessCalendar', () => {
       expect(calendar.nthBusinessDay(Month.of('2026-10'), 5).value).toBe('2026-10-07');
     });
 
-    it('stops at the last business day of the month (November 2026 has 19)', () => {
+    it('takes the last business day when the month has fewer than n (November 2026 has 19)', () => {
       // 21 weekdays minus Finados (02/11) and Consciência Negra (20/11).
       expect(calendar.nthBusinessDay(Month.of('2026-11'), 19).value).toBe('2026-11-30');
-      expect(() => calendar.nthBusinessDay(Month.of('2026-11'), 20)).toThrow(RangeError);
+      expect(calendar.nthBusinessDay(Month.of('2026-11'), 20).value).toBe('2026-11-30');
+      expect(calendar.nthBusinessDay(Month.of('2026-11'), 23).value).toBe('2026-11-30');
+    });
+
+    it('takes the last business day of February 2026 for the 23rd (Carnival leaves it 18)', () => {
+      expect(calendar.nthBusinessDay(Month.of('2026-02'), 23).value).toBe('2026-02-27');
+    });
+
+    it('ends on a business day that is not the last day of the month (May 2026 ends on a Sunday)', () => {
+      expect(calendar.nthBusinessDay(Month.of('2026-05'), 23).value).toBe('2026-05-29');
     });
 
     it('refuses n below one', () => {

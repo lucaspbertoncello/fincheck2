@@ -12,6 +12,7 @@ import { TransactionCategoryKindMismatchError } from '#/modules/transactions/dom
 import { TransactionCategoryNotAllowedError } from '#/modules/transactions/domain/transaction/transaction-category-not-allowed.error.ts';
 import { TransactionIsInstallmentError } from '#/modules/transactions/domain/transaction/transaction-is-installment.error.ts';
 import { TransactionIsSplitError } from '#/modules/transactions/domain/transaction/transaction-is-split.error.ts';
+import { TransactionLinkedToOccurrenceError } from '#/modules/transactions/domain/transaction/transaction-linked-to-occurrence.error.ts';
 import { TransactionMethodAccountMismatchError } from '#/modules/transactions/domain/transaction/transaction-method-account-mismatch.error.ts';
 import { TransactionNatureLockedError } from '#/modules/transactions/domain/transaction/transaction-nature-locked.error.ts';
 import { TransactionNatureSignMismatchError } from '#/modules/transactions/domain/transaction/transaction-nature-sign-mismatch.error.ts';
@@ -218,7 +219,11 @@ export class Transaction {
   static linkTransfer(
     first: Transaction,
     second: Transaction,
-    options: { secondHasInvoiceLink: boolean; secondIsCardAccount: boolean },
+    options: {
+      secondHasInvoiceLink: boolean;
+      secondHasOccurrenceLink?: boolean;
+      secondIsCardAccount: boolean;
+    },
     now: string,
   ): void {
     if (first.id === second.id || first.accountId === second.accountId) {
@@ -239,6 +244,7 @@ export class Transaction {
         'transfer',
         {
           hasActiveInvoiceLink: options.secondHasInvoiceLink,
+          hasActiveOccurrenceLink: options.secondHasOccurrenceLink ?? false,
           isCardAccount: options.secondIsCardAccount,
         },
         now,
@@ -336,7 +342,12 @@ export class Transaction {
   // paid invoice) keep it. A transfer has no category; leaving a transfer cuts the link.
   changeNature(
     nature: 'expense' | 'income' | 'transfer',
-    options: { hasActiveInvoiceLink: boolean; isCardAccount: boolean },
+    options: {
+      hasActiveInvoiceLink: boolean;
+      // It settles an occurrence of a recurrence: the nature is what makes it count there.
+      hasActiveOccurrenceLink?: boolean;
+      isCardAccount: boolean;
+    },
     now: string,
   ): void {
     if (this.isSplit()) throw new TransactionIsSplitError();
@@ -347,6 +358,11 @@ export class Transaction {
       (this.nature === 'invoice_payment' && options.hasActiveInvoiceLink)
     ) {
       throw new TransactionNatureLockedError();
+    }
+    // A transaction tied to an occurrence only counts there as an income or an expense: turning it
+    // into another nature would leave it settling money it no longer is. Undo the link first.
+    if (options.hasActiveOccurrenceLink && nature !== this.nature) {
+      throw new TransactionLinkedToOccurrenceError();
     }
     // Credit on a card is a refund, an expense with a positive value: it is never income.
     if (nature === 'income' && nature !== this.nature && options.isCardAccount) {
@@ -438,6 +454,22 @@ export class Transaction {
     this.categorySource = 'user';
     this.categoryRuleId = null;
     this.updatedAt = now;
+  }
+
+  // The transaction settles an occurrence of a recurrence that has a category (RF-REC-004): when this
+  // one has none, it takes it, with the origin `recurrence`. Never replaces a category that is
+  // already there, whoever put it, and never touches a split transaction, one outside expense and
+  // income, one of the other kind, or an archived category. Answers whether it took it.
+  applyRecurrenceCategory(category: Transaction.CategoryRef, now: string): boolean {
+    if (this.categoryId !== null || this.isSplit() || !this.hasCountedNature()) return false;
+    if (category.isArchived || category.kind !== this.nature) return false;
+
+    this.categoryId = category.id;
+    this.categorySource = 'recurrence';
+    this.categoryRuleId = null;
+    this.updatedAt = now;
+
+    return true;
   }
 
   // Why a bulk categorization skips this transaction, as the reason of the skip; null when the

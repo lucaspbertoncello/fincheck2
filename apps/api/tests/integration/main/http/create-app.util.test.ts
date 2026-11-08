@@ -1,5 +1,7 @@
 import { deletionImpactDtoSchema } from '@fincheck/shared/accounts/deletion-impact/deletion-impact.schema.ts';
 import { apiErrorSchema } from '@fincheck/shared/common/api-error/api-error.schema.ts';
+import { invoiceDetailDtoSchema } from '@fincheck/shared/invoices/invoice/invoice.schema.ts';
+import { listSubscriptionsResponseSchema } from '@fincheck/shared/recurrences/subscription/subscription.schema.ts';
 import { reviewQueueDtoSchema } from '@fincheck/shared/transactions/review-queue/review-queue.schema.ts';
 import { transactionDtoSchema } from '@fincheck/shared/transactions/transaction/transaction.schema.ts';
 import {
@@ -14,7 +16,10 @@ import { createTestApp } from '#tests/support/app/create-test-app.util.ts';
 import { insertTestCategory } from '#tests/support/categories/category/insert-test-category.util.ts';
 import { insertTestTag } from '#tests/support/categories/tag/insert-test-tag.util.ts';
 import { createTestDatabase } from '#tests/support/database/create-test-database.util.ts';
+import { createRecurrenceTestWorld } from '#tests/support/recurrences/recurrence/create-recurrence-test-world.util.ts';
 import { createFixedClock } from '#tests/support/shared/clock/create-fixed-clock.util.ts';
+import { insertTestExpense } from '#tests/support/transactions/transaction/insert-test-expense.util.ts';
+import { insertTestIncome } from '#tests/support/transactions/transaction/insert-test-income.util.ts';
 
 const NOW = '2026-11-06T15:00:00.000Z';
 
@@ -362,5 +367,153 @@ describe('createApp wires invoices into transactions and accounts', () => {
     const locked = await send('PATCH', `/transactions/${debit.id}`, { nature: 'expense' });
     expect(locked.status).toBe(422);
     expect(apiErrorSchema.parse(await locked.json()).code).toBe('TRANSACTION_NATURE_LOCKED');
+  });
+});
+
+// The same, for `recurrences`: the app `main` builds, not the test app of one module. Each test
+// needs one reader or route that `createApp` has to plug in, and fails if it is left out: the link
+// of an occurrence on the transaction (`links`), the candidates of the review queue
+// (`recurrenceCandidates`), the expected recurrences of an invoice (`expectations`), the routes of
+// the subscriptions and the category that the link puts on the transaction.
+describe('createApp wires recurrences into transactions and invoices', () => {
+  let world: Awaited<ReturnType<typeof createRecurrenceTestWorld>>;
+
+  beforeEach(async () => {
+    world = await createRecurrenceTestWorld();
+  });
+
+  afterEach(async () => {
+    await world.database.destroy();
+  });
+
+  it('creates a recurrence, ties a transaction to its occurrence and shows the link on the transaction', async () => {
+    const { occurrence } = await world.create({ name: 'Academia' });
+    const expense = await insertTestExpense(world.database.db, world.checking, {
+      cents: 10990,
+      on: '2026-10-10',
+      description: 'Academia Smart',
+    });
+
+    const linked = await world.send('POST', `/occurrences/${occurrence?.id}/payments`, {
+      transactionId: expense,
+    });
+    const dto = await world.occurrenceOf(linked, 201);
+    expect(dto).toMatchObject({ status: 'confirmed', receivedCents: 10990 });
+
+    const after = transactionDtoSchema.parse(
+      await (await world.send('GET', `/transactions/${expense}`)).json(),
+    );
+    expect(after.links.occurrence).toEqual({
+      occurrenceId: occurrence?.id,
+      recurrenceName: 'Academia',
+    });
+  });
+
+  it('puts the category of the recurrence on the transaction it settles (the use case of transactions is plugged)', async () => {
+    const categoryId = await insertTestCategory(world.database.db, { name: 'Saúde teste' });
+    const { occurrence } = await world.create({ categoryId });
+    const expense = await insertTestExpense(world.database.db, world.checking, {
+      cents: 10990,
+      on: '2026-10-10',
+    });
+
+    await world.send('POST', `/occurrences/${occurrence?.id}/payments`, { transactionId: expense });
+
+    const after = transactionDtoSchema.parse(
+      await (await world.send('GET', `/transactions/${expense}`)).json(),
+    );
+    expect(after).toMatchObject({ categoryId, categorySource: 'recurrence' });
+  });
+
+  it('answers GET /subscriptions: 200, not 404', async () => {
+    await world.create({ name: 'Netflix', isSubscription: true, serviceSlug: 'netflix' });
+
+    const response = await world.send('GET', '/subscriptions');
+
+    expect(response.status).toBe(200);
+    expect(listSubscriptionsResponseSchema.parse(await response.json())).toMatchObject({
+      summary: { activeCount: 1, monthlyTotalCents: 10990, yearlyTotalCents: 131880 },
+    });
+  });
+
+  it('puts the expected recurrence of a card in its invoice (the expectations reader)', async () => {
+    await world.create({
+      name: 'Netflix',
+      accountId: world.card,
+      method: 'credit',
+      expectedAmountCents: 5590,
+      dateRule: { type: 'fixed_day', day: 21 },
+    });
+
+    // 22/10 is after the closing of the 5th, so `2026-11` is the open invoice, and the 21st of
+    // October (the occurrence of this month) falls in it.
+    const response = await world.send('GET', `/cards/${world.card}/invoices/2026-11`);
+
+    expect(response.status).toBe(200);
+    const invoice = invoiceDetailDtoSchema.parse(await response.json());
+    expect(invoice.breakdown.expectedRecurringCents).toBe(5590);
+    expect(invoice.items).toContainEqual(
+      expect.objectContaining({ type: 'expected_recurrence', recurrenceName: 'Netflix' }),
+    );
+  });
+
+  it('offers the occurrences a transaction in review could settle (the candidates reader)', async () => {
+    await world.create({
+      kind: 'income',
+      name: 'Mesada',
+      expectedAmountCents: 85000,
+      matchText: 'pai',
+      maxPayments: 2,
+      dateRule: { type: 'any_day' },
+    });
+    const pix = await insertTestIncome(world.database.db, world.checking, {
+      cents: 60000,
+      on: '2026-10-04',
+      counterparty: 'PAI',
+    });
+
+    const response = await world.send('GET', '/transactions/review-queue');
+
+    expect(response.status).toBe(200);
+    const queue = reviewQueueDtoSchema.parse(await response.json());
+    const item = queue.items.find((candidate) => candidate.transaction.id === pix);
+    expect(item?.recurrenceCandidates).toEqual([
+      expect.objectContaining({ recurrenceName: 'Mesada', month: '2026-10' }),
+    ]);
+  });
+
+  it('refuses to pay an invoice with a transaction that already settles an occurrence (the linked reader)', async () => {
+    const { occurrence } = await world.create({ name: 'Faturinha' });
+    const debit = await insertTestExpense(world.database.db, world.checking, {
+      cents: 10990,
+      on: '2026-10-10',
+    });
+    await world.send('POST', `/occurrences/${occurrence?.id}/payments`, { transactionId: debit });
+
+    const response = await world.send('POST', `/cards/${world.card}/invoices/2026-11/payments`, {
+      amountCents: 10990,
+      paidOn: '2026-10-10',
+      transactionId: debit,
+    });
+
+    expect(response.status).toBe(409);
+    expect(apiErrorSchema.parse(await response.json()).code).toBe(
+      'INVOICE_PAYMENT_TRANSACTION_ALREADY_LINKED',
+    );
+  });
+
+  it('mounts the routes of recurrences, occurrences and subscriptions: they answer, they are not 404', async () => {
+    for (const path of [
+      '/recurrences?month=2026-10',
+      '/recurrences/summary?month=2026-10',
+      '/occurrences?month=2026-10',
+      '/subscriptions',
+    ]) {
+      expect((await world.send('GET', path)).status).toBe(200);
+    }
+    const preview = await world.send('POST', '/recurrences/preview', {
+      dateRule: { type: 'fixed_day', day: 25 },
+    });
+    expect(preview.status).toBe(200);
   });
 });

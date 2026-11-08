@@ -14,7 +14,7 @@ import { createTestDatabase } from '#tests/support/database/create-test-database
 import { createFixedClock } from '#tests/support/shared/clock/create-fixed-clock.util.ts';
 import { insertTestTransaction } from '#tests/support/transactions/transaction/insert-test-transaction.util.ts';
 
-// The recurrences are not built yet (piece 6): their reader is a double that answers what the
+// The reader of the recurrences is a double here, which answers what the
 // contract says, to prove that the total, the lines and the next invoice use it, and only while
 // the invoice has not closed.
 describe('InvoiceDtoBuilder with the recurrences foreseen on the card', () => {
@@ -23,7 +23,7 @@ describe('InvoiceDtoBuilder with the recurrences foreseen on the card', () => {
   let builder: InvoiceDtoBuilder;
 
   const expectations: RecurrenceExpectationReader = {
-    async expectationsOf(_accountId, months) {
+    async expectationsOf({ months }) {
       const all = new Map([
         [
           '2026-11',

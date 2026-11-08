@@ -218,9 +218,9 @@ packages/ui/
 | Contexto       | Assuntos                                                                                                      |
 | -------------- | ------------------------------------------------------------------------------------------------------------- |
 | `accounts`     | `account` · `credit-card` · `wallet` (carteira manual) · `institution` (bancos pré-cadastrados)              |
-| `transactions` | `transaction` · `installment` · `transfer` · `friend-debt` · `provenance` (procedência e original do banco)  |
+| `transactions` | `transaction` · `installment-plan` (compra parcelada) · `account-balance` e `account-deletion` (o que `accounts` pede) · `card-invoice` e `invoice-payment` (o que `invoices` pede) · `occurrence-payment` e `subscription-charge` (o que `recurrences` pede) · `category-rule-history` e `category-usage` (o que `categories` pede). Ainda sem arquivo: `transfer`, `friend-debt`, `provenance` |
 | `invoices`     | `invoice` (competência e caixa, fechamento) · `invoice-payment`                                               |
-| `recurrences`  | `recurrence` · `occurrence` · `matching` · `business-day` (dia útil, feriado)                                 |
+| `recurrences`  | `recurrence` · `occurrence` · `occurrence-payment` · `matching` · `subscription` (o dia útil e o feriado moram em `shared/calendar`) |
 | `bills`        | `bill` (contas a pagar e a receber) · `settlement` (baixa)                                                    |
 | `categories`   | `category` · `tag` · `rule` (regra de categorização) · `suggestion`                                           |
 | `dashboard`    | `summary` · `projection` (projeção do mês) · `month-comparison` · `free-balance` (o quanto ainda pode gastar) |

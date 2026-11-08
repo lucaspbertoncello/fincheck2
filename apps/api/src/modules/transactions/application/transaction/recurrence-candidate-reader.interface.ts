@@ -4,8 +4,8 @@ import type { Kysely } from 'kysely';
 import type { Database } from '#/database/database.type.ts';
 
 // Port to the occurrences of a recurrence a transaction in review could pay (the allowance and the
-// meal voucher, BR-REC-012). The owner is `recurrences` (not built yet: unwired in the `main`,
-// there are no candidates, which is the truth without recurrences).
+// meal voucher, BR-REC-012). The owner is `recurrences`, which applies the rule of the automatic
+// match; the ones that already pay an occurrence get none.
 export interface RecurrenceCandidateReader {
   candidatesFor(
     items: RecurrenceCandidateReader.Item[],
@@ -16,6 +16,8 @@ export interface RecurrenceCandidateReader {
 export namespace RecurrenceCandidateReader {
   export type Item = {
     transactionId: string;
+    // The day of the transaction: the window of an occurrence has to hold it.
+    occurredOn: string;
     // Sender and description, normalized.
     text: string;
     // Positive, the value the occurrence would receive.

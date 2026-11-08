@@ -19,6 +19,7 @@ import { CreateInvoicePaymentUseCase } from '#/modules/invoices/application/invo
 import { DeleteInvoicePaymentUseCase } from '#/modules/invoices/application/invoice-payment/delete-invoice-payment.usecase.ts';
 import { DismissPaymentSuggestionUseCase } from '#/modules/invoices/application/invoice-payment/dismiss-payment-suggestion.usecase.ts';
 import { GetTransactionInvoiceLinksQuery } from '#/modules/invoices/application/invoice-payment/get-transaction-invoice-links.query.ts';
+import type { LinkedTransactionReader } from '#/modules/invoices/application/invoice-payment/linked-transaction-reader.interface.ts';
 import type { InvoicePaymentCandidateReader } from '#/modules/invoices/application/invoice-payment/invoice-payment-candidate-reader.interface.ts';
 import type { LinkInvoicePaymentTransaction } from '#/modules/invoices/application/invoice-payment/link-invoice-payment-transaction.interface.ts';
 import type { PaymentTransactionReader } from '#/modules/invoices/application/invoice-payment/payment-transaction-reader.interface.ts';
@@ -45,8 +46,9 @@ import type { UnitOfWork } from '#/shared/unit-of-work/unit-of-work.interface.ts
 // `accounts` (the cycle days of a card), `transactions` (the lines and sums of the cycle, the
 // transactions that pay, the candidates of the payment found, and the use cases that link and
 // unlink a payment) and, once it exists, `recurrences` (the occurrences still expected on a card).
-// They come in as ports. The reader of `recurrences` is optional: without it no invoice has an
-// expected recurrence (piece 6 plugs it in).
+// They come in as ports. The readers of `recurrences` are optional: without the first no invoice has
+// an expected recurrence, and without the second a debit that already settles an occurrence may be
+// offered as the payment of an invoice (`bills` will add its own to the same port).
 export function createInvoicesModule(deps: {
   db: Kysely<Database>;
   unitOfWork: UnitOfWork<Kysely<Database>>;
@@ -60,6 +62,7 @@ export function createInvoicesModule(deps: {
     unlinkTransaction: UnlinkInvoicePaymentTransaction;
   };
   expectations?: RecurrenceExpectationReader | undefined;
+  linkedElsewhere?: LinkedTransactionReader | undefined;
 }) {
   const { db, unitOfWork, clock, cards, transactionPorts } = deps;
   const calendar = new BusinessCalendar();
@@ -74,6 +77,7 @@ export function createInvoicesModule(deps: {
     deps.expectations,
     calendar,
     clock,
+    deps.linkedElsewhere,
   );
 
   const routes = new Hono()
@@ -103,6 +107,7 @@ export function createInvoicesModule(deps: {
             builder,
             unitOfWork,
             clock,
+            deps.linkedElsewhere,
           ),
         ),
         deleteInvoicePayment: new DeleteInvoicePaymentController(

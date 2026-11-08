@@ -1404,3 +1404,116 @@ describe('Transaction.releaseFromInvoicePayment', () => {
     },
   );
 });
+
+describe('Transaction.applyRecurrenceCategory (the transaction settles an occurrence, RF-REC-004)', () => {
+  it('takes the category of the recurrence when it has none, with the origin recurrence', () => {
+    const transaction = buildTestTransaction();
+
+    expect(transaction.applyRecurrenceCategory(FOOD, LATER)).toBe(true);
+
+    expect(transaction).toMatchObject({
+      categoryId: 'food',
+      categorySource: 'recurrence',
+      categoryRuleId: null,
+      updatedAt: LATER,
+    });
+    expect(transaction.isInReview()).toBe(false);
+  });
+
+  it('takes the category of an income recurrence on an income', () => {
+    const transaction = buildTestTransaction({ nature: 'income', amount: cents(5000) });
+
+    expect(transaction.applyRecurrenceCategory(SALARY, LATER)).toBe(true);
+    expect(transaction.categoryId).toBe('salary');
+  });
+
+  it.each([
+    ['one chosen by Lucas', { categoryId: 'mine', categorySource: 'user' }],
+    ['one put by a rule', { categoryId: 'ruled', categorySource: 'rule', categoryRuleId: 'r1' }],
+    ['one put by a bill', { categoryId: 'billed', categorySource: 'bill' }],
+  ] as const)('never replaces a category that is already there: %s', (_name, attributes) => {
+    const transaction = buildTestTransaction(attributes);
+
+    expect(transaction.applyRecurrenceCategory(FOOD, LATER)).toBe(false);
+
+    expect(transaction).toMatchObject(attributes);
+    expect(transaction.updatedAt).toBe(TEST_NOW);
+  });
+
+  it('does not touch a split transaction', () => {
+    const transaction = buildTestTransaction({
+      splits: [
+        new TransactionSplit({
+          id: 's1',
+          position: 1,
+          amount: cents(-600),
+          nature: 'expense',
+          categoryId: null,
+          description: null,
+        }),
+        new TransactionSplit({
+          id: 's2',
+          position: 2,
+          amount: cents(-650),
+          nature: 'expense',
+          categoryId: null,
+          description: null,
+        }),
+      ],
+    });
+
+    expect(transaction.applyRecurrenceCategory(FOOD, LATER)).toBe(false);
+    expect(transaction.categoryId).toBeNull();
+  });
+
+  it('does not touch a transaction outside expense and income, or a category of the other kind or archived', () => {
+    const transfer = buildTestTransaction({ nature: 'transfer' });
+    const expense = buildTestTransaction();
+
+    expect(transfer.applyRecurrenceCategory(FOOD, LATER)).toBe(false);
+    expect(expense.applyRecurrenceCategory(SALARY, LATER)).toBe(false);
+    expect(expense.applyRecurrenceCategory({ ...FOOD, isArchived: true }, LATER)).toBe(false);
+    expect(expense.categoryId).toBeNull();
+  });
+});
+
+describe('Transaction.changeNature of a transaction tied to an occurrence', () => {
+  const free = { hasActiveInvoiceLink: false, isCardAccount: false } as const;
+  const tied = { ...free, hasActiveOccurrenceLink: true } as const;
+
+  it('refuses any other nature while the link stands', () => {
+    const expense = buildTestTransaction();
+    const income = buildTestTransaction({ nature: 'income', amount: cents(5000) });
+
+    expect(() => expense.changeNature('transfer', tied, LATER)).toThrow(
+      expect.objectContaining({ code: 'TRANSACTION_LINKED_TO_OCCURRENCE' }),
+    );
+    expect(() => income.changeNature('transfer', tied, LATER)).toThrow(
+      expect.objectContaining({ code: 'TRANSACTION_LINKED_TO_OCCURRENCE' }),
+    );
+    expect(expense.nature).toBe('expense');
+    expect(income.nature).toBe('income');
+  });
+
+  it('accepts the nature it already has, and any change when there is no link', () => {
+    const expense = buildTestTransaction();
+
+    expect(() => expense.changeNature('expense', tied, LATER)).not.toThrow();
+    expect(() => expense.changeNature('transfer', free, LATER)).not.toThrow();
+    expect(expense.nature).toBe('transfer');
+  });
+
+  it('refuses a linked transaction as the second leg of a transfer', () => {
+    const first = buildTestTransaction({ accountId: 'a', nature: 'transfer' });
+    const second = buildTestTransaction({ accountId: 'b', amount: cents(1250), nature: 'income' });
+
+    expect(() =>
+      Transaction.linkTransfer(
+        first,
+        second,
+        { secondHasInvoiceLink: false, secondHasOccurrenceLink: true, secondIsCardAccount: false },
+        LATER,
+      ),
+    ).toThrow(expect.objectContaining({ code: 'TRANSACTION_LINKED_TO_OCCURRENCE' }));
+  });
+});

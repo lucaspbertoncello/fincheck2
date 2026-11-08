@@ -7,6 +7,7 @@ import type { CardReader } from '#/modules/invoices/application/card/card-reader
 import { requireCard } from '#/modules/invoices/application/card/require-card.util.ts';
 import type { InvoiceDtoBuilder } from '#/modules/invoices/application/invoice/invoice-dto-builder.service.ts';
 import type { InvoiceOpener } from '#/modules/invoices/application/invoice/invoice-opener.service.ts';
+import type { LinkedTransactionReader } from '#/modules/invoices/application/invoice-payment/linked-transaction-reader.interface.ts';
 import type { LinkInvoicePaymentTransaction } from '#/modules/invoices/application/invoice-payment/link-invoice-payment-transaction.interface.ts';
 import type { PaymentTransactionReader } from '#/modules/invoices/application/invoice-payment/payment-transaction-reader.interface.ts';
 import { computeInvoicePhase } from '#/modules/invoices/domain/invoice/compute-invoice-phase.util.ts';
@@ -35,6 +36,7 @@ export class CreateInvoicePaymentUseCase {
   private readonly builder: InvoiceDtoBuilder;
   private readonly unitOfWork: UnitOfWork<Kysely<Database>>;
   private readonly clock: Clock;
+  private readonly linkedElsewhere: LinkedTransactionReader | undefined;
 
   constructor(
     cards: CardReader,
@@ -45,6 +47,7 @@ export class CreateInvoicePaymentUseCase {
     builder: InvoiceDtoBuilder,
     unitOfWork: UnitOfWork<Kysely<Database>>,
     clock: Clock,
+    linkedElsewhere?: LinkedTransactionReader,
   ) {
     this.cards = cards;
     this.invoices = invoices;
@@ -54,6 +57,7 @@ export class CreateInvoicePaymentUseCase {
     this.builder = builder;
     this.unitOfWork = unitOfWork;
     this.clock = clock;
+    this.linkedElsewhere = linkedElsewhere;
   }
 
   async execute(
@@ -91,6 +95,12 @@ export class CreateInvoicePaymentUseCase {
         });
         const linked = await this.invoices.findLinkedTransactionIds([transaction.id], executor);
         if (linked.has(transaction.id)) throw new InvoicePaymentTransactionAlreadyLinkedError();
+        // One that already settles an occurrence or a bill cannot also pay the invoice.
+        const elsewhere = await this.linkedElsewhere?.findLinkedTransactionIds(
+          [transaction.id],
+          executor,
+        );
+        if (elsewhere?.has(transaction.id)) throw new InvoicePaymentTransactionAlreadyLinkedError();
       }
 
       await this.invoices.save(invoice, executor);
