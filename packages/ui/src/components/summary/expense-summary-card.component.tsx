@@ -16,6 +16,8 @@ type ExpenseSummaryCardProps = {
   variationPercent: number | null;
   /** Name of the previous month, lower case ("setembro"). */
   previousMonthLabel: string;
+  /** Keeps the empty badge row when there is no variation, to line up with the cards beside it. */
+  reserveBadge?: boolean;
   label?: string;
   /** Makes the card a link (see `MonthSummaryCard`). */
   href?: string;
@@ -31,6 +33,7 @@ export function ExpenseSummaryCard({
   barSegments,
   variationPercent,
   previousMonthLabel,
+  reserveBadge,
   label = 'Despesas',
   href,
 }: ExpenseSummaryCardProps) {
@@ -39,6 +42,7 @@ export function ExpenseSummaryCard({
   return (
     <MonthSummaryCard
       href={href}
+      reserveBadge={reserveBadge}
       icon="receipt"
       label={label}
       badge={variationPercent === null ? null : <VariationBadge percent={variationPercent} />}

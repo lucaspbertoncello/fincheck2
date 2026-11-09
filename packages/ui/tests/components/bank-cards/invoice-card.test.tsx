@@ -65,4 +65,20 @@ describe('InvoiceCard', () => {
     expect(html).not.toContain('2.137,45');
     expect(html).not.toContain('129,90');
   });
+
+  it('keeps the actions at the foot, so a taller box (a row of equal heights) grows above them', () => {
+    const html = renderToStaticMarkup(
+      <InvoiceCard
+        status="open"
+        totalCents={1000}
+        dueLine="Fecha 30/10, vence 06/11"
+        installments={[]}
+        actions={<button type="button">Ver fatura</button>}
+        className="flex-1"
+      />,
+    );
+
+    expect(html).toMatch(/class="mt-auto flex flex-wrap[^"]*"><button/);
+    expect(html).toContain('flex-1');
+  });
 });

@@ -26,12 +26,12 @@ describe('MonthPicker', () => {
     expect(html).toMatch(/<span aria-hidden="true" class="grid overflow-hidden[^"]*">/);
   });
 
-  it('writes the month regular and small: 14 px on the phone, 15 px on the desktop', () => {
+  it('writes the month regular and small: 14 px, the label size, on every width', () => {
     const html = render('Outubro');
 
     expect(html).not.toMatch(/font-bold|font-emphasis|text-subsection|text-body/);
     expect(html).toContain('text-label');
-    expect(html).toContain('lg:text-list');
+    expect(html).not.toContain('text-list');
   });
 
   it('paints month, year and arrows in the same secondary color', () => {
@@ -161,7 +161,7 @@ describe('MonthPicker', () => {
     expect(html).not.toContain('Outubro');
   });
 
-  it('stops an arrow at an end: it is disabled, not hidden', () => {
+  it('stops an arrow at an end: it is dimmed (aria-disabled, still focusable), not hidden', () => {
     const html = renderToStaticMarkup(
       <MonthPicker
         monthLabel="Outubro"
@@ -172,7 +172,9 @@ describe('MonthPicker', () => {
       />,
     );
 
-    expect(html).toMatch(/<button[^>]*aria-label="Próximo mês"[^>]*disabled/);
-    expect(html).not.toMatch(/<button[^>]*aria-label="Mês anterior"[^>]*disabled/);
+    expect(html.match(/aria-disabled="true"/g)).toHaveLength(1);
+    expect(html).toMatch(/aria-label="Próximo mês"[^>]*aria-disabled="true"/);
+    // `aria-disabled`, not the native attribute: the focus stays on the arrow at the end.
+    expect(html).not.toMatch(/<button[^>]*\sdisabled=/);
   });
 });

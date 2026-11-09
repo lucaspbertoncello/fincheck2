@@ -51,3 +51,27 @@ describe('buildFormFromAccount', () => {
     expect(buildFormFromAccount(wallet).institutionCode).toBe('');
   });
 });
+
+describe('buildFormFromAccount, the balance of the preview', () => {
+  const checking: Account.Dto = {
+    ...base,
+    type: 'checking',
+    creditCard: null,
+    balanceCents: 348_615,
+    balanceAt: '2026-11-09T10:00:00.000Z',
+  };
+
+  it('carries the balance the account has now, so the preview does not say R$ 0,00', () => {
+    expect(buildFormFromAccount(checking).initialBalanceCents).toBe(348_615);
+  });
+
+  it('carries a negative balance as it is', () => {
+    expect(buildFormFromAccount({ ...checking, balanceCents: -1_250 }).initialBalanceCents).toBe(
+      -1_250,
+    );
+  });
+
+  it('falls back to zero while the bank has not reported a balance', () => {
+    expect(buildFormFromAccount({ ...checking, balanceCents: null }).initialBalanceCents).toBe(0);
+  });
+});

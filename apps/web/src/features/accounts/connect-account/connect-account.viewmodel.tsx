@@ -5,6 +5,8 @@ import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 
 import { useAccountsSearch } from '#/shared/hooks/accounts/use-accounts-search.hook.ts';
+import { NEW_CARD_FORM } from '#/features/accounts/connect-account/constants/new-account-form.constant.ts';
+import type { ManualAccountForm } from '#/features/accounts/connect-account/types/connect-account.type.ts';
 import { MANUAL_ACCOUNT_TYPES } from '#/features/accounts/connect-account/constants/manual-account-types.constant.ts';
 import { useConnectAccountModel } from '#/features/accounts/connect-account/connect-account.model.ts';
 import { ConnectAccountView } from '#/features/accounts/connect-account/connect-account.view.tsx';
@@ -39,6 +41,8 @@ type SessionProps = {
   isOpen: boolean;
   editId: string | undefined;
   editAccount: Account.Dto | undefined;
+  /** The form a new account opens with (a new card: the manual card form); none starts the Open Finance. */
+  newForm: ManualAccountForm | undefined;
   editState: 'loading' | 'error' | 'ready';
   model: ReturnType<typeof useConnectAccountModel>;
   onClose: () => void;
@@ -53,13 +57,14 @@ function ConnectAccountSession({
   isOpen,
   editId,
   editAccount,
+  newForm,
   editState,
   model,
   onClose,
   onDelete,
 }: SessionProps) {
   const navigate = useNavigate();
-  const state = useConnectAccountForm(editAccount ? buildFormFromAccount(editAccount) : undefined);
+  const state = useConnectAccountForm(editAccount ? buildFormFromAccount(editAccount) : newForm);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [connectError, setConnectError] = useState<{
     message: string;
@@ -179,21 +184,22 @@ function ConnectAccountSession({
 
 /**
  * Modal "Conectar conta" of Contas e cartões, which also edits. It opens by the URL: `?new=account`
- * (the "+" of the top bar and the "Conectar outra conta" card) to connect, `?edit=<accountId>`
- * (the "…" menu of an account or card) to edit.
+ * (the "+" of the top bar) to connect, `?new=card` ("Adicionar cartão de crédito") to connect already
+ * on the manual card form, `?edit=<accountId>` (the "…" menu of an account or card) to edit.
  */
 export function ConnectAccountViewModel() {
   const { search, update } = useAccountsSearch();
-  const isCreating = search.new === 'account';
+  const isCreating = search.new !== undefined;
   const model = useConnectAccountModel(isCreating, search.edit);
   const editState = model.isLoadingEdit ? 'loading' : model.isEditError ? 'error' : 'ready';
 
   return (
     <ConnectAccountSession
-      key={`${search.edit ?? 'new'}:${model.editAccount?.id ?? editState}`}
+      key={`${search.edit ?? 'new'}:${search.new ?? ''}:${model.editAccount?.id ?? editState}`}
       isOpen={isCreating || Boolean(search.edit)}
       editId={search.edit}
       editAccount={model.editAccount}
+      newForm={search.new === 'card' ? NEW_CARD_FORM : undefined}
       editState={editState}
       model={model}
       onClose={() => update({ new: undefined, edit: undefined })}

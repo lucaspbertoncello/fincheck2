@@ -23,8 +23,14 @@ describe('OverviewPage on the last day of the month', () => {
     const slider = await screen.findByRole('group', { name: 'Até o fim do mês' });
 
     expect(await screen.findByText('Dia 1 de 1')).toBeInTheDocument();
-    expect(within(slider).getByRole('button', { name: 'Dia anterior' })).toBeDisabled();
-    expect(within(slider).getByRole('button', { name: 'Próximo dia' })).toBeDisabled();
+    expect(within(slider).getByRole('button', { name: 'Dia anterior' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+    expect(within(slider).getByRole('button', { name: 'Próximo dia' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
   });
 
   it('keeps the same day at 23:30, still October in São Paulo', async () => {
@@ -69,8 +75,13 @@ describe('OverviewPage on the first day of the month', () => {
     const slider = await screen.findByRole('group', { name: 'Até o fim do mês' });
 
     expect(await screen.findByText('Dia 1 de 30')).toBeInTheDocument();
-    expect(within(slider).getByRole('button', { name: 'Dia anterior' })).toBeDisabled();
-    expect(within(slider).getByRole('button', { name: 'Próximo dia' })).toBeEnabled();
+    expect(within(slider).getByRole('button', { name: 'Dia anterior' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+    expect(within(slider).getByRole('button', { name: 'Próximo dia' })).not.toHaveAttribute(
+      'aria-disabled',
+    );
     expect(screen.getAllByText('Novembro 2026').length).toBeGreaterThan(0);
   });
 

@@ -4,6 +4,7 @@ import type { InvoiceHighlightsData } from '#/features/invoices/invoice-page/typ
 
 type InvoiceHighlightsProps = {
   data: InvoiceHighlightsData;
+  className?: string;
 };
 
 /**
@@ -11,11 +12,11 @@ type InvoiceHighlightsProps = {
  * what the next invoice already has between installments and card subscriptions. The first two
  * are on the standard row; the last is a sentence with the value.
  */
-export function InvoiceHighlights({ data }: InvoiceHighlightsProps) {
+export function InvoiceHighlights({ data, className }: InvoiceHighlightsProps) {
   const hasRows = data.largest !== null || data.ending.length > 0;
 
   return (
-    <Section title="Destaques" variant="glass">
+    <Section title="Destaques" variant="glass" className={className}>
       {hasRows ? (
         <ul className="m-0 flex list-none flex-col divide-y divide-line p-0">
           {data.largest ? (

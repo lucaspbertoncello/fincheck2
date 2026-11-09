@@ -10,6 +10,7 @@ type InvoiceCategoryCompositionProps = {
   rows: readonly InvoiceCategoryRowData[];
   onToggle: (key: string) => void;
   onClear: () => void;
+  className?: string;
 };
 
 type RowProps = {
@@ -94,6 +95,7 @@ export function InvoiceCategoryComposition({
   rows,
   onToggle,
   onClear,
+  className,
 }: InvoiceCategoryCompositionProps) {
   const [expanded, setExpanded] = useState(false);
   const selected = rows.some((row) => row.selected);
@@ -106,6 +108,7 @@ export function InvoiceCategoryComposition({
     <Section
       title="Para onde foi"
       variant="glass"
+      className={className}
       action={
         selected ? (
           <Button variant="tertiary" size="sm" onPress={onClear}>

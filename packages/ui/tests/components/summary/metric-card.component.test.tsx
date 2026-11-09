@@ -45,4 +45,25 @@ describe('MetricCard', () => {
     expect(html).toContain('45%');
     expect(html).toContain('barra');
   });
+
+  it('keeps the badge row, invisible, when asked to and there is no badge', () => {
+    const reserved = renderToStaticMarkup(
+      <MetricCard icon="trend" label="Despesas" value="R$ 0,00" reserveBadge />,
+    );
+    const plain = renderToStaticMarkup(
+      <MetricCard icon="trend" label="Maior Pix" value="R$ 1,00" />,
+    );
+
+    expect(reserved).toContain('aria-hidden="true" class="invisible flex px-s8 py-s4 text-meta"');
+    expect(plain).not.toContain('invisible flex');
+  });
+
+  it('shows the badge, not the placeholder, when there is one', () => {
+    const html = renderToStaticMarkup(
+      <MetricCard icon="trend" label="Receitas" value="1" badge="45%" reserveBadge />,
+    );
+
+    expect(html).toContain('45%');
+    expect(html).not.toContain('invisible flex');
+  });
 });

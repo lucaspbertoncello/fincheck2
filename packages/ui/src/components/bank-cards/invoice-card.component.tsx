@@ -34,7 +34,11 @@ type InvoiceCardProps = {
   className?: string;
 };
 
-/** Invoice below the bank card: total, due line, cycle bar, next installments, actions (3.4). */
+/**
+ * Invoice below the bank card: total, due line, cycle bar, next installments, actions (3.4). The
+ * actions sit at the foot: in a taller box (the invoices of a row share one height) the extra room
+ * goes between the installments and the actions.
+ */
 export function InvoiceCard({
   status,
   totalCents,
@@ -106,7 +110,9 @@ export function InvoiceCard({
         )}
       </div>
 
-      {actions ? <div className="flex flex-wrap items-center gap-s12">{actions}</div> : null}
+      {actions ? (
+        <div className="mt-auto flex flex-wrap items-center gap-s12">{actions}</div>
+      ) : null}
     </section>
   );
 }

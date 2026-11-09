@@ -77,6 +77,16 @@ describe('ExpenseSummaryCard', () => {
     );
     expect(html).not.toContain('data-tone');
   });
+
+  it('keeps the badge row without a badge only when asked, to line up with the cards beside it', () => {
+    const props = { ...BASE, previousSamePointCents: 0, variationPercent: null };
+
+    expect(renderToStaticMarkup(<ExpenseSummaryCard {...props} reserveBadge />)).toContain(
+      'invisible flex px-s8 py-s4 text-meta',
+    );
+    // Alone in a row (Transações > Por categoria) a card gets no empty row.
+    expect(renderToStaticMarkup(<ExpenseSummaryCard {...props} />)).not.toContain('invisible flex');
+  });
 });
 
 describe('ResultSummaryCard', () => {

@@ -1,5 +1,6 @@
 import { Banner, BannerSlot, ConfirmDialog, EmptyState } from '@fincheck/ui';
 
+import { INVOICE_GRID_CLASS } from '#/features/invoices/invoice-page/constants/invoice-grid-class.constant.ts';
 import { InvoiceCategoryComposition } from '#/features/invoices/invoice-page/components/invoice-category-composition.component.tsx';
 import { InvoiceHighlights } from '#/features/invoices/invoice-page/components/invoice-highlights.component.tsx';
 import { InvoiceHero } from '#/features/invoices/invoice-page/components/invoice-hero.component.tsx';
@@ -15,8 +16,8 @@ import type { InvoicePageViewProps } from '#/features/invoices/invoice-page/type
 /**
  * The invoice of a card as a page (BR-INV-006): the way back, the title with the arrows, the bank
  * card on top with the summary beside it (state, total, due, cycle, variation, what is left), the
- * payment the app found, highlights and "Para onde foi" side by side, the payments and the lines by
- * day. Every state is here: loading (a skeleton the size of the page, with the card already on
+ * payment the app found, highlights and "Para onde foi" below on the same two columns, the payments
+ * and the lines by day. Every state is here: loading (a skeleton the size of the page, with the card already on
  * top), error, an invoice that does not exist and the ready page, which has its own empty state for
  * an invoice with no lines. Everything arrives ready in props.
  */
@@ -108,15 +109,19 @@ export function InvoicePageView(props: InvoicePageViewProps) {
       ) : null}
 
       {hasCategories || hasHighlights ? (
-        <div
-          className={`grid grid-cols-1 gap-s16 lg:gap-s24 ${hasCategories && hasHighlights ? 'xl:grid-cols-2' : ''}`}
-        >
-          {props.highlights ? <InvoiceHighlights data={props.highlights} /> : null}
+        <div className={INVOICE_GRID_CLASS}>
+          {props.highlights ? (
+            <InvoiceHighlights
+              data={props.highlights}
+              className={hasCategories ? undefined : 'xl:col-span-2'}
+            />
+          ) : null}
           {hasCategories ? (
             <InvoiceCategoryComposition
               rows={props.categoryRows}
               onToggle={props.onToggleCategory}
               onClear={props.onClearCategory}
+              className={hasHighlights ? undefined : 'xl:col-span-2'}
             />
           ) : null}
         </div>

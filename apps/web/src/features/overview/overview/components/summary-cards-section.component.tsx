@@ -34,6 +34,7 @@ export function SummaryCardsSection({ data, links }: SummaryCardsSectionProps) {
         variationPercent={data.expenseVariationPercent}
         previousMonthLabel={data.previousMonthLabel}
         href={links.expense}
+        reserveBadge
       />
       <ResultSummaryCard
         receivedCents={data.receivedCents}

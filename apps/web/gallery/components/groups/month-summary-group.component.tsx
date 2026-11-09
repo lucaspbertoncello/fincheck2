@@ -120,6 +120,7 @@ export const MONTH_SUMMARY_SECTIONS: GallerySectionDef[] = [
               barSegments={buildExpenseBar(0, 520000)}
               variationPercent={getSpentVariationPercent(0, 0)}
               previousMonthLabel="setembro"
+              reserveBadge
             />
             <ResultSummaryCard
               receivedCents={0}

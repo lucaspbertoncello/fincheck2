@@ -56,9 +56,12 @@ export {
   type FreeBalanceLine,
   type SummaryBarSegment,
 } from '#/components/summary/index.ts';
+export { usePagedScroll } from '#/hooks/pager/index.ts';
 export { useMediaQuery } from '#/hooks/viewport/index.ts';
+export { PagerArrows, PagerTrack } from '#/components/pager/index.ts';
 export {
   Button,
+  DashedAddBox,
   LinkButton,
   PlusButton,
   PlusMenu,

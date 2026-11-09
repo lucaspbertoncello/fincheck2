@@ -175,6 +175,7 @@ export function AccountListViewModel() {
         ) : undefined
       }
       onConnect={() => update({ new: 'account' })}
+      onAddCard={() => update({ new: 'card' })}
       onViewInvoice={(cardId, month) => openInvoice(cardId, month, { withCard: true })}
       onCorrectInvoice={(cardId, month) => update({ correct: `${cardId}:${month}` })}
       onOpenFuture={(cardId) => update({ future: cardId })}

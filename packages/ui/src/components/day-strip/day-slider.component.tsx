@@ -2,11 +2,11 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { type KeyboardEvent, useId, useState } from 'react';
 import { Button } from 'react-aria-components';
 
+import { ArrowButton } from '#/components/buttons/arrow-button.component.tsx';
 import { dayLongLabel } from '#/components/day-strip/day-long-label.util.ts';
 import { shiftBusinessDate } from '#/components/day-strip/shift-business-date.util.ts';
 import type { DayStripDay } from '#/components/day-strip/day-strip.type.ts';
 import { ProjectionFigures } from '#/components/day-strip/projection-figures.component.tsx';
-import { Icon } from '#/components/icons/icon.component.tsx';
 import { formatMoneyParts } from '#/components/money/format-money-parts.util.ts';
 import { useMoneyHidden } from '#/components/money/money-visibility.context.ts';
 import { cx } from '#/utils/class-names.util.ts';
@@ -40,9 +40,6 @@ const FADE_VARIANTS = {
   center: { opacity: 1 },
   exit: { opacity: 0 },
 };
-
-const ARROW =
-  'group relative grid size-ctl-sm shrink-0 cursor-pointer place-items-center rounded-capsule text-fg-secondary outline-none transition-[background-color,color,transform] duration-(--duration-fast) after:absolute after:-inset-1.5 after:content-[""] data-[disabled]:cursor-default data-[disabled]:opacity-40 data-[hovered]:bg-brand-weak data-[hovered]:text-brand data-[pressed]:scale-94 data-[focus-visible]:outline-2 data-[focus-visible]:outline-offset-2 data-[focus-visible]:outline-brand lg:size-8';
 
 function spokenMoney(cents: number, hidden: boolean): string {
   if (hidden) return 'valor oculto';
@@ -130,15 +127,13 @@ export function DaySlider<TItem>({
         onKeyDown={handleKeyDown}
         className="focus-ring grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-s8 rounded-panel border border-line bg-glass p-s12 lg:p-s16"
       >
-        <Button
-          aria-label="Dia anterior"
+        <ArrowButton
+          direction="previous"
+          label="Dia anterior"
           isDisabled={index === 0}
           excludeFromTabOrder
           onPress={() => goTo(index - 1)}
-          className={ARROW}
-        >
-          <Icon name="chevron-left" size="md" />
-        </Button>
+        />
         <span className="sr-only" aria-live="polite" aria-atomic="true">
           {spoken}
         </span>
@@ -174,15 +169,13 @@ export function DaySlider<TItem>({
             </motion.div>
           </AnimatePresence>
         </div>
-        <Button
-          aria-label="Próximo dia"
+        <ArrowButton
+          direction="next"
+          label="Próximo dia"
           isDisabled={index === last}
           excludeFromTabOrder
           onPress={() => goTo(index + 1)}
-          className={ARROW}
-        >
-          <Icon name="chevron-right" size="md" />
-        </Button>
+        />
       </div>
 
       <div aria-hidden="true" className="flex items-center gap-s12 px-s4">

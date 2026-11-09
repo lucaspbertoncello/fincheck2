@@ -1,7 +1,7 @@
 import { MotionConfig } from 'motion/react';
 import { type ReactNode, useRef, useState } from 'react';
-import { Button } from 'react-aria-components';
 
+import { ArrowButton } from '#/components/buttons/arrow-button.component.tsx';
 import { dayLongLabel } from '#/components/day-strip/day-long-label.util.ts';
 import { DaySlider } from '#/components/day-strip/day-slider.component.tsx';
 import { DayStrip } from '#/components/day-strip/day-strip.component.tsx';
@@ -14,7 +14,6 @@ import { DayStripLegend } from '#/components/day-strip/day-strip-legend.componen
 import { groupDaysByWeek } from '#/components/day-strip/group-days-by-week.util.ts';
 import { WeekCards } from '#/components/day-strip/week-cards.component.tsx';
 import { SegmentedControl } from '#/components/forms/segmented-control.component.tsx';
-import { Icon } from '#/components/icons/icon.component.tsx';
 import { Section } from '#/components/sections/section.component.tsx';
 
 type DayStripSectionProps<TItem> = {
@@ -43,9 +42,6 @@ const MODE_OPTIONS = [
   { key: 'day', label: 'Dia' },
   { key: 'week', label: 'Semana' },
 ];
-
-const ARROW =
-  'group relative hidden size-ctl-sm cursor-pointer place-items-center rounded-capsule text-fg-secondary outline-none transition-[background-color,color] duration-(--duration-fast) after:absolute after:-inset-1.5 after:content-[""] data-[hovered]:bg-brand-weak data-[hovered]:text-brand data-[focus-visible]:outline-2 data-[focus-visible]:outline-offset-2 data-[focus-visible]:outline-brand lg:grid lg:size-8';
 
 function scrollByPage(list: HTMLElement | null, direction: -1 | 1) {
   if (!list) return;
@@ -92,20 +88,18 @@ export function DayStripSection<TItem>({
   const header =
     variant === 'occurrences' ? (
       <>
-        <Button
-          aria-label="Dias anteriores"
+        <ArrowButton
+          direction="previous"
+          label="Dias anteriores"
+          desktopOnly
           onPress={() => scrollByPage(listRef.current, -1)}
-          className={ARROW}
-        >
-          <Icon name="chevron-left" size="md" />
-        </Button>
-        <Button
-          aria-label="Próximos dias"
+        />
+        <ArrowButton
+          direction="next"
+          label="Próximos dias"
+          desktopOnly
           onPress={() => scrollByPage(listRef.current, 1)}
-          className={ARROW}
-        >
-          <Icon name="chevron-right" size="md" />
-        </Button>
+        />
       </>
     ) : (
       action

@@ -57,11 +57,17 @@ describe('OverviewPage', () => {
     slider.focus();
     await user.keyboard('{End}');
     await waitFor(() => expect(counter()).toBe(`Dia ${total} de ${total}`));
-    expect(within(slider).getByRole('button', { name: 'Próximo dia' })).toBeDisabled();
+    expect(within(slider).getByRole('button', { name: 'Próximo dia' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
 
     await user.keyboard('{Home}');
     await waitFor(() => expect(counter()).toBe(`Dia 1 de ${total}`));
-    expect(within(slider).getByRole('button', { name: 'Dia anterior' })).toBeDisabled();
+    expect(within(slider).getByRole('button', { name: 'Dia anterior' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
 
     await user.keyboard('{ArrowRight}');
     await waitFor(() => expect(counter()).toBe(`Dia 2 de ${total}`));
@@ -174,5 +180,31 @@ describe('OverviewPage', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'Ocultar valores' })[0]!);
 
     await waitFor(() => expect(screen.getAllByText('valor oculto').length).toBeGreaterThan(3));
+  });
+});
+
+describe('OverviewPage, the month summary in an empty month', () => {
+  // The seed has nothing in January 2024: no income, no spending, nothing to compare with.
+  it('keeps Receitas, Despesas and Resultado on the same lines: the three have the badge row', async () => {
+    renderApp('/?month=2024-01');
+
+    const region = await screen.findByRole('region', { name: 'Resumo do mês' });
+    const income = await within(region).findByRole('article', { name: 'Receitas' });
+    const expenses = within(region).getByRole('article', { name: 'Despesas' });
+    const result = within(region).getByRole('article', { name: 'Resultado do mês' });
+    await waitFor(() => expect(income).toHaveTextContent(/0%/));
+
+    // Despesas has no variation to show, yet its row stays (invisible), so the value is the
+    // third child of the three boxes: header, badge row, value.
+    expect(income).toHaveTextContent('0%');
+    expect(result).toHaveTextContent('▲');
+    expect(expenses).not.toHaveTextContent('%');
+    const kinds = [income, expenses, result].map((card) =>
+      Array.from(card.children).map((child) => child.tagName),
+    );
+    expect(kinds[1]).toEqual(kinds[0]);
+    expect(kinds[2]).toEqual(kinds[0]);
+    expect(kinds[0]?.[2]).toBe('P');
+    expect(expenses.children[1]).toHaveAttribute('aria-hidden', 'true');
   });
 });

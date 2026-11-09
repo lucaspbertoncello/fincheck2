@@ -364,3 +364,28 @@ describe('Fatura, desfazer um pagamento', () => {
     expect(screen.queryByRole('button', { name: /^Desfazer pagamento/ })).not.toBeInTheDocument();
   });
 });
+
+describe('Fatura, página: a grade só', () => {
+  it('puts "Destaques" and "Para onde foi" on the same two columns as the card and the summary', async () => {
+    await openInvoice('Roxinho');
+
+    const summary = screen.getByRole('region', { name: 'Resumo da fatura' });
+    const highlights = screen.getByRole('region', { name: 'Destaques' });
+    const composition = screen.getByRole('region', { name: 'Para onde foi' });
+    const top = summary.parentElement as HTMLElement;
+    const bottom = highlights.parentElement as HTMLElement;
+
+    // One grid definition for both rows: the card column is 24 rem, the other takes the rest.
+    expect(top.className).toContain('xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]');
+    expect(bottom.className).toBe(top.className);
+    // The two boxes are the two cells of that row, in the order of the columns, one height.
+    expect(composition.parentElement).toBe(bottom);
+    expect(Array.from(bottom.children)).toEqual([highlights, composition]);
+    expect(bottom.className).toContain('items-stretch');
+    expect(bottom.className).toContain('gap-s16');
+    expect(bottom.className).toContain('lg:gap-s24');
+    // Neither box carries a width or a column of its own that would leave the grid.
+    expect(highlights.className).not.toMatch(/col-span|w-\[|max-w/);
+    expect(composition.className).not.toMatch(/col-span|w-\[|max-w/);
+  });
+});

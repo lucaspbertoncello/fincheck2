@@ -11,6 +11,8 @@ type MetricCardProps = {
   label: string;
   /** Badge at the right of the header (percent, variation or delta). */
   badge?: ReactNode;
+  /** Keeps the badge row (at the badge's height) when there is no badge, so boxes on one row stay aligned. */
+  reserveBadge?: boolean;
   /** The big value: a `Money` or any short node. Null draws `emptyText` (no data yet). */
   value: ReactNode | null;
   /** Text of the value row when `value` is null. */
@@ -48,6 +50,7 @@ export function MetricCard({
   icon,
   label,
   badge,
+  reserveBadge = false,
   value,
   emptyText = 'Ainda sem dado',
   lines,
@@ -86,7 +89,13 @@ export function MetricCard({
         </h3>
       </header>
       {/* Its own row: beside a long label ("Resultado do mês") the badge would not fit. */}
-      {badge ? <span className="flex">{badge}</span> : null}
+      {badge ? (
+        <span className="flex">{badge}</span>
+      ) : reserveBadge ? (
+        <span aria-hidden="true" className="invisible flex px-s8 py-s4 text-meta">
+          &nbsp;
+        </span>
+      ) : null}
       {isLoading ? (
         <>
           <div className="flex h-8 items-center">

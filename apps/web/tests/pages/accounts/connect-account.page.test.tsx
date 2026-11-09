@@ -228,4 +228,22 @@ describe('Editar conta (?edit=<id>)', () => {
     );
     expect(within(dialog).getByRole('button', { name: 'Salvar' })).toBeEnabled();
   });
+
+  it('shows the balance the account has now in the preview, not R$ 0,00', async () => {
+    renderApp('/accounts');
+    await screen.findByRole('article', { name: 'Nubank' });
+    const nubank = db.accounts.find((item) => item.name === 'Nubank');
+
+    window.history.pushState({}, '', `/accounts?edit=${nubank?.id}`);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Editar conta' });
+    const preview = await within(dialog).findByRole('img', { name: /^Prévia: Nubank/ });
+    expect(preview).toHaveTextContent(/3\.486,15/);
+    expect(preview).not.toHaveTextContent('0,00');
+    // The balance is not a field of the edit: "Ajustar saldo" is the way to change it.
+    expect(
+      within(dialog).queryByRole('textbox', { name: 'Saldo inicial' }),
+    ).not.toBeInTheDocument();
+  });
 });

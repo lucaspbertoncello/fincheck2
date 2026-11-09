@@ -1,8 +1,7 @@
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useState } from 'react';
-import { Button } from 'react-aria-components';
 
-import { Icon } from '#/components/icons/icon.component.tsx';
+import { ArrowButton } from '#/components/buttons/arrow-button.component.tsx';
 import { PeriodMenu } from '#/components/page/period-menu.component.tsx';
 import type { PeriodMenuProps } from '#/components/page/period-menu.type.ts';
 import { cx } from '#/utils/class-names.util.ts';
@@ -35,9 +34,6 @@ type MonthPickerProps = {
 };
 
 type Direction = 1 | -1;
-
-const ARROW =
-  'group relative grid size-ctl-sm shrink-0 cursor-pointer place-items-center rounded-capsule text-fg-secondary outline-none transition-[background-color,color,transform] duration-(--duration-fast) after:absolute after:-inset-1.5 after:content-[""] data-[hovered]:bg-brand-weak data-[hovered]:text-brand data-[pressed]:scale-94 data-[disabled]:pointer-events-none data-[disabled]:opacity-40 data-[focus-visible]:outline-2 data-[focus-visible]:outline-offset-2 data-[focus-visible]:outline-brand lg:size-8';
 
 /** Every month name, so the window is as wide as the widest one and the arrows never move. */
 const MONTH_NAMES = [
@@ -81,7 +77,7 @@ const FADE_VARIANTS = {
  * widest month (an invisible sizer holds all twelve), so no month name pushes them. A month
  * change is a slider: the text leaves and enters sliding in the direction of the move, clipped
  * to the window so it never passes over the arrows. Month, year and arrows share the secondary
- * text color; the text is 14 px on the phone and 15 px on the desktop, regular (components.md 1.5). Screen readers hear the month in a polite live region; the
+ * text color; the text is 14 px (the label size) on every width, regular (components.md 1.5). Screen readers hear the month in a polite live region; the
  * animated text is hidden from them.
  *
  * With `period` (Transações) the picker also holds the period button. Out of the month the window
@@ -117,24 +113,19 @@ export function MonthPicker({
 
   return (
     <div role="group" aria-label={isYear ? 'Ano' : 'Mês'} className="flex items-center gap-s4">
-      <Button
-        aria-label={isYear ? 'Ano anterior' : 'Mês anterior'}
+      <ArrowButton
+        direction="previous"
+        label={isYear ? 'Ano anterior' : 'Mês anterior'}
         onPress={handlePrevious}
         isDisabled={isPreviousDisabled}
-        className={cx(ARROW, rangeLabel && 'invisible')}
-      >
-        <Icon
-          name="chevron-left"
-          size="md"
-          className="transition-transform duration-(--duration-fast) group-data-[hovered]:-translate-x-px"
-        />
-      </Button>
+        className={cx(rangeLabel && 'invisible')}
+      />
       <span className="sr-only" aria-live="polite" aria-atomic="true">
         {spoken}
       </span>
       <span
         aria-hidden="true"
-        className="grid overflow-hidden text-center text-label whitespace-nowrap text-fg-secondary lg:text-list"
+        className="grid overflow-hidden text-center text-label whitespace-nowrap text-fg-secondary"
       >
         <span className="invisible col-start-1 row-start-1 grid">
           {isYear ? (
@@ -174,18 +165,13 @@ export function MonthPicker({
           </motion.span>
         </AnimatePresence>
       </span>
-      <Button
-        aria-label={isYear ? 'Próximo ano' : 'Próximo mês'}
+      <ArrowButton
+        direction="next"
+        label={isYear ? 'Próximo ano' : 'Próximo mês'}
         onPress={handleNext}
         isDisabled={isNextDisabled}
-        className={cx(ARROW, rangeLabel && 'invisible')}
-      >
-        <Icon
-          name="chevron-right"
-          size="md"
-          className="transition-transform duration-(--duration-fast) group-data-[hovered]:translate-x-px"
-        />
-      </Button>
+        className={cx(rangeLabel && 'invisible')}
+      />
       {period ? (
         <div className="ml-s8">
           <PeriodMenu

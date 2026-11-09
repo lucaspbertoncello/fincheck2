@@ -4,6 +4,7 @@ import {
   Chip,
   ChoiceChip,
   CountBadge,
+  DashedAddBox,
   HideValuesButton,
   Logo,
   Money,
@@ -20,6 +21,7 @@ import {
 } from '@fincheck/ui';
 
 import type { GallerySectionDef } from '#gallery/types/gallery-group.type.ts';
+import { PagerDemo } from '#gallery/components/demos/pager-demo.component.tsx';
 import { GalleryVariant } from '#gallery/components/shell/gallery-variant.component.tsx';
 import { State } from '#gallery/components/shell/state.component.tsx';
 
@@ -282,6 +284,34 @@ export const BASE_SECTIONS: GallerySectionDef[] = [
           <PlusMenu label="Criar" items={PLUS_ITEMS} onAction={noop} />
         </GalleryVariant>
       </>
+    ),
+  },
+  {
+    id: 'dashed-add-box',
+    title: 'DashedAddBox',
+    content: (
+      <>
+        <GalleryVariant caption="o lugar vazio ao lado de um cartão" width={420}>
+          <div className="h-64">
+            <DashedAddBox label="Adicionar cartão de crédito" onPress={noop} className="h-full" />
+          </div>
+        </GalleryVariant>
+        <GalleryVariant caption="no celular, só a altura do conteúdo" width={340}>
+          <DashedAddBox label="Adicionar conta" onPress={noop} />
+        </GalleryVariant>
+      </>
+    ),
+  },
+  {
+    id: 'pager',
+    title: 'PagerArrows e PagerTrack',
+    content: (
+      <GalleryVariant
+        caption="cinco blocos, de 2 em 2 no desktop (1 no celular); setas na linha do título"
+        width="full"
+      >
+        <PagerDemo />
+      </GalleryVariant>
     ),
   },
   {

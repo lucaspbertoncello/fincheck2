@@ -40,7 +40,6 @@ export function AccountTile({ data, onAction, onMenuAction }: AccountTileProps) 
           label={`Ações de ${data.name}`}
           items={data.menuItems}
           onAction={(key) => onMenuAction(data.id, key)}
-          className="-mr-s8"
         />
       }
     />

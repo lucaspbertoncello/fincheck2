@@ -231,13 +231,18 @@ describe('Mapa de gastos', () => {
     watchRequests();
     await openMap();
 
-    expect(screen.getByRole('button', { name: 'Próximo ano' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Próximo ano' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
     await user.click(screen.getByRole('button', { name: 'Ano anterior' }));
 
     const grid = await screen.findByRole('grid', { name: 'Gasto por dia em 2025' });
     expect(within(grid).getAllByRole('button')).toHaveLength(365);
     expect(asked).toHaveBeenCalledWith('?from=2025-01-01&to=2025-12-31');
-    expect(screen.getByRole('button', { name: 'Próximo ano' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Próximo ano' })).not.toHaveAttribute(
+      'aria-disabled',
+    );
     expect(screen.getByText('365 dias')).toBeInTheDocument();
   });
 
@@ -252,7 +257,10 @@ describe('Mapa de gastos', () => {
     expect(within(grid).getAllByRole('row')).toHaveLength(5);
     // 1 to 22 October: the days after today are outlines, not buttons.
     expect(within(grid).getAllByRole('button')).toHaveLength(22);
-    expect(screen.getByRole('button', { name: 'Próximo mês' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Próximo mês' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
     expect(asked).toHaveBeenCalledWith('?from=2026-10-01&to=2026-10-31');
   });
 
@@ -269,11 +277,16 @@ describe('Mapa de gastos', () => {
     });
     expect(within(september).getAllByRole('button')).toHaveLength(30);
     expect(asked).toHaveBeenCalledWith('?from=2026-09-01&to=2026-09-30');
-    expect(screen.getByRole('button', { name: 'Próximo mês' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Próximo mês' })).not.toHaveAttribute(
+      'aria-disabled',
+    );
 
     await user.click(screen.getByRole('button', { name: 'Próximo mês' }));
     await screen.findByRole('grid', { name: 'Gasto por dia em outubro de 2026' });
-    expect(screen.getByRole('button', { name: 'Próximo mês' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Próximo mês' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
   });
 
   it('goes back to the year from the month, keeping where it was', async () => {

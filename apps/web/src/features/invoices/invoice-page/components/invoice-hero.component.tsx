@@ -1,6 +1,7 @@
 import { BankCard } from '@fincheck/ui';
 import type { ReactNode } from 'react';
 
+import { INVOICE_GRID_CLASS } from '#/features/invoices/invoice-page/constants/invoice-grid-class.constant.ts';
 import type { InvoiceCardData } from '#/features/invoices/invoice-page/types/invoice-page.type.ts';
 
 type InvoiceHeroProps = {
@@ -12,12 +13,12 @@ type InvoiceHeroProps = {
 
 /**
  * The top of the invoice page: the bank card (the same `BankCard` as in Contas e cartões, which is
- * the one that travels here from the list) and, beside it, the summary of the invoice. On the
- * phone the card comes first, full width.
+ * the one that travels here from the list) and, beside it, the summary of the invoice, on the grid of the
+ * whole page (`INVOICE_GRID_CLASS`). On the phone the card comes first, full width.
  */
 export function InvoiceHero({ card, children }: InvoiceHeroProps) {
   return (
-    <div className="grid grid-cols-1 gap-s16 lg:gap-s24 xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
+    <div className={INVOICE_GRID_CLASS}>
       {card ? (
         <div className="w-full max-w-[24rem] self-start">
           <BankCard

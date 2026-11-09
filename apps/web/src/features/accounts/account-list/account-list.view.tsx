@@ -2,6 +2,7 @@ import {
   Banner,
   BannerSlot,
   ContentSkeleton,
+  DashedAddBox,
   EmptyState,
   ErrorState,
   Money,
@@ -11,15 +12,14 @@ import {
 import type { ReactNode } from 'react';
 
 import { AccountTile } from '#/features/accounts/account-list/components/account-tile.component.tsx';
-import { CardBlock } from '#/features/accounts/account-list/components/card-block.component.tsx';
+import { CardSection } from '#/features/accounts/account-list/components/card-section.component.tsx';
+import { ACCOUNT_GRID_CLASS } from '#/features/accounts/account-list/constants/account-grid-class.constant.ts';
 import type {
   AccountTileData,
   CardBlockData,
   ConnectionFailureData,
   HistoryProgressData,
 } from '#/features/accounts/account-list/types/account-list.type.ts';
-
-const GRID_CLASS = 'grid grid-cols-1 items-start gap-s16 lg:grid-cols-2 lg:gap-s24';
 
 type AccountListViewProps = {
   state: 'loading' | 'error' | 'empty' | 'ready';
@@ -36,6 +36,8 @@ type AccountListViewProps = {
   /** The future invoices of one card; when present they take the place of the cards. */
   futureSlot?: ReactNode;
   onConnect: () => void;
+  /** "Adicionar cartão de crédito": the same dialog, already on the credit card form. */
+  onAddCard: () => void;
   onViewInvoice: (cardId: string, month: string) => void;
   onCorrectInvoice: (cardId: string, month: string) => void;
   onOpenFuture: (cardId: string) => void;
@@ -58,6 +60,7 @@ export function AccountListView({
   totalCents,
   futureSlot,
   onConnect,
+  onAddCard,
   onViewInvoice,
   onCorrectInvoice,
   onOpenFuture,
@@ -112,20 +115,14 @@ export function AccountListView({
         <>
           {futureSlot ??
             (cards.length > 0 ? (
-              <Section title="Cartões de crédito" divider={false}>
-                <div className={GRID_CLASS}>
-                  {cards.map((card) => (
-                    <CardBlock
-                      key={card.id}
-                      data={card}
-                      onViewInvoice={onViewInvoice}
-                      onCorrectInvoice={onCorrectInvoice}
-                      onOpenFuture={onOpenFuture}
-                      onMenuAction={onCardMenuAction}
-                    />
-                  ))}
-                </div>
-              </Section>
+              <CardSection
+                cards={cards}
+                onAddCard={onAddCard}
+                onViewInvoice={onViewInvoice}
+                onCorrectInvoice={onCorrectInvoice}
+                onOpenFuture={onOpenFuture}
+                onMenuAction={onCardMenuAction}
+              />
             ) : null)}
 
           <Section
@@ -137,7 +134,7 @@ export function AccountListView({
               </span>
             }
           >
-            <div className={GRID_CLASS}>
+            <div className={ACCOUNT_GRID_CLASS}>
               {accounts.map((account) => (
                 <AccountTile
                   key={account.id}
@@ -146,12 +143,20 @@ export function AccountListView({
                   onMenuAction={onAccountMenuAction}
                 />
               ))}
+              {/* An odd count leaves a hole in the last row of the two columns: the add box fills it. */}
+              {accounts.length % 2 === 1 ? (
+                <DashedAddBox
+                  label="Adicionar conta"
+                  onPress={onConnect}
+                  className="max-lg:hidden lg:self-stretch"
+                />
+              ) : null}
             </div>
           </Section>
 
           {archived.length > 0 ? (
             <Section title="Arquivadas">
-              <div className={GRID_CLASS}>
+              <div className={ACCOUNT_GRID_CLASS}>
                 {archived.map((account) => (
                   <AccountTile
                     key={account.id}

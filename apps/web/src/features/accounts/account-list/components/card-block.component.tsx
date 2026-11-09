@@ -55,6 +55,7 @@ export function CardBlock({
       )}
       {invoice ? (
         <InvoiceCard
+          className="flex-1"
           status={invoice.status}
           totalCents={invoice.totalCents}
           dueLine={invoice.dueLine}
@@ -84,7 +85,7 @@ export function CardBlock({
           }
         />
       ) : (
-        <div className="glass flex items-center justify-between gap-s12 p-s16 text-label text-fg-secondary">
+        <div className="glass flex flex-1 items-center justify-between gap-s12 p-s16 text-label text-fg-secondary">
           Ainda sem fatura neste cartão.
           {menu}
         </div>

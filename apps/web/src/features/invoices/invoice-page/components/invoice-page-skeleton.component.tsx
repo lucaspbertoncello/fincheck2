@@ -1,6 +1,7 @@
 import { Skeleton } from '@fincheck/ui';
 
 import { InvoiceHero } from '#/features/invoices/invoice-page/components/invoice-hero.component.tsx';
+import { INVOICE_GRID_CLASS } from '#/features/invoices/invoice-page/constants/invoice-grid-class.constant.ts';
 import type { InvoiceCardData } from '#/features/invoices/invoice-page/types/invoice-page.type.ts';
 
 type InvoicePageSkeletonProps = {
@@ -10,7 +11,7 @@ type InvoicePageSkeletonProps = {
 
 /**
  * The invoice page while it loads, at the size of the real thing: the card, the summary box, the
- * composition and the first lines. Same gaps as the loaded page, so nothing moves when the data
+ * highlights and the composition on the same two columns, and the first lines. Same gaps as the loaded page, so nothing moves when the data
  * arrives.
  */
 export function InvoicePageSkeleton({ card }: InvoicePageSkeletonProps) {
@@ -35,18 +36,33 @@ export function InvoicePageSkeleton({ card }: InvoicePageSkeletonProps) {
           </div>
         </section>
       </InvoiceHero>
-      <div className="glass flex flex-col gap-s16 p-s24">
-        <Skeleton className="h-6 w-40" />
-        {Array.from({ length: 4 }, (_, index) => (
-          <div key={index} className="flex items-center gap-s12 py-s8">
-            <Skeleton className="size-8 shrink-0" />
-            <div className="flex flex-1 flex-col gap-s8">
-              <Skeleton className="h-4 w-40" />
-              <Skeleton className="h-1.5 w-full" />
+      <div className={INVOICE_GRID_CLASS}>
+        <div className="glass flex flex-col gap-s16 p-s24">
+          <Skeleton className="h-6 w-28" />
+          {Array.from({ length: 2 }, (_, index) => (
+            <div key={index} className="flex items-center gap-s12 py-s8">
+              <Skeleton className="size-8 shrink-0" />
+              <div className="flex flex-1 flex-col gap-s8">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+              <Skeleton className="h-6 w-20" />
             </div>
-            <Skeleton className="h-8 w-24" />
-          </div>
-        ))}
+          ))}
+        </div>
+        <div className="glass flex flex-col gap-s16 p-s24">
+          <Skeleton className="h-6 w-40" />
+          {Array.from({ length: 4 }, (_, index) => (
+            <div key={index} className="flex items-center gap-s12 py-s8">
+              <Skeleton className="size-8 shrink-0" />
+              <div className="flex flex-1 flex-col gap-s8">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-1.5 w-full" />
+              </div>
+              <Skeleton className="h-8 w-24" />
+            </div>
+          ))}
+        </div>
       </div>
       <div className="glass flex flex-col gap-s16 p-s24">
         <Skeleton className="h-6 w-36" />
