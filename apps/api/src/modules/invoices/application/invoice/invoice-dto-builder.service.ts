@@ -10,6 +10,7 @@ import { computeInvoiceHighlights } from '#/modules/invoices/application/invoice
 import type { RecurrenceExpectationReader } from '#/modules/invoices/application/invoice/recurrence-expectation-reader.interface.ts';
 import type { LinkedTransactionReader } from '#/modules/invoices/application/invoice-payment/linked-transaction-reader.interface.ts';
 import { computeSettledAmount } from '#/modules/invoices/application/invoice-payment/compute-settled-amount.util.ts';
+import type { FirstSyncReader } from '#/modules/invoices/application/invoice/first-sync-reader.interface.ts';
 import type { InvoicePaymentCandidateReader } from '#/modules/invoices/application/invoice-payment/invoice-payment-candidate-reader.interface.ts';
 import type { PaymentTransactionReader } from '#/modules/invoices/application/invoice-payment/payment-transaction-reader.interface.ts';
 import { computeInvoicePhase } from '#/modules/invoices/domain/invoice/compute-invoice-phase.util.ts';
@@ -42,6 +43,7 @@ export class InvoiceDtoBuilder {
   private readonly calendar: BusinessCalendar;
   private readonly clock: Clock;
   private readonly linkedElsewhere: LinkedTransactionReader | undefined;
+  private readonly firstSyncs: FirstSyncReader | undefined;
 
   constructor(
     invoices: InvoiceRepository<Kysely<Database>>,
@@ -52,6 +54,7 @@ export class InvoiceDtoBuilder {
     calendar: BusinessCalendar,
     clock: Clock,
     linkedElsewhere?: LinkedTransactionReader,
+    firstSyncs?: FirstSyncReader,
   ) {
     this.invoices = invoices;
     this.cardTransactions = cardTransactions;
@@ -61,6 +64,7 @@ export class InvoiceDtoBuilder {
     this.calendar = calendar;
     this.clock = clock;
     this.linkedElsewhere = linkedElsewhere;
+    this.firstSyncs = firstSyncs;
   }
 
   // The invoice of the month that is open today for this card: the one a purchase of today falls in.
@@ -72,8 +76,18 @@ export class InvoiceDtoBuilder {
     card: CardReader.Card,
     months: Month[],
     executor?: Kysely<Database>,
+    // `withoutFirstSyncRule`: the invoices as the statement reads them, with no "paid before the
+    // Fincheck". The detector of invoice payments of the import needs them: the debit that paid an
+    // old invoice is in the history, and it is not spending.
+    options: { withoutFirstSyncRule?: boolean } = {},
   ): Promise<InvoiceContract.Dto[]> {
-    const assembled = await this.assemble(card, months, true, executor);
+    const assembled = await this.assemble(
+      card,
+      months,
+      true,
+      executor,
+      options.withoutFirstSyncRule === true,
+    );
 
     return assembled.map((invoice) => invoice.dto);
   }
@@ -125,11 +139,15 @@ export class InvoiceDtoBuilder {
     months: Month[],
     withSuggestions: boolean,
     executor?: Kysely<Database>,
+    withoutFirstSyncRule = false,
   ): Promise<InvoiceDtoBuilder.InProgress[]> {
     const today = this.clock.today();
     const cycle = new InvoiceCycle(card.closingDay, card.dueDay);
     const openMonth = cycle.monthFor(today);
     const phaseOf = (month: Month) => computeInvoicePhase(month, openMonth);
+    const firstSyncOn = withoutFirstSyncRule
+      ? undefined
+      : (await this.firstSyncs?.firstSyncDatesOf([card.id], executor))?.get(card.id);
 
     const [rows, totals, expected] = await Promise.all([
       this.invoices.findByAccountAndMonths(card.id, months, executor),
@@ -175,12 +193,26 @@ export class InvoiceDtoBuilder {
         paid: computeSettledAmount(payments, snapshots),
       });
 
-      const suggestion =
-        withSuggestions &&
+      // An invoice of the bank due before the connection was made (its first round) was paid before the
+      // Fincheck existed: the app cannot know, and the bank's old invoice almost always was. Only a
+      // payment turns this reading off: one Lucas registered, or one the app found in the bank (the
+      // payment found and the presumed payment work as before). A correction of the total does not,
+      // it only changes the value shown. Nothing is written.
+      const isBeforeFincheck =
+        firstSyncOn !== undefined &&
+        phase !== 'projected' &&
+        dueOn.isBefore(BusinessDate.of(firstSyncOn)) &&
+        payments.length === 0 &&
+        statement.unpaid().cents > 0;
+      const found =
+        (withSuggestions || isBeforeFincheck) &&
         STATUSES_THAT_LOOK_FOR_PAYMENT.includes(statement.status) &&
         statement.unpaid().cents > 0
           ? await this.findSuggestion(card.id, row, statement, closesOn, dueOn, executor)
           : null;
+      const paidBeforeFincheck = isBeforeFincheck && found === null;
+      const status = paidBeforeFincheck ? 'paid' : statement.status;
+      const suggestion = withSuggestions ? found : null;
       const presumed =
         suggestion?.isPresumed === true
           ? Money.fromCents(Math.abs(suggestion.transaction.amount.cents))
@@ -194,7 +226,7 @@ export class InvoiceDtoBuilder {
           month: month.value,
           closesOn: closesOn.value,
           dueOn: dueOn.value,
-          status: statement.status,
+          status,
           breakdown: {
             purchasesCents: statement.purchases.cents,
             installmentsCents: statement.installments.cents,
@@ -207,7 +239,7 @@ export class InvoiceDtoBuilder {
           totalCents: statement.total.cents,
           paidCents: statement.paid.cents,
           presumedPaidCents: presumed.cents,
-          remainingCents: statement.remaining(presumed).cents,
+          remainingCents: paidBeforeFincheck ? 0 : statement.remaining(presumed).cents,
           payments: payments
             .toSorted(
               (a, b) =>
@@ -232,6 +264,7 @@ export class InvoiceDtoBuilder {
               }
             : null,
           isEditable: statement.status !== 'projected',
+          paidBeforeFincheck,
         },
       });
     }

@@ -161,6 +161,7 @@ export function createAppParts({
       recurrences.invoiceReaders.linkedTransactions,
       billReaders.linkedTransactions,
     ),
+    firstSyncs: syncReaders.firstSyncs,
   });
   const bills = createBillsModule({
     db,

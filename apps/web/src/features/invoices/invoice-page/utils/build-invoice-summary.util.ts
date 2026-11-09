@@ -20,7 +20,8 @@ export function buildInvoiceSummary(invoice: Invoice.DetailDto, today: string): 
   const status = INVOICE_STATUS_LABELS[invoice.status];
 
   return {
-    statusLabel: status.label,
+    // An invoice of the bank due before the Fincheck started is paid by the rule, not by Lucas.
+    statusLabel: invoice.paidBeforeFincheck ? 'Paga antes do Fincheck' : status.label,
     statusTone: status.tone,
     totalCents: invoice.totalCents,
     dueIn: describeInvoiceDue(invoice, today),

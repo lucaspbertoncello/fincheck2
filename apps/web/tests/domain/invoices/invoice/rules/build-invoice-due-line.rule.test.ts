@@ -23,6 +23,7 @@ function invoice(overrides: Partial<Invoice.Dto>): Invoice.Dto {
     payments: [],
     paymentSuggestion: null,
     isEditable: true,
+    paidBeforeFincheck: false,
     ...overrides,
   };
 }

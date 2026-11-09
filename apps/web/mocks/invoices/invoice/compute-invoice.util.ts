@@ -195,6 +195,7 @@ export function computeInvoice(
     payments,
     paymentSuggestion,
     isEditable: status !== 'projected',
+    paidBeforeFincheck: false,
   };
 
   const items: Invoice.Item[] = [

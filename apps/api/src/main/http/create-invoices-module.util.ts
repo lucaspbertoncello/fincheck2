@@ -7,6 +7,7 @@ import { RecordBankInvoiceTotalsUseCase } from '#/modules/invoices/application/b
 import { CountAccountInvoicesQuery } from '#/modules/invoices/application/account-deletion/count-account-invoices.query.ts';
 import { DeleteAccountInvoicesUseCase } from '#/modules/invoices/application/account-deletion/delete-account-invoices.usecase.ts';
 import type { CardReader } from '#/modules/invoices/application/card/card-reader.interface.ts';
+import type { FirstSyncReader } from '#/modules/invoices/application/invoice/first-sync-reader.interface.ts';
 import type { CardInvoiceTransactionReader } from '#/modules/invoices/application/invoice/card-invoice-transaction-reader.interface.ts';
 import { GetInvoiceMonthQuery } from '#/modules/invoices/application/invoice/get-invoice-month.query.ts';
 import { GetInvoiceQuery } from '#/modules/invoices/application/invoice/get-invoice.query.ts';
@@ -67,6 +68,9 @@ export function createInvoicesModule(deps: {
   };
   expectations?: RecurrenceExpectationReader | undefined;
   linkedElsewhere?: LinkedTransactionReader | undefined;
+  // `sync`: when the first round of the connection of a card started (before it, the bank's
+  // invoices count as paid before the Fincheck). Without it every invoice is read as it is.
+  firstSyncs?: FirstSyncReader | undefined;
 }) {
   const { db, unitOfWork, clock, cards, transactionPorts } = deps;
   const calendar = new BusinessCalendar();
@@ -82,6 +86,7 @@ export function createInvoicesModule(deps: {
     calendar,
     clock,
     deps.linkedElsewhere,
+    deps.firstSyncs,
   );
 
   const routes = new Hono()

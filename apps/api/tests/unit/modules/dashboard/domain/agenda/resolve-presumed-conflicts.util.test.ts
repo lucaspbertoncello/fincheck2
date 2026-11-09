@@ -32,6 +32,7 @@ const invoiceOf = (transactionId: string, dueOn: string, month = '2026-10'): Inv
       isPresumed: true,
     },
     isEditable: true,
+    paidBeforeFincheck: false,
   },
 });
 

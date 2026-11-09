@@ -45,6 +45,9 @@ export const invoiceDtoSchema = z.object({
   payments: z.array(invoicePaymentDtoSchema),
   paymentSuggestion: invoicePaymentSuggestionSchema.nullable(),
   isEditable: z.boolean(),
+  // Due before the first round of the Pluggy connection, with no payment (a correction of the total does not matter): paid
+  // before the Fincheck existed, so it is not a debt (status `paid`, nothing left to pay).
+  paidBeforeFincheck: z.boolean().default(false),
 });
 
 export const invoiceItemSchema = z.discriminatedUnion('type', [

@@ -247,6 +247,7 @@ describe('AccountListPage, invoice with more refund than purchases (R5)', () => 
                 payments: [],
                 paymentSuggestion: null,
                 isEditable: true,
+                paidBeforeFincheck: false,
               },
             },
           ],

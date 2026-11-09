@@ -13,7 +13,8 @@ const MONTHS_BACK = 4;
 
 // The invoices still to pay that the detector of invoice payments of the import compares a debit
 // to (`domain model.md` 4.10, detector 2 (b)): closed, partial or overdue, of the active cards,
-// with the total that counts. A month is looked at when it has a row or a transaction. The sync asks
+// with the total that counts. The rule "paid before the Fincheck" is not applied: the debit that
+// paid an old invoice is in the history of the first round and must still be taken as its payment. A month is looked at when it has a row or a transaction. The sync asks
 // it through its own port, which this class satisfies.
 export class ListPayableInvoicesQuery {
   private readonly cards: CardReader;
@@ -54,7 +55,9 @@ export class ListPayableInvoicesQuery {
         .toSorted()
         .map((month) => Month.of(month));
 
-      for (const invoice of await this.builder.buildMany(card, months, executor)) {
+      for (const invoice of await this.builder.buildMany(card, months, executor, {
+        withoutFirstSyncRule: true,
+      })) {
         if (
           invoice.status !== 'closed' &&
           invoice.status !== 'partial' &&
