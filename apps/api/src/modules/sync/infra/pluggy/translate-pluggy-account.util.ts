@@ -37,6 +37,8 @@ export function translatePluggyAccount(
     id: response.id,
     name: asText(response.name) || asText(response.marketingName) || 'Sem nome',
     type,
+    // The bank of the connection holds; the gateway fills it only for the MeuPluggy.
+    institution: null,
     // As it came: the card shows the amount used and the port keeps it that way.
     balanceCents:
       typeof response.balance === 'number' ? convertAmountToCents(response.balance) : null,

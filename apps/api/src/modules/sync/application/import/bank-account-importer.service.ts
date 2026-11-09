@@ -53,8 +53,8 @@ export class BankAccountImporter {
       if (link.isPending() && !known) {
         const found = await this.candidates.find(
           {
-            institutionCode: connection.institutionCode,
-            institutionName: connection.institutionName,
+            institutionCode: account.institution?.code ?? connection.institutionCode,
+            institutionName: account.institution?.name ?? connection.institutionName,
             type: account.type,
             numberHint: account.numberHint,
           },
@@ -122,8 +122,8 @@ export class BankAccountImporter {
     return {
       type: account.type,
       name: account.name,
-      institutionCode: connection.institutionCode,
-      institutionName: connection.institutionName,
+      institutionCode: account.institution?.code ?? connection.institutionCode,
+      institutionName: account.institution?.name ?? connection.institutionName,
       balanceCents: BankAccountImporter.balanceOf(fetched),
       card:
         account.card && days

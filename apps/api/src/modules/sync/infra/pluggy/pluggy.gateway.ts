@@ -6,6 +6,8 @@ import type { PluggyConnectToken } from '#/modules/sync/infra/pluggy/pluggy-conn
 import type { PluggyItem } from '#/modules/sync/infra/pluggy/pluggy-item.type.ts';
 import type { PluggyTransaction } from '#/modules/sync/infra/pluggy/pluggy-transaction.type.ts';
 import { PluggyClient } from '#/modules/sync/infra/pluggy/pluggy.client.ts';
+import { deriveMeuPluggyInstitution } from '#/modules/sync/infra/pluggy/derive-meu-pluggy-institution.util.ts';
+import { isMeuPluggyConnector } from '#/modules/sync/infra/pluggy/is-meu-pluggy-connector.util.ts';
 import { translatePluggyAccount } from '#/modules/sync/infra/pluggy/translate-pluggy-account.util.ts';
 import { translatePluggyBill } from '#/modules/sync/infra/pluggy/translate-pluggy-bill.util.ts';
 import { translatePluggyItem } from '#/modules/sync/infra/pluggy/translate-pluggy-item.util.ts';
@@ -24,6 +26,10 @@ export class PluggyGateway implements BankDataProvider {
   // The type of each account seen, because a transaction only makes sense knowing if it is a card
   // (the sign is the opposite there) and the Pluggy does not say it on the transaction.
   private readonly accountTypes = new Map<string, BankDataProvider.Account['type'] | null>();
+
+  // Whether the connector of each item seen is the MeuPluggy, learned by `getItem` (a round asks for
+  // the item first); an item not seen is asked for by `listAccounts`.
+  private readonly meuPluggyItems = new Map<string, boolean>();
 
   constructor(client: PluggyClient = new PluggyClient(), clock: Clock = new SystemClock()) {
     this.client = client;
@@ -67,7 +73,11 @@ export class PluggyGateway implements BankDataProvider {
         'item',
       );
 
-      return translatePluggyItem(response, this.clock.now());
+      const item = translatePluggyItem(response, this.clock.now());
+
+      this.meuPluggyItems.set(itemId, isMeuPluggyConnector(response.connector));
+
+      return item;
     });
   }
 
@@ -82,6 +92,7 @@ export class PluggyGateway implements BankDataProvider {
         { itemId },
         'item',
       );
+      const isMeuPluggy = await this.isMeuPluggyItem(credentials, itemId);
       const accounts: BankDataProvider.Account[] = [];
 
       for (const response of responses) {
@@ -94,7 +105,9 @@ export class PluggyGateway implements BankDataProvider {
         }
       }
 
-      return accounts;
+      const institution = isMeuPluggy ? deriveMeuPluggyInstitution(accounts) : null;
+
+      return institution ? accounts.map((account) => ({ ...account, institution })) : accounts;
     });
   }
 
@@ -139,6 +152,26 @@ export class PluggyGateway implements BankDataProvider {
 
       return responses.flatMap((response) => translatePluggyBill(response) ?? []);
     });
+  }
+
+  private async isMeuPluggyItem(
+    credentials: BankDataProvider.Credentials,
+    itemId: string,
+  ): Promise<boolean> {
+    const known = this.meuPluggyItems.get(itemId);
+
+    if (known !== undefined) return known;
+    const response = await this.client.get<PluggyItem.Response>(
+      credentials,
+      `/items/${encodeURIComponent(itemId)}`,
+      {},
+      'item',
+    );
+    const isMeuPluggy = isMeuPluggyConnector(response.connector);
+
+    this.meuPluggyItems.set(itemId, isMeuPluggy);
+
+    return isMeuPluggy;
   }
 
   // From the memory when `listAccounts` already passed by it; otherwise asks the provider. Null when

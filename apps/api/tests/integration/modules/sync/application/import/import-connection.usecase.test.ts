@@ -60,6 +60,72 @@ describe('a round of the sync, complete', () => {
       });
     });
 
+    describe('a MeuPluggy connection', () => {
+      const meuPluggy = () =>
+        buildTestItem({ institutionName: 'MeuPluggy', institutionCode: 'other' });
+
+      it('creates the account with the bank it comes from, not the name of the connector', async () => {
+        world.provider.items.set(SYNC_TEST_ITEM_ID, meuPluggy());
+        world.provider.accounts.set(SYNC_TEST_ITEM_ID, [
+          buildTestBankAccount({ institution: { name: 'Nubank', code: 'nubank' } }),
+        ]);
+
+        await world.connect();
+
+        const [account] = await world.accountsTable();
+        expect(account).toMatchObject({ institution_code: 'nubank', institution_name: null });
+      });
+
+      it('keeps the name of a bank that is not pre-registered', async () => {
+        world.provider.items.set(SYNC_TEST_ITEM_ID, meuPluggy());
+        world.provider.accounts.set(SYNC_TEST_ITEM_ID, [
+          buildTestBankAccount({ institution: { name: 'Banco Pequeno', code: 'other' } }),
+        ]);
+
+        await world.connect();
+
+        const [account] = await world.accountsTable();
+        expect(account).toMatchObject({
+          institution_code: 'other',
+          institution_name: 'Banco Pequeno',
+        });
+      });
+
+      it('keeps the name of the connector when the account brings no bank', async () => {
+        world.provider.items.set(SYNC_TEST_ITEM_ID, meuPluggy());
+        world.provider.accounts.set(SYNC_TEST_ITEM_ID, [buildTestBankAccount()]);
+
+        await world.connect();
+
+        const [account] = await world.accountsTable();
+        expect(account).toMatchObject({ institution_code: 'other', institution_name: 'MeuPluggy' });
+      });
+
+      it('does not undo what Lucas edited on the next round', async () => {
+        world.provider.items.set(SYNC_TEST_ITEM_ID, meuPluggy());
+        world.provider.accounts.set(SYNC_TEST_ITEM_ID, [
+          buildTestBankAccount({ institution: { name: 'Nubank', code: 'nubank' } }),
+        ]);
+        const connection = await world.connect();
+        const checkingId = await world.accountIdOf(CHECKING);
+        await world.send('PATCH', `/accounts/${checkingId}`, {
+          name: 'Minha conta',
+          institutionCode: 'other',
+          institutionName: 'Meu banco',
+        });
+        world.moveTo('2026-11-09T18:00:00.000Z');
+
+        await world.retry(connection.id);
+
+        const [account] = await world.accountsTable();
+        expect(account).toMatchObject({
+          name: 'Minha conta',
+          institution_code: 'other',
+          institution_name: 'Meu banco',
+        });
+      });
+    });
+
     it('records the amount used on a card as a positive number', async () => {
       world.provider.accounts.set(SYNC_TEST_ITEM_ID, [buildTestBankCard({ balanceCents: -25000 })]);
 

@@ -54,6 +54,9 @@ export namespace BankDataProvider {
     id: string;
     name: string;
     type: 'checking' | 'savings' | 'credit_card';
+    // The bank of the account when the connection does not say it (an aggregator such as the
+    // MeuPluggy); null otherwise, and the institution of the connection holds.
+    institution: { name: string; code: Institution.Code } | null;
     // What the bank informs: the balance, or on a card the amount used (positive). Null when absent.
     balanceCents: number | null;
     // The last 4 digits of the number of the account or card, when the bank sends them.

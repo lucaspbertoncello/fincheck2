@@ -770,3 +770,70 @@ describe('PluggyGateway: failures', () => {
     }
   });
 });
+
+describe('PluggyGateway: accounts of a MeuPluggy item', () => {
+  const checking = {
+    id: 'acc-1',
+    type: 'BANK',
+    subtype: 'CHECKING_ACCOUNT',
+    name: 'Nu Pagamentos S.A.',
+    balance: 1,
+  };
+  const savings = { ...checking, id: 'acc-2', subtype: 'SAVINGS_ACCOUNT' };
+  const card = {
+    id: 'acc-3',
+    type: 'CREDIT',
+    subtype: 'CREDIT_CARD',
+    name: 'Platinum Mastercard',
+    balance: 5,
+  };
+  const itemOf = (connector: { id: number; name: string }) => ({
+    id: 'item-1',
+    connector,
+    status: 'UPDATED',
+    executionStatus: 'SUCCESS',
+  });
+  const answer = (connector: { id: number; name: string }, accounts: unknown[]) =>
+    withAuth((call) => (call.path === '/items/item-1' ? json(itemOf(connector)) : page(accounts)));
+  const MEU = { id: 200, name: 'MeuPluggy' };
+  const institutionsOf = (accounts: { institution: unknown }[]) =>
+    accounts.map((account) => account.institution);
+  const NUBANK = { name: 'Nu Pagamentos S.A.', code: 'nubank' };
+
+  it('gives every account, the card included, the bank of the checking account', async () => {
+    const { gateway, calls } = setup(answer(MEU, [card, checking]));
+
+    await gateway.getItem(CREDENTIALS, 'item-1');
+    const accounts = await gateway.listAccounts(CREDENTIALS, 'item-1');
+
+    expect(institutionsOf(accounts)).toEqual([NUBANK, NUBANK]);
+    expect(calls.filter((call) => call.path === '/items/item-1')).toHaveLength(1);
+  });
+
+  it('reads the bank of a savings account when there is no checking account', async () => {
+    const { gateway } = setup(answer(MEU, [card, savings]));
+
+    expect(institutionsOf(await gateway.listAccounts(CREDENTIALS, 'item-1'))).toEqual([
+      NUBANK,
+      NUBANK,
+    ]);
+  });
+
+  it('keeps the connector name when the item has no checking or savings account', async () => {
+    const { gateway } = setup(answer(MEU, [card]));
+
+    expect(institutionsOf(await gateway.listAccounts(CREDENTIALS, 'item-1'))).toEqual([null]);
+  });
+
+  it('keeps the connector name when the name matches no bank', async () => {
+    const { gateway } = setup(answer(MEU, [{ ...checking, name: 'Conta Corrente' }, card]));
+
+    expect(institutionsOf(await gateway.listAccounts(CREDENTIALS, 'item-1'))).toEqual([null, null]);
+  });
+
+  it('leaves an ordinary connector alone', async () => {
+    const { gateway } = setup(answer({ id: 601, name: 'Itaú' }, [checking, card]));
+
+    expect(institutionsOf(await gateway.listAccounts(CREDENTIALS, 'item-1'))).toEqual([null, null]);
+  });
+});

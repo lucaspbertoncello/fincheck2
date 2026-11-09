@@ -20,6 +20,7 @@ describe('translatePluggyAccount', () => {
       id: 'acc-1',
       name: 'Conta Corrente',
       type: 'checking',
+      institution: null,
       balanceCents: 123456,
       numberHint: '3456',
       card: null,
@@ -104,6 +105,7 @@ describe('translatePluggyAccount', () => {
       ).toEqual({
         id: 'acc-1',
         name: 'Cartão Gold',
+        institution: null,
         type: 'credit_card',
         // As it came, not flipped: it is the amount used.
         balanceCents: 75010,
