@@ -18,8 +18,10 @@ type Expectation = {
 // satisfies. An occurrence falls in the invoice its expected day falls in, by the cycle of the card
 // (the function `invoiceMonthOf` that `invoices` hands in); with no day, in the invoice of its own
 // month. It counts what is left of it while it is expected, partial or late; one confirmed or
-// skipped counts nothing, and neither does one of a deleted recurrence. When the real charge comes
-// and is tied to the occurrence, what is left shrinks, so the same expense never counts twice.
+// skipped counts nothing, and neither does one of a deleted or paused recurrence (the same rule as
+// the agenda: pausing keeps the occurrence of the month, but it leaves the expected invoice, so the
+// Livre and the projection; resuming brings it back). When the real charge comes and is tied to
+// the occurrence, what is left shrinks, so the same expense never counts twice.
 export class GetOccurrenceExpectationsQuery {
   private readonly db: Kysely<Database>;
   private readonly occurrences: OccurrenceRepository<Kysely<Database>>;
@@ -56,6 +58,7 @@ export class GetOccurrenceExpectationsQuery {
       .where('r.account_id', '=', query.accountId)
       .where('r.kind', '=', 'expense')
       .where('r.archived_at', 'is', null)
+      .where('r.paused_at', 'is', null)
       .where('o.skipped_at', 'is', null)
       .where('o.settled_at', 'is', null)
       .where('o.month', '>=', first.previous().value)

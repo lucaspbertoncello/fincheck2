@@ -92,6 +92,7 @@ export function createSyncModule(deps: {
     candidates,
     clock,
   );
+  const listConnections = new ListConnectionsQuery(connections, builder);
 
   const accountImporter = new BankAccountImporter(deps.accounts, candidates, connections);
   const importConnection = new ImportConnectionUseCase(
@@ -139,9 +140,7 @@ export function createSyncModule(deps: {
     .route(
       '/',
       createConnectionRoute({
-        listConnections: new ListConnectionsController(
-          new ListConnectionsQuery(connections, builder),
-        ),
+        listConnections: new ListConnectionsController(listConnections),
         registerConnection: new RegisterConnectionController(
           new RegisterConnectionUseCase(
             connections,
@@ -213,5 +212,20 @@ export function createSyncModule(deps: {
       clock,
     ),
     recoverInterruptedRuns: new RecoverInterruptedRunsUseCase(runs, clock),
+    // The reader `dashboard` declares and `sync` fulfils: the connections, for the freshness seal
+    // and the alerts. It reads the list `GET /connections` already shows, and keeps four fields.
+    dashboardReaders: {
+      connections: {
+        async listConnections() {
+          const { items } = await listConnections.execute();
+          return items.map((item) => ({
+            connectionId: item.id,
+            institutionName: item.institutionName,
+            status: item.status,
+            lastBankUpdateAt: item.lastBankUpdateAt,
+          }));
+        },
+      },
+    },
   };
 }

@@ -8,6 +8,7 @@ import { AutoMatchOccurrencesUseCase } from '#/modules/recurrences/application/m
 import { EnsureOccurrencesUseCase } from '#/modules/recurrences/application/occurrence/ensure-occurrences.usecase.ts';
 import { GetOccurrenceExpectationsQuery } from '#/modules/recurrences/application/occurrence/get-occurrence-expectations.query.ts';
 import { ListOccurrenceCandidatesQuery } from '#/modules/recurrences/application/occurrence/list-occurrence-candidates.query.ts';
+import { ListAgendaOccurrencesQuery } from '#/modules/recurrences/application/occurrence/list-agenda-occurrences.query.ts';
 import { ListOccurrencesQuery } from '#/modules/recurrences/application/occurrence/list-occurrences.query.ts';
 import { MonthOccurrenceLoader } from '#/modules/recurrences/application/occurrence/month-occurrence-loader.service.ts';
 import { OccurrenceDtoBuilder } from '#/modules/recurrences/application/occurrence/occurrence-dto-builder.service.ts';
@@ -299,6 +300,14 @@ export function createRecurrencesModule(deps: {
         transactionPorts.occurrenceTransactions,
         builder,
         linker,
+      ),
+    },
+    // The readers `dashboard` declares and `recurrences` fulfils.
+    dashboardReaders: {
+      occurrences: new ListAgendaOccurrencesQuery(
+        new ListOccurrencesQuery(occurrences, loader, builder, clock),
+        loader,
+        recurrences,
       ),
     },
     // The reader `profile` declares and `recurrences` fulfils.

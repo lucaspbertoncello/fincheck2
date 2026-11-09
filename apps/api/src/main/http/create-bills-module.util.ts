@@ -12,6 +12,7 @@ import { DeleteBillPaymentUseCase } from '#/modules/bills/application/bill-payme
 import { DismissBillPaymentSuggestionUseCase } from '#/modules/bills/application/bill-payment/dismiss-payment-suggestion.usecase.ts';
 import type { LinkedElsewhereReader } from '#/modules/bills/application/bill-payment/linked-elsewhere-reader.interface.ts';
 import { ListBillPaymentCandidatesQuery } from '#/modules/bills/application/bill-payment/list-bill-payment-candidates.query.ts';
+import { ListAgendaBillsQuery } from '#/modules/bills/application/bill-payment/list-agenda-bills.query.ts';
 import { ListNewBillPaymentCandidatesQuery } from '#/modules/bills/application/bill-payment/list-new-bill-payment-candidates.query.ts';
 import { UndoBillPaymentSuggestionDismissalUseCase } from '#/modules/bills/application/bill-payment/undo-bill-payment-suggestion-dismissal.usecase.ts';
 import { BillDtoBuilder } from '#/modules/bills/application/bill/bill-dto-builder.service.ts';
@@ -135,5 +136,16 @@ export function createBillsModule(deps: {
   // `/bills/payment-candidates` is a fixed path under `/bills/:id`: the payment route goes first.
   const routes = new Hono().route('/', billPaymentRoute).route('/', billRoute);
 
-  return { routes };
+  return {
+    routes,
+    // The reader `dashboard` declares and `bills` fulfils.
+    dashboardReaders: {
+      bills: new ListAgendaBillsQuery(
+        bills,
+        builder,
+        transactionPorts.billTransactions,
+        linkedElsewhere,
+      ),
+    },
+  };
 }

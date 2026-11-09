@@ -6,6 +6,10 @@ import { KyselyUnitOfWork } from '#/database/unit-of-work/kysely-unit-of-work.se
 import { handleError } from '#/main/http/handle-error.util.ts';
 import { createLocalTokenMiddleware } from '#/main/http/middlewares/local-token.middleware.ts';
 import { createBackupModule } from '#/main/http/create-backup-module.util.ts';
+import { createDashboardAccountReader } from '#/main/http/create-dashboard-account-reader.util.ts';
+import { createDashboardCategoryReader } from '#/main/http/create-dashboard-category-reader.util.ts';
+import { createDashboardModule } from '#/main/http/create-dashboard-module.util.ts';
+import { createTransactionsDashboardPorts } from '#/main/http/create-transactions-dashboard-ports.util.ts';
 import { createCategoriesModule } from '#/main/http/create-categories-module.util.ts';
 import { composeLinkedTransactionReaders } from '#/main/http/compose-linked-transaction-readers.util.ts';
 import { createBillsModule } from '#/main/http/create-bills-module.util.ts';
@@ -310,6 +314,21 @@ export function createAppParts({
     },
   });
 
+  // dashboard has no table: it reads accounts (the balances), invoices, bills and recurrences (what
+  // is still to pay and to receive, and the use case that creates the occurrences that are missing),
+  // transactions (the lines of spending and income, the queue to review) and categories (the kind).
+  // The connections belong to sync, so it is built after it (the freshness seal and the alerts).
+  const dashboard = createDashboardModule({
+    clock,
+    ensureOccurrences: recurrences.ensureOccurrences,
+    accounts: createDashboardAccountReader(new ListAccountsUseCase(accounts, accountPresenter)),
+    invoices: invoices.dashboardReaders.invoices,
+    bills: bills.dashboardReaders.bills,
+    occurrences: recurrences.dashboardReaders.occurrences,
+    categories: createDashboardCategoryReader(categories.transactionReaders.categories),
+    connections: syncModule.dashboardReaders.connections,
+    ...createTransactionsDashboardPorts({ db }),
+  });
   const app = new Hono()
     .notFound((c) =>
       c.json<ApiError.Dto>({ code: 'ROUTE_NOT_FOUND', message: 'Rota não encontrada.' }, 404),
@@ -340,7 +359,8 @@ export function createAppParts({
     .route('/', profile.routes)
     .route('/', bills.routes)
     .route('/', backup.routes)
-    .route('/', syncModule.routes);
+    .route('/', syncModule.routes)
+    .route('/', dashboard.routes);
 
   return {
     app,

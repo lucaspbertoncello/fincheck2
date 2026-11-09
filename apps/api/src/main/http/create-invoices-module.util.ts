@@ -13,6 +13,7 @@ import { GetInvoiceQuery } from '#/modules/invoices/application/invoice/get-invo
 import { GetOpenInvoiceMonthsQuery } from '#/modules/invoices/application/invoice/get-open-invoice-months.query.ts';
 import { InvoiceDtoBuilder } from '#/modules/invoices/application/invoice/invoice-dto-builder.service.ts';
 import { InvoiceOpener } from '#/modules/invoices/application/invoice/invoice-opener.service.ts';
+import { ListAgendaInvoicesQuery } from '#/modules/invoices/application/invoice/list-agenda-invoices.query.ts';
 import { ListInvoicesQuery } from '#/modules/invoices/application/invoice/list-invoices.query.ts';
 import { ListOpenInvoicesQuery } from '#/modules/invoices/application/invoice/list-open-invoices.query.ts';
 import type { RecurrenceExpectationReader } from '#/modules/invoices/application/invoice/recurrence-expectation-reader.interface.ts';
@@ -169,6 +170,15 @@ export function createInvoicesModule(deps: {
         clock,
       ),
       payableInvoices: new ListPayableInvoicesQuery(
+        cards,
+        invoices,
+        transactionPorts.cardTransactions,
+        builder,
+      ),
+    },
+    // The reader `dashboard` declares and `invoices` fulfils.
+    dashboardReaders: {
+      invoices: new ListAgendaInvoicesQuery(
         cards,
         invoices,
         transactionPorts.cardTransactions,

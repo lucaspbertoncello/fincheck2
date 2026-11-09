@@ -5,8 +5,8 @@ import type { Database } from '#/database/database.type.ts';
 import type { CardReader } from '#/modules/invoices/application/card/card-reader.interface.ts';
 import type { CardInvoiceTransactionReader } from '#/modules/invoices/application/invoice/card-invoice-transaction-reader.interface.ts';
 import type { InvoiceDtoBuilder } from '#/modules/invoices/application/invoice/invoice-dto-builder.service.ts';
+import { listLookbackMonths } from '#/modules/invoices/application/invoice/list-lookback-months.util.ts';
 import type { InvoiceRepository } from '#/modules/invoices/domain/invoice/invoice-repository.interface.ts';
-import { Month } from '#/shared/date/month.value-object.ts';
 
 // The invoice of each active card that asks for attention (BR-DSH-009): the oldest one still to
 // pay (closed, partial or overdue) if there is any, otherwise the open one. Ordered by due date,
@@ -40,18 +40,11 @@ export class ListOpenInvoicesQuery {
         this.invoices.findByAccount(card.id),
         this.cardTransactions.invoiceMonthsOf(card.id),
       ]);
-      // Only the last three months before the open one: an older invoice with no payment is almost
-      // always a payment that did not match, not a debt (decided by the PM, 08/11/2026).
-      const oldestLooked = openMonth.previous().previous().previous();
-      const before = [
-        ...new Set([
-          ...rows.map((row) => row.month.value),
-          ...transactionMonths.map((m) => m.value),
-        ]),
-      ]
-        .filter((month) => month < openMonth.value && month >= oldestLooked.value)
-        .toSorted()
-        .map((month) => Month.of(month));
+      // Only the last three months before the open one (see `listLookbackMonths`).
+      const before = listLookbackMonths(openMonth, [
+        ...rows.map((row) => row.month.value),
+        ...transactionMonths.map((month) => month.value),
+      ]);
 
       const oldest = await this.builder.findOldestUnpaidMonth(card, before);
       const [invoice] = await this.builder.buildMany(card, [oldest ?? openMonth]);

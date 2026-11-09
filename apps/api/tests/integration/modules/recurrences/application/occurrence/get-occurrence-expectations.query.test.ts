@@ -153,6 +153,31 @@ describe('the recurrences expected on the invoices of a card', () => {
     ).toBe(100);
   });
 
+  it('counts nothing of a paused recurrence (not in the totals, not as a line), and counts it again once it resumes', async () => {
+    const { recurrence } = await onCard({ dateRule: { type: 'fixed_day', day: 21 } });
+    const expectedOf = async () =>
+      (await invoices()).find((invoice) => invoice.month === '2026-12');
+    const linesOf = async () => {
+      const response = await world.send('GET', `/cards/${world.card}/invoices/2026-12`);
+
+      return invoiceDetailDtoSchema.parse(await response.json()).items;
+    };
+    expect((await expectedOf())?.breakdown.expectedRecurringCents).toBe(5590);
+
+    const paused = await world.send('POST', `/recurrences/${recurrence.id}/pause`);
+    expect(paused.status).toBe(200);
+
+    expect(Object.values(await expectedBy()).every((cents) => cents === 0)).toBe(true);
+    expect((await expectedOf())?.totalCents).toBe(0);
+    expect(await linesOf()).toEqual([]);
+
+    const resumed = await world.send('POST', `/recurrences/${recurrence.id}/resume`);
+    expect(resumed.status).toBe(200);
+
+    expect((await expectedOf())?.breakdown.expectedRecurringCents).toBe(5590);
+    expect(await linesOf()).toEqual([expect.objectContaining({ type: 'expected_recurrence' })]);
+  });
+
   it('counts nothing for an invoice that is closed, a deleted recurrence, an income, another card or a checking account', async () => {
     const deleted = await onCard({ name: 'Excluída', expectedAmountCents: 111 });
     await world.send('DELETE', `/recurrences/${deleted.recurrence.id}`);
