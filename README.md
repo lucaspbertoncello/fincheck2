@@ -113,14 +113,24 @@ Bank sync goes through Pluggy. It is optional: without it the app works with man
 
 1. Sign up at the [Pluggy Dashboard](https://dashboard.pluggy.ai) and create an application. It gets a **Client ID** and a **Client Secret**. The secret is shown only once, so copy it right away.
 2. Start the app (`pnpm dev`) and open **Configurações > Conexões** (Settings > Connections). Paste the Client ID and the Client Secret and save. The API checks them against Pluggy before storing them.
-3. Connect a bank at [meu.pluggy.ai](https://meu.pluggy.ai) and copy the 36-character **connection code** (the Pluggy item id).
+3. Get the Item ID (the 36-character connection code) from the Pluggy Dashboard:
+   1. Connect your bank at [meu.pluggy.ai](https://meu.pluggy.ai).
+   2. In the Dashboard, add the **MeuPluggy** connector to your application.
+   3. Open the application and click "Ir para Demo".
+   4. Authorize MeuPluggy (OAuth). This is done once per bank.
+   5. In the Demo, open the three-dot menu (top right) and click "Copiar Item ID".
+
+   > **Do this within the 15-day trial.** The trial starts when you create the Dashboard account. Connecting after it ends is not possible; already connected banks keep working.
+
+   Sources: [pluggyai/meu-pluggy](https://github.com/pluggyai/meu-pluggy), [Actual Budget: Pluggy.ai](https://actualbudget.org/docs/advanced/bank-sync/pluggyai) (checked 2026-11-09).
+
 4. In the app, go to **Contas** (Accounts), add an account, choose **Banco (Open Finance)** and paste the code. The accounts, cards and transactions are imported, and a job refreshes them every hour.
 
 Notes:
 
 - The keys are not in `.env`. They are stored in the database, with the secret encrypted by **Windows DPAPI** for your Windows user. That is why saving keys works only on Windows, and why a backup restored on another PC asks for the keys again.
 - New Pluggy applications start with access to **Sandbox** connectors (fake banks), which is a safe way to try the flow. See the [Pluggy sandbox guide](https://docs.pluggy.ai/en/docs/guides/sandbox) for the test logins.
-- Not confirmed from Pluggy's public documentation: pricing or free-trial terms for connecting real banks, and whether an application created on the Dashboard can read items connected on Meu Pluggy. Check with Pluggy before relying on either.
+- Not confirmed from Pluggy's public documentation: pricing for connecting real banks after the trial. Check with Pluggy before relying on it.
 - The Pluggy integration has so far been tested only against fake responses; expect rough edges with the first real bank.
 
 ## Commands
