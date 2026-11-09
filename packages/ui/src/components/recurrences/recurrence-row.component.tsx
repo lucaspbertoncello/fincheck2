@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 
 import { Button } from '#/components/buttons/index.ts';
 import { Collapse } from '#/components/disclosure/index.ts';
@@ -104,17 +104,7 @@ export function RecurrenceRow({
 }: RecurrenceRowProps) {
   const [isOpen, setIsOpen] = useState(false);
   const panelId = useId();
-  const itemRef = useRef<HTMLLIElement>(null);
   const expandable = transactions !== undefined;
-
-  // Pending (the `ListRow` belongs to another piece): `ListRow` should take `expanded` and `controls`
-  // and put them on its name button. Until then they go on it here, the first button of the item.
-  useEffect(() => {
-    const trigger = expandable ? itemRef.current?.querySelector('button') : null;
-    if (!trigger) return;
-    trigger.setAttribute('aria-expanded', String(isOpen));
-    trigger.setAttribute('aria-controls', panelId);
-  }, [expandable, isOpen, panelId]);
 
   // From the desktop the references sit in the value column and the detail is one line cut with an
   // ellipsis (the whole text in the `title`); below it the value column keeps only the main value
@@ -185,6 +175,8 @@ export function RecurrenceRow({
       nameClassName={dismissed ? 'text-fg-tertiary line-through' : undefined}
       onOpen={expandable ? () => setIsOpen((current) => !current) : undefined}
       openLabel={expandable ? `Transações de ${name}` : undefined}
+      expanded={expandable ? isOpen : undefined}
+      controls={expandable ? panelId : undefined}
       // One unit, so the chevron never sits alone on a line.
       badges={[
         <span key="status" className="inline-flex items-center gap-s4">
@@ -239,7 +231,7 @@ export function RecurrenceRow({
   if (!expandable) return row;
 
   return (
-    <li ref={itemRef} className={className}>
+    <li className={className}>
       {row}
       <Collapse isOpen={isOpen} id={panelId} contentClassName="pb-s12">
         {/* Under the text (mark 36 or 40 px and 12 px), ending where the amount ends (menu 44 or 40 px and 12 px). */}

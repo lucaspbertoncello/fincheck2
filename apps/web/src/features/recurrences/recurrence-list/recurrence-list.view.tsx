@@ -11,8 +11,12 @@ import {
   TotalCard,
   type RecurrenceAction,
   type RecurrenceFlow,
+  type TotalCardDetail,
 } from '@fincheck/ui';
+import type { Ref } from 'react';
 
+import { MissingFilterChip } from '#/features/recurrences/recurrence-list/components/missing-filter-chip.component.tsx';
+import { TOTAL_CARD_WORDS } from '#/features/recurrences/recurrence-list/constants/total-card-words.constant.ts';
 import { FLOW_OPTIONS } from '#/features/recurrences/recurrence-list/constants/flow-options.constant.ts';
 import { DayOccurrenceList } from '#/features/recurrences/recurrence-list/components/day-occurrence-list.component.tsx';
 import { IdleRecurrenceRow } from '#/features/recurrences/recurrence-list/components/idle-recurrence-row.component.tsx';
@@ -31,7 +35,7 @@ import type {
   OccurrenceRowData,
 } from '#/features/recurrences/recurrence-list/types/recurrence-list.type.ts';
 
-type TotalCardData = { label: string; totalCents: number; caption?: string };
+type TotalCardData = { label: string; totalCents: number; details: TotalCardDetail[] };
 
 type RecurrenceListViewProps = {
   state: 'loading' | 'error' | 'empty' | 'ready';
@@ -42,6 +46,15 @@ type RecurrenceListViewProps = {
   onFlowChange: (flow: RecurrenceFlow) => void;
   attentionRows: OccurrenceRowData[];
   card: TotalCardData;
+  /**
+   * `?show=missing`: the list and "Precisa de você" hold only what still lacks money. The strip of
+   * days and "Sem dia certo" stay whole: they are the calendar of the month, not a list. The
+   * screen scrolls to the start of the list when the filter arrives (`listScrollTarget`): the chip is
+   * already at the top, the list is what is out of sight.
+   */
+  missingFilter: { isActive: boolean; onClear: () => void };
+  /** The box of the list the screen scrolls to when `?show=missing` arrives. */
+  listScrollTarget: Ref<HTMLDivElement>;
   strip: {
     title: string;
     days: OccurrenceDayData[];
@@ -100,6 +113,8 @@ function ReadyContent({
   onFlowChange,
   attentionRows,
   card,
+  missingFilter,
+  listScrollTarget,
   strip,
   rows,
   idleRecurrences,
@@ -131,6 +146,8 @@ function ReadyContent({
           />
         ) : null}
       </BannerSlot>
+
+      <MissingFilterChip isActive={missingFilter.isActive} onClear={missingFilter.onClear} />
 
       {attentionRows.length > 0 ? (
         <NeedsAttentionStrip countLabel={countLabel(attentionRows.length)}>
@@ -171,21 +188,23 @@ function ReadyContent({
         }
       />
 
-      <Section title={flow === 'income' ? 'Receitas' : 'Despesas fixas'}>
-        {rows.length > 0 ? (
-          <RecurrenceList>
-            {rows.map((row) => (
-              <OccurrenceRowItem key={row.occurrenceId} row={row} onAction={onRowAction} />
-            ))}
-          </RecurrenceList>
-        ) : (
-          <p className="text-body text-fg-secondary">
-            {flow === 'income'
-              ? 'Nenhuma receita fixa neste mês.'
-              : 'Nenhuma despesa fixa neste mês.'}
-          </p>
-        )}
-      </Section>
+      <div ref={listScrollTarget} className="scroll-mt-s16">
+        <Section title={flow === 'income' ? 'Receitas' : 'Despesas fixas'}>
+          {rows.length > 0 ? (
+            <RecurrenceList>
+              {rows.map((row) => (
+                <OccurrenceRowItem key={row.occurrenceId} row={row} onAction={onRowAction} />
+              ))}
+            </RecurrenceList>
+          ) : (
+            <p className="text-body text-fg-secondary">
+              {missingFilter.isActive
+                ? TOTAL_CARD_WORDS[flow].emptyMissing
+                : TOTAL_CARD_WORDS[flow].emptyList}
+            </p>
+          )}
+        </Section>
+      </div>
 
       {idleRecurrences.length > 0 ? (
         <Section title="Fora deste mês">

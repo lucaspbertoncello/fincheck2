@@ -13,5 +13,6 @@ export function buildFilters(search: TransactionListSearch) {
     uncategorized: search.category ? undefined : search.uncategorized,
     tagId: search.tag,
     ruleId: search.ruleId,
+    recurrenceLinked: search.recurrence === 'linked' ? true : undefined,
   };
 }

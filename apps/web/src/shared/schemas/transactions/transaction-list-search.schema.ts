@@ -28,6 +28,8 @@ export const transactionListSearchSchema = z.object({
   // "Ver transações" of a rule: only what that rule categorized.
   ruleId: idSchema.optional().catch(undefined),
   uncategorized: z.boolean().optional().catch(undefined),
+  // `?recurrence=linked` ("já recebidos" / "pagos" of Recorrências): only what pays an occurrence.
+  recurrence: z.enum(['linked']).optional().catch(undefined),
   // One day of the month (`YYYY-MM-DD`), from the spend map of the profile: only that day's rows show.
   day: businessDateSchema.optional().catch(undefined),
   // The open modal: edit or split of one transaction.

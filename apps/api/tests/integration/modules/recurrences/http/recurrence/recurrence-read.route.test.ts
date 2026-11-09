@@ -254,9 +254,15 @@ describe('recurrence reads', () => {
 
       expect(response.status).toBe(200);
       expect(recurrenceSummarySchema.parse(await response.json())).toEqual({
-        incomes: { expectedCents: 842700, receivedCents: 380200, count: 5 },
+        // Missing: the freelance (4.200,00 pending) and the allowance (R$ 425,00 partial). The
+        // voucher and both salaries are confirmed, so nothing is left of them.
+        incomes: { expectedCents: 842700, receivedCents: 380200, missingCents: 462500, count: 5 },
         expenses: {
           expectedCents: 54259,
+          // Only the plan was paid (R$ 200,00, a different value). Missing: the late cleaner
+          // (R$ 213,69) and the gym still expected (R$ 109,90); the confirmed plan has none.
+          paidCents: 20000,
+          missingCents: 32359,
           paidCount: 1,
           lateCount: 1,
           differentCount: 1,
@@ -285,7 +291,126 @@ describe('recurrence reads', () => {
       expect(recurrenceSummarySchema.parse(await response.json()).incomes).toEqual({
         expectedCents: 77700,
         receivedCents: 0,
+        missingCents: 77700,
         count: 1,
+      });
+    });
+
+    it('never counts an occurrence that came in over the expected amount as missing', async () => {
+      const { occurrence } = await world.create({
+        kind: 'income',
+        name: 'VR',
+        expectedAmountCents: 77700,
+        dateRule: { type: 'any_day', day: 5 },
+      });
+      await payIncome(occurrence?.id ?? '', 90000, '2026-10-02');
+
+      const response = await world.send('GET', '/recurrences/summary?month=2026-10');
+
+      expect(recurrenceSummarySchema.parse(await response.json()).incomes).toEqual({
+        expectedCents: 77700,
+        receivedCents: 90000,
+        missingCents: 0,
+        count: 1,
+      });
+    });
+
+    it('leaves a dismissed income out even when it kept a payment already linked', async () => {
+      const { occurrence } = await world.create({
+        kind: 'income',
+        name: 'Freela',
+        expectedAmountCents: 100000,
+        dateRule: { type: 'any_day' },
+      });
+      await payIncome(occurrence?.id ?? '', 40000, '2026-10-03');
+      await world.send('POST', `/occurrences/${occurrence?.id}/skip`);
+
+      const response = await world.send('GET', '/recurrences/summary?month=2026-10');
+
+      expect(recurrenceSummarySchema.parse(await response.json()).incomes).toEqual({
+        expectedCents: 0,
+        receivedCents: 0,
+        missingCents: 0,
+        count: 0,
+      });
+    });
+
+    it('leaves out the occurrence of a deleted recurrence, the set the list of recurrences shows', async () => {
+      const { recurrence, occurrence } = await world.create({
+        kind: 'income',
+        name: 'Freela',
+        expectedAmountCents: 100000,
+        dateRule: { type: 'any_day' },
+      });
+      await world.create({
+        kind: 'income',
+        name: 'VR',
+        expectedAmountCents: 77700,
+        dateRule: { type: 'any_day', day: 5 },
+      });
+      await payIncome(occurrence?.id ?? '', 40000, '2026-10-03');
+      await world.send('DELETE', `/recurrences/${recurrence.id}`);
+
+      const summary = recurrenceSummarySchema.parse(
+        await (await world.send('GET', '/recurrences/summary?month=2026-10')).json(),
+      );
+      const list = await world.send('GET', '/recurrences?month=2026-10');
+      const listed = (await list.json()) as {
+        items: { occurrence: { remainingCents: number; status: string } | null }[];
+      };
+      const missingOfList = listed.items.reduce(
+        (total, item) => total + (item.occurrence?.remainingCents ?? 0),
+        0,
+      );
+
+      // The deleted one kept its history, but it is neither in the list nor in the card.
+      expect(listed.items).toHaveLength(1);
+      expect(summary.incomes).toEqual({
+        expectedCents: 77700,
+        receivedCents: 0,
+        missingCents: 77700,
+        count: 1,
+      });
+      expect(summary.incomes.missingCents).toBe(missingOfList);
+    });
+
+    it('adds up the paid and the missing of an expense that came in over the expected amount', async () => {
+      const { occurrence } = await world.create({
+        name: 'Academia',
+        expectedAmountCents: 10990,
+        dateRule: { type: 'fixed_day', day: 25 },
+      });
+      const payment = await insertTestExpense(world.database.db, world.checking, {
+        cents: 12000,
+        on: '2026-10-20',
+      });
+      await world.send('POST', `/occurrences/${occurrence?.id}/payments`, {
+        transactionId: payment,
+      });
+
+      const response = await world.send('GET', '/recurrences/summary?month=2026-10');
+
+      expect(recurrenceSummarySchema.parse(await response.json()).expenses).toMatchObject({
+        paidCents: 12000,
+        missingCents: 0,
+        count: 1,
+      });
+    });
+
+    it('leaves a skipped expense out of what was paid and of what is missing', async () => {
+      const { occurrence } = await world.create({
+        name: 'Academia',
+        expectedAmountCents: 10990,
+        dateRule: { type: 'fixed_day', day: 25 },
+      });
+      await world.send('POST', `/occurrences/${occurrence?.id}/skip`);
+
+      const response = await world.send('GET', '/recurrences/summary?month=2026-10');
+
+      expect(recurrenceSummarySchema.parse(await response.json()).expenses).toMatchObject({
+        paidCents: 0,
+        missingCents: 0,
+        count: 0,
       });
     });
 
@@ -293,8 +418,16 @@ describe('recurrence reads', () => {
       const response = await world.send('GET', '/recurrences/summary?month=2026-03');
 
       expect(recurrenceSummarySchema.parse(await response.json())).toEqual({
-        incomes: { expectedCents: 0, receivedCents: 0, count: 0 },
-        expenses: { expectedCents: 0, paidCount: 0, lateCount: 0, differentCount: 0, count: 0 },
+        incomes: { expectedCents: 0, receivedCents: 0, missingCents: 0, count: 0 },
+        expenses: {
+          expectedCents: 0,
+          paidCents: 0,
+          missingCents: 0,
+          paidCount: 0,
+          lateCount: 0,
+          differentCount: 0,
+          count: 0,
+        },
       });
     });
 
@@ -308,6 +441,8 @@ describe('recurrence reads', () => {
         count: 1,
         lateCount: 1,
         expectedCents: 10990,
+        paidCents: 0,
+        missingCents: 10990,
       });
     });
 

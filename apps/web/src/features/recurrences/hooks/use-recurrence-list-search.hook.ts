@@ -33,6 +33,8 @@ export function useRecurrenceListSearch() {
     flow: (search.flow ?? 'expense') satisfies Flow,
     selectFlow: (flow: Flow) => update({ flow }, true),
     selectDay: (day: string) => update({ day }, true),
+    /** Back to every recurrence of the side: drops `?show=missing` and keeps the rest. */
+    clearShow: () => update({ show: undefined }, true),
     openNew: () => update({ new: 'recurrence' }),
     openNewSubscription: () => update({ new: 'subscription' }),
     openEdit: (recurrenceId: string) => update({ edit: recurrenceId }),

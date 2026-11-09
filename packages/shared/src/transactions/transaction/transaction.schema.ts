@@ -148,6 +148,9 @@ export const listTransactionsQuerySchema = z
     uncategorized: queryBooleanSchema.optional(),
     tagId: idSchema.optional(),
     ruleId: idSchema.optional(),
+    // true: only what pays an occurrence of a recurrence and enters the accounts (as the sum of the
+    // cards does); false: only what has no link to an occurrence (a linked ignored one is in neither).
+    recurrenceLinked: queryBooleanSchema.optional(),
     direction: z.enum(['out', 'in']).optional(),
     search: z.string().min(1).max(100).optional(),
     installmentPlanId: idSchema.optional(),

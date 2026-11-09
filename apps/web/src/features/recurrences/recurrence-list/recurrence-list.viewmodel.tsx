@@ -2,6 +2,7 @@ import type { RecurrenceAction } from '@fincheck/ui';
 import { useToast } from '@fincheck/ui';
 import { useState } from 'react';
 
+import { useScrollToMissingFilter } from '#/features/recurrences/recurrence-list/hooks/use-scroll-to-missing-filter.hook.ts';
 import { useRecurrenceListSearch } from '#/features/recurrences/hooks/use-recurrence-list-search.hook.ts';
 import { useRecurrenceListModel } from '#/features/recurrences/recurrence-list/recurrence-list.model.ts';
 import { RecurrenceListView } from '#/features/recurrences/recurrence-list/recurrence-list.view.tsx';
@@ -10,10 +11,10 @@ import type {
   OccurrenceRowData,
 } from '#/features/recurrences/recurrence-list/types/recurrence-list.type.ts';
 import type { RowContext } from '#/features/recurrences/recurrence-list/types/row-context.type.ts';
-import { buildExpenseCaption } from '#/features/recurrences/recurrence-list/utils/build-expense-caption.util.ts';
-import { buildIncomeCaption } from '#/features/recurrences/recurrence-list/utils/build-income-caption.util.ts';
 import { buildOccurrenceChips } from '#/features/recurrences/recurrence-list/utils/build-occurrence-chips.util.ts';
 import { buildOccurrenceDays } from '#/features/recurrences/recurrence-list/utils/build-occurrence-days.util.ts';
+import { buildTotalCardDetails } from '#/features/recurrences/recurrence-list/utils/build-total-card-details.util.ts';
+import { isOccurrenceMissing } from '#/domain/recurrences/occurrence/rules/is-occurrence-missing.rule.ts';
 import { getBusinessDate } from '#/shared/utils/date/get-business-date.util.ts';
 import { presentIdleRecurrence } from '#/features/recurrences/recurrence-list/utils/present-idle-recurrence.util.ts';
 import { presentOccurrenceRow } from '#/features/recurrences/recurrence-list/utils/present-occurrence-row.util.ts';
@@ -144,6 +145,8 @@ export function RecurrenceListViewModel() {
         : 'ready';
 
   const { flow } = search;
+  const onlyMissing = search.show === 'missing';
+  const listScrollTarget = useScrollToMissingFilter(onlyMissing, state === 'ready');
   const allRecurrenceItems = model.recurrences.data?.items ?? [];
   const recurrenceItems = allRecurrenceItems.filter((item) => item.kind === flow);
   const context: RowContext = {
@@ -161,18 +164,28 @@ export function RecurrenceListViewModel() {
 
   const attentionOccurrences = model.attention.data?.items ?? [];
   const attentionIds = new Set(attentionOccurrences.map((occurrence) => occurrence.id));
+  // `?show=missing` (the "faltam" of the card): only what still lacks money, in the list and in
+  // "Precisa de você". The strip of days and "Sem dia certo" stay whole: they are the calendar of
+  // the month (PM decision), not a list of what is missing.
   const attentionRows = attentionOccurrences
-    .filter((occurrence) => occurrence.kind === flow)
+    .filter(
+      (occurrence) => occurrence.kind === flow && (!onlyMissing || isOccurrenceMissing(occurrence)),
+    )
     .map((occurrence) => presentOccurrenceRow(occurrence, context));
 
   const monthRows = recurrenceItems.flatMap((item) =>
-    item.occurrence && !attentionIds.has(item.occurrence.id)
+    item.occurrence &&
+    !attentionIds.has(item.occurrence.id) &&
+    (!onlyMissing || isOccurrenceMissing(item.occurrence))
       ? [presentOccurrenceRow(item.occurrence, context)]
       : [],
   );
-  const idleRecurrences = recurrenceItems
-    .filter((item) => item.occurrence === null)
-    .map((item) => presentIdleRecurrence(item, context));
+  // With no occurrence in the month, nothing is missing: the ones outside of it leave the filter.
+  const idleRecurrences = onlyMissing
+    ? []
+    : recurrenceItems
+        .filter((item) => item.occurrence === null)
+        .map((item) => presentIdleRecurrence(item, context));
 
   const flowOccurrences = (model.occurrences.data?.items ?? []).filter(
     (occurrence) => occurrence.kind === flow,
@@ -198,12 +211,12 @@ export function RecurrenceListViewModel() {
       ? {
           label: `Receitas esperadas em ${monthName}`,
           totalCents: summary?.incomes.expectedCents ?? 0,
-          caption: summary ? buildIncomeCaption(summary, isHidden) : undefined,
+          details: summary ? buildTotalCardDetails('income', summary, month, isHidden) : [],
         }
       : {
           label: 'Despesas fixas',
           totalCents: summary?.expenses.expectedCents ?? 0,
-          caption: summary ? buildExpenseCaption(summary) : undefined,
+          details: summary ? buildTotalCardDetails('expense', summary, month, isHidden) : [],
         };
 
   return (
@@ -216,6 +229,8 @@ export function RecurrenceListViewModel() {
       flow={flow}
       onFlowChange={search.selectFlow}
       card={card}
+      missingFilter={{ isActive: onlyMissing, onClear: search.clearShow }}
+      listScrollTarget={listScrollTarget}
       strip={{
         title: `${monthLabel}, dia a dia`,
         days,

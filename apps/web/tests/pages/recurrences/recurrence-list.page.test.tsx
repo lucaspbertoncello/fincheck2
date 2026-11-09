@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import type { Occurrence } from '@fincheck/shared/recurrences/occurrence/occurrence.type.ts';
 import type { Recurrence } from '@fincheck/shared/recurrences/recurrence/recurrence.type.ts';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createTestOccurrence } from '#tests/support/recurrences/occurrence/create-test-occurrence.util.ts';
 import { server } from '#mocks/setup/server.util.ts';
@@ -12,14 +12,16 @@ import { CURRENT_MONTH } from '#mocks/support/dates/mock-clock.store.ts';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
 import { makeOccurrenceLate } from '#tests/support/recurrences/occurrence/make-occurrence-late.util.ts';
 import { renderApp } from '#tests/support/app/render-app.util.tsx';
-import { buildExpenseCaption } from '#/features/recurrences/recurrence-list/utils/build-expense-caption.util.ts';
-import { buildIncomeCaption } from '#/features/recurrences/recurrence-list/utils/build-income-caption.util.ts';
+import { isOccurrenceMissing } from '#/domain/recurrences/occurrence/rules/is-occurrence-missing.rule.ts';
 import { buildOccurrenceChips } from '#/features/recurrences/recurrence-list/utils/build-occurrence-chips.util.ts';
 import { getOccurrencePlacement } from '#/features/recurrences/recurrence-list/utils/get-occurrence-placement.util.ts';
 import { formatMoneyNote } from '#/features/recurrences/utils/format-money-note.util.ts';
+import { hideValuesStore } from '#/shared/stores/hide-values.store.ts';
 import { callApi } from '#tests/support/mocks/call-api.util.ts';
 
 resetDatabaseBeforeEach();
+beforeEach(() => hideValuesStore.set(false));
+afterEach(() => hideValuesStore.set(false));
 
 // Rendering the whole app is quick alone, but with the other test workers busy the first paint of
 // a page can take longer than the 1 s that findBy waits by default (and than the 5 s of a test), so
@@ -178,9 +180,10 @@ describe('RecurrenceListPage', () => {
     expect(screen.queryByRole('region', { name: 'Despesas fixas' })).not.toBeInTheDocument();
   });
 
-  it('shows in the card the total and the caption of the side that is chosen', async () => {
-    const summary = (await callApi('GET', `/recurrences/summary?month=${CURRENT_MONTH}`))
-      .json as Recurrence.Summary;
+  describe('the card of the side that is chosen', () => {
+    const summaryOf = async () =>
+      (await callApi('GET', `/recurrences/summary?month=${CURRENT_MONTH}`))
+        .json as Recurrence.Summary;
     const cardOf = (label: string | RegExp) => {
       const card = screen.getByText(label, { selector: 'span' }).closest('div');
       if (!card) throw new Error(`No card ${label}`);
@@ -190,17 +193,356 @@ describe('RecurrenceListPage', () => {
     const plain = (text: string) => text.replace(/\s/g, '');
     const textOf = (card: HTMLElement) => plain(card.textContent ?? '');
 
-    renderApp(URL);
-    await screen.findByRole('region', { name: 'Despesas fixas' });
-    const expenseCard = textOf(cardOf('Despesas fixas'));
-    expect(expenseCard).toContain(plain(formatMoneyNote(summary.expenses.expectedCents, false)));
-    expect(expenseCard).toContain(plain(buildExpenseCaption(summary)));
+    it('shows the total, what was paid and what is missing on Despesas', async () => {
+      const summary = await summaryOf();
+      renderApp(URL);
+      await screen.findByRole('region', { name: 'Despesas fixas' });
 
-    await userEvent.click((await findFlowSelector()).getByRole('radio', { name: 'Receitas' }));
-    await screen.findByRole('region', { name: 'Receitas' });
-    const incomeCard = textOf(cardOf(/^Receitas esperadas em /));
-    expect(incomeCard).toContain(plain(formatMoneyNote(summary.incomes.expectedCents, false)));
-    expect(incomeCard).toContain(plain(buildIncomeCaption(summary, false)));
+      const card = textOf(cardOf('Despesas fixas'));
+      expect(card).toContain(plain(formatMoneyNote(summary.expenses.expectedCents, false)));
+      expect(card).toContain(plain(`${formatMoneyNote(summary.expenses.paidCents, false)} pagos`));
+      expect(card).toContain(
+        plain(`faltam ${formatMoneyNote(summary.expenses.missingCents, false)}`),
+      );
+      expect(card).toContain('atrasadas');
+      expect(card).toContain('comvalordiferente');
+      // "N paga(s)" left the card: the money says it now.
+      expect(card).not.toMatch(/\dpagas?/);
+    });
+
+    it('shows the total, what was received and what is missing on Receitas', async () => {
+      const summary = await summaryOf();
+      renderApp(INCOME_URL);
+      await screen.findByRole('region', { name: 'Receitas' });
+
+      const card = textOf(cardOf(/^Receitas esperadas em /));
+      expect(card).toContain(plain(formatMoneyNote(summary.incomes.expectedCents, false)));
+      expect(card).toContain(
+        plain(`${formatMoneyNote(summary.incomes.receivedCents, false)} já recebidos`),
+      );
+      expect(card).toContain(
+        plain(`faltam ${formatMoneyNote(summary.incomes.missingCents, false)}`),
+      );
+    });
+
+    it('hides the money of the two lines with the eye on, and the links stay', async () => {
+      const summary = await summaryOf();
+      hideValuesStore.set(true);
+      renderApp(INCOME_URL);
+      await screen.findByRole('region', { name: 'Receitas' });
+
+      const card = textOf(cardOf(/^Receitas esperadas em /));
+      expect(card).not.toContain(plain(formatMoneyNote(summary.incomes.receivedCents, false)));
+      expect(card).not.toContain(plain(formatMoneyNote(summary.incomes.missingCents, false)));
+      // No whitespace in `card`: "já recebidos" reads "járecebidos".
+      expect(card).toContain('járecebidos');
+      expect(card).toContain('faltam');
+      expect(
+        screen.getByRole('link', { name: /ver as transações recebidas neste mês/ }),
+      ).toBeInTheDocument();
+    });
+
+    it('leads "já recebidos" and "pagos" to the linked transactions of the month and the side', async () => {
+      renderApp(INCOME_URL);
+      await screen.findByRole('region', { name: 'Receitas' });
+      expect(
+        screen.getByRole('link', { name: /ver as transações recebidas neste mês/ }),
+      ).toHaveAttribute(
+        'href',
+        `/transactions?type=income&recurrence=linked&month=${CURRENT_MONTH}`,
+      );
+
+      await userEvent.click((await findFlowSelector()).getByRole('radio', { name: 'Despesas' }));
+      await screen.findByRole('region', { name: 'Despesas fixas' });
+      expect(
+        screen.getByRole('link', { name: /ver as transações pagas neste mês/ }),
+      ).toHaveAttribute(
+        'href',
+        `/transactions?type=expense&recurrence=linked&month=${CURRENT_MONTH}`,
+      );
+    });
+
+    it('names each link with its visible text plus where it goes', async () => {
+      renderApp(INCOME_URL);
+      await screen.findByRole('region', { name: 'Receitas' });
+
+      const received = screen.getByRole('link', { name: /já recebidos, ver as transações/ });
+      const missing = screen.getByRole('link', { name: /^faltam .*, ver o que falta receber$/ });
+
+      // The text the eye reads is in the name (WCAG 2.5.3), the hint comes after it.
+      expect(received.textContent).toMatch(/^R\$.* já recebidos, ver as transações recebidas/);
+      expect(missing.textContent).toMatch(/^faltam R\$/);
+      expect(received).not.toHaveAttribute('aria-label');
+      expect(missing).not.toHaveAttribute('aria-label');
+    });
+
+    it('goes to Transações when the number is chosen', async () => {
+      renderApp(INCOME_URL);
+      await screen.findByRole('region', { name: 'Receitas' });
+
+      await userEvent.click(
+        screen.getByRole('link', { name: /ver as transações recebidas neste mês/ }),
+      );
+
+      await waitFor(() => expect(window.location.pathname).toBe('/transactions'));
+      expect(window.location.search).toContain('type=income');
+      expect(window.location.search).toContain('recurrence=linked');
+      expect(window.location.search).toContain(`month=${CURRENT_MONTH}`);
+      // The names of the parameters are the ones Transações reads: the screen narrows its list.
+      expect(await screen.findByText('Só vinculadas a recorrências')).toBeInTheDocument();
+    });
+
+    it('opens "faltam" on the same side with ?show=missing, with the keyboard too', async () => {
+      renderApp(INCOME_URL);
+      await screen.findByRole('region', { name: 'Receitas' });
+      const link = screen.getByRole('link', { name: /ver o que falta receber/ });
+      expect(link).toHaveAttribute(
+        'href',
+        `/recurrences?flow=income&show=missing&month=${CURRENT_MONTH}`,
+      );
+
+      link.focus();
+      await userEvent.keyboard('{Enter}');
+
+      expect(await screen.findByText('Só as que faltam')).toBeInTheDocument();
+      expect(window.location.pathname).toBe('/recurrences');
+      expect(window.location.search).toContain('flow=income');
+      expect(window.location.search).toContain('show=missing');
+    });
+
+    it('does not make a link of a line of R$ 0,00', async () => {
+      const summary = await summaryOf();
+      server.use(
+        http.get('/api/recurrences/summary', () =>
+          HttpResponse.json({
+            incomes: { ...summary.incomes, receivedCents: 0, missingCents: 0 },
+            expenses: summary.expenses,
+          } satisfies Recurrence.Summary),
+        ),
+      );
+      renderApp(INCOME_URL);
+      await screen.findByRole('region', { name: 'Receitas' });
+
+      const card = textOf(cardOf(/^Receitas esperadas em /));
+      expect(card).toContain(plain(`${formatMoneyNote(0, false)} já recebidos`));
+      expect(card).toContain(plain(`faltam ${formatMoneyNote(0, false)}`));
+      expect(screen.queryByRole('link', { name: /recebidas neste mês/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /falta receber/ })).not.toBeInTheDocument();
+    });
+  });
+
+  describe('?show=missing', () => {
+    async function occurrencesOf(kind: 'income' | 'expense') {
+      const { json } = await callApi('GET', `/occurrences?month=${CURRENT_MONTH}`);
+      return (json as { items: Occurrence.Dto[] }).items.filter(
+        (item) => item.kind === kind && !item.carriedOver,
+      );
+    }
+    const isMissing = isOccurrenceMissing;
+
+    it('lists only what still lacks money on Receitas, with the chip', async () => {
+      const incomes = await occurrencesOf('income');
+      const missing = incomes.filter(isMissing).map((item) => item.recurrenceName);
+      const settled = incomes.filter((item) => !isMissing(item)).map((item) => item.recurrenceName);
+      expect(missing.length).toBeGreaterThan(0);
+      expect(settled.length).toBeGreaterThan(0);
+
+      renderApp(`${INCOME_URL}&show=missing`);
+
+      const list = within(await screen.findByRole('region', { name: 'Receitas' }));
+      for (const name of missing) expect(list.getByText(name)).toBeInTheDocument();
+      for (const name of settled) expect(list.queryByText(name)).not.toBeInTheDocument();
+      expect(screen.getByText('Só as que faltam')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Limpar filtro' })).toBeInTheDocument();
+    });
+
+    it('keeps "Precisa de você" and the list to what is missing on Despesas, and the strip whole', async () => {
+      const expenses = await occurrencesOf('expense');
+      const settled = expenses
+        .filter((item) => !isMissing(item))
+        .map((item) => item.recurrenceName);
+      const late = expenses
+        .filter((item) => item.status === 'late')
+        .map((item) => item.recurrenceName);
+      expect(settled.length).toBeGreaterThan(0);
+      expect(late.length).toBeGreaterThan(0);
+
+      renderApp(`${URL}&show=missing`);
+
+      const attention = await findAttentionStrip();
+      for (const name of late) expect(attention.getByText(name)).toBeInTheDocument();
+      // Spotify and Internet only wait for an answer about the amount: they are paid.
+      expect(attention.queryByText('Spotify')).not.toBeInTheDocument();
+      expect(attention.queryByText('Internet')).not.toBeInTheDocument();
+      const list = within(screen.getByRole('region', { name: 'Despesas fixas' }));
+      for (const name of settled) expect(list.queryByText(name)).not.toBeInTheDocument();
+      expect(screen.getByRole('region', { name: /, dia a dia$/ })).toBeInTheDocument();
+    });
+
+    it('says nothing is missing when everything of the side is settled', async () => {
+      for (const occurrence of db.occurrences) {
+        occurrence.skippedAt = `${CURRENT_MONTH}-01T12:00:00.000Z`;
+      }
+
+      renderApp(`${INCOME_URL}&show=missing`);
+
+      expect(await screen.findByText('Nada falta receber neste mês.')).toBeInTheDocument();
+    });
+
+    it('takes only ?show out with "Limpar filtro", keeping the side and the month', async () => {
+      renderApp(`${INCOME_URL}&show=missing&day=${CURRENT_MONTH}-15`);
+      await userEvent.click(await screen.findByRole('button', { name: 'Limpar filtro' }));
+
+      await waitFor(() => expect(window.location.search).not.toContain('show='));
+      expect(window.location.search).toContain('flow=income');
+      expect(window.location.search).toContain(`month=${CURRENT_MONTH}`);
+      expect(window.location.search).toContain(`day=${CURRENT_MONTH}-15`);
+      // The chip folds away (inert and hidden from the readers) instead of leaving at once.
+      await waitFor(() =>
+        expect(screen.queryByRole('button', { name: 'Limpar filtro' })).not.toBeInTheDocument(),
+      );
+    });
+
+    // What the list opened by "faltam" holds, and what the card says is missing, must be the same
+    // money: the card is the sum of `remainingCents` of the lines the filter keeps.
+    async function missingOfList(flow: 'income' | 'expense') {
+      const { json } = await callApi('GET', `/recurrences?month=${CURRENT_MONTH}`);
+      const items = (json as { items: Recurrence.ListItem[] }).items.filter(
+        (item) => item.kind === flow,
+      );
+
+      return items.flatMap((item) =>
+        item.occurrence && isOccurrenceMissing(item.occurrence) ? [item.occurrence] : [],
+      );
+    }
+    const summaryNow = async () =>
+      (await callApi('GET', `/recurrences/summary?month=${CURRENT_MONTH}`))
+        .json as Recurrence.Summary;
+    const sumOf = (items: Occurrence.Dto[]) =>
+      items.reduce((total, item) => total + item.remainingCents, 0);
+
+    it('closes the number of "faltam" with the lines the filter keeps, on both sides', async () => {
+      const summary = await summaryNow();
+      const income = await missingOfList('income');
+      const expense = await missingOfList('expense');
+
+      expect(sumOf(income)).toBe(summary.incomes.missingCents);
+      expect(sumOf(expense)).toBe(summary.expenses.missingCents);
+      expect(income.length).toBeGreaterThan(0);
+
+      renderApp(`${INCOME_URL}&show=missing`);
+      const list = within(await screen.findByRole('region', { name: 'Receitas' }));
+      for (const occurrence of income) {
+        expect(list.getByText(occurrence.recurrenceName)).toBeInTheDocument();
+      }
+    });
+
+    it('still closes after a recurrence with a payment is deleted: the card and the list leave it together', async () => {
+      const before = await summaryNow();
+      const mesada = db.recurrences.find((item) => item.name === 'Mesada');
+      if (!mesada) throw new Error('No Mesada');
+      expect(before.incomes.missingCents).toBeGreaterThan(0);
+
+      expect((await callApi('DELETE', `/recurrences/${mesada.id}`)).status).toBeLessThan(300);
+
+      const after = await summaryNow();
+      const income = await missingOfList('income');
+      expect(income.some((item) => item.recurrenceName === 'Mesada')).toBe(false);
+      expect(after.incomes.missingCents).toBeLessThan(before.incomes.missingCents);
+      expect(sumOf(income)).toBe(after.incomes.missingCents);
+    });
+
+    it('still closes after an occurrence with a payment is dismissed: it is no longer missing', async () => {
+      const before = await summaryNow();
+      const mesada = (await missingOfList('income')).find((item) => item.receivedCents > 0);
+      if (!mesada) throw new Error('No income with a payment');
+
+      expect((await callApi('POST', `/occurrences/${mesada.id}/skip`)).status).toBeLessThan(300);
+
+      const after = await summaryNow();
+      const income = await missingOfList('income');
+      expect(income.some((item) => item.id === mesada.id)).toBe(false);
+      expect(after.incomes.missingCents).toBe(before.incomes.missingCents - mesada.remainingCents);
+      expect(sumOf(income)).toBe(after.incomes.missingCents);
+    });
+
+    describe('scrolling to the filtered section on arrival', () => {
+      const scrollIntoView = vi.fn();
+      const original = Reflect.get(Element.prototype, 'scrollIntoView') as unknown;
+      const originalMatchMedia = Reflect.get(window, 'matchMedia') as unknown;
+
+      beforeEach(() => {
+        scrollIntoView.mockClear();
+        Reflect.set(Element.prototype, 'scrollIntoView', scrollIntoView);
+      });
+      afterEach(() => {
+        Reflect.set(Element.prototype, 'scrollIntoView', original);
+        Reflect.set(window, 'matchMedia', originalMatchMedia);
+      });
+
+      it('glides there once when the screen opens with ?show=missing, and not at every render', async () => {
+        renderApp(`${INCOME_URL}&show=missing`);
+        await screen.findByText('Só as que faltam');
+
+        await waitFor(() => expect(scrollIntoView).toHaveBeenCalledTimes(1));
+        expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start', behavior: 'smooth' });
+        // The target is the start of the filtered list, not the chip (which is already at the top).
+        const target = scrollIntoView.mock.contexts[0] as HTMLElement;
+        expect(
+          within(target).getByRole('heading', { name: 'Receitas', level: 2 }),
+        ).toBeInTheDocument();
+        expect(within(target).queryByText('Só as que faltam')).not.toBeInTheDocument();
+
+        // The filter stays on while the side changes and the list renders again: no new scroll.
+        await userEvent.click((await findFlowSelector()).getByRole('radio', { name: 'Despesas' }));
+        await screen.findByRole('region', { name: 'Despesas fixas' });
+        expect(scrollIntoView).toHaveBeenCalledTimes(1);
+      });
+
+      it('goes there when "faltam" is chosen, and again only after the filter was cleared', async () => {
+        renderApp(INCOME_URL);
+        await screen.findByRole('region', { name: 'Receitas' });
+        expect(scrollIntoView).not.toHaveBeenCalled();
+
+        await userEvent.click(screen.getByRole('link', { name: /ver o que falta receber/ }));
+        await waitFor(() => expect(scrollIntoView).toHaveBeenCalledTimes(1));
+
+        await userEvent.click(await screen.findByRole('button', { name: 'Limpar filtro' }));
+        await waitFor(() => expect(window.location.search).not.toContain('show='));
+        expect(scrollIntoView).toHaveBeenCalledTimes(1);
+
+        await userEvent.click(screen.getByRole('link', { name: /ver o que falta receber/ }));
+        await waitFor(() => expect(scrollIntoView).toHaveBeenCalledTimes(2));
+      });
+
+      it('goes there without gliding with "reduzir movimento"', async () => {
+        Reflect.set(window, 'matchMedia', (query: string) => ({
+          matches: query.includes('prefers-reduced-motion'),
+          media: query,
+          addEventListener: () => undefined,
+          removeEventListener: () => undefined,
+        }));
+        renderApp(`${INCOME_URL}&show=missing`);
+        await screen.findByText('Só as que faltam');
+
+        await waitFor(() => expect(scrollIntoView).toHaveBeenCalledTimes(1));
+        expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start', behavior: 'auto' });
+      });
+
+      it('does not scroll without the filter', async () => {
+        renderApp(INCOME_URL);
+        await screen.findByRole('region', { name: 'Receitas' });
+
+        expect(scrollIntoView).not.toHaveBeenCalled();
+      });
+    });
+
+    it('ignores a ?show that is not a filter', async () => {
+      renderApp(`${INCOME_URL}&show=tudo`);
+
+      await screen.findByRole('region', { name: 'Receitas' });
+      expect(screen.queryByText('Só as que faltam')).not.toBeInTheDocument();
+    });
   });
 
   it('counts "Precisa de você" by side and hides it on the side with nothing pending', async () => {

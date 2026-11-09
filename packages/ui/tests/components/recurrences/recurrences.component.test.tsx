@@ -287,6 +287,31 @@ describe('BillRow', () => {
   });
 });
 
+describe('RecurrenceRow disclosure', () => {
+  const linked = [
+    { id: 't1', dateLabel: '07/10', description: 'Pix Academia', amountCents: 10990 },
+  ];
+
+  it('puts aria-expanded and aria-controls on the name button of a row that opens its transactions', () => {
+    const html = renderToStaticMarkup(row({ transactions: linked }));
+
+    expect(html).toContain('aria-expanded="false"');
+    const controls = /aria-controls="([^"]+)"/.exec(html)?.[1];
+    expect(controls).toBeTruthy();
+    // The button that carries them is the one named by what it opens, and the panel has that id.
+    expect(html).toMatch(/<button[^>]*aria-expanded="false"[^>]*>/);
+    expect(html).toContain(`id="${controls}"`);
+  });
+
+  it('has neither on a row that has no transactions to open', () => {
+    const html = renderToStaticMarkup(row());
+
+    // Only the "…" menu says it is expandable; the row has no panel to point to.
+    expect(html.match(/aria-expanded/g)).toHaveLength(1);
+    expect(html).not.toContain('aria-controls');
+  });
+});
+
 describe('TotalCard', () => {
   it('is a plain card without items', () => {
     const html = renderToStaticMarkup(
@@ -297,6 +322,45 @@ describe('TotalCard', () => {
     expect(html).toContain('8.427,00');
     expect(html).toContain('3 recebidas');
     expect(html).not.toContain('aria-expanded');
+  });
+
+  it('draws a detail with an href as a link that keeps its text and adds the destination for readers', () => {
+    const html = renderToStaticMarkup(
+      <TotalCard
+        label="Despesas fixas"
+        totalCents={54259}
+        details={[
+          {
+            key: 'a',
+            text: 'R$ 200,00 pagos',
+            href: '/transactions?type=expense',
+            srHint: 'ver as pagas',
+          },
+          { key: 'b', text: 'faltam R$ 0,00' },
+          { key: 'c', text: '1 atrasada' },
+        ]}
+      />,
+    );
+
+    expect(html).toContain('href="/transactions?type=expense"');
+    // The name of the link is the visible text plus the hint (never an aria-label that replaces it).
+    expect(html).not.toContain('aria-label');
+    expect(html).toMatch(/R\$ 200,00 pagos<span class="sr-only">, ver as pagas<\/span>/);
+    expect(html.match(/<a /g)).toHaveLength(1);
+    expect(html).toContain('faltam R$ 0,00');
+    expect(html).toContain('1 atrasada');
+    // A touch target of 44 px on a phone, and the underline only on hover and keyboard focus.
+    expect(html).toContain('min-h-11');
+    expect(html).toContain('lg:min-h-0');
+    expect(html).toContain('data-[hovered]:underline');
+    expect(html).toContain('data-[focus-visible]:underline');
+    expect(html).not.toContain('aria-expanded');
+  });
+
+  it('draws no list when there are no details', () => {
+    const html = renderToStaticMarkup(<TotalCard label="A" totalCents={100} details={[]} />);
+
+    expect(html).not.toContain('<ul');
   });
 
   it('starts closed: the head is the trigger of a collapsed, inert panel', () => {

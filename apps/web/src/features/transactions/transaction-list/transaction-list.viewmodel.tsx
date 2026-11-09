@@ -168,7 +168,11 @@ export function TransactionListViewModel() {
     onReview: () => go('/transactions/review'),
   });
 
-  const hasFilter = countActiveFilters(search) > 0 || search.type !== 'all' || Boolean(search.q);
+  const hasFilter =
+    countActiveFilters(search) > 0 ||
+    search.type !== 'all' ||
+    Boolean(search.q) ||
+    search.recurrence !== undefined;
   const activeList = isMonth ? model.list : model.periodList;
   const status: TransactionListViewProps['status'] = activeList.isError
     ? 'error'
@@ -266,6 +270,8 @@ export function TransactionListViewModel() {
     dayFilter: dayOfMonth
       ? { label: `Dia ${formatDayChip(dayOfMonth)}`, onClear: () => update({ day: null }) }
       : null,
+    recurrenceFilter:
+      search.recurrence === 'linked' ? { onClear: () => update({ recurrence: null }) } : null,
     syncFailures,
     onClearFilters: filters.clear,
     onConnectAccounts: () => go('/accounts'),

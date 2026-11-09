@@ -132,10 +132,13 @@ export const recurrenceSummarySchema = z.object({
   incomes: z.object({
     expectedCents: centsSchema,
     receivedCents: centsSchema,
+    missingCents: centsSchema,
     count: z.int().nonnegative(),
   }),
   expenses: z.object({
     expectedCents: centsSchema,
+    paidCents: centsSchema,
+    missingCents: centsSchema,
     paidCount: z.int().nonnegative(),
     lateCount: z.int().nonnegative(),
     differentCount: z.int().nonnegative(),

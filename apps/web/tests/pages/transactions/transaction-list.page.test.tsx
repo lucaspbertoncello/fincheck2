@@ -7,6 +7,7 @@ import { makeTransactionRecord } from '#mocks/state/seed/make-transaction-record
 import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { server } from '#mocks/setup/server.util.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
+import { callApi } from '#tests/support/mocks/call-api.util.ts';
 import { renderApp } from '#tests/support/app/render-app.util.tsx';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
 
@@ -47,6 +48,81 @@ describe('TransactionListPage', () => {
     await waitFor(() => expect(asked).toContain('019a0000-0000-7000-8000-000000000001'), LONG_WAIT);
     expect(screen.queryByText('CINEMARK')).not.toBeInTheDocument();
     expect(window.location.search).toContain('ruleId=019a0000-0000-7000-8000-000000000001');
+  });
+
+  describe('?recurrence=linked (the "já recebidos" and "pagos" of Recorrências)', () => {
+    async function descriptionsOf(query: string) {
+      const { json } = await callApi('GET', `/transactions?month=${CURRENT_MONTH}${query}`);
+
+      return (json as { items: { description: string }[] }).items.map((item) => item.description);
+    }
+    const LINKED_INCOME_URL = `${PAGE}&type=income&recurrence=linked`;
+
+    it('lists only what pays a recurrence, with the type and the month of the URL, and shows the chip', async () => {
+      const linked = await descriptionsOf('&direction=in&recurrenceLinked=true');
+      const loose = (await descriptionsOf('&direction=in&recurrenceLinked=false')).filter(
+        (description) => !linked.includes(description),
+      );
+      expect(linked.length).toBeGreaterThan(0);
+      expect(loose.length).toBeGreaterThan(0);
+
+      renderApp(LINKED_INCOME_URL);
+
+      for (const description of linked) {
+        expect(
+          (await screen.findAllByText(description, undefined, LONG_WAIT)).length,
+        ).toBeGreaterThan(0);
+      }
+      for (const description of loose)
+        expect(screen.queryByText(description)).not.toBeInTheDocument();
+      expect(screen.getByText('Só vinculadas a recorrências')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Limpar filtro' })).toBeInTheDocument();
+    });
+
+    it('asks the API for what is linked, besides the direction and the month', async () => {
+      const asked: URLSearchParams[] = [];
+      server.use(
+        http.get('/api/transactions', ({ request }) => {
+          asked.push(new URL(request.url).searchParams);
+          return HttpResponse.json({ items: [], nextCursor: null });
+        }),
+      );
+      renderApp(LINKED_INCOME_URL);
+
+      await waitFor(() => expect(asked.length).toBeGreaterThan(0), LONG_WAIT);
+      const last = asked.at(-1);
+      expect(last?.get('recurrenceLinked')).toBe('true');
+      expect(last?.get('direction')).toBe('in');
+      expect(last?.get('month')).toBe(CURRENT_MONTH);
+    });
+
+    it('takes only ?recurrence out with "Limpar filtro", keeping the type and the month', async () => {
+      const linked = await descriptionsOf('&direction=in&recurrenceLinked=true');
+      const loose = (await descriptionsOf('&direction=in&recurrenceLinked=false')).filter(
+        (description) => !linked.includes(description),
+      );
+      renderApp(LINKED_INCOME_URL);
+      await userEvent.click(
+        await screen.findByRole('button', { name: 'Limpar filtro' }, LONG_WAIT),
+      );
+
+      await waitFor(() => expect(window.location.search).not.toContain('recurrence='));
+      expect(window.location.search).toContain('type=income');
+      expect(window.location.search).toContain(`month=${CURRENT_MONTH}`);
+      expect(
+        (await screen.findAllByText(loose[0] ?? '', undefined, LONG_WAIT)).length,
+      ).toBeGreaterThan(0);
+      await waitFor(() =>
+        expect(screen.queryByRole('button', { name: 'Limpar filtro' })).not.toBeInTheDocument(),
+      );
+    });
+
+    it('ignores a ?recurrence that is not a filter', async () => {
+      renderApp(`${PAGE}&recurrence=tudo`);
+
+      await screen.findByText('CINEMARK', undefined, LONG_WAIT);
+      expect(screen.queryByText('Só vinculadas a recorrências')).not.toBeInTheDocument();
+    });
   });
 
   it('the review strip leads to the review queue, keeping the month', async () => {

@@ -69,6 +69,20 @@ describe('recurrences routes (reads)', () => {
     expect(summary.expenses.count).toBe(10);
     expect(summary.expenses.differentCount).toBeGreaterThanOrEqual(1);
     expect(summary.expenses.paidCount).toBeGreaterThanOrEqual(2);
+
+    // What is paid and what is missing are the sums of the lines of the list, the skipped out.
+    const counted = (await occurrences()).filter(
+      (item) => !item.carriedOver && item.status !== 'skipped',
+    );
+    const sumOf = (kind: 'income' | 'expense', pick: 'receivedCents' | 'remainingCents') =>
+      counted.filter((item) => item.kind === kind).reduce((total, item) => total + item[pick], 0);
+    expect(summary.incomes.receivedCents).toBe(sumOf('income', 'receivedCents'));
+    expect(summary.incomes.missingCents).toBe(sumOf('income', 'remainingCents'));
+    expect(summary.incomes.missingCents).toBeGreaterThan(0);
+    expect(summary.expenses.paidCents).toBe(sumOf('expense', 'receivedCents'));
+    expect(summary.expenses.paidCents).toBeGreaterThan(0);
+    expect(summary.expenses.missingCents).toBe(sumOf('expense', 'remainingCents'));
+    expect(summary.expenses.missingCents).toBeGreaterThan(0);
   });
 
   it('serves the detail with history and a preview of the next occurrences', async () => {

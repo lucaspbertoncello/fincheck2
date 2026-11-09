@@ -113,6 +113,14 @@ export const transactionMock = [
           .filter((tx) => !query.ruleId || tx.categoryRuleId === query.ruleId)
           .filter(
             (tx) =>
+              query.recurrenceLinked === undefined ||
+              (countsInAccounts(tx) &&
+                db.occurrences.some((occurrence) =>
+                  occurrence.payments.some((payment) => payment.transactionId === tx.id),
+                )) === query.recurrenceLinked,
+          )
+          .filter(
+            (tx) =>
               !query.direction ||
               (query.direction === 'out' ? tx.amountCents < 0 : tx.amountCents > 0),
           )

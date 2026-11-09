@@ -5,3 +5,17 @@ export type TotalCardItem = {
   note?: string;
   cents: number;
 };
+
+/** A line under the value of a `TotalCard`: plain text, or a link to where the number comes from. */
+export type TotalCardDetail = {
+  key: string;
+  /** What the line says: "R$ 3.387,22 já recebidos". */
+  text: string;
+  /** Makes the line a link, with a "›" after it. Without it the line is plain text. */
+  href?: string;
+  /**
+   * Said after the text by a screen reader only, so the name of the link keeps the visible text
+   * (WCAG 2.5.3) and adds where it goes: "R$ 3.387,22 já recebidos, ver as transações recebidas".
+   */
+  srHint?: string;
+};

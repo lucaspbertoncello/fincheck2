@@ -6,6 +6,7 @@ import type { Database } from '#/database/database.type.ts';
 import { competenceOnSql } from '#/modules/transactions/application/transaction/competence-on-sql.util.ts';
 import { decodeTransactionCursor } from '#/modules/transactions/application/transaction/decode-transaction-cursor.util.ts';
 import { encodeTransactionCursor } from '#/modules/transactions/application/transaction/encode-transaction-cursor.util.ts';
+import { entersAccountsSql } from '#/modules/transactions/application/transaction/enters-accounts-sql.util.ts';
 import { escapeLikePattern } from '#/modules/transactions/application/transaction/escape-like-pattern.util.ts';
 import { inReviewSql } from '#/modules/transactions/application/transaction/in-review-sql.util.ts';
 import type { TransactionAccountReader } from '#/modules/transactions/application/transaction/transaction-account-reader.interface.ts';
@@ -86,6 +87,19 @@ export class ListTransactionsQuery {
       );
     }
     if (input.ruleId) query = query.where('t.category_rule_id', '=', input.ruleId);
+    if (input.recurrenceLinked !== undefined) {
+      // true: what pays an occurrence of a recurrence and still enters the accounts (an ignored
+      // one pays nothing, so it is not in the sum of the cards). false: what has no link at all;
+      // an ignored one that is linked is in neither list.
+      const hasLink = sql<boolean>`exists (
+        select 1 from occurrence_payments where occurrence_payments.transaction_id = t.id
+      )`;
+      query = query.where(
+        input.recurrenceLinked
+          ? sql<boolean>`(${entersAccountsSql('t')} and ${hasLink})`
+          : sql<boolean>`not ${hasLink}`,
+      );
+    }
     if (input.direction) {
       query = query.where('t.amount_cents', input.direction === 'out' ? '<' : '>', 0);
     }

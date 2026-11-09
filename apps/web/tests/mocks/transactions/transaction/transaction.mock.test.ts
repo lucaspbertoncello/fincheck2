@@ -49,6 +49,23 @@ describe('transactions routes (reads)', () => {
     expect(items.map((tx) => tx.occurredOn)).toEqual(sorted.map((tx) => tx.occurredOn));
   });
 
+  it('filters by the link to a recurrence, as the cards of Recorrências add up', async () => {
+    const listOf = async (query: string) =>
+      listTransactionsResponseSchema.parse(
+        (await callApi('GET', `/transactions?month=${CURRENT_MONTH}${query}`)).json,
+      ).items;
+    const all = await listOf('');
+    const linked = await listOf('&recurrenceLinked=true');
+    const loose = await listOf('&recurrenceLinked=false');
+
+    expect(linked.length).toBeGreaterThan(0);
+    expect(linked.every((tx) => tx.links.occurrence !== null && tx.ignoredAt === null)).toBe(true);
+    expect(linked.length + loose.length).toBe(all.length);
+    expect(loose.some((tx) => tx.links.occurrence === null)).toBe(true);
+    const incomeLinked = await listOf('&recurrenceLinked=true&direction=in');
+    expect(incomeLinked.every((tx) => tx.amountCents > 0)).toBe(true);
+  });
+
   it('paginates without a month and filters', async () => {
     const first = listTransactionsResponseSchema.parse(
       (await callApi('GET', '/transactions?limit=5')).json,

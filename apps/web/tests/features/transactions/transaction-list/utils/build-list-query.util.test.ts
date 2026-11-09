@@ -72,4 +72,27 @@ describe('transaction list search and query', () => {
     expect(query).not.toHaveProperty('to');
     expect(query.limit).toBe(60);
   });
+
+  it('reads ?recurrence=linked and asks for what pays a recurrence, in the month and in a period', () => {
+    const search = transactionListSearchSchema.parse({ recurrence: 'linked', type: 'income' });
+
+    expect(search.recurrence).toBe('linked');
+    expect(buildListQuery('2026-11', search)).toMatchObject({
+      month: '2026-11',
+      direction: 'in',
+      recurrenceLinked: true,
+    });
+    expect(buildPeriodListQuery({}, search)).toMatchObject({ recurrenceLinked: true });
+    // Not one of the filters of the "Filtros" panel: the chip carries it.
+    expect(countActiveFilters(search)).toBe(0);
+  });
+
+  it('leaves the link filter out without ?recurrence, and on a value it does not know', () => {
+    for (const raw of [{}, { recurrence: 'all' }, { recurrence: 1 }]) {
+      const search = transactionListSearchSchema.parse(raw);
+
+      expect(search.recurrence).toBeUndefined();
+      expect(buildListQuery('2026-11', search).recurrenceLinked).toBeUndefined();
+    }
+  });
 });

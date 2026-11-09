@@ -15,4 +15,4 @@ export type {
 } from '#/components/recurrences/recurrence-status.type.ts';
 export type { RecurrenceTransaction } from '#/components/recurrences/recurrence-transaction.type.ts';
 export { TotalCard } from '#/components/recurrences/total-card.component.tsx';
-export type { TotalCardItem } from '#/components/recurrences/total-card.type.ts';
+export type { TotalCardDetail, TotalCardItem } from '#/components/recurrences/total-card.type.ts';

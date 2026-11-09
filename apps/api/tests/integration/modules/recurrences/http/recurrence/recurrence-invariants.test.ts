@@ -191,10 +191,13 @@ describe('recurrence invariants', () => {
       expect(summary.incomes).toEqual({
         expectedCents: incomes.reduce((total, item) => total + item.expectedAmountCents, 0),
         receivedCents: incomes.reduce((total, item) => total + item.receivedCents, 0),
+        missingCents: incomes.reduce((total, item) => total + item.remainingCents, 0),
         count: incomes.length,
       });
       expect(summary.expenses).toEqual({
         expectedCents: expenses.reduce((total, item) => total + item.expectedAmountCents, 0),
+        paidCents: expenses.reduce((total, item) => total + item.receivedCents, 0),
+        missingCents: expenses.reduce((total, item) => total + item.remainingCents, 0),
         paidCount: expenses.filter((item) => item.status === 'confirmed').length,
         lateCount: expenses.filter((item) => item.status === 'late').length,
         differentCount: expenses.filter((item) => item.difference?.decision === null).length,

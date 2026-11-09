@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createRecurrenceRequestSchema,
   dateRuleSchema,
+  recurrenceSummarySchema,
   updateRecurrenceRequestSchema,
 } from '#/recurrences/recurrence/recurrence.schema.ts';
 
@@ -236,5 +237,48 @@ describe('updateRecurrenceRequestSchema', () => {
 
   it('clears the employment regime with null', () => {
     expect(updateRecurrenceRequestSchema.safeParse({ employmentRegime: null }).success).toBe(true);
+  });
+});
+
+describe('recurrenceSummarySchema', () => {
+  const summary = {
+    incomes: { expectedCents: 5_370_020, receivedCents: 338_722, missingCents: 198_280, count: 5 },
+    expenses: {
+      expectedCents: 54_259,
+      paidCents: 20_000,
+      missingCents: 32_359,
+      paidCount: 1,
+      lateCount: 1,
+      differentCount: 1,
+      count: 3,
+    },
+  };
+
+  it('carries what is received and what is missing of the incomes, and what is paid and missing of the expenses', () => {
+    expect(recurrenceSummarySchema.parse(summary)).toEqual(summary);
+  });
+
+  it('asks for the missing amount of both cards and the paid amount of the expenses', () => {
+    expect(
+      recurrenceSummarySchema.safeParse({
+        ...summary,
+        incomes: { ...summary.incomes, missingCents: undefined },
+      }).success,
+    ).toBe(false);
+    expect(
+      recurrenceSummarySchema.safeParse({
+        ...summary,
+        expenses: { ...summary.expenses, paidCents: undefined, missingCents: undefined },
+      }).success,
+    ).toBe(false);
+  });
+
+  it('refuses an amount that is not whole cents', () => {
+    expect(
+      recurrenceSummarySchema.safeParse({
+        ...summary,
+        incomes: { ...summary.incomes, missingCents: 10.5 },
+      }).success,
+    ).toBe(false);
   });
 });

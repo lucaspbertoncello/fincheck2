@@ -87,8 +87,12 @@ export const recurrenceMock = [
       { query: summaryRecurrencesQuerySchema, response: recurrenceSummarySchema },
       ({ query }) => {
         assertSupportedMonth(query.month, 'month');
+        // The set of the list of recurrences: the live ones only, with the skipped out.
         const month = listMonthOccurrences(db, query.month).filter(
-          (item) => !item.carriedOver && item.status !== 'skipped',
+          (item) =>
+            !item.carriedOver &&
+            item.status !== 'skipped' &&
+            !db.recurrences.find((recurrence) => recurrence.id === item.recurrenceId)?.archivedAt,
         );
         const incomes = month.filter((item) => item.kind === 'income');
         const expenses = month.filter((item) => item.kind === 'expense');
@@ -97,10 +101,13 @@ export const recurrenceMock = [
           incomes: {
             expectedCents: incomes.reduce((sum, item) => sum + item.expectedAmountCents, 0),
             receivedCents: incomes.reduce((sum, item) => sum + item.receivedCents, 0),
+            missingCents: incomes.reduce((sum, item) => sum + item.remainingCents, 0),
             count: incomes.length,
           },
           expenses: {
             expectedCents: expenses.reduce((sum, item) => sum + item.expectedAmountCents, 0),
+            paidCents: expenses.reduce((sum, item) => sum + item.receivedCents, 0),
+            missingCents: expenses.reduce((sum, item) => sum + item.remainingCents, 0),
             paidCount: expenses.filter((item) => item.status === 'confirmed').length,
             lateCount: expenses.filter((item) => item.status === 'late').length,
             differentCount: expenses.filter(

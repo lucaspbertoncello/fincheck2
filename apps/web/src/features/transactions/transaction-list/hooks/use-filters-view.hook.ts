@@ -24,6 +24,7 @@ export function useFiltersView({ lookups, search, update }: FiltersViewArgs) {
       tag: null,
       uncategorized: null,
       ruleId: null,
+      recurrence: null,
       q: null,
     });
   }

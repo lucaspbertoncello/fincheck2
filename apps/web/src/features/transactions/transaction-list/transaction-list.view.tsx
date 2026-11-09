@@ -13,6 +13,7 @@ import {
 
 import { BulkPickerModal } from '#/features/transactions/transaction-list/components/bulk-picker-modal.component.tsx';
 import { ByCategory } from '#/features/transactions/transaction-list/components/by-category/by-category.component.tsx';
+import { RecurrenceFilterChip } from '#/features/transactions/transaction-list/components/recurrence-filter-chip.component.tsx';
 import { DayFilterChip } from '#/features/transactions/transaction-list/components/day-filter-chip.component.tsx';
 import { DayList } from '#/shared/components/transactions/day-list.component.tsx';
 import { FiltersModal } from '#/features/transactions/transaction-list/components/filters-modal.component.tsx';
@@ -47,6 +48,7 @@ export function TransactionListView(props: TransactionListViewProps) {
         />
       ))}
       {!isCategoryView && props.dayFilter ? <DayFilterChip filter={props.dayFilter} /> : null}
+      {!isCategoryView ? <RecurrenceFilterChip filter={props.recurrenceFilter} /> : null}
 
       <BannerSlot isOpen={Boolean(props.actionError)}>
         {props.actionError ? (

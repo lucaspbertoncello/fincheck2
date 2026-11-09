@@ -242,6 +242,11 @@ export type DayFilterView = {
   onClear: () => void;
 };
 
+/** The list is narrowed to what pays a recurrence (`?recurrence=linked`), with the way back. */
+export type RecurrenceFilterView = {
+  onClear: () => void;
+};
+
 export type ConfirmView = {
   title: string;
   description: string;
@@ -280,6 +285,8 @@ export type TransactionListViewProps = {
   emptyReason: 'month' | 'filtered' | 'day' | null;
   /** Set while `?day=` narrows the list to one day. */
   dayFilter: DayFilterView | null;
+  /** Set while `?recurrence=linked` narrows the list (the list view; "Por categoria" has no such read). */
+  recurrenceFilter: RecurrenceFilterView | null;
   syncFailures: SyncFailureView[];
   onClearFilters: () => void;
   onConnectAccounts: () => void;
