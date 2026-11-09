@@ -12,10 +12,11 @@ const ROW: TransactionRowData = {
   name: 'Anthropic* Claude Sub',
   amountCents: -10000,
   kind: 'expense',
-  categoryName: 'Assinaturas',
+  categoryIcon: 'tag',
+  categoryNames: ['Assinaturas'],
   accountLabel: 'Nubank, crédito',
   pending: true,
-} as TransactionRowData;
+};
 
 function renderRow() {
   return render(

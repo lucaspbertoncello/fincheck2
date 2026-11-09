@@ -20,11 +20,13 @@ import { useResolveBankChange } from '#/domain/transactions/transaction/hooks/us
 import { useRestoreOriginalTransaction } from '#/domain/transactions/transaction/hooks/use-restore-original-transaction.hook.ts';
 import { useSplitTransaction } from '#/domain/transactions/transaction/hooks/use-split-transaction.hook.ts';
 import { useInfiniteTransactions } from '#/domain/transactions/transaction/hooks/use-infinite-transactions.hook.ts';
+import { useTransactionLists } from '#/domain/transactions/transaction/hooks/use-transaction-lists.hook.ts';
 import { useTransactions } from '#/domain/transactions/transaction/hooks/use-transactions.hook.ts';
 import { useUnignoreTransaction } from '#/domain/transactions/transaction/hooks/use-unignore-transaction.hook.ts';
 import { useUnsplitTransaction } from '#/domain/transactions/transaction/hooks/use-unsplit-transaction.hook.ts';
 import { useUpdateTransaction } from '#/domain/transactions/transaction/hooks/use-update-transaction.hook.ts';
 import type { TransactionListSearch } from '#/shared/schemas/transactions/transaction-list-search.schema.ts';
+import { buildIncomeLatestQuery } from '#/features/transactions/transaction-list/utils/build-income-latest-query.util.ts';
 import { buildListQuery } from '#/features/transactions/transaction-list/utils/build-list-query.util.ts';
 import { buildPeriodListQuery } from '#/features/transactions/transaction-list/utils/build-period-list-query.util.ts';
 
@@ -45,6 +47,23 @@ type ModelArgs = {
 export function useTransactionListModel({ month, range, search, ruleQuestionIds }: ModelArgs) {
   const isCategoryView = search.view === 'category';
   const isMonth = search.period === 'month';
+  const breakdown = useCategoryBreakdown(month, { enabled: isMonth && isCategoryView });
+  // The totals of a wider period come from the categories (the list view shows them too).
+  const periodBreakdown = useCategoryBreakdownPeriod(range, { enabled: !isMonth });
+
+  // The breakdown brings the last transactions of the expense groups; the income groups open to the
+  // ones read here, one read per income category (the ones with a category and a transaction).
+  const incomeCategoryIds = (
+    (isMonth ? breakdown.data : periodBreakdown.data)?.incomes.items ?? []
+  ).flatMap((item) =>
+    item.categoryId !== null && item.transactionCount > 0 ? [item.categoryId] : [],
+  );
+  const incomeReads = useTransactionLists(
+    incomeCategoryIds.map((categoryId) =>
+      buildIncomeLatestQuery({ categoryId, month, range, isMonth }),
+    ),
+    { enabled: isCategoryView && search.type !== 'expense' },
+  );
 
   return {
     accounts: useAccounts({ includeArchived: true }),
@@ -63,9 +82,10 @@ export function useTransactionListModel({ month, range, search, ruleQuestionIds 
     summary: useTransactionSummary(month, { enabled: isMonth }),
     connections: useConnections(),
     startRun: useStartConnectionRun(),
-    breakdown: useCategoryBreakdown(month, { enabled: isMonth && isCategoryView }),
-    // The totals of a wider period come from the categories (the list view shows them too).
-    periodBreakdown: useCategoryBreakdownPeriod(range, { enabled: !isMonth }),
+    breakdown,
+    periodBreakdown,
+    /** The last incomes of each income category of the breakdown, in the order of `categoryIds`. */
+    incomeLatest: { categoryIds: incomeCategoryIds, reads: incomeReads },
     monthSummary: useMonthSummary(month, { enabled: isMonth && isCategoryView }),
     ruleSuggestions: useRuleSuggestions(ruleQuestionIds),
     updateTransaction: useUpdateTransaction(),

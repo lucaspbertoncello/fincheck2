@@ -40,7 +40,10 @@ describe('transactions routes (reads)', () => {
     expect(items.some((tx) => tx.splits.length === 2)).toBe(true);
     expect(items.some((tx) => tx.ignoredAt !== null)).toBe(true);
     expect(items.some((tx) => tx.bankChange !== null && tx.isEdited)).toBe(true);
-    expect(items.filter((tx) => tx.nature === 'transfer')).toHaveLength(2);
+    // Two legs between own accounts, and two more made by "Rotação entre contas" (with category).
+    const transfers = items.filter((tx) => tx.nature === 'transfer');
+    expect(transfers).toHaveLength(4);
+    expect(transfers.filter((tx) => tx.categoryId !== null)).toHaveLength(2);
     expect(items.some((tx) => tx.links.occurrence !== null)).toBe(true);
     const sorted = [...items].sort((a, b) => b.occurredOn.localeCompare(a.occurredOn));
     expect(items.map((tx) => tx.occurredOn)).toEqual(sorted.map((tx) => tx.occurredOn));

@@ -22,7 +22,7 @@ function cur(back: number): string {
 
 // Transactions, installment plans and the paid invoices of the past. Names and amounts are made up.
 export function seedTransactions(database: MockState.Database, ids: SeedIds): void {
-  const { acc, cat, rule } = ids;
+  const { acc, cat, rule, tag } = ids;
   const previous = addMonths(CURRENT_MONTH, -1);
   const prevDay = (day: number) => dateInMonth(previous, day);
   const nuCard = database.accounts.find((a) => a.id === acc.nuCartao)?.creditCard;
@@ -134,6 +134,31 @@ export function seedTransactions(database: MockState.Database, ids: SeedIds): vo
   out.transferCounterpartId = incoming.id;
   incoming.transferCounterpartId = out.id;
 
+  // The same between own accounts, made by the category that is a transfer ("Rotação entre
+  // contas"): the category page lists both legs, though they are not spending.
+  const rotationOut = push({
+    accountId: acc.nuConta,
+    method: 'transfer',
+    nature: 'transfer',
+    natureSetBy: 'user',
+    description: 'ROTACAO CAIXA DO MES PARA BRADESCO',
+    amountCents: -20_000,
+    occurredOn: cur(8),
+    categoryId: cat.rotacaoContas,
+  });
+  const rotationIn = push({
+    accountId: acc.brConta,
+    method: 'transfer',
+    nature: 'transfer',
+    natureSetBy: 'user',
+    description: 'ROTACAO CAIXA DO MES DO NUBANK',
+    amountCents: 20_000,
+    occurredOn: cur(8),
+    categoryId: cat.rotacaoContas,
+  });
+  rotationOut.transferCounterpartId = rotationIn.id;
+  rotationIn.transferCounterpartId = rotationOut.id;
+
   // Bradesco checking.
   push({
     accountId: acc.brConta,
@@ -238,6 +263,8 @@ export function seedTransactions(database: MockState.Database, ids: SeedIds): vo
     categoryId: cat.delivery,
     categorySource: 'rule',
     categoryRuleId: rule.ifood,
+    // The one transaction with a tag: its row shows the category and the tag side by side.
+    tagIds: [tag.delivery],
   });
   nu({
     description: 'IFOOD *HAMBURGUERIA',

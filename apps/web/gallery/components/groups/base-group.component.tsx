@@ -133,6 +133,15 @@ export const BASE_SECTIONS: GallerySectionDef[] = [
         <GalleryVariant caption="tag">
           <Chip tone="tag"># delivery</Chip>
         </GalleryVariant>
+        <GalleryVariant caption="compact (na linha de detalhe: categoria e tag, 20 de altura)">
+          <Chip compact>Mercado</Chip>
+          <Chip tone="tag" icon="hash" compact>
+            delivery
+          </Chip>
+          <Chip tone="dashed" compact>
+            Sem categoria
+          </Chip>
+        </GalleryVariant>
       </>
     ),
   },

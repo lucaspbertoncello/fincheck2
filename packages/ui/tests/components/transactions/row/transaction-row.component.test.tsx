@@ -19,7 +19,7 @@ const base: TransactionRowData = {
   kind: 'expense',
   amountCents: -4590,
   categoryIcon: 'food',
-  categoryName: 'Restaurantes',
+  categoryNames: ['Restaurantes'],
   accountLabel: 'Nubank, crédito',
 };
 
@@ -66,11 +66,68 @@ describe('TransactionRow', () => {
     expect(html.indexOf('45,90')).toBeLessThan(html.indexOf('Ações de Padaria Estrela'));
   });
 
-  it('writes category and account on one detail line, with the full text in the title', () => {
+  it('writes the category as a chip and the account on one detail line, with the full text in the title', () => {
     const html = row();
 
     expect(html).toContain('title="Restaurantes · Nubank, crédito"');
     expect(html).toContain('text-label text-fg-secondary');
+    // The chip is compact (20 px) so the detail line is as tall as one with no chip.
+    expect(html).toMatch(
+      /<span class="[^"]*h-5[^"]*bg-subtle[^"]*"><span class="[^"]*">Restaurantes<\/span><\/span>/,
+    );
+    expect(html.indexOf('Restaurantes')).toBeLessThan(html.indexOf('Nubank, crédito'));
+  });
+
+  it('puts the tags next to the category, in the tag chip', () => {
+    const html = row({ tags: ['delivery', 'presente'] });
+
+    expect(html).toContain('title="Restaurantes · #delivery · #presente · Nubank, crédito"');
+    expect(html.indexOf('Restaurantes')).toBeLessThan(html.indexOf('delivery'));
+    expect(html.indexOf('presente')).toBeLessThan(html.indexOf('Nubank, crédito'));
+    expect((html.match(/border border-line/g) ?? []).length).toBe(2);
+  });
+
+  it('shows two tags at most and "+N" for the others, all of them in the title', () => {
+    const html = row({ tags: ['a', 'b', 'c', 'd'] });
+
+    expect(html).toContain('+2');
+    expect(html).not.toContain('>c<');
+    // The "+N" says what it hides, on hover and to a screen reader.
+    expect(html).toContain('title="e mais 2: #c, #d"');
+    expect(html).toContain('aria-label="e mais 2: #c, #d"');
+    expect(html).toContain('#a · #b · #c · #d');
+  });
+
+  it('truncates a long category or tag with an ellipsis, never past the column', () => {
+    const html = row({
+      categoryNames: ['Despesas recorrentes da casa de praia'],
+      tags: ['uma-tag-com-um-nome-bem-comprido'],
+    });
+
+    expect(html).toContain('max-w-full');
+    expect(html).toContain('min-w-0 truncate">Despesas recorrentes da casa de praia</span>');
+    expect(html).toContain('min-w-0 truncate">uma-tag-com-um-nome-bem-comprido</span>');
+  });
+
+  it('writes one category chip per part of a split transaction', () => {
+    const html = row({ splitParts: 2, categoryNames: ['Mercado', 'Casa'] });
+
+    expect(html).toContain('>Mercado<');
+    expect(html).toContain('>Casa<');
+    expect(html).toContain('Dividida em 2');
+    expect(html).not.toContain('+1');
+    expect(html).toContain('title="Mercado · Casa · Nubank, crédito"');
+  });
+
+  it('shows two categories at most for a split transaction and "+N" for the others', () => {
+    const html = row({ splitParts: 3, categoryNames: ['Mercado', 'Casa', 'Saúde'] });
+
+    expect(html).toContain('>Mercado<');
+    expect(html).toContain('>Casa<');
+    expect(html).not.toContain('>Saúde<');
+    expect(html).toContain('+1');
+    expect(html).toContain('aria-label="e mais 1: Saúde"');
+    expect(html).toContain('title="Mercado · Casa · Saúde · Nubank, crédito"');
   });
 
   it('shows at most two chips and moves the rest to the detail line', () => {
@@ -81,21 +138,31 @@ describe('TransactionRow', () => {
       installment: { number: 3, total: 10 },
       tags: ['delivery'],
     });
-    const chipCount = (html.match(/rounded-capsule font-plain whitespace-nowrap/g) ?? []).length;
+    // The status chips are the ones that are not compact: the category and the tags are on the detail line.
+    const statusChips = (
+      html.match(/rounded-capsule font-plain whitespace-nowrap px-s8 py-s4/g) ?? []
+    ).length;
 
     expect(html).toContain('Não lançada');
     expect(html).toContain('Para revisar');
     expect(html).toContain(
-      'title="Restaurantes · Nubank, crédito · Editada · Parcela 3 de 10 · #delivery"',
+      'title="Restaurantes · #delivery · Nubank, crédito · Editada · Parcela 3 de 10"',
     );
-    expect(chipCount).toBe(2);
+    expect(statusChips).toBe(2);
   });
 
-  it('keeps the title off the detail line when the overflow carries money', () => {
-    const html = row({ pending: true, toReview: true, debtPaidCents: 15000, debtPerson: 'Rafa' });
+  it('keeps the money out of the title when the overflow carries it, but not the categories', () => {
+    const html = row({
+      pending: true,
+      toReview: true,
+      debtPaidCents: 15000,
+      debtPerson: 'Rafa',
+      tags: ['delivery'],
+    });
 
     expect(html).toContain('Abateu');
-    expect(html).not.toContain('title="Restaurantes');
+    expect(html).toContain('title="Restaurantes · #delivery · Nubank, crédito"');
+    expect(html).not.toMatch(/title="[^"]*Abateu/);
   });
 
   it('paints the expense amount red with "−", the R$ prefix too, and leaves ignored ones faded', () => {
@@ -168,13 +235,17 @@ describe('TransactionRow', () => {
   });
 
   it('draws a transaction with no category with a dashed icon', () => {
-    expect(row({ uncategorized: true, categoryName: undefined })).toContain('border-dashed');
+    expect(row({ uncategorized: true, categoryNames: undefined })).toContain('border-dashed');
   });
 
-  it('writes "Sem categoria" in the metadata when there is no category name', () => {
-    const html = row({ uncategorized: true, categoryName: undefined });
-    expect(html).toContain('Sem categoria');
-    expect(row({ categoryName: 'Delivery' })).not.toContain('Sem categoria');
+  it('writes "Sem categoria" as a dashed chip when there is no category name', () => {
+    const html = row({ uncategorized: true, categoryNames: undefined });
+
+    expect(html).toMatch(
+      /<span class="[^"]*h-5[^"]*border-dashed[^"]*"><span class="[^"]*">Sem categoria<\/span><\/span>/,
+    );
+    expect(html).toContain('title="Sem categoria · Nubank, crédito"');
+    expect(row({ categoryNames: ['Delivery'] })).not.toContain('Sem categoria');
   });
 
   it('hides the amount, the sign and the debt value when the eye is on', () => {

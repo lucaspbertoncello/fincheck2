@@ -30,6 +30,13 @@ describe('Chip', () => {
   it('has a large size', () => {
     expect(renderToStaticMarkup(<Chip large>Mercado</Chip>)).toContain('text-label');
   });
+
+  it('has a compact size, 20 px tall with no vertical padding, for a line of text', () => {
+    const html = renderToStaticMarkup(<Chip compact>Mercado</Chip>);
+
+    expect(html).toContain('h-5');
+    expect(html).not.toContain('py-s4');
+  });
 });
 
 describe('CountBadge', () => {

@@ -15,8 +15,12 @@ export type TransactionRowData = {
   categoryIcon: IconName;
   /** "Sem categoria": dashed icon circle. */
   uncategorized?: boolean;
-  /** "Delivery", "Transferência entre contas". Empty for a transaction with no category. */
-  categoryName?: string;
+  /**
+   * The categories of the transaction, each one a chip on the detail line: one name, or one per
+   * part when it is split ("Mercado", "Casa"). The row shows two and writes the rest as "+N". Empty
+   * for a transaction with no category (the row writes "Sem categoria" when `uncategorized`).
+   */
+  categoryNames?: readonly string[];
   /** "Nubank, crédito". */
   accountLabel: string;
   /** Tag names without the "#": ["delivery"]. */

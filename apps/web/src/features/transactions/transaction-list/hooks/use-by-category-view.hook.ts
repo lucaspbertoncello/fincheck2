@@ -47,12 +47,26 @@ export function useByCategoryView({
   const isMonth = search.period === 'month';
   const breakdown = isMonth ? model.breakdown.data : model.periodBreakdown.data;
   const monthSummary = model.monthSummary.data;
+
   if (!breakdown || (isMonth && !monthSummary)) return { view: null, empty: false };
 
   const transactionsById = new Map(
     (model.monthTransactions.data?.items ?? []).map((item) => [item.id, item]),
   );
-  const groups = buildCategoryGroups(breakdown, lookups, transactionsById, search.q ?? '');
+  // The income groups open to the last incomes the model read for each of them.
+  const incomeLatest = new Map(
+    model.incomeLatest.categoryIds.map((categoryId, index) => [
+      categoryId,
+      model.incomeLatest.reads[index]?.data?.items ?? [],
+    ]),
+  );
+  const groups = buildCategoryGroups(
+    breakdown,
+    lookups,
+    transactionsById,
+    incomeLatest,
+    search.q ?? '',
+  );
 
   return {
     empty: Boolean(search.q) && groups.expenses.length === 0 && groups.incomes.length === 0,

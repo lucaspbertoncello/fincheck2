@@ -1,5 +1,6 @@
 import {
   CategoryGroup,
+  type CategoryGroupData,
   CategoryGroupList,
   ExpenseSummaryCard,
   IncomeSummaryCard,
@@ -8,7 +9,6 @@ import {
   SummaryBar,
 } from '@fincheck/ui';
 
-import { UNCATEGORIZED_GROUP_ID } from '#/features/transactions/transaction-list/constants/uncategorized-group-id.constant.ts';
 import type { ByCategoryView } from '#/shared/types/transactions/transaction-list-view.type.ts';
 
 type ByCategoryProps = {
@@ -56,10 +56,35 @@ function IncomeCardOfPeriod({
   );
 }
 
+type GroupProps = {
+  group: CategoryGroupData;
+  kind: 'expense' | 'income';
+  data: ByCategoryView;
+};
+
+/**
+ * A group of either list: the same for expenses and incomes, and one open at a time across both
+ * (the open one is kept by kind and id, because a category can be in both lists).
+ */
+function Group({ group, kind, data }: GroupProps) {
+  const openId = `${kind}:${group.id}`;
+
+  return (
+    <CategoryGroup
+      group={group}
+      kind={kind}
+      expanded={data.openGroupId === openId}
+      onExpandedChange={(open) => data.onOpenGroupChange(openId, open)}
+      onSeeAll={data.onSeeAll}
+      onReview={group.uncategorized ? data.onReview : undefined}
+    />
+  );
+}
+
 /**
  * "Por categoria" (screens.md): the expense and income cards, then Despesas por categoria (each group
  * opens to its last transactions and "Ver as N transações na lista"; the group without category is
- * "Para revisar") and Receitas por fonte.
+ * "Para revisar") and Receitas por fonte, which work the same way (one group open at a time).
  */
 export function ByCategory({ data }: ByCategoryProps) {
   const { expenseCard, incomeCard } = data;
@@ -107,15 +132,7 @@ export function ByCategory({ data }: ByCategoryProps) {
           kind="expense"
         >
           {data.expenses.map((group) => (
-            <CategoryGroup
-              key={group.id}
-              group={group}
-              kind="expense"
-              expanded={data.openGroupId === group.id}
-              onExpandedChange={(open) => data.onOpenGroupChange(group.id, open)}
-              onSeeAll={data.onSeeAll}
-              onReview={group.id === UNCATEGORIZED_GROUP_ID ? data.onReview : undefined}
-            />
+            <Group key={group.id} group={group} kind="expense" data={data} />
           ))}
         </CategoryGroupList>
       ) : null}
@@ -129,13 +146,7 @@ export function ByCategory({ data }: ByCategoryProps) {
           kind="income"
         >
           {data.incomes.map((group) => (
-            <CategoryGroup
-              key={group.id}
-              group={group}
-              kind="income"
-              expanded={false}
-              onExpandedChange={() => undefined}
-            />
+            <Group key={group.id} group={group} kind="income" data={data} />
           ))}
         </CategoryGroupList>
       ) : null}

@@ -17,6 +17,10 @@ type ListRowProps = {
   onOpen?: () => void;
   /** Accessible name of that button ("Editar Internet Fibra"). */
   openLabel?: string;
+  /** With `onOpen`: `aria-expanded` of the name button (a row that opens a panel); none if undefined. */
+  expanded?: boolean;
+  /** With `onOpen`: `aria-controls` of the name button, the id of the panel it opens. */
+  controls?: string;
   /** Classes of the name ("text-fg-tertiary line-through" for a dismissed item). */
   nameClassName?: string;
   /** The detail line under the name: one line from the desktop, two on the phone, then cut. */
@@ -68,6 +72,8 @@ export function ListRow({
   name,
   onOpen,
   openLabel,
+  expanded,
+  controls,
   nameClassName,
   detail,
   detailTitle,
@@ -121,6 +127,8 @@ export function ListRow({
             type="button"
             onClick={onOpen}
             aria-label={openLabel}
+            aria-expanded={expanded}
+            aria-controls={controls}
             title={name}
             className={cx(
               nameClass,

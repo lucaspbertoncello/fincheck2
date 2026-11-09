@@ -94,6 +94,22 @@ describe('ListRow', () => {
     expect(html).toContain('aria-label="Editar Internet Fibra"');
   });
 
+  it('sets aria-expanded and aria-controls on the name button when the row opens a panel', () => {
+    const open = render({ onOpen: () => undefined, expanded: true, controls: 'panel-1' });
+    const closed = render({ onOpen: () => undefined, expanded: false, controls: 'panel-1' });
+
+    expect(open).toContain('aria-expanded="true"');
+    expect(open).toContain('aria-controls="panel-1"');
+    expect(closed).toContain('aria-expanded="false"');
+  });
+
+  it('leaves aria-expanded and aria-controls out when they are not given', () => {
+    const html = render({ onOpen: () => undefined, openLabel: 'Abrir' });
+
+    expect(html).not.toContain('aria-expanded');
+    expect(html).not.toContain('aria-controls');
+  });
+
   it('never underlines the name on hover; only the keyboard focus does', () => {
     const html = render({ onOpen: () => undefined, openLabel: 'Abrir Internet Fibra' });
     const button = /<button[^>]*class="([^"]*)"/.exec(html);

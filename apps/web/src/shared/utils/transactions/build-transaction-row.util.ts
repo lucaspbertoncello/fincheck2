@@ -1,3 +1,4 @@
+import type { Category } from '@fincheck/shared/categories/category/category.type.ts';
 import type { Transaction } from '@fincheck/shared/transactions/transaction/transaction.type.ts';
 import type { TransactionRowData } from '@fincheck/ui';
 
@@ -10,6 +11,37 @@ function accountLabel(transaction: Transaction.Dto, lookups: TransactionLookups)
   const account = lookups.accounts.get(transaction.accountId);
   const method = TRANSACTION_METHOD_LABELS[transaction.method];
   return account ? `${account.name}, ${method}` : method;
+}
+
+// The category chips of a split transaction: one per part, in order and without repeats; a part that
+// is a debt with a friend says so, one with no category says "Sem categoria".
+function describeSplitCategories(
+  transaction: Transaction.Dto,
+  lookups: TransactionLookups,
+): string[] {
+  const names = [...transaction.splits]
+    .sort((a, b) => a.position - b.position)
+    .map((part) =>
+      part.nature === 'lent' || part.nature === 'reimbursed'
+        ? OUT_OF_ACCOUNT_LABELS[part.nature]
+        : ((part.categoryId ? lookups.categories.get(part.categoryId)?.name : undefined) ??
+          'Sem categoria'),
+    );
+
+  return [...new Set(names)];
+}
+
+// The category chip of a transaction that is not split ("" has none).
+function describeCategory(
+  transaction: Transaction.Dto,
+  category: Category.Dto | null | undefined,
+  counts: boolean,
+): string {
+  if (counts) return category?.name ?? '';
+  // A transfer made by the category that is a transfer says which one.
+  if (transaction.nature === 'transfer' && category) return category.name;
+
+  return OUT_OF_ACCOUNT_LABELS[transaction.nature];
 }
 
 /** A transaction of the contract as its list row draws it. */
@@ -40,14 +72,9 @@ export function buildTransactionRow(
           ? 'transfer'
           : 'history',
     uncategorized,
-    categoryName: isSplit
-      ? ''
-      : counts
-        ? (category?.name ?? '')
-        : transaction.nature === 'transfer' && category
-          ? // A transfer made by the category that is a transfer says which one.
-            category.name
-          : OUT_OF_ACCOUNT_LABELS[transaction.nature],
+    categoryNames: isSplit
+      ? describeSplitCategories(transaction, lookups)
+      : [describeCategory(transaction, category, counts)].filter(Boolean),
     accountLabel: accountLabel(transaction, lookups),
     tags,
     installment: transaction.installment

@@ -6,6 +6,7 @@ import { ListRow } from '#/components/list-row/index.ts';
 import { OverflowMenu } from '#/components/menus/index.ts';
 import { Money } from '#/components/money/index.ts';
 import { buildTransactionRowFlags } from '#/components/transactions/row/build-transaction-row-flags.util.tsx';
+import { buildTransactionRowLabels } from '#/components/transactions/row/build-transaction-row-labels.util.tsx';
 import { buildTransactionMenuItems } from '#/components/transactions/row/build-transaction-menu-items.util.ts';
 import type {
   TransactionMenuKey,
@@ -35,10 +36,11 @@ function moneyTone(transaction: TransactionRowData) {
 
 /**
  * Transaction row (components.md 6 and 10.0): the standard `ListRow` with the category icon and
- * type badge, the name on one line, "category · account" (plus whatever did not fit in the two
- * chips) on the detail line, the amount at the right end with the sign column and the "…" menu in
- * its own column. Lives inside a `TransactionDayGroup` list; the detail boxes go under it. The
- * amount goes through `Money`, so hiding values just works.
+ * type badge, the name on one line with up to two status chips, and on the detail line the category
+ * and the tags as chips, then "· account" (plus whatever did not fit in the two status chips). The
+ * amount sits at the right end with the sign column and the "…" menu in its own column. Lives
+ * inside a `TransactionDayGroup` list; the detail boxes go under it. The amount goes through
+ * `Money`, so hiding values just works.
  */
 export function TransactionRow({
   transaction,
@@ -50,17 +52,18 @@ export function TransactionRow({
   className,
 }: TransactionRowProps) {
   const { id, name, ignored } = transaction;
-  const categoryLabel =
-    transaction.categoryName || (transaction.uncategorized ? 'Sem categoria' : '');
   const flags = buildTransactionRowFlags(transaction);
   const chips = flags.slice(0, MAX_CHIPS);
   const overflow = flags.slice(MAX_CHIPS);
-  const base = [categoryLabel, transaction.accountLabel].filter(Boolean);
+  const labels = buildTransactionRowLabels(transaction);
+  const base = [transaction.accountLabel].filter(Boolean);
   const parts = [...base, ...overflow.map((flag) => flag.node)];
   const plainParts = overflow.map((flag) => flag.text);
+  // When the overflow carries money the title leaves it out (a hidden value must not leak), but it
+  // still carries the categories, the tags and the account, so what the chips hide is never lost.
   const plainDetail = plainParts.every((text) => text !== undefined)
-    ? [...base, ...plainParts].join(' · ')
-    : undefined;
+    ? [...labels.plain, ...base, ...plainParts].join(' · ')
+    : [...labels.plain, ...base].join(' · ');
   const [firstChip, secondChip] = chips;
   const menuItems = buildTransactionMenuItems(transaction);
 
@@ -105,12 +108,17 @@ export function TransactionRow({
                 ? [firstChip.chip]
                 : undefined
           }
-          detail={parts.map((part, index) => (
-            <span key={index}>
-              {index > 0 ? ' · ' : null}
-              {part}
-            </span>
-          ))}
+          detail={
+            <>
+              {labels.chips}
+              {parts.map((part, index) => (
+                <span key={index}>
+                  {index > 0 || labels.chips.length > 0 ? ' · ' : null}
+                  {part}
+                </span>
+              ))}
+            </>
+          }
           detailTitle={plainDetail}
           value={
             <Money

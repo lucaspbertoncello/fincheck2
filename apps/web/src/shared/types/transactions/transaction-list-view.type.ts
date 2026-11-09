@@ -178,8 +178,9 @@ export type ByCategoryView = {
   incomesTotalCents: number;
   showExpenses: boolean;
   showIncomes: boolean;
+  /** The one open group of both lists (expenses and incomes), as the list writes its key; null when none. */
   openGroupId: string | null;
-  onOpenGroupChange: (id: string, open: boolean) => void;
+  onOpenGroupChange: (key: string, open: boolean) => void;
   onSeeAll: (id: string) => void;
   onReview: () => void;
 };

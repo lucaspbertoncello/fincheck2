@@ -102,9 +102,13 @@ export function CategorySummary({
           </div>
           <Figure icon="list" label="Transações">
             {figures ? (
-              <span className="text-money-md font-numeric text-fg-primary tabular-nums">
-                {figures.transactionCount}
-              </span>
+              figures.transactionCount === null ? (
+                DASH
+              ) : (
+                <span className="text-money-md font-numeric text-fg-primary tabular-nums">
+                  {figures.transactionCount}
+                </span>
+              )
             ) : (
               <Skeleton className="h-6 w-12" />
             )}

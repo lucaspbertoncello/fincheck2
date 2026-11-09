@@ -211,6 +211,18 @@ describe('CategoryPage: the category that is a transfer', () => {
     expect(screen.queryByRole('heading', { name: 'Últimos 12 meses' })).not.toBeInTheDocument();
   });
 
+  it('counts the transactions it lists, though the categories of the period never count a transfer', async () => {
+    await openPage('Rotação entre contas');
+
+    expect(
+      await screen.findByText('ROTACAO CAIXA DO MES PARA BRADESCO', undefined, LONG_WAIT),
+    ).toBeInTheDocument();
+    expect(screen.getByText('ROTACAO CAIXA DO MES DO NUBANK')).toBeInTheDocument();
+    const summary = await screen.findByRole('region', { name: 'Resumo da categoria' });
+    expect(await within(summary).findByText('2', undefined, LONG_WAIT)).toBeInTheDocument();
+    expect(within(summary).queryByText('0')).not.toBeInTheDocument();
+  });
+
   it('keeps the total for an ordinary category', async () => {
     await openPage('Mercado');
 

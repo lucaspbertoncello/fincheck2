@@ -145,4 +145,20 @@ describe('buildCategoryFigures', () => {
       buildCategoryFigures({ ...base, period: 'all', range: {} }).monthlyAverageCents,
     ).toBeNull();
   });
+
+  it('counts a category that is a transfer by what the page says, since the categories never count a transfer', () => {
+    const base = {
+      kind: 'expense' as const,
+      categoryId: 'rotation',
+      period: 'month' as const,
+      range: { from: '2026-10-01', to: '2026-10-31' },
+      today: TODAY,
+      breakdown,
+    };
+
+    // Not in the breakdown (it is not spending): 0, which is the defect.
+    expect(buildCategoryFigures(base).transactionCount).toBe(0);
+    expect(buildCategoryFigures({ ...base, transferCount: 2 }).transactionCount).toBe(2);
+    expect(buildCategoryFigures({ ...base, transferCount: null }).transactionCount).toBeNull();
+  });
 });

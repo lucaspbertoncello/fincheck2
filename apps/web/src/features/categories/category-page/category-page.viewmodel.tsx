@@ -81,6 +81,18 @@ export function CategoryPageViewModel() {
   const isExpense = kind === 'expense';
   const kindWord = isExpense ? 'Gasto' : 'Recebido';
 
+  // The breakdown counts spending and income, never a transfer between own accounts: the count of
+  // a category that is a transfer comes from its list, once all of it is read (or from the category
+  // over all the history); a dash until then.
+  const listComplete = model.list.isSuccess && !model.list.hasNextPage;
+  const transferCount = !category?.isTransfer
+    ? undefined
+    : listComplete
+      ? items.length
+      : search.period === 'all'
+        ? category.transactionCount
+        : null;
+
   const figures =
     category && model.breakdown.data
       ? buildCategoryFigures({
@@ -90,6 +102,7 @@ export function CategoryPageViewModel() {
           range,
           today,
           breakdown: model.breakdown.data,
+          transferCount,
         })
       : null;
 

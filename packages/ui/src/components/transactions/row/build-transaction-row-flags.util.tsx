@@ -19,9 +19,10 @@ type TransactionRowFlag = {
  * Everything worth flagging on a transaction, in priority order (what asks for attention first,
  * then what happened to it, then what describes it). The row shows the first two as chips and
  * writes the rest on the detail line, so a row never carries a third chip (components.md 10.0).
+ * The category and the tags are not flags: they have their own place on the detail line.
  */
 export function buildTransactionRowFlags(transaction: TransactionRowData): TransactionRowFlag[] {
-  const { installment, splitParts, debtPaidCents, debtPerson, tags } = transaction;
+  const { installment, splitParts, debtPaidCents, debtPerson } = transaction;
   const flags: TransactionRowFlag[] = [];
 
   if (transaction.pending) {
@@ -110,18 +111,5 @@ export function buildTransactionRowFlags(transaction: TransactionRowData): Trans
       ),
     });
   }
-  for (const tag of tags ?? []) {
-    flags.push({
-      key: `tag-${tag}`,
-      chip: (
-        <Chip tone="tag" icon="hash">
-          {tag}
-        </Chip>
-      ),
-      node: `#${tag}`,
-      text: `#${tag}`,
-    });
-  }
-
   return flags;
 }

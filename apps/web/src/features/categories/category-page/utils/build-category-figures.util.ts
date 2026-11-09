@@ -7,7 +7,8 @@ import type { TransactionPeriod } from '#/shared/schemas/transactions/transactio
 type CategoryFigures = {
   /** What was spent (expense) or received (income) in the period. */
   totalCents: number;
-  transactionCount: number;
+  /** Null for a category that is a transfer whose count is not known yet (see `transferCount`). */
+  transactionCount: number | null;
   /** Null only when the period has no transaction at all, so there is no month to divide by. */
   monthlyAverageCents: number | null;
 };
@@ -19,6 +20,13 @@ type FiguresInput = {
   range: PeriodRange;
   today: string;
   breakdown: CategoryBreakdown.Dto;
+  /**
+   * Set only for a category that is a transfer. The breakdown counts spending and income, never a
+   * transfer between own accounts, so it has no count for these; the page counts them itself: the
+   * transactions of the list when they are all read, or the count of the category over all the
+   * history. Null while it is not known (more pages to read).
+   */
+  transferCount?: number | null;
 };
 
 /** Months between two `YYYY-MM`, both included. */
@@ -44,7 +52,7 @@ function countMonths(input: FiguresInput): number | null {
 
 /** The three figures at the top of the category page, from the categories of the period. */
 export function buildCategoryFigures(input: FiguresInput): CategoryFigures {
-  const { kind, categoryId, breakdown } = input;
+  const { kind, categoryId, breakdown, transferCount } = input;
   const expense = breakdown.expenses.items.find((item) => item.categoryId === categoryId);
   const income = breakdown.incomes.items.find((item) => item.categoryId === categoryId);
   const item = kind === 'expense' ? expense : income;
@@ -53,7 +61,7 @@ export function buildCategoryFigures(input: FiguresInput): CategoryFigures {
 
   return {
     totalCents,
-    transactionCount: item?.transactionCount ?? 0,
+    transactionCount: transferCount === undefined ? (item?.transactionCount ?? 0) : transferCount,
     monthlyAverageCents: months === null ? null : Math.round(totalCents / months),
   };
 }
