@@ -2,7 +2,6 @@ import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
 
 import { clampHeatmapLevel } from '#/components/heatmap/clamp-heatmap-level.util.ts';
 import { describeHeatmapDay } from '#/components/heatmap/describe-heatmap-day.util.ts';
-import { formatHeatmapDayWithYear } from '#/components/heatmap/format-heatmap-day-with-year.util.ts';
 import {
   HEATMAP_DAY_NUMBER_CLASS,
   HEATMAP_LEVEL_CLASS,
@@ -12,9 +11,8 @@ import { maskFutureHeatmapDays } from '#/components/heatmap/mask-future-heatmap-
 import { moveHeatmapFocus } from '#/components/heatmap/move-heatmap-focus.util.ts';
 import { isHeatmapKey } from '#/components/heatmap/is-heatmap-key.util.ts';
 import { type HeatmapPosition } from '#/components/heatmap/heatmap-position.type.ts';
+import { SpendHeatmapTip } from '#/components/heatmap/spend-heatmap-tip.component.tsx';
 import type { SpendHeatmapGrid } from '#/components/heatmap/spend-heatmap.type.ts';
-import { formatMoneyParts } from '#/components/money/format-money-parts.util.ts';
-import { maskMoneyText } from '#/components/money/mask-money-text.util.ts';
 import { useMoneyHidden } from '#/components/money/money-visibility.context.ts';
 import { cx } from '#/utils/class-names.util.ts';
 
@@ -44,23 +42,10 @@ const MONTH_KEY: Record<string, string> = {
   PageDown: 'End',
 };
 
-function tipText(totalCents: number, hidden: boolean): string {
-  if (totalCents <= 0) return 'Sem gastos';
-  const value = `R$ ${formatMoneyParts(totalCents)}`;
-  return hidden ? maskMoneyText(value) : value;
-}
-
-/** Where the tip sits horizontally: against the edge for the first and last weekdays, else centered. */
-function tipSide(weekday: number): string {
-  if (weekday < 2) return 'left-0';
-  if (weekday > 4) return 'right-0';
-  return 'left-1/2 -translate-x-1/2';
-}
-
 /**
  * The month as a calendar (BR-PRF-003, "Mês"): the weekdays on top, a row per week, the day number
  * inside each square and the fill by spend. Same behaviors as the year map: one tab stop, the arrows
- * move a day, the tip (value and date) shows on hover and focus, every day has a name for screen
+ * move a day, the tip (value and date on one line, drawn over the page by `FloatingTip`) shows on hover and focus, every day has a name for screen
  * readers. The squares are fluid up to the width of the calendar.
  */
 export function SpendHeatmapMonth({
@@ -74,7 +59,11 @@ export function SpendHeatmapMonth({
   const rows = grid.weeks;
   const navigable = useMemo(() => maskFutureHeatmapDays(rows, today), [rows, today]);
   const cellRefs = useRef(new Map<string, HTMLButtonElement>());
-  const [tipDate, setTipDate] = useState<string | null>(null);
+  const [tip, setTip] = useState<{
+    date: string;
+    totalCents: number;
+    anchor: HTMLElement;
+  } | null>(null);
   const [active, setActive] = useState<HeatmapPosition | null>(null);
 
   // `column` is the week (the row of the calendar) and `row` the weekday, as in the year map.
@@ -87,7 +76,7 @@ export function SpendHeatmapMonth({
 
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key === 'Escape') {
-      setTipDate(null);
+      setTip(null);
       return;
     }
     const mapped = MONTH_KEY[event.key];
@@ -118,7 +107,7 @@ export function SpendHeatmapMonth({
         aria-colcount={7}
         aria-rowcount={rows.length}
         onKeyDown={onKeyDown}
-        onMouseLeave={() => setTipDate(null)}
+        onMouseLeave={() => setTip(null)}
         className="flex flex-col gap-s4"
       >
         {rows.map((week, weekIndex) => (
@@ -152,12 +141,22 @@ export function SpendHeatmapMonth({
                     tabIndex={isTabStop ? 0 : -1}
                     aria-label={describeHeatmapDay(day.date, day.totalCents, hidden)}
                     onClick={() => onSelectDay(day.date)}
-                    onFocus={() => {
+                    onFocus={(event) => {
                       setActive({ column: weekIndex, row: weekday });
-                      setTipDate(day.date);
+                      setTip({
+                        date: day.date,
+                        totalCents: day.totalCents,
+                        anchor: event.currentTarget,
+                      });
                     }}
-                    onBlur={() => setTipDate(null)}
-                    onMouseEnter={() => setTipDate(day.date)}
+                    onBlur={() => setTip(null)}
+                    onMouseEnter={(event) =>
+                      setTip({
+                        date: day.date,
+                        totalCents: day.totalCents,
+                        anchor: event.currentTarget,
+                      })
+                    }
                     className={cx(
                       'focus-ring flex aspect-square w-full cursor-pointer items-center justify-center rounded-mini text-meta tabular-nums',
                       'transition-transform duration-(--duration-fast) ease-(--ease-standard) hover:scale-105 motion-reduce:transition-none motion-reduce:hover:scale-100',
@@ -174,27 +173,20 @@ export function SpendHeatmapMonth({
                       {number}
                     </span>
                   </button>
-                  {tipDate === day.date ? (
-                    <div
-                      aria-hidden="true"
-                      className={cx(
-                        'pointer-events-none absolute z-(--z-tooltip) flex w-max max-w-56 flex-col gap-s4 rounded-input bg-fg-primary px-s12 py-s8 text-meta text-page',
-                        weekIndex === 0 ? 'top-full mt-s4' : 'bottom-full mb-s4',
-                        tipSide(weekday),
-                      )}
-                    >
-                      <span className="font-emphasis tabular-nums">
-                        {tipText(day.totalCents, hidden)}
-                      </span>
-                      <span>{formatHeatmapDayWithYear(day.date)}</span>
-                    </div>
-                  ) : null}
                 </span>
               );
             })}
           </div>
         ))}
       </div>
+      {tip ? (
+        <SpendHeatmapTip
+          anchor={tip.anchor}
+          date={tip.date}
+          totalCents={tip.totalCents}
+          today={today}
+        />
+      ) : null}
     </div>
   );
 }

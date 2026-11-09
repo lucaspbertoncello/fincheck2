@@ -83,7 +83,7 @@ describe('TransactionRow', () => {
     });
     const chipCount = (html.match(/rounded-capsule font-plain whitespace-nowrap/g) ?? []).length;
 
-    expect(html).toContain('Pendente');
+    expect(html).toContain('Não lançada');
     expect(html).toContain('Para revisar');
     expect(html).toContain(
       'title="Restaurantes · Nubank, crédito · Editada · Parcela 3 de 10 · #delivery"',
@@ -114,7 +114,7 @@ describe('TransactionRow', () => {
     expect(html).toContain('data-type="income"');
   });
 
-  it('shows installment, pending, review, edited and bank-changed chips', () => {
+  it('shows installment, not-posted, review, edited and bank-changed chips', () => {
     const html = row({
       installment: { number: 3, total: 10 },
       pending: true,
@@ -124,7 +124,7 @@ describe('TransactionRow', () => {
     });
 
     expect(html).toContain('Parcela 3 de 10');
-    expect(html).toContain('Pendente');
+    expect(html).toContain('Não lançada');
     expect(html).toContain('Para revisar');
     expect(html).toContain('Editada');
     expect(html).toContain('Banco alterou o original');

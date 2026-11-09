@@ -21,4 +21,13 @@ describe('OverflowMenu', () => {
     expect(html).toContain('aria-expanded="false"');
     expect(html).toContain('size-ctl-touch');
   });
+
+  it('hovers one tone above the row hover, so the circle shows on it', () => {
+    const html = renderToStaticMarkup(
+      <OverflowMenu label="Ações" onAction={() => {}} items={[]} />,
+    );
+
+    expect(html).toContain('data-[hovered]:bg-subtle-hover');
+    expect(html).not.toContain('data-[hovered]:bg-subtle ');
+  });
 });

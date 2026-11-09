@@ -462,4 +462,21 @@ export function seedTransactions(database: MockState.Database, ids: SeedIds): vo
       }
     }
   }
+
+  // The two newest card purchases of the month are not posted by the bank yet (status "pending"):
+  // the row shows the "Não lançada" chip and the invoice already counts them.
+  database.transactions
+    .filter(
+      (record) =>
+        record.method === 'credit' &&
+        record.nature === 'expense' &&
+        record.bank !== null &&
+        record.occurredOn.startsWith(CURRENT_MONTH) &&
+        record.installment === null,
+    )
+    .sort((a, b) => b.occurredOn.localeCompare(a.occurredOn))
+    .slice(0, 2)
+    .forEach((record) => {
+      if (record.bank) record.bank.status = 'pending';
+    });
 }

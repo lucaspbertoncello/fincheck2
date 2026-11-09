@@ -24,7 +24,7 @@ export function OverflowMenu({ label, items, onAction, className }: OverflowMenu
         aria-label={label}
         className={cx(
           'focus-ring grid size-ctl-touch shrink-0 cursor-pointer place-items-center rounded-capsule text-fg-secondary lg:size-ctl-tab',
-          'transition-colors duration-(--duration-fast) data-[hovered]:bg-subtle data-[hovered]:text-fg-primary data-[pressed]:bg-subtle',
+          'transition-colors duration-(--duration-fast) data-[hovered]:bg-subtle-hover data-[hovered]:text-fg-primary data-[pressed]:bg-subtle-hover',
           className,
         )}
       >

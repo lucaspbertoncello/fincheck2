@@ -198,6 +198,12 @@ export const SHELL_SECTIONS: GallerySectionDef[] = [
             <ContentSkeleton variant={variant} />
           </GalleryVariant>
         ))}
+        <GalleryVariant
+          caption="ContentSkeleton overview com 1 cartão de resumo (summaryCards={1})"
+          width={760}
+        >
+          <ContentSkeleton variant="overview" summaryCards={1} />
+        </GalleryVariant>
       </>
     ),
   },

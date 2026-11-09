@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 import { Chip } from '#/components/chips/index.ts';
 import { Money } from '#/components/money/index.ts';
+import { NotPostedChip } from '#/components/transactions/row/not-posted-chip.component.tsx';
 import type { TransactionRowData } from '#/components/transactions/row/transaction-row.type.ts';
 
 /** One piece of metadata of a row: the chip it becomes and the plain text it turns into when the chips are over. */
@@ -26,13 +27,9 @@ export function buildTransactionRowFlags(transaction: TransactionRowData): Trans
   if (transaction.pending) {
     flags.push({
       key: 'pending',
-      chip: (
-        <Chip tone="warn" icon="clock">
-          Pendente
-        </Chip>
-      ),
-      node: 'Pendente',
-      text: 'Pendente',
+      chip: <NotPostedChip />,
+      node: 'Não lançada',
+      text: 'Não lançada',
     });
   }
   if (transaction.toReview) {

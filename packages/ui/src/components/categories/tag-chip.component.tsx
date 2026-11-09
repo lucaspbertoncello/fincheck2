@@ -13,7 +13,8 @@ type TagChipProps = {
 
 /**
  * Tag chip (components.md 15): "# nome", the count of transactions and the "…" menu. 32 px tall
- * on the desktop and 44 on the phone. An archived tag is dimmed and offers "Desarquivar" instead of "Arquivar".
+ * on the desktop and 44 on the phone, 12 of padding on both sides: the "…" button and its hover circle sit entirely inside the box.
+ * An archived tag is dimmed and offers "Desarquivar" instead of "Arquivar".
  */
 export function TagChip({ tag, onRename, onArchive, onRestore, className }: TagChipProps) {
   const archived = tag.archived === true;
@@ -21,7 +22,7 @@ export function TagChip({ tag, onRename, onArchive, onRestore, className }: TagC
   return (
     <span
       className={cx(
-        'inline-flex h-ctl-touch items-center gap-s8 rounded-capsule bg-subtle pr-s4 pl-s12 text-label whitespace-nowrap text-fg-primary lg:h-8',
+        'inline-flex h-ctl-touch items-center gap-s8 rounded-capsule bg-subtle px-s12 text-label whitespace-nowrap text-fg-primary lg:h-8',
         archived && 'text-fg-secondary',
         className,
       )}

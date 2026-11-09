@@ -4,6 +4,7 @@ import { ToggleButton, ToggleButtonGroup } from 'react-aria-components';
 
 import { Icon } from '#/components/icons/icon.component.tsx';
 import { SegmentedIndicator } from '#/components/forms/segmented-indicator.component.tsx';
+import { SegmentedSlide } from '#/components/forms/segmented-slide.component.tsx';
 import type { SegmentedTone } from '#/components/forms/segmented-indicator.type.ts';
 import {
   SEGMENTED_ITEM_ACTIVE_CLASS,
@@ -37,8 +38,9 @@ type SegmentedControlProps = {
   isDisabled?: boolean;
   /**
    * The main-control version (Todas | Despesas | Receitas): fills the width at every size, equal
-   * segments (the slide never resizes them), a tilted card-dot before each label (unless the option has an icon) and the tone of
-   * each option on the slide. The same language as Despesa | Receita in the new-transaction form.
+   * segments, a tilted card-dot before each label (unless the option has an icon) and the tone of
+   * each option on the slide. One pill (`SegmentedSlide`) moves from option to option and takes
+   * the new tone on the way. The same control as Despesa | Receita in the amount field.
    */
   direction?: boolean;
   className?: string;
@@ -59,6 +61,7 @@ export function SegmentedControl({
   className,
 }: SegmentedControlProps) {
   const indicatorId = useId();
+  const selectedIndex = options.findIndex((option) => option.key === value);
 
   return (
     <MotionConfig reducedMotion="user">
@@ -75,10 +78,17 @@ export function SegmentedControl({
         className={cx(
           SEGMENTED_TRACK_CLASS,
           'data-[disabled]:opacity-50',
-          direction ? 'w-full' : 'lg:inline-flex',
+          direction ? 'relative w-full' : 'lg:inline-flex',
           className,
         )}
       >
+        {direction && selectedIndex >= 0 ? (
+          <SegmentedSlide
+            index={selectedIndex}
+            count={options.length}
+            tone={options[selectedIndex]?.tone}
+          />
+        ) : null}
         {options.map((option) => (
           <ToggleButton
             key={option.key}
@@ -92,12 +102,7 @@ export function SegmentedControl({
           >
             {({ isSelected }) => (
               <>
-                {isSelected ? (
-                  <SegmentedIndicator
-                    layoutId={indicatorId}
-                    tone={direction ? option.tone : undefined}
-                  />
-                ) : null}
+                {isSelected && !direction ? <SegmentedIndicator layoutId={indicatorId} /> : null}
                 {direction && !option.icon ? (
                   <span
                     aria-hidden="true"

@@ -48,8 +48,10 @@ describe('AmountField', () => {
     expect(expense).toContain('text-loss');
     expect(income).toContain('+');
     expect(income).toContain('text-gain');
-    expect(income).toContain('translate-x-full');
-    expect(expense).not.toContain('translate-x-full');
+    expect(income).toContain('translateX(100%)');
+    expect(expense).toContain('translateX(0%)');
+    expect(income).toContain('data-tone="gain"');
+    expect(expense).toContain('data-tone="loss"');
   });
 
   it('hides the selector when the caller does not handle the kind', () => {

@@ -5,12 +5,21 @@ import {
   TOOLTIP_CLOSE_DELAY_MS,
   TOOLTIP_OPEN_DELAY_MS,
 } from '#/components/overlays/tooltip-timing.constant.ts';
+import { cx } from '#/utils/class-names.util.ts';
 
 type TooltipProps = {
   /** The text of the tip. For an icon-only control it is the same text as the control's accessible name. */
   label: string;
   /** The side of the trigger the tip opens on; the rail uses the default, to the right. */
   placement?: 'right' | 'left' | 'top' | 'bottom';
+  /**
+   * A sentence, not a name: the tip wraps at 256 px and reads at normal line height. The default
+   * is a one-line name that never wraps.
+   */
+  multiline?: boolean;
+  /** Controlled open state; leave it out and the tip opens on hover and keyboard focus by itself. */
+  isOpen?: boolean;
+  onOpenChange?: (isOpen: boolean) => void;
   /** The one focusable, hoverable element that carries the tip (a React Aria `Button` or `Link`). */
   children: ReactElement;
 };
@@ -26,14 +35,31 @@ type TooltipProps = {
  * text equals the trigger's accessible name, the browser drops the description and nothing is read
  * twice; keep the two texts equal.
  */
-export function Tooltip({ label, placement = 'right', children }: TooltipProps) {
+export function Tooltip({
+  label,
+  placement = 'right',
+  multiline = false,
+  isOpen,
+  onOpenChange,
+  children,
+}: TooltipProps) {
   return (
-    <TooltipTrigger delay={TOOLTIP_OPEN_DELAY_MS} closeDelay={TOOLTIP_CLOSE_DELAY_MS}>
+    <TooltipTrigger
+      delay={TOOLTIP_OPEN_DELAY_MS}
+      closeDelay={TOOLTIP_CLOSE_DELAY_MS}
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
+    >
       {children}
       <AriaTooltip
         placement={placement}
         offset={12}
-        className="group/tip rounded-input bg-fg-primary px-s12 py-s8 text-label leading-none font-emphasis whitespace-nowrap text-page shadow-(--shadow-tooltip) transition-[opacity,transform] duration-(--duration-fast) ease-(--ease-standard) data-[entering]:opacity-0 data-[exiting]:opacity-0 data-[entering]:data-[placement=right]:-translate-x-1 data-[exiting]:data-[placement=right]:-translate-x-1 data-[entering]:data-[placement=left]:translate-x-1 data-[exiting]:data-[placement=left]:translate-x-1 data-[entering]:data-[placement=top]:translate-y-1 data-[exiting]:data-[placement=top]:translate-y-1 data-[entering]:data-[placement=bottom]:-translate-y-1 data-[exiting]:data-[placement=bottom]:-translate-y-1 motion-reduce:translate-x-0! motion-reduce:translate-y-0!"
+        className={cx(
+          'group/tip rounded-input bg-fg-primary px-s12 py-s8 text-label text-page shadow-(--shadow-tooltip) transition-[opacity,transform] duration-(--duration-fast) ease-(--ease-standard) data-[entering]:opacity-0 data-[exiting]:opacity-0 data-[entering]:data-[placement=right]:-translate-x-1 data-[exiting]:data-[placement=right]:-translate-x-1 data-[entering]:data-[placement=left]:translate-x-1 data-[exiting]:data-[placement=left]:translate-x-1 data-[entering]:data-[placement=top]:translate-y-1 data-[exiting]:data-[placement=top]:translate-y-1 data-[entering]:data-[placement=bottom]:-translate-y-1 data-[exiting]:data-[placement=bottom]:-translate-y-1 motion-reduce:translate-x-0! motion-reduce:translate-y-0!',
+          multiline
+            ? 'max-w-64 leading-snug font-plain'
+            : 'leading-none font-emphasis whitespace-nowrap',
+        )}
       >
         <OverlayArrow>
           <svg

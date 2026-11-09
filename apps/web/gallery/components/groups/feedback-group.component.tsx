@@ -124,7 +124,7 @@ function ModalDemos() {
   );
 }
 
-type ConfirmKind = 'plain' | 'changes' | 'destructive' | 'loading';
+type ConfirmKind = 'plain' | 'long' | 'changes' | 'destructive' | 'loading';
 
 function ConfirmDemos() {
   const [open, setOpen] = useState<ConfirmKind | null>(null);
@@ -143,6 +143,19 @@ function ConfirmDemos() {
           title="Aplicar a regra?"
           description="14 transações vão mudar de categoria."
           confirmLabel="Aplicar"
+          onConfirm={() => setOpen(null)}
+        />
+      </GalleryVariant>
+      <GalleryVariant caption="texto longo (a caixa cresce com o texto, os botões ficam logo abaixo)">
+        <Button variant="secondary" onPress={() => setOpen('long')}>
+          Confirmar com texto longo
+        </Button>
+        <ConfirmDialog
+          isOpen={open === 'long'}
+          onOpenChange={close}
+          title="Aplicar a regra a todas as transações parecidas?"
+          description="A regra recategoriza 14 transações do histórico e passa a valer para as próximas que chegarem do banco. As que você editou à mão continuam como estão, e dá para desfazer a regra depois em Categorias › Regras."
+          confirmLabel="Aplicar a regra"
           onConfirm={() => setOpen(null)}
         />
       </GalleryVariant>

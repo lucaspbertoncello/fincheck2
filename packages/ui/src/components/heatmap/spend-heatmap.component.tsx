@@ -5,7 +5,7 @@ import { clampHeatmapLevel } from '#/components/heatmap/clamp-heatmap-level.util
 import { describeHeatmapDay } from '#/components/heatmap/describe-heatmap-day.util.ts';
 import { maskFutureHeatmapDays } from '#/components/heatmap/mask-future-heatmap-days.util.ts';
 import { SpendHeatmapMonth } from '#/components/heatmap/spend-heatmap-month.component.tsx';
-import { formatHeatmapDayWithYear } from '#/components/heatmap/format-heatmap-day-with-year.util.ts';
+import { SpendHeatmapTip } from '#/components/heatmap/spend-heatmap-tip.component.tsx';
 import {
   HEATMAP_LEVEL_CLASS,
   HEATMAP_WEEKDAY_LABELS,
@@ -18,8 +18,6 @@ import type {
   SpendHeatmapGrid,
   SpendHeatmapView,
 } from '#/components/heatmap/spend-heatmap.type.ts';
-import { formatMoneyParts } from '#/components/money/format-money-parts.util.ts';
-import { maskMoneyText } from '#/components/money/mask-money-text.util.ts';
 import { useMoneyHidden } from '#/components/money/money-visibility.context.ts';
 import { cx } from '#/utils/class-names.util.ts';
 
@@ -43,24 +41,7 @@ type SpendHeatmapProps = {
   className?: string;
 };
 
-type Tip = { date: string; totalCents: number; column: number; row: number };
-
-function tipText(totalCents: number, hidden: boolean): string {
-  if (totalCents <= 0) return 'Sem gastos';
-  const value = `R$ ${formatMoneyParts(totalCents)}`;
-  return hidden ? maskMoneyText(value) : value;
-}
-
-/** Vertical place of the tip: under the square for the top rows, over it for the rest. */
-function tipPosition(row: number): { top?: string; bottom?: string } {
-  const cell = 'var(--heatmap-cell)';
-  const gap = 'var(--spacing-s4)';
-  const rowGap = 'var(--spacing-s8)';
-  if (row < 3) {
-    return { top: `calc(${cell} * ${row + 2} + ${gap} * ${row + 1} + ${rowGap})` };
-  }
-  return { bottom: `calc(100% - ${cell} * ${row + 1} - ${gap} * ${row - 1} - ${rowGap})` };
-}
+type Tip = { date: string; totalCents: number; anchor: HTMLElement };
 
 /**
  * The spend map (BR-PRF-003). The year view (the default, also fit for 12 months): a square per
@@ -68,7 +49,7 @@ function tipPosition(row: number): { top?: string; bottom?: string } {
  * Sex at the left. The month view is a calendar (see `SpendHeatmapMonth`). Fluid on the desktop; on the
  * phone the squares keep a touchable size and the map scrolls sideways, opening on the current week.
  * The grid is a real `grid`: one tab stop, arrows move a day, Home and End go along the row, Page Up
- * and Down along the column. The tip (date and value) shows on hover and on focus, Esc hides it.
+ * and Down along the column. The tip (value and date, on one line, drawn over the page by `FloatingTip`) shows on hover and on focus, Esc hides it.
  * Every day has a name for screen readers (value first, then the date).
  */
 export function SpendHeatmap({
@@ -176,15 +157,6 @@ function SpendHeatmapYear({ grid, label, today, onSelectDay, className }: SpendH
     cellRefs.current.get(day.date)?.focus();
   }
 
-  const tipAlign =
-    tip === null
-      ? ''
-      : tip.column < 4
-        ? 'translate-x-0'
-        : tip.column > weeks.length - 5
-          ? '-translate-x-full'
-          : '-translate-x-1/2';
-
   return (
     <div className={cx('flex items-start gap-s8', className)}>
       <div
@@ -247,8 +219,8 @@ function SpendHeatmapYear({ grid, label, today, onSelectDay, className }: SpendH
                     );
                   }
                   const isTabStop = tabStop.column === column && tabStop.row === row;
-                  const showTip = () =>
-                    setTip({ date: day.date, totalCents: day.totalCents, column, row });
+                  const showTip = (anchor: HTMLElement) =>
+                    setTip({ date: day.date, totalCents: day.totalCents, anchor });
                   return (
                     <span key={day.date} role="gridcell" className="relative flex">
                       <button
@@ -260,12 +232,12 @@ function SpendHeatmapYear({ grid, label, today, onSelectDay, className }: SpendH
                         tabIndex={isTabStop ? 0 : -1}
                         aria-label={describeHeatmapDay(day.date, day.totalCents, hidden)}
                         onClick={() => onSelectDay(day.date)}
-                        onFocus={() => {
+                        onFocus={(event) => {
                           setActive({ column, row });
-                          showTip();
+                          showTip(event.currentTarget);
                         }}
                         onBlur={() => setTip(null)}
-                        onMouseEnter={showTip}
+                        onMouseEnter={(event) => showTip(event.currentTarget)}
                         className={cx(
                           'focus-ring h-(--heatmap-cell) w-full cursor-pointer rounded-mini',
                           'transition-transform duration-(--duration-fast) ease-(--ease-standard) hover:scale-125 motion-reduce:transition-none motion-reduce:hover:scale-100',
@@ -280,24 +252,16 @@ function SpendHeatmapYear({ grid, label, today, onSelectDay, className }: SpendH
               </div>
             ))}
           </div>
-          {tip ? (
-            <div
-              aria-hidden="true"
-              className={cx(
-                'pointer-events-none absolute z-(--z-tooltip) flex w-max max-w-56 flex-col gap-s4 rounded-input bg-fg-primary px-s12 py-s8 text-meta text-page',
-                tipAlign,
-              )}
-              style={{
-                left: `${((tip.column + 0.5) / weeks.length) * 100}%`,
-                ...tipPosition(tip.row),
-              }}
-            >
-              <span className="font-emphasis tabular-nums">{tipText(tip.totalCents, hidden)}</span>
-              <span>{formatHeatmapDayWithYear(tip.date)}</span>
-            </div>
-          ) : null}
         </div>
       </div>
+      {tip ? (
+        <SpendHeatmapTip
+          anchor={tip.anchor}
+          date={tip.date}
+          totalCents={tip.totalCents}
+          today={today}
+        />
+      ) : null}
     </div>
   );
 }

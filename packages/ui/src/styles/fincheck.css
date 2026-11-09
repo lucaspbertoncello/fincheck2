@@ -28,6 +28,7 @@
   --color-page-top: var(--color-bg-top);
   --color-glass: var(--color-surface-glass);
   --color-subtle: var(--color-surface-subtle);
+  --color-subtle-hover: var(--color-surface-subtle-hover);
   --color-modal: var(--color-surface-modal);
   --color-popover: var(--color-surface-popover);
   --color-menu: var(--color-surface-menu);
@@ -233,6 +234,14 @@
 /* Popover and menu entrance: opacity + scale from the top right corner (components.md 1.3). */
 @keyframes pop-in {
   from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+/* The toast leaving by its "×" or Esc: the entrance backwards (180 ms, `pop-in`'s curve). */
+@keyframes pop-out {
+  to {
     opacity: 0;
     transform: scale(0.96);
   }

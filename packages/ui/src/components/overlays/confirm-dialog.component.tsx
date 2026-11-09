@@ -51,7 +51,7 @@ export function ConfirmDialog({
     <ModalFrame
       isOpen={isOpen}
       onOpenChange={onOpenChange}
-      size="dialog"
+      size="confirm"
       role={destructive ? 'alertdialog' : 'dialog'}
       isDismissable={!loading}
     >

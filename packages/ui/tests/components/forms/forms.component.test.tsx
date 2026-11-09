@@ -155,6 +155,25 @@ describe('SegmentedControl', () => {
     expect(html).not.toContain('lg:inline-flex');
   });
 
+  it('direction mode: one pill that slides by transform and changes its fill in 240 ms', () => {
+    const toned = [
+      { key: 'expense', label: 'Despesa', tone: 'loss' as const },
+      { key: 'income', label: 'Receita', tone: 'gain' as const },
+    ];
+    const html = renderToStaticMarkup(
+      <SegmentedControl direction options={toned} value="income" onChange={noop} label="Tipo" />,
+    );
+
+    expect(html.match(/data-tone=/g)).toHaveLength(1);
+    expect(html).toContain('width:50%');
+    expect(html).toContain('translateX(100%)');
+    expect(html).toContain('bg-gain-weak');
+    expect(html).toContain('transition-[transform,background-color,box-shadow]');
+    expect(html).toContain('duration-(--duration-slide)');
+    expect(html).toContain('ease-(--ease-standard)');
+    expect(html).toContain('motion-reduce:transition-none');
+  });
+
   it('keeps the icon tone of an option that is not selected, and drops the dot for it', () => {
     const withIcons = [
       { key: 'all', label: 'Todas', icon: 'list' as const, iconTone: 'neutral' as const },

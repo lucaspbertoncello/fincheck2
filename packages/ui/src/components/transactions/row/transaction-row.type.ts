@@ -22,6 +22,7 @@ export type TransactionRowData = {
   /** Tag names without the "#": ["delivery"]. */
   tags?: readonly string[];
   installment?: { number: number; total: number };
+  /** The bank authorized the purchase and has not posted it yet: the "Não lançada" chip, with its explanation. */
   pending?: boolean;
   toReview?: boolean;
   edited?: boolean;

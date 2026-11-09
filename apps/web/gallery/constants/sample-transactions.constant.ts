@@ -49,7 +49,7 @@ export const ROW_SAMPLES: { caption: string; row: TransactionRowData }[] = [
     },
   },
   {
-    caption: 'Tags, parcela, pendente, para revisar, editada',
+    caption: 'Tags, parcela, não lançada (passe o mouse no selo), para revisar, editada',
     row: {
       ...BASE_ROW,
       id: 'trx-chips',

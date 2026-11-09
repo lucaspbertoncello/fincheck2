@@ -10,6 +10,7 @@
   --color-bg-top: oklch(0.9 0.05 166);   /* #c0e9d6 */
   --color-surface-glass: oklch(1 0 0 / 0.72);   /* #ffffffb8 */
   --color-surface-subtle: oklch(0.96 0.01 168 / 0.7);   /* #ecf4f0b2 */
+  --color-surface-subtle-hover: oklch(0.88 0.02 168 / 0.9);   /* #ccdcd5e6 */
   --color-surface-modal: oklch(1 0 0 / 0.95);   /* #fffffff2 */
   --color-surface-popover: oklch(1 0 0 / 0.92);   /* #ffffffeb */
   --color-surface-menu: oklch(1 0 0 / 0.98);   /* #fffffffa */
@@ -183,6 +184,7 @@
   --z-selection-bar: 8;
   --z-undo-toast: 9;
   --z-menu: 30;
+  --z-floating-tip: 50; /* FloatingTip, drawn on document.body: over the bottom bar, menus, toasts and modals */
   --breakpoint-desktop: 1280px;
   --breakpoint-mobile: 375px;
 }
@@ -193,6 +195,7 @@
   --color-bg-top: oklch(0.27 0.05 168);   /* #052e22 */
   --color-surface-glass: oklch(0.25 0.015 185 / 0.55);   /* #1a24228c */
   --color-surface-subtle: oklch(0.3 0.015 185 / 0.5);   /* #26302f80 */
+  --color-surface-subtle-hover: oklch(0.43 0.02 185 / 0.8);   /* #445451cc */
   --color-surface-modal: oklch(0.23 0.01 195);   /* #181e1e */
   --color-surface-popover: oklch(0.25 0.01 195);   /* #1c2323 */
   --color-surface-menu: oklch(0.26 0.012 190);   /* #1e2625 */

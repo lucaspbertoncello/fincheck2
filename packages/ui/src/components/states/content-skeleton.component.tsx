@@ -7,6 +7,8 @@ const DAY_KEYS = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 'd9', 'd10'] a
 
 type ContentSkeletonProps = {
   variant: ContentSkeletonVariant;
+  /** `overview` only: how many summary cards to draw, 1 to 3 (default 3). The grid fits the count. */
+  summaryCards?: 1 | 2 | 3;
   className?: string;
 };
 
@@ -27,10 +29,16 @@ function SkeletonRows({ count }: { count: number }) {
   );
 }
 
-function SummaryCards() {
+const SUMMARY_GRID_CLASS = {
+  1: 'lg:grid-cols-1',
+  2: 'lg:grid-cols-2',
+  3: 'lg:grid-cols-3',
+} as const;
+
+function SummaryCards({ count }: { count: 1 | 2 | 3 }) {
   return (
-    <div className="grid gap-s16 lg:grid-cols-3 lg:gap-s24">
-      {ROW_KEYS.slice(0, 3).map((key) => (
+    <div className={cx('grid gap-s16 lg:gap-s24', SUMMARY_GRID_CLASS[count])}>
+      {ROW_KEYS.slice(0, count).map((key) => (
         <div key={key} className="flex flex-col gap-s12 p-s16">
           <Skeleton className="h-4 w-1/2" />
           <Skeleton className="h-8 w-2/3" />
@@ -45,13 +53,13 @@ function SummaryCards() {
  * Placeholder for a screen that has no data yet: the same structure as the real content, no
  * full-screen spinner (components.md 14.2). Each variant is a rough shape, not a layout spec.
  */
-export function ContentSkeleton({ variant, className }: ContentSkeletonProps) {
+export function ContentSkeleton({ variant, summaryCards = 3, className }: ContentSkeletonProps) {
   return (
     <div role="status" aria-busy="true" className={cx('flex flex-col gap-s24', className)}>
       <span className="sr-only">Carregando</span>
       {variant === 'overview' ? (
         <>
-          <SummaryCards />
+          <SummaryCards count={summaryCards} />
           <Skeleton className="h-5 w-40" />
           <div className="grid grid-cols-5 gap-s8 lg:grid-cols-10">
             {DAY_KEYS.map((key) => (

@@ -176,6 +176,13 @@ describe('TagChip and TagList', () => {
     expect(html).toContain('lg:h-8');
   });
 
+  it('has the same padding on both sides, so the "…" circle sits inside the box', () => {
+    const html = renderToStaticMarkup(<TagChip tag={TAG} {...TAG_HANDLERS} />);
+
+    expect(html).toContain('px-s12');
+    expect(html).not.toContain('pr-s4');
+  });
+
   it('dims an archived tag', () => {
     const html = renderToStaticMarkup(
       <TagChip tag={{ ...TAG, archived: true }} {...TAG_HANDLERS} />,
