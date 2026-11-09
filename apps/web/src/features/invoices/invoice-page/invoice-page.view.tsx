@@ -1,4 +1,4 @@
-import { Banner, BannerSlot, EmptyState } from '@fincheck/ui';
+import { Banner, BannerSlot, ConfirmDialog, EmptyState } from '@fincheck/ui';
 
 import { InvoiceCategoryComposition } from '#/features/invoices/invoice-page/components/invoice-category-composition.component.tsx';
 import { InvoiceHighlights } from '#/features/invoices/invoice-page/components/invoice-highlights.component.tsx';
@@ -125,6 +125,7 @@ export function InvoicePageView(props: InvoicePageViewProps) {
       {showPayments ? (
         <InvoicePayments
           payments={props.payments}
+          onUndo={props.paymentUndo.onAsk}
           registering={paymentForm.registering}
           isBusy={paymentForm.isBusy}
           cents={paymentForm.cents}
@@ -136,6 +137,19 @@ export function InvoicePageView(props: InvoicePageViewProps) {
           failedAttempts={paymentForm.failedAttempts}
           onSave={paymentForm.onSave}
           onCancel={paymentForm.onCancel}
+        />
+      ) : null}
+
+      {props.paymentUndo.target ? (
+        <ConfirmDialog
+          isOpen
+          onOpenChange={(open) => !open && props.paymentUndo.onCancel()}
+          title="Desfazer este pagamento?"
+          description={props.paymentUndo.target.undoDescription}
+          destructive
+          confirmLabel="Desfazer pagamento"
+          loading={props.paymentUndo.isBusy}
+          onConfirm={props.paymentUndo.onConfirm}
         />
       ) : null}
 

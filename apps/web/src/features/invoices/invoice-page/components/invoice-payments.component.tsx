@@ -1,11 +1,13 @@
 import { Button, CategoryIcon, Collapse, ListRow, Money, Section } from '@fincheck/ui';
 
+import type { InvoicePaymentData } from '#/features/invoices/invoice-page/types/invoice-page.type.ts';
 import { PaymentForm } from '#/features/invoices/invoice-page/components/payment-form.component.tsx';
 
 const PAYMENT_FORM_ID = 'invoice-payment-form';
 
 type InvoicePaymentsProps = {
-  payments: readonly { id: string; label: string; cents: number }[];
+  payments: readonly InvoicePaymentData[];
+  onUndo: (paymentId: string) => void;
   registering: boolean;
   isBusy: boolean;
   cents: number;
@@ -21,11 +23,12 @@ type InvoicePaymentsProps = {
 
 /**
  * "Pagamentos": what was paid so far and, once "Registrar pagamento" is pressed, the form (the
- * amount is already what is left) with its own Cancelar and Salvar. The form opens with the
+ * amount is already what is left) with its own Cancelar and Salvar. Each payment has a "Desfazer" that asks for confirmation. The form opens with the
  * Collapse, so nothing jumps.
  */
 export function InvoicePayments({
   payments,
+  onUndo,
   registering,
   isBusy,
   cents,
@@ -57,6 +60,16 @@ export function InvoicePayments({
                   weight="plain"
                   className="text-money-row"
                 />
+              }
+              actions={
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  isDisabled={isBusy}
+                  onPress={() => onUndo(payment.id)}
+                >
+                  Desfazer <span className="sr-only">{payment.undoContext}</span>
+                </Button>
               }
             />
           ))}

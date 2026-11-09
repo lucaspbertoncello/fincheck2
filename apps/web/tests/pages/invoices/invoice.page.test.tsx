@@ -1,8 +1,10 @@
 import { configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { http, HttpResponse } from 'msw';
 import { describe, expect, it, vi } from 'vitest';
 
 import { openMonthFor } from '#mocks/invoices/invoice/open-month-for.util.ts';
+import { server } from '#mocks/setup/server.util.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
 import { addMonths } from '#mocks/support/dates/add-months.util.ts';
 import { TODAY } from '#mocks/support/dates/mock-clock.store.ts';
@@ -196,7 +198,7 @@ describe('Fatura, página (BR-INV-006)', () => {
     expect(await screen.findByText(/Pagamento vinculado à fatura/)).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByText('Pagamento encontrado')).not.toBeInTheDocument());
 
-    fireEvent.click(screen.getByText('Desfazer'));
+    fireEvent.click(screen.getByRole('button', { name: 'Desfazer' }));
     await waitFor(() =>
       expect(db.invoices.flatMap((invoice) => invoice.payments)).toHaveLength(before),
     );
@@ -285,5 +287,80 @@ describe('Fatura, página: o cartão no topo', () => {
     const named = document.querySelectorAll<HTMLElement>('[data-shared-card]');
     expect(named).toHaveLength(1);
     expect(named[0]!.style.getPropertyValue('--card-vt-name')).toBe(`card-${id}`);
+  });
+});
+
+describe('Fatura, desfazer um pagamento', () => {
+  /** Opens the open invoice of Roxinho and registers a payment of what is left (today). */
+  async function openWithPayment() {
+    const user = userEvent.setup();
+    const opened = await openInvoice('Roxinho');
+    await user.click(screen.getByRole('button', { name: 'Registrar pagamento' }));
+    await user.click(screen.getByRole('button', { name: 'Salvar pagamento' }));
+    expect(await screen.findByText(/Pago em/)).toBeInTheDocument();
+
+    return { user, ...opened };
+  }
+
+  const countPayments = () => db.invoices.flatMap((invoice) => invoice.payments).length;
+
+  it('asks first, then removes the payment and the invoice goes back to what is left to pay', async () => {
+    const before = countPayments();
+    const { user } = await openWithPayment();
+
+    await user.click(screen.getByRole('button', { name: /^Desfazer pagamento de \d{2}\/\d{2}$/ }));
+    const dialog = await screen.findByRole('alertdialog', { name: 'Desfazer este pagamento?' });
+    expect(dialog).toHaveTextContent(/R\$\s[\d.]+,\d{2} feito em \d{2}\/\d{2}/);
+    expect(countPayments()).toBe(before + 1);
+
+    await user.click(within(dialog).getByRole('button', { name: 'Desfazer pagamento' }));
+
+    await waitFor(() => expect(countPayments()).toBe(before));
+    await waitFor(() => expect(screen.queryByText(/Pago em/)).not.toBeInTheDocument());
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(await screen.findByText('Fatura aberta')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Registrar pagamento' })).toBeInTheDocument();
+  });
+
+  it('does not call the API when the confirmation is cancelled', async () => {
+    const { user } = await openWithPayment();
+    const registered = countPayments();
+
+    await user.click(await screen.findByRole('button', { name: /^Desfazer pagamento de/ }));
+    const dialog = await screen.findByRole('alertdialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+    expect(countPayments()).toBe(registered);
+    expect(screen.getByText(/Pago em/)).toBeInTheDocument();
+  });
+
+  it('shows the error on the page and keeps the payment when the API refuses', async () => {
+    const { user } = await openWithPayment();
+    server.use(
+      http.delete(
+        '/api/cards/:accountId/invoices/:month/payments/:paymentId',
+        () => new HttpResponse(null, { status: 500 }),
+      ),
+    );
+
+    await user.click(await screen.findByRole('button', { name: /^Desfazer pagamento de/ }));
+    const dialog = await screen.findByRole('alertdialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Desfazer pagamento' }));
+
+    expect(
+      await screen.findByText('Não deu para desfazer o pagamento. Tente de novo.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(screen.getByText(/Pago em/)).toBeInTheDocument();
+  });
+
+  it('offers no Desfazer on an invoice with no registered payment (paid before the Fincheck)', async () => {
+    const { id } = card('Roxinho');
+    for (const invoice of db.invoices) if (invoice.accountId === id) invoice.payments = [];
+    await openInvoice('Roxinho', -1);
+
+    expect(screen.queryByText(/Pago em/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Desfazer pagamento/ })).not.toBeInTheDocument();
   });
 });

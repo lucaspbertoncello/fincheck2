@@ -115,6 +115,28 @@ export type InvoiceItemGroupData = {
   rows: readonly InvoiceItemRowData[];
 };
 
+/** One payment of the invoice, with the texts of its "Desfazer". */
+export type InvoicePaymentData = {
+  id: string;
+  /** "Pago em 21/10". */
+  label: string;
+  cents: number;
+  /** Said only to the screen reader after "Desfazer": "pagamento de 21/10". */
+  undoContext: string;
+  /** The sentence of the confirmation: the amount, the date and what changes. */
+  undoDescription: string;
+};
+
+/** The confirmation that opens when "Desfazer" is pressed on a payment. */
+type InvoicePaymentUndoData = {
+  /** The payment waiting for the answer; null while the dialog is closed. */
+  target: InvoicePaymentData | null;
+  isBusy: boolean;
+  onAsk: (paymentId: string) => void;
+  onCancel: () => void;
+  onConfirm: () => void;
+};
+
 type InvoicePaymentFormData = {
   registering: boolean;
   isBusy: boolean;
@@ -155,7 +177,8 @@ export type InvoicePageViewProps = {
   suggestion: InvoiceSuggestionData | null;
   onLinkSuggestion: () => void;
   onDismissSuggestion: () => void;
-  payments: readonly { id: string; label: string; cents: number }[];
+  payments: readonly InvoicePaymentData[];
+  paymentUndo: InvoicePaymentUndoData;
   paymentForm: InvoicePaymentFormData;
   categoryRows: readonly InvoiceCategoryRowData[];
   onToggleCategory: (key: string) => void;

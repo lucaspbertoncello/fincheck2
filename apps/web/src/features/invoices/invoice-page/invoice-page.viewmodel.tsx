@@ -54,6 +54,7 @@ function InvoicePageContent({ accountId, month }: ContentProps) {
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [undoingId, setUndoingId] = useState<string | null>(null);
 
   const today = getBusinessDate(new Date());
   const { invoice } = model;
@@ -157,6 +158,24 @@ function InvoicePageContent({ accountId, month }: ContentProps) {
     );
   }
 
+  const payments = buildInvoicePayments(invoice?.payments ?? []);
+  const undoing = payments.find((payment) => payment.id === undoingId) ?? null;
+
+  function undoPayment() {
+    if (!undoing) return;
+    setActionError(null);
+    model.deletePayment.mutate(
+      { ...target, paymentId: undoing.id },
+      {
+        onSuccess: () => setUndoingId(null),
+        onError: () => {
+          setUndoingId(null);
+          setActionError('Não deu para desfazer o pagamento. Tente de novo.');
+        },
+      },
+    );
+  }
+
   const isMonthValid = monthSchema.safeParse(month).success;
   const status: InvoicePageViewProps['status'] =
     !isMonthValid || model.isMissing
@@ -195,7 +214,14 @@ function InvoicePageContent({ accountId, month }: ContentProps) {
     suggestion,
     onLinkSuggestion: linkSuggestion,
     onDismissSuggestion: dismissSuggestion,
-    payments: buildInvoicePayments(invoice?.payments ?? []),
+    payments,
+    paymentUndo: {
+      target: undoing,
+      isBusy: model.deletePayment.isPending,
+      onAsk: setUndoingId,
+      onCancel: () => setUndoingId(null),
+      onConfirm: undoPayment,
+    },
     paymentForm: {
       registering,
       isBusy:
