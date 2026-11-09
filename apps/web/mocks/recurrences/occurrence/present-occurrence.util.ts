@@ -27,6 +27,7 @@ export function presentOccurrence(
       ...payment,
       amountCents: Math.min(payment.amountCents, Math.abs(tx.amountCents)),
       occurredOn: tx.occurredOn,
+      description: tx.description,
     });
   }
   payments.sort((a, b) => a.occurredOn.localeCompare(b.occurredOn));

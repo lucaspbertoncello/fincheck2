@@ -24,7 +24,11 @@ export function OccurrenceRowItem({ row, onAction, onDecideDifference }: Occurre
       status={row.status}
       statusNote={row.statusNote}
       amountCents={row.amountCents}
-      totalCents={row.totalCents}
+      expectedCents={row.expectedCents}
+      remainingCents={row.remainingCents}
+      excessCents={row.excessCents}
+      transactions={row.transactions}
+      carriedOver={row.carriedOver}
       inlineActions={row.inlineActions}
       detailMode={attention ? 'reason' : 'schedule'}
       decision={

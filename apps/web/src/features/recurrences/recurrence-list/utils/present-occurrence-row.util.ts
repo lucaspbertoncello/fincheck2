@@ -4,7 +4,9 @@ import type { OccurrenceRowData } from '#/features/recurrences/recurrence-list/t
 import type { RowContext } from '#/features/recurrences/recurrence-list/types/row-context.type.ts';
 import { buildOccurrenceStatusNote } from '#/features/recurrences/recurrence-list/utils/build-occurrence-status-note.util.ts';
 import { buildRecurrenceAccountLabel } from '#/features/recurrences/recurrence-list/utils/build-recurrence-account-label.util.ts';
+import { formatPaymentDate } from '#/features/recurrences/recurrence-list/utils/format-payment-date.util.ts';
 import { describeDateRule } from '#/shared/utils/recurrences/describe-date-rule.util.ts';
+import { getOccurrenceAgendaAmount } from '#/domain/recurrences/occurrence/rules/get-occurrence-agenda-amount.rule.ts';
 import { getOccurrenceAmount } from '#/domain/recurrences/occurrence/rules/get-occurrence-amount.rule.ts';
 import { getOccurrenceInlineActions } from '#/domain/recurrences/occurrence/rules/get-occurrence-inline-actions.rule.ts';
 import { getOccurrenceRowStatus } from '#/domain/recurrences/occurrence/rules/get-occurrence-row-status.rule.ts';
@@ -40,6 +42,14 @@ export function presentOccurrenceRow(
     status,
     statusNote: buildOccurrenceStatusNote(occurrence, context),
     ...getOccurrenceAmount(occurrence),
+    agendaAmountCents: getOccurrenceAgendaAmount(occurrence),
+    carriedOver: occurrence.carriedOver,
+    transactions: occurrence.payments.map((payment) => ({
+      id: payment.id,
+      dateLabel: formatPaymentDate(payment.occurredOn, context.today),
+      description: payment.description.trim() || 'Sem descrição',
+      amountCents: payment.amountCents,
+    })),
     inlineActions: getOccurrenceInlineActions(occurrence),
     difference,
     pending: context.pendingKey === occurrence.id || context.pendingKey === occurrence.recurrenceId,

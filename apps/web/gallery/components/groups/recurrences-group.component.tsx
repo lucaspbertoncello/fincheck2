@@ -59,8 +59,10 @@ function NeedsAttentionSample() {
         flow="expense"
         rule="Todo dia 22"
         status="different"
-        statusNote="Cobrado R$ 23,90, R$ 2,00 a mais"
+        statusNote="Cobrado acima do esperado"
         amountCents={2390}
+        expectedCents={2190}
+        excessCents={200}
         detailMode="reason"
         decision={
           <ExpectedValueUpdate newCents={2390} keptCents={2190} onUpdate={noop} onKeep={noop} />
@@ -260,10 +262,58 @@ export const RECURRENCES_SECTIONS: GallerySectionDef[] = [
                 status={status}
                 statusNote={STATUS_NOTE[status]}
                 amountCents={status === 'partial' ? 42500 : 11990}
-                totalCents={status === 'partial' ? 85000 : undefined}
+                expectedCents={
+                  status === 'partial' ? 85000 : status === 'received' ? 11990 : undefined
+                }
+                remainingCents={status === 'partial' ? 42500 : undefined}
                 onAction={noop}
               />
             ))}
+          </RecurrenceList>
+        </GalleryVariant>
+        <GalleryVariant
+          caption="abre com as transações vinculadas (clique na linha), com o excedente"
+          width={820}
+        >
+          <RecurrenceList>
+            <RecurrenceRow
+              name="Vale Verde (salário)"
+              icon="salary"
+              flow="income"
+              rule="Até o 5º dia útil, em até 3 Pix"
+              account="Pix de Vale Verde"
+              status="received"
+              statusNote="Recebido 07/10"
+              amountCents={470000}
+              expectedCents={420000}
+              excessCents={50000}
+              transactions={[
+                {
+                  id: 'a',
+                  dateLabel: '03/10',
+                  description: 'Pix recebido Vale Verde',
+                  amountCents: 300000,
+                },
+                {
+                  id: 'b',
+                  dateLabel: '07/10',
+                  description: 'Pix recebido Vale Verde, complemento do mês',
+                  amountCents: 170000,
+                },
+              ]}
+              onAction={noop}
+            />
+            <RecurrenceRow
+              name="Mesada"
+              icon="salary"
+              flow="income"
+              rule="Em qualquer dia do mês"
+              status="expected"
+              statusNote="Qualquer dia do mês"
+              amountCents={20000}
+              transactions={[]}
+              onAction={noop}
+            />
           </RecurrenceList>
         </GalleryVariant>
         <GalleryVariant caption="receita, com ações inline" width={820}>

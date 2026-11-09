@@ -78,7 +78,8 @@ export namespace MockState {
     settledAt: string | null;
     skippedAt: string | null;
     decision: Occurrence.Decision | null;
-    payments: Occurrence.Payment[];
+    // The description is the transaction's, read when the Dto is built.
+    payments: Omit<Occurrence.Payment, 'description'>[];
   }
 
   export interface BillRecord {

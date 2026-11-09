@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import { buildOccurrenceStatusNote } from '#/features/recurrences/recurrence-list/utils/build-occurrence-status-note.util.ts';
 import { describeDateRule } from '#/shared/utils/recurrences/describe-date-rule.util.ts';
-import { getOccurrenceAmount } from '#/domain/recurrences/occurrence/rules/get-occurrence-amount.rule.ts';
 import { getOccurrenceInlineActions } from '#/domain/recurrences/occurrence/rules/get-occurrence-inline-actions.rule.ts';
 import { getOccurrenceRowStatus } from '#/domain/recurrences/occurrence/rules/get-occurrence-row-status.rule.ts';
 import { createTestOccurrence } from '#tests/support/recurrences/occurrence/create-test-occurrence.util.ts';
@@ -12,6 +11,7 @@ const payment = {
   transactionId: 't1',
   amountCents: 10_990,
   occurredOn: '2026-10-21',
+  description: 'Mensalidade Academia',
   linkedBy: 'auto' as const,
 };
 
@@ -150,24 +150,6 @@ describe('getOccurrenceInlineActions', () => {
   });
 });
 
-describe('getOccurrenceAmount', () => {
-  it('shows what came in for partial and confirmed, otherwise the expected amount', () => {
-    expect(
-      getOccurrenceAmount(
-        createTestOccurrence({
-          status: 'partial',
-          receivedCents: 4_000,
-          expectedAmountCents: 8_000,
-        }),
-      ),
-    ).toEqual({ amountCents: 4_000, totalCents: 8_000 });
-    expect(
-      getOccurrenceAmount(createTestOccurrence({ status: 'confirmed', receivedCents: 12_990 })),
-    ).toEqual({ amountCents: 12_990 });
-    expect(getOccurrenceAmount(createTestOccurrence())).toEqual({ amountCents: 10_990 });
-  });
-});
-
 describe('buildOccurrenceStatusNote', () => {
   const context = { today: '2026-10-22', hidden: false };
 
@@ -208,12 +190,40 @@ describe('buildOccurrenceStatusNote', () => {
     });
 
     expect(buildOccurrenceStatusNote(late, context)).toBe('Venceu 20/10, sem pagamento ligado');
-    expect(buildOccurrenceStatusNote(different, context)).toMatch(
-      /^Cobrado R\$\s23,90, R\$\s2,00 a mais$/,
+    // What came in above and what is missing are written by the card, not by the note.
+    expect(buildOccurrenceStatusNote(different, context)).toBe('Cobrado acima do esperado');
+    expect(buildOccurrenceStatusNote(different, { ...context, hidden: true })).toBe(
+      'Cobrado acima do esperado',
     );
-    expect(buildOccurrenceStatusNote(different, { ...context, hidden: true })).toMatch(
-      /^Cobrado R\$\s••,••, R\$\s•,•• a mais$/,
+  });
+
+  it('writes what is below the expected amount with the money, hiding it when asked', () => {
+    const less = createTestOccurrence({
+      kind: 'income',
+      status: 'confirmed',
+      receivedCents: 8_790,
+      payments: [payment],
+      difference: { amountCents: -200, decision: null },
+    });
+
+    expect(buildOccurrenceStatusNote(less, context)).toMatch(
+      /^Recebido R\$\s87,90, R\$\s2,00 a menos$/,
     );
+    expect(buildOccurrenceStatusNote(less, { ...context, hidden: true })).toMatch(
+      /^Recebido R\$\s••,••, R\$\s•,•• a menos$/,
+    );
+  });
+
+  it('does not repeat "faltam" on a late occurrence that already got a payment', () => {
+    const late = createTestOccurrence({
+      status: 'late',
+      expectedOn: '2026-10-20',
+      receivedCents: 4_000,
+      remainingCents: 6_990,
+      payments: [payment],
+    });
+
+    expect(buildOccurrenceStatusNote(late, context)).toBe('Venceu 20/10, com pagamento parcial');
   });
 
   it('counts the payments of a partial occurrence', () => {

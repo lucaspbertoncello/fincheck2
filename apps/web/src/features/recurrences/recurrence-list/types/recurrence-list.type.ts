@@ -3,6 +3,7 @@ import type {
   RecurrenceFlow,
   RecurrenceInlineAction,
   RecurrenceStatus,
+  RecurrenceTransaction,
   ServiceLogoData,
 } from '@fincheck/ui';
 
@@ -21,9 +22,20 @@ export type OccurrenceRowData = {
   account?: string;
   status: RecurrenceStatus;
   statusNote?: string;
+  /** What came in; the expected amount while nothing did. */
   amountCents: number;
-  /** Partial only: the full expected amount. */
-  totalCents?: number;
+  /** Something came in: the expected amount ("≈ R$ 2.600,00 previstos"). */
+  expectedCents?: number;
+  /** Something came in and part is open: what is missing. */
+  remainingCents?: number;
+  /** What came in above the expected amount. */
+  excessCents?: number;
+  /** What the day list of the strip shows (what came in, else the expected amount). */
+  agendaAmountCents: number;
+  /** A late one brought from an earlier month. */
+  carriedOver: boolean;
+  /** The transactions linked to it this month, for the open row. */
+  transactions: RecurrenceTransaction[];
   inlineActions: RecurrenceInlineAction[];
   /** Different amount waiting for an answer: what was charged and what was expected. */
   difference?: { newCents: number; keptCents: number };

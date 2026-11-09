@@ -48,6 +48,9 @@ describe('recurrences routes (reads)', () => {
       receivedCents: 40_000,
       remainingCents: 40_000,
     });
+    expect(mesada?.occurrence?.payments.map((payment) => payment.description)).toEqual([
+      'PIX JORGE A LIMA',
+    ]);
     const freela = items.find((item) => item.name === 'Lume Design (freela)');
     expect(freela?.dateRule).toMatchObject({ type: 'around_day', day: 25, toleranceDays: 2 });
     expect(freela?.occurrence?.receivedCents).toBe(0);
@@ -133,6 +136,10 @@ describe('recurrences routes (changes)', () => {
       remainingCents: 0,
       difference: null,
     });
+    // Each payment is named by the description of its transaction.
+    expect(
+      occurrenceDtoSchema.parse(linked.json).payments.map((payment) => payment.description),
+    ).toEqual(['PIX JORGE A LIMA', 'PIX JORGE A LIMA']);
     expect(
       (await callApi('POST', `/occurrences/${mesada?.id}/payments`, { transactionId: created.id }))
         .status,

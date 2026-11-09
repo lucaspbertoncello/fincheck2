@@ -383,6 +383,7 @@ describe('buildOccurrenceAgendaEntry', () => {
               transactionId: 't',
               amountCents: 10990,
               occurredOn: '2026-10-12',
+              description: 'Pagamento',
               linkedBy: 'auto',
             },
           ],

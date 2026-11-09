@@ -85,10 +85,12 @@ export class Occurrence {
   }
 
   // What each payment that counts is worth now, oldest first. `worthOf` answers the amount of a
-  // transaction today and its day, or `null` when the transaction does not count (ignored, removed
-  // by the bank without an edit, gone): that payment settles nothing.
+  // transaction today, its day and its description, or `null` when the transaction does not count
+  // (ignored, removed by the bank without an edit, gone): that payment settles nothing.
   countedPayments(
-    worthOf: (transactionId: string) => { cents: number; occurredOn: BusinessDate } | null,
+    worthOf: (
+      transactionId: string,
+    ) => { cents: number; occurredOn: BusinessDate; description: string } | null,
   ): Occurrence.CountedPayment[] {
     return this.payments
       .flatMap((payment) => {
@@ -100,6 +102,7 @@ export class Occurrence {
             payment,
             cents: Math.min(payment.amount.cents, worth.cents),
             occurredOn: worth.occurredOn,
+            description: worth.description,
           },
         ];
       })
@@ -233,5 +236,7 @@ export namespace Occurrence {
     cents: number;
     // The day of the transaction.
     occurredOn: BusinessDate;
+    // What the transaction is called today.
+    description: string;
   };
 }

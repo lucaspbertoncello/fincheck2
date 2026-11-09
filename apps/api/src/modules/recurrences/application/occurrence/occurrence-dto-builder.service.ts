@@ -64,6 +64,7 @@ export class OccurrenceDtoBuilder {
           ? {
               cents: Math.abs(snapshot.amountCents),
               occurredOn: BusinessDate.of(snapshot.occurredOn),
+              description: snapshot.description,
             }
           : null;
       });
@@ -130,6 +131,7 @@ export class OccurrenceDtoBuilder {
         transactionId: item.payment.transactionId,
         amountCents: item.cents,
         occurredOn: item.occurredOn.value,
+        description: item.description,
         linkedBy: item.payment.linkedBy,
       })),
       accountId: recurrence.accountId,

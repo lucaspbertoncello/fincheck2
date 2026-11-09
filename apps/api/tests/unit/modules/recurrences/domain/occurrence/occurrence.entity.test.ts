@@ -117,15 +117,21 @@ describe('Occurrence', () => {
 
       const counted = occurrence.countedPayments((id) =>
         id === 't1'
-          ? { cents: 30000, occurredOn: BusinessDate.of('2026-10-05') }
-          : { cents: 99999, occurredOn: BusinessDate.of('2026-10-03') },
+          ? { cents: 30000, occurredOn: BusinessDate.of('2026-10-05'), description: 'Salário' }
+          : {
+              cents: 99999,
+              occurredOn: BusinessDate.of('2026-10-03'),
+              description: 'Adiantamento',
+            },
       );
 
       // Oldest transaction first; a transaction worth less now counts for less, one worth more
       // never counts for more than what was linked.
-      expect(counted.map((item) => [item.payment.transactionId, item.cents])).toEqual([
-        ['t2', 42500],
-        ['t1', 30000],
+      expect(
+        counted.map((item) => [item.payment.transactionId, item.cents, item.description]),
+      ).toEqual([
+        ['t2', 42500, 'Adiantamento'],
+        ['t1', 30000, 'Salário'],
       ]);
     });
 

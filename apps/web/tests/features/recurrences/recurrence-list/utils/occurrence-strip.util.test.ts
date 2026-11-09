@@ -13,7 +13,14 @@ describe('getOccurrencePlacement', () => {
     const confirmed = createTestOccurrence({
       status: 'confirmed',
       payments: [
-        { id: 'p', transactionId: 't', amountCents: 1, occurredOn: '2026-10-21', linkedBy: 'auto' },
+        {
+          id: 'p',
+          transactionId: 't',
+          amountCents: 1,
+          occurredOn: '2026-10-21',
+          description: 'Pix recebido',
+          linkedBy: 'auto',
+        },
       ],
     });
 

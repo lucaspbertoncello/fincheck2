@@ -32,9 +32,10 @@ export function buildOccurrenceStatusNote(
       return income ? 'Marcada como recebida' : 'Marcada como paga';
     case 'different': {
       const amount = occurrence.difference?.amountCents ?? 0;
-      const direction = amount > 0 ? 'a mais' : 'a menos';
       const verb = income ? 'Recebido' : 'Cobrado';
-      return `${verb} ${formatMoneyNote(occurrence.receivedCents, hidden)}, ${formatMoneyNote(Math.abs(amount), hidden)} ${direction}`;
+      // The card already writes what came in above ("R$ x a mais"), so the note does not.
+      if (amount > 0) return `${verb} acima do esperado`;
+      return `${verb} ${formatMoneyNote(occurrence.receivedCents, hidden)}, ${formatMoneyNote(Math.abs(amount), hidden)} a menos`;
     }
     case 'partial': {
       const count = occurrence.payments.length;
@@ -44,8 +45,9 @@ export function buildOccurrenceStatusNote(
     }
     case 'late': {
       const due = formatShortDate(occurrence.expectedOn ?? occurrence.windowEndOn);
+      // What is missing is on the card ("faltam ≈ R$ x"), not in the note.
       return occurrence.payments.length > 0
-        ? `Venceu ${due}, faltam ${formatMoneyNote(occurrence.remainingCents, hidden)}`
+        ? `Venceu ${due}, com pagamento parcial`
         : `Venceu ${due}, sem pagamento ligado`;
     }
     case 'expected':

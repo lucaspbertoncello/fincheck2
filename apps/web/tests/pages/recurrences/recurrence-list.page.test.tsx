@@ -389,6 +389,7 @@ describe('RecurrenceListPage', () => {
                 transactionId: '3f0c3a1e-0000-4000-8000-000000000001',
                 amountCents: 395_000,
                 occurredOn: `${CURRENT_MONTH}-26`,
+                description: 'PIX M SOUZA',
                 linkedBy: 'user',
               },
             ],

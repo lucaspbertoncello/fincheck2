@@ -22,7 +22,7 @@ export function DayOccurrenceList({ items }: { items: readonly OccurrenceRowData
           detailTitle={item.statusNote}
           value={
             <Money
-              cents={item.amountCents}
+              cents={item.agendaAmountCents}
               sign={item.flow === 'income' ? 'plus' : 'minus'}
               signColumn
               weight="plain"

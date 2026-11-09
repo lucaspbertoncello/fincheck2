@@ -23,6 +23,8 @@ export const occurrencePaymentSchema = z.object({
   transactionId: idSchema,
   amountCents: positiveCentsSchema,
   occurredOn: businessDateSchema,
+  /** What the linked transaction is called today. */
+  description: z.string(),
   linkedBy: z.enum(OCCURRENCE_LINKED_BY),
 });
 

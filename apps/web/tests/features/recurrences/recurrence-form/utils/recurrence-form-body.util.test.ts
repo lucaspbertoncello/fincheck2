@@ -189,7 +189,14 @@ describe('weekend and holiday shift when editing', () => {
 describe('form helpers', () => {
   it('writes the history of confirmations', () => {
     const payment = (day: string) => [
-      { id: day, transactionId: day, amountCents: 1, occurredOn: day, linkedBy: 'auto' as const },
+      {
+        id: day,
+        transactionId: day,
+        amountCents: 1,
+        occurredOn: day,
+        description: 'Pix recebido',
+        linkedBy: 'auto' as const,
+      },
     ];
     const history = [
       createTestOccurrence({

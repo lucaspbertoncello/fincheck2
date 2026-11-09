@@ -76,6 +76,41 @@ describe('occurrence routes', () => {
       expect(await listOf('2026-10')).toHaveLength(2);
     });
 
+    it('names each payment by the description its transaction has today', async () => {
+      const { occurrence } = await world.create({
+        expectedAmountCents: 85000,
+        maxPayments: 2,
+        kind: 'income',
+        dateRule: { type: 'any_day' },
+      });
+      const first = await insertTestIncome(world.database.db, world.checking, {
+        cents: 42500,
+        on: '2026-10-03',
+        description: 'Pix de Jorge',
+      });
+      const second = await insertTestIncome(world.database.db, world.checking, {
+        cents: 20000,
+        on: '2026-10-09',
+        description: 'Pix de Maria',
+      });
+      await link(occurrence?.id ?? '', second);
+      await link(occurrence?.id ?? '', first);
+      await world.database.db
+        .updateTable('transactions')
+        .set({ description: 'Pix do Jorge (editado)' })
+        .where('id', '=', first)
+        .execute();
+
+      const [item] = await listOf('2026-10');
+
+      expect(item?.payments.map((payment) => [payment.transactionId, payment.description])).toEqual(
+        [
+          [first, 'Pix do Jorge (editado)'],
+          [second, 'Pix de Maria'],
+        ],
+      );
+    });
+
     it('brings the late ones of earlier months into the current month, marked carriedOver, until they are answered (R6)', async () => {
       const { occurrence } = await world.create({
         name: 'Academia',
