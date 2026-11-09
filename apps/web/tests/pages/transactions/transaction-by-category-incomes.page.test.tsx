@@ -108,14 +108,17 @@ describe('"Por categoria": the income sources work like the expense groups', () 
     await receive('PIX SEM CATEGORIA', 5000, null);
     renderApp(PAGE);
 
-    const name = await screen.findByText('Outras receitas', undefined, LONG_WAIT);
+    // The expense group has the same name and comes first: the income one is the last on the page.
+    await waitFor(() => expect(screen.getAllByText('Para revisar')).toHaveLength(2), LONG_WAIT);
+    const names = screen.getAllByText('Para revisar');
+    const name = names[names.length - 1]!;
     // The row of the group: the first ancestor of its name that holds a "Revisar" button.
     let group = name.parentElement;
     while (group && !within(group).queryByRole('button', { name: 'Revisar' })) {
       group = group.parentElement;
     }
     expect(group).not.toBeNull();
-    expect(within(group!).queryByRole('button', { name: 'Outras receitas' })).toBeNull();
+    expect(within(group!).queryByRole('button', { name: 'Para revisar' })).toBeNull();
 
     fireEvent.click(within(group!).getByRole('button', { name: 'Revisar' }));
     await waitFor(() => expect(window.location.pathname).toBe('/transactions/review'));

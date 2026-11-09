@@ -137,7 +137,7 @@ describe('buildCategoryGroups: the income groups', () => {
 
     expect(other).toMatchObject({
       id: 'uncategorized',
-      name: 'Outras receitas',
+      name: 'Para revisar',
       icon: 'inbox',
       uncategorized: true,
       count: 1,

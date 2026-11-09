@@ -141,7 +141,7 @@ export function buildCategoryGroups(
 
       return {
         id: item.categoryId ?? UNCATEGORIZED_GROUP_ID,
-        name: category?.name ?? 'Outras receitas',
+        name: category?.name ?? 'Para revisar',
         icon: uncategorized ? 'inbox' : mapCategoryIcon(category?.icon),
         uncategorized,
         totalCents: item.receivedCents,
