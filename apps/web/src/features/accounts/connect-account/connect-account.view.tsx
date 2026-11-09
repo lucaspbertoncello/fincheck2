@@ -52,8 +52,6 @@ type ConnectAccountViewProps = {
   isSubmitting: boolean;
   onSubmit: () => void;
   onOpenSettings: () => void;
-  /** The bank of an account that comes from the Open Finance is not edited by hand. */
-  isBankLocked: boolean;
   typeOptions: readonly { value: Account.Type; label: string; icon: IconName }[];
   institutionOptions: readonly { value: Institution.Code; label: string }[];
   brandOptions: readonly { value: CreditCard.Brand; label: string }[];
@@ -144,7 +142,6 @@ export function ConnectAccountView({
   isSubmitting,
   onSubmit,
   onOpenSettings,
-  isBankLocked,
   typeOptions,
   institutionOptions,
   brandOptions,
@@ -193,7 +190,6 @@ export function ConnectAccountView({
       institutionOptions={institutionOptions}
       brandOptions={brandOptions}
       isEditing={isEditing}
-      isBankLocked={isBankLocked}
     />
   );
 

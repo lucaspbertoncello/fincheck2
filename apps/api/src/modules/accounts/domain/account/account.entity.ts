@@ -8,7 +8,6 @@ import { AccountBalanceNotAdjustableError } from '#/modules/accounts/domain/acco
 import { AccountHistoryNotAvailableError } from '#/modules/accounts/domain/account/account-history-not-available.error.ts';
 import { AccountNotACardError } from '#/modules/accounts/domain/account/account-not-a-card.error.ts';
 import { AccountNotArchivedError } from '#/modules/accounts/domain/account/account-not-archived.error.ts';
-import { AccountSourceLockedError } from '#/modules/accounts/domain/account/account-source-locked.error.ts';
 import { CreditCard } from '#/modules/accounts/domain/credit-card/credit-card.value-object.ts';
 import { RequestValidationError } from '#/shared/errors/request-validation.error.ts';
 import { generateId } from '#/shared/id/generate-id.util.ts';
@@ -116,13 +115,9 @@ export class Account {
   }
 
   // Edit by name, bank and card data. `type` and `source` never change. Works on an archived account.
+  // The bank of a Pluggy account is editable too: the connector name can be wrong ("MeuPluggy"),
+  // and the sync never writes the bank again after the account exists.
   edit(patch: AccountContract.UpdateRequest, now: string): void {
-    if (
-      this.isPluggy() &&
-      (patch.institutionCode !== undefined || patch.institutionName !== undefined)
-    ) {
-      throw new AccountSourceLockedError();
-    }
     if (patch.institutionCode !== undefined && this.type === 'wallet') {
       throw new RequestValidationError([
         { path: 'institutionCode', message: 'A carteira não muda de banco.' },

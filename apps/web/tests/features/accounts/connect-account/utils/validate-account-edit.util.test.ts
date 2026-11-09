@@ -18,7 +18,7 @@ const card: ManualAccountForm = {
 
 describe('validateAccountEdit', () => {
   it('builds the patch of a card: empty last digits and limit go as null so they can be cleared', () => {
-    expect(validateAccountEdit(card, false)).toEqual({
+    expect(validateAccountEdit(card)).toEqual({
       ok: true,
       body: {
         name: 'Roxinho',
@@ -35,17 +35,24 @@ describe('validateAccountEdit', () => {
     });
   });
 
-  it('does not send the bank when it comes from the Pluggy, and does not ask for it', () => {
-    const result = validateAccountEdit(
-      { ...card, type: 'checking', institutionCode: '', closingDay: '', dueDay: '' },
-      true,
-    );
+  it('sends the name of a bank that is not in the list', () => {
+    const result = validateAccountEdit({
+      ...card,
+      type: 'checking',
+      institutionCode: 'other',
+      institutionName: ' Banco Novo ',
+      closingDay: '',
+      dueDay: '',
+    });
 
-    expect(result).toEqual({ ok: true, body: { name: 'Roxinho' } });
+    expect(result).toEqual({
+      ok: true,
+      body: { name: 'Roxinho', institutionCode: 'other', institutionName: 'Banco Novo' },
+    });
   });
 
   it('keeps the same messages as the creation when a field is wrong', () => {
-    const result = validateAccountEdit({ ...card, name: '', closingDay: '40' }, false);
+    const result = validateAccountEdit({ ...card, name: '', closingDay: '40' });
 
     expect(result.ok).toBe(false);
     expect(!result.ok && result.errors['name']).toMatch(/Dê um nome/);

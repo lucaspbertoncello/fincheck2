@@ -181,12 +181,6 @@ export const accountMock = [
       { body: updateAccountRequestSchema, response: accountDtoSchema },
       ({ params, body }) => {
         const account = findAccount(db, params['id'] ?? '');
-        if (
-          (body.institutionCode !== undefined || body.institutionName !== undefined) &&
-          account.source === 'pluggy'
-        ) {
-          fail(422, 'ACCOUNT_SOURCE_LOCKED', 'Banco de conta do Pluggy não muda');
-        }
         if (body.institutionCode !== undefined && account.type === 'wallet')
           fail(400, 'VALIDATION_FAILED', 'Carteira não muda de banco');
         if (body.institutionCode === 'wallet')

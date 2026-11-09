@@ -37,8 +37,6 @@ type ManualAccountFormProps = {
   brandOptions: readonly Option<CreditCard.Brand>[];
   /** Editing: the kind of account cannot change, and neither the opening balance. */
   isEditing: boolean;
-  /** The bank comes from the Open Finance: it is shown but not changed. */
-  isBankLocked: boolean;
 };
 
 function digitsOnly(value: string): string {
@@ -69,7 +67,6 @@ export function ManualAccountForm({
   institutionOptions,
   brandOptions,
   isEditing,
-  isBankLocked,
 }: ManualAccountFormProps) {
   const isCard = form.type === 'credit_card';
   const isWallet = form.type === 'wallet';
@@ -116,7 +113,6 @@ export function ManualAccountForm({
             value={form.institutionCode}
             onChange={(code) => onFieldChange('institutionCode', code)}
             error={errors['institutionCode']}
-            isDisabled={isBankLocked}
           />
         )}
         {!isWallet && form.institutionCode === 'other' ? (

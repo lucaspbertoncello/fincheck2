@@ -374,11 +374,14 @@ describe('accounts routes', () => {
         name: 'Roxinho',
         creditCard: { dueDay: 15 },
       });
-      await expectError(
-        await send('PATCH', `/accounts/${id}`, { institutionCode: 'inter' }),
-        422,
-        'ACCOUNT_SOURCE_LOCKED',
-      );
+      const rebanked = await send('PATCH', `/accounts/${id}`, {
+        institutionCode: 'nubank',
+        institutionName: null,
+      });
+      expect(accountDtoSchema.parse(await rebanked.json())).toMatchObject({
+        institutionCode: 'nubank',
+        institutionName: null,
+      });
     });
 
     it('refuses card data on an account that is not a card with 422', async () => {

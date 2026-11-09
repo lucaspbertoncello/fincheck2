@@ -94,18 +94,15 @@ describe('Account.edit', () => {
     expect(account.updatedAt).toBe(LATER);
   });
 
-  it('renames a Pluggy account but locks its bank', () => {
+  it('renames a Pluggy account and changes its bank', () => {
     const account = buildTestAccount({ source: 'pluggy', bankBalanceCents: 1000 });
 
     account.edit({ name: 'Apelido' }, LATER);
     expect(account.name).toBe('Apelido');
 
-    expect(() => account.edit({ institutionCode: 'inter' }, LATER)).toThrow(
-      expect.objectContaining({ code: 'ACCOUNT_SOURCE_LOCKED' }),
-    );
-    expect(() => account.edit({ institutionName: null }, LATER)).toThrow(
-      expect.objectContaining({ code: 'ACCOUNT_SOURCE_LOCKED' }),
-    );
+    account.edit({ institutionCode: 'nubank', institutionName: null }, LATER);
+    expect(account.institutionCode).toBe('nubank');
+    expect(account.institutionName).toBeNull();
   });
 
   it('changes the bank of a manual account', () => {

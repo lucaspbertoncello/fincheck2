@@ -67,7 +67,6 @@ function ConnectAccountSession({
   } | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const isEditing = Boolean(editId);
-  const isBankLocked = editAccount?.source === 'pluggy';
 
   function close() {
     state.reset();
@@ -111,7 +110,7 @@ function ConnectAccountSession({
 
   function submitEdit() {
     if (!editId) return;
-    const result = validateAccountEdit(state.form, isBankLocked);
+    const result = validateAccountEdit(state.form);
     if (!result.ok) {
       state.showErrors(result.errors);
       return;
@@ -171,7 +170,6 @@ function ConnectAccountSession({
       }
       onSubmit={submit}
       onOpenSettings={() => void navigate({ to: '/settings/connections' })}
-      isBankLocked={isBankLocked}
       typeOptions={TYPE_OPTIONS}
       institutionOptions={INSTITUTION_OPTIONS}
       brandOptions={BRAND_OPTIONS}

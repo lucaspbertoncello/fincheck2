@@ -15,21 +15,11 @@ function toDay(text: string): number {
 
 /**
  * Validates the edit with the same rules as the creation, then builds the `PATCH /accounts/:id`
- * body: the kind of account never changes, and a bank that comes from the Pluggy is left alone.
+ * body: the kind of account never changes. The bank is editable on every account, the Pluggy ones too.
  */
-export function validateAccountEdit(
-  form: ManualAccountForm,
-  isBankLocked: boolean,
-): AccountEditValidation {
+export function validateAccountEdit(form: ManualAccountForm): AccountEditValidation {
   const result = validateManualAccount(form);
-  if (!result.ok) {
-    const errors = { ...result.errors };
-    if (isBankLocked) {
-      delete errors['institutionCode'];
-      delete errors['institutionName'];
-    }
-    if (Object.keys(errors).length > 0) return { ok: false, errors };
-  }
+  if (!result.ok) return { ok: false, errors: result.errors };
 
   const isWallet = form.type === 'wallet';
   const isOtherBank = form.institutionCode === 'other';
@@ -38,7 +28,7 @@ export function validateAccountEdit(
     ok: true,
     body: {
       name: form.name.trim(),
-      ...(isWallet || isBankLocked
+      ...(isWallet
         ? {}
         : {
             institutionCode: form.institutionCode || undefined,
