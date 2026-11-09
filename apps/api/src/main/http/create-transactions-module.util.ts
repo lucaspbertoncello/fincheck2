@@ -172,7 +172,14 @@ export function createTransactionsModule(deps: {
           new SplitTransactionUseCase(transactions, references, builder, unitOfWork, clock),
         ),
         unsplitTransaction: new UnsplitTransactionController(
-          new UnsplitTransactionUseCase(transactions, builder, unitOfWork, clock),
+          new UnsplitTransactionUseCase(
+            transactions,
+            accounts,
+            readers.links,
+            builder,
+            unitOfWork,
+            clock,
+          ),
         ),
       }),
     )
@@ -190,7 +197,14 @@ export function createTransactionsModule(deps: {
     readers.categories && readers.tags && readers.categoryRules
       ? createTransactionBulkRoute({
           bulkTransactions: new BulkTransactionsController(
-            new BulkTransactionsUseCase(transactions, references, readers.links, unitOfWork, clock),
+            new BulkTransactionsUseCase(
+              transactions,
+              references,
+              accounts,
+              readers.links,
+              unitOfWork,
+              clock,
+            ),
           ),
           restoreBulkTransactions: new RestoreBulkTransactionsController(
             new RestoreBulkTransactionsUseCase(
@@ -198,6 +212,7 @@ export function createTransactionsModule(deps: {
               readers.categoryRules,
               references,
               accounts,
+              readers.links,
               unitOfWork,
               clock,
             ),

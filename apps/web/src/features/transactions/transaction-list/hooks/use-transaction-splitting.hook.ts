@@ -5,10 +5,10 @@ import { useRef, useState } from 'react';
 import { balanceSplitParts } from '#/domain/transactions/transaction-split/rules/balance-split-parts.rule.ts';
 import { checkSplit } from '#/domain/transactions/transaction-split/rules/check-split.rule.ts';
 import { distributeCents } from '#/domain/transactions/transaction-split/rules/distribute-cents.rule.ts';
-import { getTransactionDirection } from '#/domain/transactions/transaction/rules/get-transaction-direction.rule.ts';
+import { getSplitPartCategoryKind } from '#/domain/transactions/transaction-split/rules/get-split-part-category-kind.rule.ts';
 import type { TransactionListModel } from '#/features/transactions/transaction-list/transaction-list.model.ts';
 import type { TransactionLookups } from '#/shared/types/transactions/transaction-lookups.type.ts';
-import { buildCategoryOptions } from '#/features/transactions/utils/build-category-options.util.ts';
+import { buildCategoryOptions } from '#/shared/utils/transactions/build-category-options.util.ts';
 import { describeTransactionError } from '#/shared/utils/transactions/describe-transaction-error.util.ts';
 
 const SPLIT_PARTS = 2;
@@ -96,9 +96,10 @@ export function useTransactionSplitting({ model, lookups, transaction, close }: 
       const even = distributeCents(total, parts.length);
       change(parts.map((part, position) => ({ ...part, amountCents: even[position] ?? 0 })));
     },
+    // The parts take the kind of the nature (a refund on a card is an expense), not the sign.
     categories: buildCategoryOptions(
       [...lookups.categories.values()],
-      getTransactionDirection(transaction.amountCents),
+      getSplitPartCategoryKind(transaction.nature) ?? 'expense',
     ),
     createPartId: () => `new-part-${(nextPartId.current += 1)}`,
     description: `${transaction.description}: reparta o valor entre duas categorias.`,

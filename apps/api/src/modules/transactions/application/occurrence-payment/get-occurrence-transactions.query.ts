@@ -46,6 +46,9 @@ export class GetOccurrenceTransactionsQuery {
   ): Promise<GetOccurrenceTransactionsQuery.Snapshot[]> {
     const rows = await this.select(executor)
       .where('t.nature', '=', criteria.kind)
+      // A credit on the card (a refund, positive on the credit method) never settles an occurrence:
+      // the money did not come into an account, it only lowered the invoice.
+      .where(sql<boolean>`not (t.method = 'credit' and t.amount_cents > 0)`)
       .where('t.amount_cents', criteria.kind === 'income' ? '>' : '<', 0)
       .where('t.occurred_on', '>=', criteria.from)
       .where('t.occurred_on', '<=', criteria.to)
@@ -63,6 +66,7 @@ export class GetOccurrenceTransactionsQuery {
         't.account_id',
         't.amount_cents',
         't.nature',
+        't.method',
         't.occurred_on',
         't.description',
         't.bank_counterparty',
@@ -78,6 +82,7 @@ export class GetOccurrenceTransactionsQuery {
     account_id: string;
     amount_cents: number;
     nature: Database['transactions']['nature'];
+    method: Database['transactions']['method'];
     occurred_on: string;
     description: string;
     bank_counterparty: string | null;
@@ -89,6 +94,7 @@ export class GetOccurrenceTransactionsQuery {
       accountId: row.account_id,
       amountCents: row.amount_cents,
       nature: row.nature,
+      isOnCard: row.method === 'credit',
       isSplit: Boolean(row.is_split),
       counts: Boolean(row.counts),
       occurredOn: row.occurred_on,
@@ -105,6 +111,8 @@ export namespace GetOccurrenceTransactionsQuery {
     // With sign.
     amountCents: number;
     nature: Database['transactions']['nature'];
+    // On the credit card (method `credit`).
+    isOnCard: boolean;
     isSplit: boolean;
     counts: boolean;
     occurredOn: string;

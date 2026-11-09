@@ -3,7 +3,7 @@ import { useState } from 'react';
 import type { useTransactionListSearch } from '#/shared/hooks/transactions/use-transaction-list-search.hook.ts';
 import type { FiltersView } from '#/shared/types/transactions/transaction-list-view.type.ts';
 import type { TransactionLookups } from '#/shared/types/transactions/transaction-lookups.type.ts';
-import { buildCategoryOptions } from '#/features/transactions/utils/build-category-options.util.ts';
+import { buildCategoryOptions } from '#/shared/utils/transactions/build-category-options.util.ts';
 import { countActiveFilters } from '#/features/transactions/transaction-list/utils/count-active-filters.util.ts';
 
 type FiltersViewArgs = {

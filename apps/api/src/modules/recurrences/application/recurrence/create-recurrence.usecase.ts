@@ -125,6 +125,7 @@ export class CreateRecurrenceUseCase {
           amountCents: transaction.amountCents,
           nature: transaction.nature,
           counts: transaction.counts,
+          isOnCard: transaction.isOnCard,
         });
         const [linked, linkedThere] = await Promise.all([
           this.occurrences.findLinkedTransactionIds([transaction.id], executor),

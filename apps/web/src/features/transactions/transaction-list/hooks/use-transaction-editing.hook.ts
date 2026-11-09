@@ -3,11 +3,13 @@ import type { TagPickerProps, TransactionEditErrors } from '@fincheck/ui';
 import { useState } from 'react';
 import type { Tag } from '@fincheck/shared/categories/tag/tag.type.ts';
 
+import { getAcceptedCategoryKinds } from '#/domain/transactions/transaction/rules/get-accepted-category-kinds.rule.ts';
 import { getTransactionDirection } from '#/domain/transactions/transaction/rules/get-transaction-direction.rule.ts';
 import { validateTransactionEdit } from '#/domain/transactions/transaction/rules/validate-transaction-edit.rule.ts';
 import type { TransactionListModel } from '#/features/transactions/transaction-list/transaction-list.model.ts';
 import type { TransactionLookups } from '#/shared/types/transactions/transaction-lookups.type.ts';
-import { buildCategoryOptions } from '#/features/transactions/utils/build-category-options.util.ts';
+import { buildCategoryOptionsForKinds } from '#/shared/utils/transactions/build-category-options-for-kinds.util.ts';
+import { buildCategoryOptions } from '#/shared/utils/transactions/build-category-options.util.ts';
 import { buildCounterpartOptions } from '#/features/transactions/transaction-list/utils/build-counterpart-options.util.ts';
 import { buildEditValues } from '#/features/transactions/transaction-list/utils/build-edit-values.util.ts';
 import { describeEditError } from '#/features/transactions/transaction-list/utils/describe-edit-error.util.ts';
@@ -59,6 +61,15 @@ export function useTransactionEditing({
   const values = draft?.id === transaction.id ? draft.values : buildEditValues(transaction);
   const mine = problem?.id === transaction.id ? problem : undefined;
   const kind = values.nature === 'income' ? 'income' : 'expense';
+  const isCardAccount = lookups.accounts.get(transaction.accountId)?.type === 'credit_card';
+  // The kinds the transaction takes: its nature's, or both for a credit on a card (a refund).
+  const kindsOf = (nature: 'expense' | 'income') =>
+    getAcceptedCategoryKinds({
+      nature,
+      amountCents: transaction.amountCents,
+      isCardAccount,
+      isSplit: false,
+    });
 
   // A transfer that is one by its category ("Rotação entre contas") shows that category next to
   // the other leg, and the other leg is optional.
@@ -67,15 +78,21 @@ export function useTransactionEditing({
 
   // Switching the nature drops the category that no longer fits: one of the other kind going to
   // expense or income, any but the one that is a transfer going to a transfer, and the one that
-  // is a transfer leaving it (the nature no longer comes from it).
+  // is a transfer leaving it (the nature no longer comes from it). A credit on a card keeps a
+  // category of either kind.
   function withValidCategory(next: typeof values): typeof values {
     if (next.nature === values.nature || !next.categoryId) return next;
     const category = lookups.categories.get(next.categoryId);
+    // A credit on a card that was income by its category and goes back to expense lets go of that
+    // category: the API does the same, and the form shows it.
+    if (isCardAccount && values.nature === 'income' && next.nature === 'expense') {
+      return category?.kind === 'income' ? { ...next, categoryId: null } : next;
+    }
     if (next.nature === 'transfer') {
       return category?.isTransfer === true ? next : { ...next, categoryId: null };
     }
     if (next.nature !== 'expense' && next.nature !== 'income') return next;
-    return category?.kind === next.nature && category.isTransfer !== true
+    return category && kindsOf(next.nature).includes(category.kind) && category.isTransfer !== true
       ? next
       : { ...next, categoryId: null };
   }
@@ -177,6 +194,8 @@ export function useTransactionEditing({
         await model.updateTransaction.mutateAsync({ id: transaction.id, body });
         if (body.categoryId) askRule([transaction.id]);
       }
+      // What was saved is the truth now: a credit on a card may have changed nature with its category.
+      setDraft(undefined);
       close();
     } catch (error) {
       const { field, message } = describeEditError(error);
@@ -195,8 +214,11 @@ export function useTransactionEditing({
     onChange: (next: typeof values) =>
       setDraft({ id: transaction.id, values: withTagsOfCategory(withValidCategory(next)) }),
     tagPicker,
+    // The API never makes income of a transaction on a card by hand ("Crédito no cartão nunca é
+    // receita"): one that is income already (by its category) keeps showing it.
+    canBeIncome: !isCardAccount || transaction.nature === 'income',
     // The category that is a transfer fits both legs of a rotation, so it shows for any kind.
-    categories: buildCategoryOptions(allCategories, kind, { withTransfer: true }),
+    categories: buildCategoryOptionsForKinds(allCategories, kindsOf(kind), { withTransfer: true }),
     transferCategories: transferByCategory
       ? buildCategoryOptions(
           allCategories.filter((category) => category.isTransfer),

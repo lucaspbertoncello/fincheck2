@@ -17,8 +17,8 @@ export interface OccurrenceTransactionReader {
     executor?: Kysely<Database>,
   ): Promise<OccurrenceTransactionReader.Snapshot>;
   // The transactions that may pay an occurrence of the kind: a credit of nature `income` (income) or
-  // a debit of nature `expense` (expense), that count, between the two days (inclusive). Whether one
-  // is already linked is for the caller to decide.
+  // a debit of nature `expense` (expense), that count, between the two days (inclusive); a credit on
+  // the card is never one. Whether one is already linked is for the caller to decide.
   findCandidates(
     criteria: { kind: 'income' | 'expense'; from: string; to: string },
     executor?: Kysely<Database>,
@@ -39,6 +39,8 @@ export namespace OccurrenceTransactionReader {
       | 'balance_adjustment'
       | 'lent'
       | 'reimbursed';
+    // On the credit card (method `credit`): a credit there (positive) settles nothing.
+    isOnCard: boolean;
     isSplit: boolean;
     // Not ignored and not removed by the bank without an edit: only then does it settle anything.
     counts: boolean;

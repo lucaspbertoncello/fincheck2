@@ -396,9 +396,11 @@ export class Transaction {
     // A transfer has no category, except the one that is a transfer itself (`isTransfer`): staying
     // a transfer keeps it (to link the other leg), leaving it (to expense or income) takes it off,
     // the nature no longer comes from it.
+    // A card credit that is income (by its category) goes back to expense: the income category no
+    // longer fits the nature, so it goes too.
     const dropsCategory = this.isTransferByCategory()
       ? nature !== 'transfer'
-      : nature === 'transfer';
+      : nature === 'transfer' || (nature === 'expense' && this.isCardCreditIncome(options));
     this.nature = nature;
     this.natureSetBy = 'user';
     if (dropsCategory) this.clearCategory();
@@ -406,6 +408,31 @@ export class Transaction {
   }
 
   private assertNatureChange(
+    nature: 'expense' | 'income' | 'transfer',
+    options: Transaction.NatureContext,
+  ): void {
+    this.assertNatureLocks(nature, options);
+    // Credit on a card is a refund, an expense with a positive value: choosing the nature by hand
+    // never makes it income (only a category of income does, `assignCategory`).
+    if (nature === 'income' && nature !== this.nature && options.isCardAccount) {
+      throw new RequestValidationError([
+        { path: 'nature', message: 'Crédito no cartão nunca é receita.' },
+      ]);
+    }
+    // Keeping the nature it already has is never a new mismatch (a card refund is an expense with
+    // a positive value, and so is a credit on a card that was income by its category).
+    if (
+      nature !== this.nature &&
+      ((nature === 'expense' && !this.amount.isNegative() && !options.isCardAccount) ||
+        (nature === 'income' && this.amount.isNegative()))
+    ) {
+      throw new TransactionNatureSignMismatchError();
+    }
+  }
+
+  // The locks every change of nature has, by hand or by a category: a split, a debt, an adjustment,
+  // a paid invoice, an occurrence or a bill.
+  private assertNatureLocks(
     nature: 'expense' | 'income' | 'transfer',
     options: Transaction.NatureContext,
   ): void {
@@ -418,30 +445,34 @@ export class Transaction {
     ) {
       throw new TransactionNatureLockedError();
     }
-    // A transaction tied to an occurrence only counts there as an income or an expense: turning it
-    // into another nature would leave it settling money it no longer is. Undo the link first.
+    this.assertNatureNotTied(nature, options);
+  }
+
+  // The links that lock the nature. A transaction tied to an occurrence only counts there as an
+  // income or an expense: turning it into another nature would leave it settling money it no longer
+  // is. Undo the link first. The same for a transaction that pays a bill (the origin of a debt is
+  // already `lent`, locked).
+  private assertNatureNotTied(
+    nature: 'expense' | 'income' | 'transfer',
+    options: Transaction.NatureContext,
+  ): void {
     if (options.hasActiveOccurrenceLink && nature !== this.nature) {
       throw new TransactionLinkedToOccurrenceError();
     }
-    // The same for a transaction that pays a bill (the origin of a debt is already `lent`, locked).
     if (options.hasActiveBillLink && nature !== this.nature) {
       throw new TransactionLinkedToBillError();
     }
-    // Credit on a card is a refund, an expense with a positive value: it is never income.
-    if (nature === 'income' && nature !== this.nature && options.isCardAccount) {
-      throw new RequestValidationError([
-        { path: 'nature', message: 'Crédito no cartão nunca é receita.' },
-      ]);
-    }
-    // Keeping the nature it already has is never a new mismatch (a card refund is an expense with
-    // a positive value).
-    if (
-      nature !== this.nature &&
-      ((nature === 'expense' && !this.amount.isNegative()) ||
-        (nature === 'income' && this.amount.isNegative()))
-    ) {
-      throw new TransactionNatureSignMismatchError();
-    }
+  }
+
+  // Credit on a card: a positive value on a card account (a refund). Its category may be of either
+  // kind: an expense category abates the spending, an income category makes it income.
+  private isCardCredit(context: Transaction.NatureContext): boolean {
+    return context.isCardAccount && !this.amount.isNegative();
+  }
+
+  // A card credit that is `income`: only a category of income makes one (`assignCategory`).
+  private isCardCreditIncome(context: Transaction.NatureContext): boolean {
+    return this.nature === 'income' && this.isCardCredit(context);
   }
 
   // The nature is `transfer` because of a category that is a transfer (`isTransfer`): only that
@@ -552,8 +583,11 @@ export class Transaction {
   }
 
   // Sets or clears the category chosen by Lucas. The category lives on the parts of a split
-  // transaction, only `expense` and `income` have one, and its kind is the transaction's. One
-  // exception: a category that is a transfer (`isTransfer`, "Rotação entre contas") makes the
+  // transaction, only `expense` and `income` have one, and its kind is the transaction's. Two
+  // exceptions. A credit on a card (a positive value) takes either kind: an expense category keeps
+  // it an expense (it abates the spending), an income category makes it `income` (set by Lucas); it
+  // goes back to expense when the category is taken off or replaced by an expense one. And a
+  // category that is a transfer (`isTransfer`, "Rotação entre contas") makes the
   // transaction a `transfer` and stays on it, whatever the kind of the category; taking it off (or
   // replacing it) gives the nature back by the sign (negative is expense, positive is income). The
   // other leg of a transfer is cut by the caller, who knows the other transaction.
@@ -565,7 +599,12 @@ export class Transaction {
     if (category === null) {
       // A split one has no category of its own to clear: its parts keep theirs, and so the tags.
       if (this.isSplit()) return;
-      if (this.isTransferByCategory()) this.returnNature(context, now);
+      // Taking off the category of a card credit that is income gives the expense back: a change of
+      // nature, so the same locks hold (an occurrence, a bill).
+      if (this.isCardCreditIncome(context)) this.assertNatureLocks('expense', context);
+      if (this.isTransferByCategory() || this.isCardCreditIncome(context)) {
+        this.returnNature(context, now);
+      }
       this.clearCategory();
       this.updatedAt = now;
       return;
@@ -581,13 +620,36 @@ export class Transaction {
       this.clearCategory();
     }
     if (!this.hasCountedNature()) throw new TransactionCategoryNotAllowedError();
-    if (category.kind !== this.nature) throw new TransactionCategoryKindMismatchError();
+    if (category.kind !== this.nature) {
+      if (!this.isCardCredit(context)) throw new TransactionCategoryKindMismatchError();
+      this.takeCardCreditNature(category.kind, context, now);
+    }
 
     // The tags belong to the category: another category leaves the old tags behind.
     if (this.categoryId !== category.id) this.tagIds = [];
     this.categoryId = category.id;
     this.categorySource = 'user';
     this.categoryRuleId = null;
+    this.updatedAt = now;
+  }
+
+  // The category of a card credit is of the other kind than its nature: the nature follows the
+  // category, by Lucas's choice. An income category makes it income (`natureSetBy = user`; by hand
+  // it never is); an expense category gives it back by the sign, an expense (a refund). The same
+  // locks as a change of nature by hand hold (an occurrence, a bill).
+  private takeCardCreditNature(
+    kind: 'expense' | 'income',
+    context: Transaction.NatureContext,
+    now: string,
+  ): void {
+    this.assertNatureLocks(kind, context);
+    if (kind === 'expense') {
+      this.returnNature(context, now);
+      return;
+    }
+
+    this.nature = 'income';
+    this.natureSetBy = 'user';
     this.updatedAt = now;
   }
 
@@ -749,7 +811,18 @@ export class Transaction {
     if (category.isTransfer === true) {
       return this.canTakeTransferCategory(context) ? null : 'outside_account';
     }
-    if (category.kind !== this.nature) return 'category_kind_mismatch';
+    if (category.kind !== this.nature) {
+      if (!this.isCardCredit(context)) return 'category_kind_mismatch';
+
+      // A card credit takes the category of the other kind (its nature follows), unless a link
+      // locks the nature.
+      try {
+        this.assertNatureLocks(category.kind, context);
+      } catch (error) {
+        if (error instanceof DomainError) return 'outside_account';
+        throw error;
+      }
+    }
 
     return null;
   }
@@ -950,14 +1023,21 @@ export class Transaction {
     this.updatedAt = now;
   }
 
-  unsplit(now: string): void {
+  // Back to one piece with no category. A card credit that was income (by the category of its
+  // parts) has no category now, so it goes back to expense, as when the category is taken off: the
+  // same locks hold (an occurrence, a bill), and the account is read by the caller.
+  unsplit(now: string, context: Transaction.NatureContext = { isCardAccount: false }): void {
     if (!this.isSplit()) throw new TransactionNotSplitError();
     if (this.splits.some((part) => part.isOutsideSpending())) {
       throw new TransactionSplitLinkedToBillError();
     }
+    const isCardCreditIncome = this.isCardCreditIncome(context);
+    // The split itself is no lock here (it is what is being undone): only the links are.
+    if (isCardCreditIncome) this.assertNatureNotTied('expense', context);
 
     this.splits = [];
     this.clearCategory();
+    if (isCardCreditIncome) this.returnNature(context, now);
     this.updatedAt = now;
   }
 
@@ -1008,7 +1088,18 @@ export class Transaction {
     this.bank = version;
     this.removedByBankAt = null;
     this.mergeBankChanges(found, settled, detectedAt);
+    this.followSignOfAmount(detectedAt);
     this.updatedAt = detectedAt;
+  }
+
+  // The value followed the bank (or came back to it) and its sign may have turned: an income never
+  // has a negative value, so what was income goes back to expense, decided by the system again, and
+  // the category of income goes with it (it no longer fits the nature).
+  private followSignOfAmount(now: string): void {
+    if (this.nature !== 'income' || !this.amount.isNegative()) return;
+
+    this.returnNature({ isCardAccount: false }, now);
+    this.clearCategory();
   }
 
   // The bank stopped sending it. Unedited, it leaves the accounts; edited, it stays with the alert.
@@ -1033,6 +1124,7 @@ export class Transaction {
     this.occurredOn = bank.occurredOn;
     this.editNote = null;
     this.bankChange = null;
+    this.followSignOfAmount(now);
     this.updatedAt = now;
 
     return true;
@@ -1075,6 +1167,7 @@ export class Transaction {
       this.occurredOn = bank.occurredOn;
     }
     this.bankChange = null;
+    this.followSignOfAmount(now);
     this.updatedAt = now;
   }
 
@@ -1091,12 +1184,23 @@ export class Transaction {
     };
   }
 
-  // Writes back what `previousState` captured. A rule that was deleted since leaves no id.
+  // Writes back what `previousState` captured. A rule that was deleted since leaves no id. Answers
+  // whether it all went back: a card credit whose nature the state would change but a link (an
+  // occurrence, a bill) locks since the action is left as it is (nature, category and tags), only
+  // the ignore goes back, and the answer is false.
   restoreState(
     state: TransactionBulk.PreviousState,
-    options: { ruleStillExists: boolean; isCardAccount?: boolean },
+    options: {
+      ruleStillExists: boolean;
+      isCardAccount?: boolean;
+      // The kind of the saved category, read by the caller; null when the state had none.
+      savedCategoryKind?: 'expense' | 'income' | null;
+      // The links of the transaction now, read by the caller (they lock the nature).
+      hasActiveOccurrenceLink?: boolean;
+      hasActiveBillLink?: boolean;
+    },
     now: string,
-  ): void {
+  ): boolean {
     // The action had made it a transfer (by the category that is a transfer): the nature goes
     // back by the sign before the saved category (if any) is written.
     if (this.isTransferByCategory() && state.categoryId !== this.categoryId) {
@@ -1116,6 +1220,39 @@ export class Transaction {
       state.categoryId !== null &&
       (this.hasCountedNature() || keepsTransferCategory) &&
       !this.isSplit();
+    // The category of a card credit had changed its nature (income by an income category, expense
+    // by an expense category): the nature goes back to what the saved category asks, an expense
+    // when there is none.
+    const cardContext = {
+      isCardAccount: options.isCardAccount ?? false,
+      hasActiveOccurrenceLink: options.hasActiveOccurrenceLink ?? false,
+      hasActiveBillLink: options.hasActiveBillLink ?? false,
+    };
+    if (
+      options.savedCategoryKind !== undefined &&
+      this.hasCountedNature() &&
+      !this.isSplit() &&
+      this.isCardCredit(cardContext)
+    ) {
+      const wanted = keepsCategory && options.savedCategoryKind === 'income' ? 'income' : 'expense';
+      if (wanted !== this.nature) {
+        try {
+          this.assertNatureLocks(wanted, cardContext);
+        } catch (error) {
+          if (!(error instanceof DomainError)) throw error;
+          this.ignoredAt = state.ignoredAt;
+          this.updatedAt = now;
+
+          return false;
+        }
+        if (wanted === 'income') {
+          this.nature = 'income';
+          this.natureSetBy = 'user';
+        } else {
+          this.returnNature(cardContext, now, state.natureSetBy ?? 'system');
+        }
+      }
+    }
     this.categoryId = keepsCategory ? state.categoryId : null;
     this.categorySource = keepsCategory ? state.categorySource : null;
     this.categoryRuleId = keepsCategory && options.ruleStillExists ? state.categoryRuleId : null;
@@ -1124,6 +1261,8 @@ export class Transaction {
     this.tagIds = keepsCategory || this.isSplit() ? [...new Set(state.tagIds)] : [];
     this.ignoredAt = state.ignoredAt;
     this.updatedAt = now;
+
+    return true;
   }
 
   // No category, no tag: the tags belong to the category.

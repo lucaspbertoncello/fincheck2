@@ -61,6 +61,8 @@ export type TransactionEditorView = {
   values: TransactionEditValues;
   onChange: (values: TransactionEditValues) => void;
   categories: CategoryOption[];
+  /** False for a transaction on a card that is not income: "Receita" is not offered as the type. */
+  canBeIncome: boolean;
   /** The categories that are a transfer, offered next to the other leg when the transaction has one. */
   transferCategories: CategoryOption[];
   counterparts: ChoiceOption[];
@@ -203,8 +205,16 @@ export type FiltersView = {
 export type BulkPickerView = {
   picker: 'category' | 'tag' | null;
   count: number;
-  expenseCategories: CategoryOption[];
-  incomeCategories: CategoryOption[];
+  /**
+   * The categories that fit every selected transaction, most used first: one kind, or two groups
+   * when all of them are credits on a card. Empty when none fits (expenses and incomes mixed).
+   */
+  categories: CategoryOption[];
+  /**
+   * Why `categories` is empty: "mixed" (expenses and incomes: no category fits all) or "none-takes"
+   * (none of the selected takes a category: split, transfers, invoice payments). Null with options.
+   */
+  noCategoryReason: 'mixed' | 'none-takes' | null;
   categoryId: string | null;
   onCategoryChange: (id: string | null) => void;
   tags: { id: string; name: string }[];

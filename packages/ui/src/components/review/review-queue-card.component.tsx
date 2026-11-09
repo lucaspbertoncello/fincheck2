@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 import { Button } from '#/components/buttons/index.ts';
 import { ChoiceChip } from '#/components/chips/index.ts';
 import { Checkbox } from '#/components/forms/index.ts';
@@ -19,6 +21,8 @@ type ReviewQueueCardProps = {
   onSelectCategory: (categoryId: string) => void;
   /** "Outra": opens the full category choice (the screen's). */
   onOtherCategory: () => void;
+  /** A line under the category chips, for what the chosen category means; leave out when none. */
+  categoryNote?: string;
   /** The tag picker of the category on the card (all but the label). */
   tagPicker: Omit<TagPickerProps, 'label' | 'className'>;
   /** The rule the save would create; leave out when there is none to offer. */
@@ -45,6 +49,7 @@ export function ReviewQueueCard({
   selectedCategoryId,
   onSelectCategory,
   onOtherCategory,
+  categoryNote,
   tagPicker,
   rule,
   canGoBack,
@@ -55,6 +60,8 @@ export function ReviewQueueCard({
   saving = false,
   className,
 }: ReviewQueueCardProps) {
+  const noteId = useId();
+
   return (
     <section
       aria-label="Transação em revisão"
@@ -75,7 +82,12 @@ export function ReviewQueueCard({
           className="text-money-sm"
         />
       </header>
-      <div role="group" aria-label="Categoria" className="flex flex-col gap-s8">
+      <div
+        role="group"
+        aria-label="Categoria"
+        aria-describedby={categoryNote ? noteId : undefined}
+        className="flex flex-col gap-s8"
+      >
         <span className="text-label text-fg-secondary">Categoria</span>
         <div className="flex flex-wrap gap-s8">
           {suggestions.map((choice) => (
@@ -92,6 +104,11 @@ export function ReviewQueueCard({
             Outra
           </Button>
         </div>
+        {categoryNote ? (
+          <p id={noteId} className="text-meta text-fg-secondary">
+            {categoryNote}
+          </p>
+        ) : null}
       </div>
       <TagPicker label="Tags" {...tagPicker} />
       {rule ? (

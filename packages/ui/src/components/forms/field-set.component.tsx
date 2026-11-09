@@ -25,9 +25,15 @@ type FieldSetProps = {
  */
 export function FieldSet({ label, aside, description, error, children, className }: FieldSetProps) {
   const labelId = useId();
+  const descriptionId = useId();
 
   return (
-    <div role="group" aria-labelledby={labelId} className={cx('flex flex-col', className)}>
+    <div
+      role="group"
+      aria-labelledby={labelId}
+      aria-describedby={description ? descriptionId : undefined}
+      className={cx('flex flex-col', className)}
+    >
       <div className="flex items-baseline justify-between gap-s8 pb-s4">
         <span id={labelId} className={FIELD_LABEL_CLASS}>
           {label}
@@ -35,7 +41,11 @@ export function FieldSet({ label, aside, description, error, children, className
         {aside ? <span className="text-meta text-fg-tertiary">{aside}</span> : null}
       </div>
       {children}
-      {description ? <p className={cx('pt-s4', FIELD_DESCRIPTION_CLASS)}>{description}</p> : null}
+      {description ? (
+        <p id={descriptionId} className={cx('pt-s4', FIELD_DESCRIPTION_CLASS)}>
+          {description}
+        </p>
+      ) : null}
       <FieldErrorMessage error={error} inField={false} />
     </div>
   );

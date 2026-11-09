@@ -2,10 +2,12 @@ import {
   Button as AriaButton,
   ComboBox,
   Group,
+  Header,
   Input,
   Label,
   ListBox,
   ListBoxItem,
+  ListBoxSection,
   Popover,
   Text,
   useFilter,
@@ -18,6 +20,7 @@ import {
 } from '#/components/forms/field-classes.constant.ts';
 import { CategoryIcon } from '#/components/icons/category-icon.component.tsx';
 import { Icon } from '#/components/icons/icon.component.tsx';
+import { splitCategoryGroups } from '#/components/forms/split-category-groups.util.ts';
 import type { CategoryOption } from '#/components/transactions/category-option.type.ts';
 import { cx } from '#/utils/class-names.util.ts';
 import { FieldErrorMessage } from '#/components/forms/field-error-message.component.tsx';
@@ -29,6 +32,8 @@ type CategoryPickerProps = {
   value: string | null;
   onChange: (categoryId: string | null) => void;
   placeholder?: string;
+  /** A line under the heading of a group (key: the group), for what the group means. */
+  groupHints?: Readonly<Record<string, string>>;
   description?: string;
   error?: string;
   isDisabled?: boolean;
@@ -40,7 +45,9 @@ type CategoryPickerProps = {
  * Category as a searchable list with the category's own icon, for the many categories of a real
  * chart of accounts: type "mer" and "Mercado" is one key away; open it to see the icons. The
  * chosen category's icon sits in the field. Arrows, Enter and Esc as in any combobox; the same
- * single focus ring as the text field. With 6 categories or fewer prefer `ChoiceField`.
+ * single focus ring as the text field. With 6 categories or fewer prefer `ChoiceField`. Options
+ * that carry a `group` are listed under its heading, in the order they come; the search filters
+ * inside the groups and a group with no match goes away.
  */
 export function CategoryPicker({
   label,
@@ -48,6 +55,7 @@ export function CategoryPicker({
   value,
   onChange,
   placeholder = 'Buscar categoria',
+  groupHints,
   description,
   error,
   isDisabled,
@@ -56,6 +64,23 @@ export function CategoryPicker({
 }: CategoryPickerProps) {
   const { contains } = useFilter({ sensitivity: 'base' });
   const chosen = categories.find((category) => category.id === value);
+  const groups = splitCategoryGroups(categories);
+  const isGrouped = groups.some((group) => group.label !== undefined);
+
+  function renderOption(category: CategoryOption) {
+    return (
+      <ListBoxItem
+        key={category.id}
+        id={category.id}
+        textValue={category.name}
+        className="group flex min-h-ctl-touch cursor-pointer items-center gap-s12 rounded-input px-s8 text-list text-fg-primary outline-none data-[focused]:bg-subtle data-[hovered]:bg-subtle data-[selected]:text-brand"
+      >
+        <CategoryIcon icon={category.icon} size="sm" />
+        <span className="min-w-0 flex-1 truncate">{category.name}</span>
+        <Icon name="check" size="sm" className="invisible group-data-[selected]:visible" />
+      </ListBoxItem>
+    );
+  }
 
   return (
     <ComboBox
@@ -101,18 +126,27 @@ export function CategoryPicker({
           )}
           className="max-h-64 overflow-auto p-s8 outline-none"
         >
-          {categories.map((category) => (
-            <ListBoxItem
-              key={category.id}
-              id={category.id}
-              textValue={category.name}
-              className="group flex min-h-ctl-touch cursor-pointer items-center gap-s12 rounded-input px-s8 text-list text-fg-primary outline-none data-[focused]:bg-subtle data-[hovered]:bg-subtle data-[selected]:text-brand"
-            >
-              <CategoryIcon icon={category.icon} size="sm" />
-              <span className="min-w-0 flex-1 truncate">{category.name}</span>
-              <Icon name="check" size="sm" className="invisible group-data-[selected]:visible" />
-            </ListBoxItem>
-          ))}
+          {isGrouped
+            ? groups.map((group) => (
+                <ListBoxSection
+                  key={group.label ?? ''}
+                  id={`group:${group.label ?? ''}`}
+                  className="mt-s8 first:mt-0"
+                >
+                  {group.label ? (
+                    <Header className="px-s8 pb-s4 text-meta text-fg-secondary">
+                      <span className="block font-emphasis">{group.label}</span>
+                      {groupHints?.[group.label] ? (
+                        // React Aria does not pass `aria-describedby` to a section, so the line stays
+                        // in the heading: the group's name is the label followed by it.
+                        <span className="block">{groupHints[group.label]}</span>
+                      ) : null}
+                    </Header>
+                  ) : null}
+                  {group.options.map(renderOption)}
+                </ListBoxSection>
+              ))
+            : categories.map(renderOption)}
         </ListBox>
       </Popover>
     </ComboBox>

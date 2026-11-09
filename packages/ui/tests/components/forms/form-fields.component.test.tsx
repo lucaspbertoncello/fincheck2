@@ -10,6 +10,7 @@ import {
   SelectField,
 } from '#/components/forms/index.ts';
 import { formatCentsInput, parseCentsInput } from '#/components/forms/index.ts';
+import { splitCategoryGroups } from '#/components/forms/split-category-groups.util.ts';
 
 const noop = () => {};
 
@@ -202,6 +203,49 @@ describe('CategoryPicker', () => {
 
     expect(html).toContain('placeholder="Buscar categoria"');
   });
+
+  it('shows the chosen category of a grouped list as it does of a flat one', () => {
+    const grouped = [
+      { id: 'market', name: 'Mercado', icon: 'cart' as const, group: 'Abate gasto' },
+      { id: 'salary', name: 'Salário', icon: 'cart' as const, group: 'Conta como receita' },
+    ];
+    const html = renderToStaticMarkup(
+      <CategoryPicker
+        label="Categoria"
+        categories={grouped}
+        groupHints={{ 'Abate gasto': 'O crédito reduz o gasto.' }}
+        value="salary"
+        onChange={noop}
+      />,
+    );
+
+    expect(html).toContain('value="Salário"');
+    expect(html).toContain('role="combobox"');
+  });
+});
+
+describe('splitCategoryGroups', () => {
+  it('puts each group where its first option came, with the order kept inside it', () => {
+    const options = [
+      { id: 'a', name: 'A', icon: 'cart' as const, group: 'Abate gasto' },
+      { id: 'b', name: 'B', icon: 'cart' as const, group: 'Conta como receita' },
+      { id: 'c', name: 'C', icon: 'cart' as const, group: 'Abate gasto' },
+    ];
+
+    expect(
+      splitCategoryGroups(options).map((group) => [group.label, group.options.map((o) => o.id)]),
+    ).toEqual([
+      ['Abate gasto', ['a', 'c']],
+      ['Conta como receita', ['b']],
+    ]);
+  });
+
+  it('is one group with no label when no option has a group', () => {
+    const groups = splitCategoryGroups([{ id: 'a', name: 'A', icon: 'cart' as const }]);
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0]?.label).toBeUndefined();
+  });
 });
 
 describe('DateQuickField', () => {
@@ -240,5 +284,29 @@ describe('AmountField fit', () => {
 
     // "123.456,78" has 10 characters: 8/10 of the size.
     expect(long).toContain('--amount-fit:0.8');
+  });
+});
+
+describe('FieldSet description', () => {
+  it('links the line to the group with aria-describedby', () => {
+    const html = renderToStaticMarkup(
+      <FieldSet label="Categoria" description="O crédito reduz o gasto.">
+        <span />
+      </FieldSet>,
+    );
+    const id = /aria-describedby="([^"]+)"/.exec(html)?.[1];
+
+    expect(id).toBeDefined();
+    expect(html).toContain(`id="${id}"`);
+  });
+
+  it('has no aria-describedby without a description', () => {
+    const html = renderToStaticMarkup(
+      <FieldSet label="Categoria">
+        <span />
+      </FieldSet>,
+    );
+
+    expect(html).not.toContain('aria-describedby');
   });
 });

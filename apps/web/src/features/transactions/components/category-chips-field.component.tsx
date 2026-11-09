@@ -2,6 +2,8 @@ import { CategoryPicker, Collapse, FieldSet, Icon, type CategoryOption } from '@
 import { useState } from 'react';
 import { Button as AriaButton, ToggleButton } from 'react-aria-components';
 
+import { CREDIT_CATEGORY_GROUP_HINTS } from '#/shared/constants/transactions/credit-category-groups.constant.ts';
+import { describeCreditCategoryGroup } from '#/shared/utils/transactions/describe-credit-category-group.util.ts';
 import { CHIP_CLASS, CHIP_ON_CLASS } from '#/shared/constants/chip/chip-class.constant.ts';
 
 /** Shortcuts shown before "Outras…". More than this and the rest hide behind the search. */
@@ -11,7 +13,10 @@ type CategoryChipsFieldProps = {
   label?: string;
   /** Right of the label ("opcional"). */
   aside?: string;
-  /** The categories of the kind, most used first (`rankCategoriesByUse`). */
+  /**
+   * The categories of the kind, most used first (`rankCategoriesByUse`). With two groups (a credit on
+   * a card) the chips are the most used of the first group, and "Outras…" opens both.
+   */
   categories: readonly CategoryOption[];
   value: string | null;
   onChange: (categoryId: string | null) => void;
@@ -23,6 +28,8 @@ type CategoryChipsFieldProps = {
  * Category as the thing people do: tap one of the few they use most, each with its icon, or open
  * "Outras…" to search the rest. A category picked from the search takes the last chip, so the choice
  * is always visible; tapping the chosen chip again clears it. With six categories or fewer all show.
+ * With groups, a line under the chips says what the group of the chosen category (or of the chips)
+ * means.
  */
 export function CategoryChipsField({
   label = 'Categoria',
@@ -34,16 +41,31 @@ export function CategoryChipsField({
   className,
 }: CategoryChipsFieldProps) {
   const [searching, setSearching] = useState(false);
-  const hasMore = categories.length > SHORTCUTS + 1;
-  const shortcuts = hasMore ? categories.slice(0, SHORTCUTS) : categories;
+  const firstGroup = categories[0]?.group;
+  const isGrouped = categories.some((category) => category.group !== firstGroup);
+  // The chips are the most used of the first group; the other groups wait in the search.
+  const pool = isGrouped
+    ? categories.filter((category) => category.group === firstGroup)
+    : categories;
+  const hasMore = isGrouped || categories.length > SHORTCUTS + 1;
+  const shortcuts = pool.length > SHORTCUTS + 1 ? pool.slice(0, SHORTCUTS) : pool;
   const chosen = categories.find((category) => category.id === value);
   const chips =
     chosen && !shortcuts.includes(chosen)
       ? [...shortcuts.slice(0, SHORTCUTS - 1), chosen]
       : shortcuts;
+  // What the group of the chosen category (or of the chips, while none is chosen) does to the credit.
+  const activeGroup = (chosen ?? categories[0])?.group;
+  const groupHint = isGrouped ? describeCreditCategoryGroup(activeGroup) : undefined;
 
   return (
-    <FieldSet label={label} aside={aside} error={error} className={className}>
+    <FieldSet
+      label={label}
+      aside={aside}
+      description={groupHint}
+      error={error}
+      className={className}
+    >
       <div className="flex flex-wrap gap-s8">
         {chips.map((category) => {
           const selected = category.id === value;
@@ -77,6 +99,7 @@ export function CategoryChipsField({
         <CategoryPicker
           label="Buscar outra categoria"
           categories={categories}
+          groupHints={CREDIT_CATEGORY_GROUP_HINTS}
           value={value}
           onChange={(categoryId) => {
             onChange(categoryId);

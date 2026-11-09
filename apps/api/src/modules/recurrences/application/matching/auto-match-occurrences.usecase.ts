@@ -97,6 +97,7 @@ export class AutoMatchOccurrencesUseCase {
         amountCents: snapshot.amountCents,
         nature: snapshot.nature,
         counts: snapshot.counts,
+        isOnCard: snapshot.isOnCard,
       });
 
       await this.linker.link(

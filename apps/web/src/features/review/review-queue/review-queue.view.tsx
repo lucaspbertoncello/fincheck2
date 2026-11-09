@@ -41,7 +41,8 @@ export type ReviewQueueViewProps = {
   categoryPicker: {
     isOpen: boolean;
     onClose: () => void;
-    categories: CategoryOption[];
+    /** The categories to choose from; one group with no label unless it is a credit on a card. */
+    groups: { label: string | null; hint: string | null; categories: CategoryOption[] }[];
     value: string | null;
     onSelect: (categoryId: string) => void;
   };
@@ -142,12 +143,18 @@ export function ReviewQueueView({
         }}
         title="Escolher categoria"
       >
-        <CategoryChoices
-          label="Categoria"
-          categories={categoryPicker.categories}
-          value={categoryPicker.value}
-          onChange={categoryPicker.onSelect}
-        />
+        <div className="flex flex-col gap-s16">
+          {categoryPicker.groups.map((group) => (
+            <CategoryChoices
+              key={group.label ?? ''}
+              label={group.label ?? 'Categoria'}
+              categories={group.categories}
+              description={group.hint ?? undefined}
+              value={categoryPicker.value}
+              onChange={categoryPicker.onSelect}
+            />
+          ))}
+        </div>
       </Modal>
     </div>
   );

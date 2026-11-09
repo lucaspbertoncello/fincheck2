@@ -38,6 +38,8 @@ import type { MockState } from '#mocks/state/mock-state.type.ts';
 import { NOW_ISO } from '#mocks/support/dates/mock-clock.store.ts';
 import { fail } from '#mocks/support/http/fail.util.ts';
 import { handleRoute } from '#mocks/support/http/handle-route.util.ts';
+import { applyCardCreditNature } from '#mocks/transactions/transaction/apply-card-credit-nature.util.ts';
+import { isCardCredit } from '#mocks/transactions/transaction/is-card-credit.util.ts';
 import { canTakeTransferCategory } from '#mocks/transactions/transaction/can-take-transfer-category.util.ts';
 import { giveNatureBack } from '#mocks/transactions/transaction/give-nature-back.util.ts';
 import { isTransferByCategory } from '#mocks/transactions/transaction/is-transfer-by-category.util.ts';
@@ -260,7 +262,7 @@ export const transactionMock = [
             else if (category.isTransfer) {
               previous.push(toPreviousState(tx));
               takeTransferCategory(tx, category.id, { source: 'user' });
-            } else if (tx.nature !== category.kind)
+            } else if (tx.nature !== category.kind && !isCardCredit(db, tx))
               skipped.push({ transactionId, reason: 'category_kind_mismatch' });
             else if (tx.categoryId === category.id && tx.categorySource === 'user')
               skipped.push({ transactionId, reason: 'no_change' });
@@ -271,6 +273,8 @@ export const transactionMock = [
                 categorySource: 'user',
                 categoryRuleId: null,
               });
+              // A credit on a card takes either kind: income makes it income, expense an expense.
+              applyCardCreditNature(db, tx);
             }
           } else if (action.type === 'addTag') {
             if (tx.tagIds.includes(action.tagId))
@@ -335,6 +339,7 @@ export const transactionMock = [
             tx &&
             (tx.nature === 'expense' || tx.nature === 'income') &&
             tx.splits.length === 0 &&
+            !isCardCredit(db, tx) &&
             findCategory(db, item.categoryId).kind !== tx.nature
           )
             fail(400, 'VALIDATION_FAILED', 'Entrada fora do contrato', {
@@ -370,6 +375,8 @@ export const transactionMock = [
               ? item.categoryRuleId
               : null;
           tx.tagIds = keepsCategory || tx.splits.length > 0 ? [...new Set(item.tagIds)] : [];
+          // A credit on a card goes back to the nature its restored category gives it.
+          if (keepsCategory || item.categoryId === null) applyCardCreditNature(db, tx);
           tx.ignoredAt = item.ignoredAt;
           tx.updatedAt = NOW_ISO;
           restoredCount += 1;
@@ -494,14 +501,23 @@ export const transactionMock = [
                 'TRANSACTION_CATEGORY_NOT_ALLOWED',
                 'Natureza fora da conta não tem categoria',
               );
-            assertUsableCategory(db, category.id, effective);
+            // A credit on a card takes either kind (the nature follows the category, below).
+            assertUsableCategory(db, category.id, effective, {
+              isCardCredit: isCardCredit(db, { ...tx, nature: effective }),
+            });
           }
         }
         // The category the transaction ends up with: another one leaves the old tags behind, so
         // the new set is checked against it and against what is left.
+        // A credit on a card that was income by its category and turns into an expense lets go of
+        // the category (it was the reason for the income).
+        const leavesIncomeOnCard =
+          body.nature === 'expense' && tx.nature === 'income' && isCardCredit(db, tx);
         const natureTakesCategory =
           body.nature !== undefined &&
-          (wasTransferByCategory ? body.nature !== 'transfer' : body.nature === 'transfer');
+          (wasTransferByCategory
+            ? body.nature !== 'transfer'
+            : body.nature === 'transfer' || leavesIncomeOnCard);
         const finalCategoryId =
           body.categoryId !== undefined
             ? body.categoryId
@@ -524,7 +540,11 @@ export const transactionMock = [
           tx.natureSetBy = 'user';
           // A transfer has no category but the one that is a transfer, which it keeps while it
           // stays a transfer (to link the other leg) and loses when it leaves.
-          if (wasTransferByCategory ? body.nature !== 'transfer' : body.nature === 'transfer') {
+          if (
+            wasTransferByCategory
+              ? body.nature !== 'transfer'
+              : body.nature === 'transfer' || leavesIncomeOnCard
+          ) {
             tx.categoryId = null;
             tx.categorySource = null;
             tx.categoryRuleId = null;
@@ -558,6 +578,7 @@ export const transactionMock = [
             tx.categoryId = body.categoryId;
             tx.categorySource = body.categoryId ? 'user' : null;
             tx.categoryRuleId = null;
+            applyCardCreditNature(db, tx);
           }
         }
         if (categoryChanged) tx.tagIds = [];

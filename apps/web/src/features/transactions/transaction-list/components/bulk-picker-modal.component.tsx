@@ -13,15 +13,15 @@ const TAG_CHIP_LIMIT = 6;
 
 /**
  * What a bulk action will put on the selected transactions, in the form-modal pattern: for
- * "Categorizar", the most used categories as chips with "Outras…" for the search (expenses and
- * incomes apart when the selection has both); for "Tag", the tags as chips. "Aplicar" waits until
+ * "Categorizar", the most used categories as chips with "Outras…" for the search, only the ones that
+ * fit every selected transaction (a selection of credits on a card has two groups: "Abate gasto"
+ * and "Conta como receita"); for "Tag", the tags as chips. "Aplicar" waits until
  * something is chosen and says so.
  */
 export function BulkPickerModal({ bulk }: BulkPickerModalProps) {
   const isCategory = bulk.picker === 'category';
   const ready = isCategory ? bulk.categoryId !== null : bulk.tagId !== null;
   const selected = countWord(bulk.count, 'transação selecionada', 'transações selecionadas');
-  const both = bulk.expenseCategories.length > 0 && bulk.incomeCategories.length > 0;
   const tagOptions = bulk.tags.map((tag) => ({
     key: tag.id,
     label: tag.name,
@@ -45,24 +45,19 @@ export function BulkPickerModal({ bulk }: BulkPickerModalProps) {
       size="wide"
     >
       {isCategory ? (
-        <>
-          {bulk.expenseCategories.length > 0 ? (
-            <CategoryChipsField
-              label={both ? 'Categorias de despesa' : 'Categoria'}
-              categories={bulk.expenseCategories}
-              value={bulk.categoryId}
-              onChange={bulk.onCategoryChange}
-            />
-          ) : null}
-          {bulk.incomeCategories.length > 0 ? (
-            <CategoryChipsField
-              label={both ? 'Categorias de receita' : 'Categoria'}
-              categories={bulk.incomeCategories}
-              value={bulk.categoryId}
-              onChange={bulk.onCategoryChange}
-            />
-          ) : null}
-        </>
+        bulk.categories.length > 0 ? (
+          <CategoryChipsField
+            categories={bulk.categories}
+            value={bulk.categoryId}
+            onChange={bulk.onCategoryChange}
+          />
+        ) : (
+          <p className="text-body text-fg-secondary">
+            {bulk.noCategoryReason === 'none-takes'
+              ? 'Nenhuma das transações selecionadas aceita categoria: as divididas, as transferências e os pagamentos de fatura ficam como estão.'
+              : 'Nenhuma categoria serve a todas as transações selecionadas: despesas e receitas não dividem categoria. Selecione só despesas, ou só receitas.'}
+          </p>
+        )
       ) : bulk.tags.length === 0 ? (
         <p className="text-body text-fg-secondary">
           Ainda não há tags. Crie uma dentro de uma categoria, em Categorias › Tags, ou na edição de

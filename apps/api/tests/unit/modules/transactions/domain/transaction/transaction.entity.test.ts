@@ -178,6 +178,465 @@ describe('credit on a card is never income', () => {
   });
 });
 
+describe('Transaction.assignCategory of a credit on a card', () => {
+  const onCard = { isCardAccount: true } as const;
+  const onChecking = { isCardAccount: false } as const;
+  const refund = (overrides: Partial<Transaction.Attributes> = {}) =>
+    buildTestTransaction({
+      accountId: 'card-1',
+      method: 'credit',
+      invoiceMonth: Month.of('2026-11'),
+      amount: cents(1500),
+      nature: 'expense',
+      natureSetBy: 'system',
+      ...overrides,
+    });
+
+  it('keeps an expense with its positive value when the category is an expense one', () => {
+    const credit = refund();
+    credit.assignCategory(FOOD, LATER, onCard);
+
+    expect(credit).toMatchObject({
+      nature: 'expense',
+      natureSetBy: 'system',
+      amount: cents(1500),
+      categoryId: 'food',
+      categorySource: 'user',
+    });
+  });
+
+  it('turns into an income, set by Lucas, when the category is an income one', () => {
+    const credit = refund();
+    credit.assignCategory(SALARY, LATER, onCard);
+
+    expect(credit).toMatchObject({
+      nature: 'income',
+      natureSetBy: 'user',
+      amount: cents(1500),
+      categoryId: 'salary',
+      categorySource: 'user',
+    });
+  });
+
+  it('goes back to expense when the income category is taken off', () => {
+    const credit = refund();
+    credit.assignCategory(SALARY, LATER, onCard);
+    credit.assignCategory(null, LATER, onCard);
+
+    expect(credit).toMatchObject({
+      nature: 'expense',
+      natureSetBy: 'system',
+      amount: cents(1500),
+      categoryId: null,
+    });
+  });
+
+  it('goes back to expense, with the old tags gone, when an expense category replaces it', () => {
+    const credit = refund();
+    credit.assignCategory(SALARY, LATER, onCard);
+    credit.replaceTags([{ id: 'tag-1', categoryId: 'salary', isArchived: false }], LATER);
+    credit.assignCategory(FOOD, LATER, onCard);
+
+    expect(credit).toMatchObject({ nature: 'expense', categoryId: 'food', tagIds: [] });
+  });
+
+  it('stays an income when another income category replaces it', () => {
+    const credit = refund();
+    credit.assignCategory(SALARY, LATER, onCard);
+    credit.assignCategory({ id: 'extra', kind: 'income', isArchived: false }, LATER, onCard);
+
+    expect(credit).toMatchObject({ nature: 'income', natureSetBy: 'user', categoryId: 'extra' });
+  });
+
+  it('comes out of the category that is a transfer into the kind of the next category', () => {
+    const credit = refund();
+    const rotation = {
+      id: 'rotation',
+      kind: 'income',
+      isArchived: false,
+      isTransfer: true,
+    } as const;
+    credit.assignCategory(rotation, LATER, onCard);
+    credit.assignCategory(SALARY, LATER, onCard);
+
+    expect(credit).toMatchObject({ nature: 'income', categoryId: 'salary' });
+  });
+
+  it('still refuses a category of income on a purchase on the card (a negative value)', () => {
+    const purchase = refund({ amount: cents(-1500) });
+
+    expect(() => purchase.assignCategory(SALARY, LATER, onCard)).toThrow(
+      expect.objectContaining({ code: 'TRANSACTION_CATEGORY_KIND_MISMATCH' }),
+    );
+    expect(purchase.nature).toBe('expense');
+  });
+
+  it('still wants the kind of the nature outside a card, for a credit as for a debit', () => {
+    const inflow = buildTestTransaction({ amount: cents(1500), nature: 'income' });
+    const refundOnChecking = buildTestTransaction({ amount: cents(1500), nature: 'expense' });
+
+    expect(() => inflow.assignCategory(FOOD, LATER, onChecking)).toThrow(
+      expect.objectContaining({ code: 'TRANSACTION_CATEGORY_KIND_MISMATCH' }),
+    );
+    expect(() => refundOnChecking.assignCategory(SALARY, LATER, onChecking)).toThrow(
+      expect.objectContaining({ code: 'TRANSACTION_CATEGORY_KIND_MISMATCH' }),
+    );
+    expect(() => inflow.assignCategory(SALARY, LATER, onChecking)).not.toThrow();
+    expect(inflow.nature).toBe('income');
+  });
+
+  it('refuses an archived category and leaves the nature alone', () => {
+    const credit = refund();
+
+    expect(() => credit.assignCategory({ ...SALARY, isArchived: true }, LATER, onCard)).toThrow(
+      expect.objectContaining({ code: 'TRANSACTION_CATEGORY_ARCHIVED' }),
+    );
+    expect(credit.nature).toBe('expense');
+  });
+
+  it('keeps the nature locks: an occurrence, a bill, a split and the natures another flow owns', () => {
+    expect(() =>
+      refund().assignCategory(SALARY, LATER, { ...onCard, hasActiveOccurrenceLink: true }),
+    ).toThrow(expect.objectContaining({ code: 'TRANSACTION_LINKED_TO_OCCURRENCE' }));
+    expect(() =>
+      refund().assignCategory(SALARY, LATER, { ...onCard, hasActiveBillLink: true }),
+    ).toThrow(expect.objectContaining({ code: 'TRANSACTION_LINKED_TO_BILL' }));
+    expect(() =>
+      refund({ nature: 'balance_adjustment' }).assignCategory(SALARY, LATER, onCard),
+    ).toThrow(expect.objectContaining({ code: 'TRANSACTION_CATEGORY_NOT_ALLOWED' }));
+    const divided = refund();
+    divided.splitInto([split(1000), split(500)], TEST_NOW);
+    expect(() => divided.assignCategory(SALARY, LATER, onCard)).toThrow(
+      expect.objectContaining({ code: 'TRANSACTION_IS_SPLIT' }),
+    );
+  });
+
+  it('is never turned into an income by hand, but may be turned back into an expense', () => {
+    const credit = refund();
+    credit.assignCategory(SALARY, LATER, onCard);
+    const manual = refund();
+
+    expect(() => manual.changeNature('income', onCard, LATER)).toThrow(RequestValidationError);
+    credit.changeNature('expense', onCard, LATER);
+
+    expect(credit).toMatchObject({
+      nature: 'expense',
+      natureSetBy: 'user',
+      amount: cents(1500),
+      categoryId: null,
+      categorySource: null,
+    });
+  });
+
+  it('keeps the sign rule of the nature outside a card', () => {
+    const inflow = buildTestTransaction({ amount: cents(1500), nature: 'income' });
+
+    expect(() => inflow.changeNature('expense', onChecking, LATER)).toThrow(
+      expect.objectContaining({ code: 'TRANSACTION_NATURE_SIGN_MISMATCH' }),
+    );
+  });
+
+  it('keeps the value and the income when the amount is edited', () => {
+    const credit = refund();
+    credit.assignCategory(SALARY, LATER, onCard);
+    credit.edit({ amount: cents(2000) }, LATER);
+
+    expect(credit).toMatchObject({ nature: 'income', amount: cents(2000), categoryId: 'salary' });
+  });
+
+  describe('the nature locks when the category goes away', () => {
+    const income = () => {
+      const credit = refund();
+      credit.assignCategory(SALARY, LATER, onCard);
+
+      return credit;
+    };
+
+    it('refuses to take the category off a credit that is income and tied to an occurrence or a bill', () => {
+      const tied = income();
+      const paid = income();
+
+      expect(() =>
+        tied.assignCategory(null, LATER, { ...onCard, hasActiveOccurrenceLink: true }),
+      ).toThrow(expect.objectContaining({ code: 'TRANSACTION_LINKED_TO_OCCURRENCE' }));
+      expect(() =>
+        paid.assignCategory(null, LATER, { ...onCard, hasActiveBillLink: true }),
+      ).toThrow(expect.objectContaining({ code: 'TRANSACTION_LINKED_TO_BILL' }));
+      expect(tied).toMatchObject({ nature: 'income', categoryId: 'salary' });
+      expect(paid).toMatchObject({ nature: 'income', categoryId: 'salary' });
+    });
+
+    it('takes the category off an expense credit that is tied, as nothing changes', () => {
+      const credit = refund();
+      credit.assignCategory(FOOD, LATER, onCard);
+
+      expect(() =>
+        credit.assignCategory(null, LATER, { ...onCard, hasActiveOccurrenceLink: true }),
+      ).not.toThrow();
+      expect(credit).toMatchObject({ nature: 'expense', categoryId: null });
+    });
+
+    it('goes back to expense when it is split and the split is undone, with no category left', () => {
+      const credit = income();
+      credit.splitInto([split(1000, SALARY), split(500, { ...SALARY, id: 'extra' })], LATER);
+
+      expect(credit).toMatchObject({ nature: 'income', categoryId: null });
+      credit.unsplit(LATER, onCard);
+
+      expect(credit).toMatchObject({
+        nature: 'expense',
+        natureSetBy: 'system',
+        amount: cents(1500),
+        categoryId: null,
+        splits: [],
+      });
+    });
+
+    it('refuses to undo the split of a credit that is income and tied, and leaves it split', () => {
+      const credit = income();
+      credit.splitInto([split(1000, SALARY), split(500, SALARY)], LATER);
+
+      expect(() => credit.unsplit(LATER, { ...onCard, hasActiveOccurrenceLink: true })).toThrow(
+        expect.objectContaining({ code: 'TRANSACTION_LINKED_TO_OCCURRENCE' }),
+      );
+      expect(credit.isSplit()).toBe(true);
+      expect(credit.nature).toBe('income');
+    });
+
+    it('splits a credit that is income only with parts of income, and an expense credit only with parts of expense', () => {
+      const expenseCredit = refund();
+
+      expect(() => income().splitInto([split(1000, FOOD), split(500)], LATER)).toThrow(
+        expect.objectContaining({ code: 'TRANSACTION_CATEGORY_KIND_MISMATCH' }),
+      );
+      expect(() => expenseCredit.splitInto([split(1000, SALARY), split(500)], LATER)).toThrow(
+        expect.objectContaining({ code: 'TRANSACTION_CATEGORY_KIND_MISMATCH' }),
+      );
+      expect(() => expenseCredit.splitInto([split(1000, FOOD), split(500)], LATER)).not.toThrow();
+    });
+
+    it('keeps the nature on a split that stays an expense or is not on a card', () => {
+      const expenseCredit = refund();
+      expenseCredit.splitInto([split(1000, FOOD), split(500)], LATER);
+      const inflow = buildTestTransaction({ amount: cents(1500), nature: 'income' });
+      inflow.splitInto([split(1000, SALARY), split(500)], LATER);
+
+      expenseCredit.unsplit(LATER, onCard);
+      inflow.unsplit(LATER, onChecking);
+
+      expect(expenseCredit.nature).toBe('expense');
+      expect(inflow.nature).toBe('income');
+    });
+  });
+
+  describe('the sign the bank sends', () => {
+    const credit = () => {
+      const transaction = refund({
+        origin: 'bank',
+        natureSetBy: 'system',
+        bank: {
+          description: 'ESTORNO',
+          amount: cents(3500),
+          occurredOn: date('2026-11-05'),
+          counterparty: null,
+          status: 'posted',
+        },
+        amount: cents(3500),
+      });
+      transaction.assignCategory(SALARY, LATER, onCard);
+
+      return transaction;
+    };
+    const flipped = (amount = -3500): Transaction.BankVersion => ({
+      description: 'ESTORNO',
+      amount: cents(amount),
+      occurredOn: date('2026-11-05'),
+      counterparty: null,
+      status: 'posted',
+    });
+
+    it('turns an income into an expense, with no category, when the bank turns the sign', () => {
+      const transaction = credit();
+      transaction.applyBankVersion(flipped(), LATER);
+
+      expect(transaction).toMatchObject({
+        nature: 'expense',
+        natureSetBy: 'system',
+        amount: cents(-3500),
+        categoryId: null,
+        categorySource: null,
+        tagIds: [],
+      });
+    });
+
+    it('keeps the income when the bank sends another positive value', () => {
+      const transaction = credit();
+      transaction.applyBankVersion(flipped(4000), LATER);
+
+      expect(transaction).toMatchObject({ nature: 'income', amount: cents(4000) });
+    });
+
+    it('does the same when Lucas takes the value of the bank on the alert, and on "restaurar original"', () => {
+      const edited = credit();
+      edited.edit({ amount: cents(3600) }, LATER);
+      edited.applyBankVersion(flipped(), LATER);
+      expect(edited).toMatchObject({ nature: 'income', amount: cents(3600) });
+
+      edited.resolveBankChange('bank', LATER);
+      expect(edited).toMatchObject({ nature: 'expense', amount: cents(-3500), categoryId: null });
+
+      const restored = credit();
+      restored.edit({ amount: cents(3600) }, LATER);
+      restored.applyBankVersion(flipped(), LATER);
+      restored.restoreOriginal(LATER);
+      expect(restored).toMatchObject({ nature: 'expense', amount: cents(-3500), categoryId: null });
+    });
+
+    it('does not touch an expense whose sign the bank turns', () => {
+      const transaction = refund({
+        origin: 'bank',
+        bank: {
+          description: 'ESTORNO',
+          amount: cents(3500),
+          occurredOn: date('2026-11-05'),
+          counterparty: null,
+          status: 'posted',
+        },
+        amount: cents(3500),
+      });
+      transaction.assignCategory(FOOD, LATER, onCard);
+      transaction.applyBankVersion(flipped(), LATER);
+
+      expect(transaction).toMatchObject({
+        nature: 'expense',
+        amount: cents(-3500),
+        categoryId: 'food',
+      });
+    });
+  });
+
+  describe('the undo of an action when a link was made meanwhile', () => {
+    it('leaves the nature, the category and the tags as they are, only the ignore goes back, and answers false', () => {
+      const credit = refund();
+      const before = credit.previousState();
+      credit.assignCategory(SALARY, LATER, onCard);
+
+      const restored = credit.restoreState(
+        before,
+        {
+          ruleStillExists: true,
+          isCardAccount: true,
+          savedCategoryKind: null,
+          hasActiveOccurrenceLink: true,
+        },
+        LATER,
+      );
+
+      expect(restored).toBe(false);
+      expect(credit).toMatchObject({ nature: 'income', natureSetBy: 'user', categoryId: 'salary' });
+    });
+
+    it('also leaves the income when the saved income category would come back over a tied expense', () => {
+      const credit = refund();
+      credit.assignCategory(SALARY, LATER, onCard);
+      const before = credit.previousState();
+      credit.assignCategory(FOOD, LATER, onCard);
+
+      const restored = credit.restoreState(
+        before,
+        {
+          ruleStillExists: true,
+          isCardAccount: true,
+          savedCategoryKind: 'income',
+          hasActiveBillLink: true,
+        },
+        LATER,
+      );
+
+      expect(restored).toBe(false);
+      expect(credit).toMatchObject({ nature: 'expense', categoryId: 'food' });
+    });
+
+    it('answers true when nothing locks it', () => {
+      const credit = refund();
+      const before = credit.previousState();
+      credit.assignCategory(SALARY, LATER, onCard);
+
+      expect(
+        credit.restoreState(
+          before,
+          { ruleStillExists: true, isCardAccount: true, savedCategoryKind: null },
+          LATER,
+        ),
+      ).toBe(true);
+      expect(credit.nature).toBe('expense');
+    });
+  });
+
+  describe('why a bulk categorization skips it', () => {
+    it('does not skip a credit on a card for either kind, and skips a purchase of the other kind', () => {
+      expect(refund().whyCannotTakeCategory(SALARY, onCard)).toBeNull();
+      expect(refund().whyCannotTakeCategory(FOOD, onCard)).toBeNull();
+      expect(refund({ amount: cents(-1500) }).whyCannotTakeCategory(SALARY, onCard)).toBe(
+        'category_kind_mismatch',
+      );
+      expect(
+        buildTestTransaction({ amount: cents(1500), nature: 'income' }).whyCannotTakeCategory(
+          FOOD,
+          onChecking,
+        ),
+      ).toBe('category_kind_mismatch');
+    });
+
+    it('skips a credit whose nature a link locks', () => {
+      expect(
+        refund().whyCannotTakeCategory(SALARY, { ...onCard, hasActiveOccurrenceLink: true }),
+      ).toBe('outside_account');
+    });
+  });
+
+  describe('the undo of an action that categorized it', () => {
+    it('gives the expense back when there was no category', () => {
+      const credit = refund();
+      const before = credit.previousState();
+      credit.assignCategory(SALARY, LATER, onCard);
+      credit.restoreState(
+        before,
+        { ruleStillExists: true, isCardAccount: true, savedCategoryKind: null },
+        LATER,
+      );
+
+      expect(credit).toMatchObject({ nature: 'expense', natureSetBy: 'system', categoryId: null });
+    });
+
+    it('gives the income back when the saved category was an income one', () => {
+      const credit = refund();
+      credit.assignCategory(SALARY, LATER, onCard);
+      const before = credit.previousState();
+      credit.assignCategory(FOOD, LATER, onCard);
+      credit.restoreState(
+        before,
+        { ruleStillExists: true, isCardAccount: true, savedCategoryKind: 'income' },
+        LATER,
+      );
+
+      expect(credit).toMatchObject({ nature: 'income', natureSetBy: 'user', categoryId: 'salary' });
+    });
+
+    it('leaves the nature alone when the caller did not read the kind of the saved category', () => {
+      const credit = refund();
+      credit.assignCategory(SALARY, LATER, onCard);
+      credit.restoreState(
+        credit.previousState(),
+        { ruleStillExists: true, isCardAccount: true },
+        LATER,
+      );
+
+      expect(credit.nature).toBe('income');
+    });
+  });
+});
+
 describe('Transaction.createBalanceAdjustment', () => {
   it('is outside the account, never zero, with the sign of the difference', () => {
     const adjustment = Transaction.createBalanceAdjustment(
@@ -963,6 +1422,37 @@ describe('Transaction.applyBankVersion (a edição sobrevive ao banco)', () => {
     expect(transaction.bank?.amount.cents).toBe(-1300);
     expect(transaction.bankChange).toBe(null);
     expect(transaction.isEdited()).toBe(false);
+  });
+
+  it('does not give the nature back of a card credit that Lucas made an income by category', () => {
+    const credit = buildTestBankTransaction({
+      accountId: 'card-1',
+      method: 'credit',
+      invoiceMonth: Month.of('2026-11'),
+      amount: cents(1500),
+      nature: 'expense',
+      bank: {
+        description: 'ESTORNO',
+        amount: cents(1500),
+        occurredOn: date('2026-11-05'),
+        counterparty: null,
+        status: 'posted',
+      },
+    });
+    credit.assignCategory(SALARY, LATER, { isCardAccount: true });
+    credit.applyBankVersion(
+      version({ description: 'ESTORNO LOJA', amount: cents(1600), counterparty: null }),
+      LATER,
+    );
+
+    expect(credit).toMatchObject({
+      nature: 'income',
+      natureSetBy: 'user',
+      categoryId: 'salary',
+      amount: cents(1600),
+    });
+    // And no detector of the import takes it over either: the nature is Lucas's.
+    expect(credit.canTakeDetectedNature()).toBe(false);
   });
 
   it('keeps what Lucas changed and records the change with before and after', () => {

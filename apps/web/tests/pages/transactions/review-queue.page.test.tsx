@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 
 import { server } from '#mocks/setup/server.util.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
+import { makeTransactionRecord } from '#mocks/state/seed/make-transaction-record.util.ts';
+import { CURRENT_MONTH } from '#mocks/support/dates/mock-clock.store.ts';
 import { renderApp } from '#tests/support/app/render-app.util.tsx';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
 
@@ -148,6 +150,148 @@ describe('ReviewQueuePage', () => {
     fireEvent.click(within(card).getByRole('button', { name: 'Outra' }));
 
     expect(await screen.findByRole('button', { name: 'Rotação entre contas' })).toBeInTheDocument();
+  });
+
+  describe('a credit on a card (a refund)', () => {
+    // The oldest of the month, so it is the one on the card.
+    function addRefund() {
+      const card = db.accounts.find((account) => account.creditCard);
+      if (!card) throw new Error('seed without a card');
+      const refund = makeTransactionRecord({
+        accountId: card.id,
+        method: 'credit',
+        description: 'ESTORNO LOJA TESTE',
+        amountCents: 5990,
+        occurredOn: `${CURRENT_MONTH}-01`,
+        nature: 'expense',
+        invoiceMonth: CURRENT_MONTH,
+      });
+      db.transactions.push(refund);
+
+      return refund;
+    }
+
+    it('offers "Abate gasto" first and "Conta como receita" after, with their lines', async () => {
+      addRefund();
+      const card = await openQueue();
+      await within(card).findByRole('heading', { name: 'ESTORNO LOJA TESTE' });
+
+      fireEvent.click(within(card).getByRole('button', { name: 'Outra' }));
+      const groups = await screen.findAllByRole('group', {
+        name: /^(Abate gasto|Conta como receita)$/,
+      });
+
+      expect(groups.map((group) => group.getAttribute('aria-label'))).toEqual([
+        'Abate gasto',
+        'Conta como receita',
+      ]);
+      expect(within(groups[0]!).getByRole('button', { name: 'Compras' })).toBeInTheDocument();
+      expect(within(groups[0]!).queryByRole('button', { name: 'Salário' })).not.toBeInTheDocument();
+      expect(within(groups[1]!).getByRole('button', { name: 'Salário' })).toBeInTheDocument();
+      expect(screen.getByText('O crédito reduz o gasto da categoria e a fatura.')).toBeVisible();
+      expect(
+        screen.getByText('O crédito vira receita do mês e também reduz a fatura.'),
+      ).toBeVisible();
+    });
+
+    it('saves it as income with a category of income, saying so on the card', async () => {
+      const refund = addRefund();
+      const card = await openQueue();
+      await within(card).findByRole('heading', { name: 'ESTORNO LOJA TESTE' });
+
+      fireEvent.click(within(card).getByRole('button', { name: 'Outra' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Salário' }));
+      expect(await within(card).findByText(/^Conta como receita: /)).toBeInTheDocument();
+      save();
+
+      await waitFor(() => expect(refund.nature).toBe('income'));
+      expect(db.categories.find((category) => category.id === refund.categoryId)?.name).toBe(
+        'Salário',
+      );
+    });
+
+    it('keeps it an expense with a category of expense', async () => {
+      const refund = addRefund();
+      const card = await openQueue();
+      await within(card).findByRole('heading', { name: 'ESTORNO LOJA TESTE' });
+
+      fireEvent.click(within(card).getByRole('button', { name: 'Outra' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Compras' }));
+      expect(await within(card).findByText(/^Abate gasto: /)).toBeInTheDocument();
+      save();
+
+      await waitFor(() => expect(refund.categoryId).not.toBeNull());
+      expect(refund.nature).toBe('expense');
+    });
+
+    // What Lucas chose by hand for the same description is the history the queue suggests from.
+    function addHistory(description: string, categoryName: string) {
+      const category = db.categories.find((entry) => entry.name === categoryName);
+      const account = db.accounts.find((entry) => !entry.creditCard);
+      if (!category || !account) throw new Error('seed without the category or an account');
+      db.transactions.push(
+        makeTransactionRecord({
+          accountId: account.id,
+          method: 'pix',
+          description,
+          amountCents: category.kind === 'income' ? 1000 : -1000,
+          occurredOn: `${CURRENT_MONTH}-02`,
+          categoryId: category.id,
+          categorySource: 'user',
+          nature: category.kind,
+        }),
+      );
+    }
+
+    it('never marks "Conta como receita" for one click: an income suggestion is not offered on a refund', async () => {
+      addRefund();
+      addHistory('ESTORNO LOJA TESTE', 'Salário');
+      const card = await openQueue();
+      await within(card).findByRole('heading', { name: 'ESTORNO LOJA TESTE' });
+
+      expect(within(card).queryByRole('button', { name: 'Salário' })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: SAVE_LABEL })).toBeDisabled();
+    });
+
+    it('marks "Abate gasto" when the history of the description is a category of expense', async () => {
+      addRefund();
+      addHistory('ESTORNO LOJA TESTE', 'Compras');
+      const card = await openQueue();
+      await within(card).findByRole('heading', { name: 'ESTORNO LOJA TESTE' });
+
+      expect(
+        await within(card).findByRole('button', { name: 'Compras', pressed: true }),
+      ).toBeInTheDocument();
+      expect(within(card).getByRole('group', { name: 'Categoria' })).toHaveAccessibleDescription(
+        /^Abate gasto: /,
+      );
+    });
+
+    it('keeps the groups for a refund on an archived card', async () => {
+      const refund = addRefund();
+      const account = db.accounts.find((entry) => entry.id === refund.accountId);
+      if (!account) throw new Error('seed without the card');
+      account.archivedAt = '2026-09-01T00:00:00.000Z';
+      const card = await openQueue();
+      await within(card).findByRole('heading', { name: 'ESTORNO LOJA TESTE' });
+
+      fireEvent.click(within(card).getByRole('button', { name: 'Outra' }));
+
+      expect(await screen.findByRole('group', { name: /^Abate gasto/ })).toBeInTheDocument();
+      expect(screen.getByRole('group', { name: 'Conta como receita' })).toHaveAccessibleDescription(
+        'O crédito vira receita do mês e também reduz a fatura.',
+      );
+    });
+
+    it('lists no groups for an ordinary transaction', async () => {
+      const card = await openQueue();
+
+      fireEvent.click(within(card).getByRole('button', { name: 'Outra' }));
+      await screen.findByRole('button', { name: 'Compras' });
+
+      expect(screen.queryByText('Abate gasto')).not.toBeInTheDocument();
+      expect(within(card).queryByText(/^Abate gasto: /)).not.toBeInTheDocument();
+    });
   });
 
   it('shows "Tudo revisado" when the queue is empty and goes back to the transactions', async () => {

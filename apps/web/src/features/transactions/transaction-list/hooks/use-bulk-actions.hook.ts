@@ -4,7 +4,9 @@ import { useState } from 'react';
 
 import type { TransactionListModel } from '#/features/transactions/transaction-list/transaction-list.model.ts';
 import type { TransactionLookups } from '#/shared/types/transactions/transaction-lookups.type.ts';
-import { buildCategoryOptions } from '#/features/transactions/utils/build-category-options.util.ts';
+import { getAcceptedCategoryKinds } from '#/domain/transactions/transaction/rules/get-accepted-category-kinds.rule.ts';
+import { getCommonCategoryKinds } from '#/domain/transactions/transaction/rules/get-common-category-kinds.rule.ts';
+import { buildCategoryOptionsForKinds } from '#/shared/utils/transactions/build-category-options-for-kinds.util.ts';
 import { countWord } from '#/shared/utils/text/count-word.util.ts';
 
 type BulkArgs = {
@@ -41,6 +43,18 @@ export function useBulkActions({
   const ids = [...selectedIds];
   const selected = transactions.filter((transaction) => selectedIds.has(transaction.id));
   const categories = [...lookups.categories.values()];
+  // Only what fits every selected transaction: a bulk categorization never offers a category some
+  // of them would refuse (a credit on a card takes both kinds; the rest, the kind of their nature).
+  const categorizable = selected.map((transaction) => ({
+    nature: transaction.nature,
+    amountCents: transaction.amountCents,
+    isCardAccount: lookups.accounts.get(transaction.accountId)?.type === 'credit_card',
+    isSplit: transaction.splits.length > 0,
+  }));
+  const kinds = getCommonCategoryKinds(categorizable);
+  // Why there is nothing to offer: no selected transaction takes a category at all, or the ones
+  // that do take different kinds.
+  const takesNone = categorizable.every((item) => getAcceptedCategoryKinds(item).length === 0);
 
   function close() {
     setPicker(null);
@@ -109,10 +123,9 @@ export function useBulkActions({
     tagId,
     setTagId,
     pending: model.bulkTransactions.isPending,
-    expenseCategories: buildCategoryOptions(categories, 'expense'),
-    incomeCategories: buildCategoryOptions(categories, 'income'),
-    hasExpenses: selected.some((transaction) => transaction.amountCents < 0),
-    hasIncomes: selected.some((transaction) => transaction.amountCents > 0),
+    categories: buildCategoryOptionsForKinds(categories, kinds),
+    noCategoryReason:
+      kinds.length > 0 ? null : takesNone ? ('none-takes' as const) : ('mixed' as const),
     tags: [...lookups.tags.values()].filter((tag) => tag.archivedAt === null),
   };
 }

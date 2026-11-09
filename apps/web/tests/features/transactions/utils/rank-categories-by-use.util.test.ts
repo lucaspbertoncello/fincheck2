@@ -31,3 +31,23 @@ describe('rankCategoriesByUse', () => {
     ]);
   });
 });
+
+describe('rankCategoriesByUse with groups', () => {
+  const grouped = [
+    { id: 'a', name: 'Alimentação', icon: 'food' as const, group: 'Abate gasto' },
+    { id: 'b', name: 'Mercado', icon: 'cart' as const, group: 'Abate gasto' },
+    { id: 's', name: 'Salário', icon: 'cart' as const, group: 'Conta como receita' },
+    { id: 'r', name: 'Reembolso', icon: 'cart' as const, group: 'Conta como receita' },
+  ];
+
+  it('ranks inside each group and keeps the groups in the order they came', () => {
+    const ranked = rankCategoriesByUse(grouped, [
+      { categoryId: 'r' },
+      { categoryId: 'r' },
+      { categoryId: 's' },
+      { categoryId: 'b' },
+    ]);
+
+    expect(ranked.map((category) => category.id)).toEqual(['b', 'a', 'r', 's']);
+  });
+});

@@ -15,7 +15,8 @@ export function useReviewQueueModel(month: string) {
     categories: useCategories({ status: 'active' }),
     tags: useTags(),
     createTag: useCreateTag(),
-    accounts: useAccounts(),
+    // A credit on an archived card is still a credit on a card: it needs the account to be read so.
+    accounts: useAccounts({ includeArchived: true }),
   };
 }
 

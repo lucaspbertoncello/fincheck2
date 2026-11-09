@@ -147,9 +147,11 @@ export class UpdateTransactionUseCase {
     }
   }
 
-  // The category that is a transfer (`isTransfer`) changes the nature with it, so what the nature
-  // depends on (the card, the links) is loaded when it is in play: choosing that category, or
-  // leaving it (taking it off or replacing it), which also cuts the other leg on both sides.
+  // The category that is a transfer (`isTransfer`) changes the nature with it, and so does the
+  // category of a credit on a card (a positive value on a card account: an income category makes it
+  // income, taking it off or an expense category gives the expense back), so what the nature depends
+  // on (the card, the links) is loaded when it is in play: choosing that category, or leaving it
+  // (taking it off or replacing it), which also cuts the other leg on both sides.
   private async assignCategory(
     transaction: Transaction,
     category: Transaction.CategoryRef | null,
@@ -157,7 +159,8 @@ export class UpdateTransactionUseCase {
     executor: Kysely<Database>,
   ): Promise<void> {
     const leaving = transaction.isTransferByCategory() && category?.isTransfer !== true;
-    if (!leaving && category?.isTransfer !== true) {
+    // A negative value never changes nature by category, so the account does not matter there.
+    if (!leaving && category?.isTransfer !== true && transaction.amount.isNegative()) {
       transaction.assignCategory(category, now);
       return;
     }

@@ -3,7 +3,7 @@ import { INSTALLMENT_LIMITS } from '@fincheck/shared/transactions/installment-pl
 import { useToast } from '@fincheck/ui';
 import { useState } from 'react';
 
-import { buildCategoryOptions } from '#/features/transactions/utils/build-category-options.util.ts';
+import { buildCategoryOptions } from '#/shared/utils/transactions/build-category-options.util.ts';
 import { describeTransactionError } from '#/shared/utils/transactions/describe-transaction-error.util.ts';
 import { focusFirstInvalid } from '#/features/transactions/utils/focus-first-invalid.util.ts';
 import { getBusinessDate } from '#/shared/utils/date/get-business-date.util.ts';

@@ -287,6 +287,7 @@ export function TransactionListViewModel() {
           values: editing.values,
           onChange: editing.onChange,
           categories: editing.categories,
+          canBeIncome: editing.canBeIncome,
           transferCategories: editing.transferCategories,
           counterparts: editing.counterparts,
           tagPicker: editing.tagPicker,
@@ -340,8 +341,8 @@ export function TransactionListViewModel() {
     bulkPicker: {
       picker: bulk.picker,
       count: selection.selectedIds.size,
-      expenseCategories: bulk.hasExpenses ? rankCategoriesByUse(bulk.expenseCategories, items) : [],
-      incomeCategories: bulk.hasIncomes ? rankCategoriesByUse(bulk.incomeCategories, items) : [],
+      categories: rankCategoriesByUse(bulk.categories, items),
+      noCategoryReason: bulk.noCategoryReason,
       categoryId: bulk.categoryId,
       onCategoryChange: bulk.setCategoryId,
       tags: bulk.tags.map((tag) => ({

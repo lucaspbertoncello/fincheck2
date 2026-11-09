@@ -1,3 +1,4 @@
+import { findAccount } from '#mocks/accounts/account/find-account.util.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
 import { buildTransactionLinks } from '#mocks/transactions/transaction/build-transaction-links.util.ts';
 import { fail } from '#mocks/support/http/fail.util.ts';
@@ -33,9 +34,19 @@ export function assertNatureChange(
       'A transação está ligada a uma conta: desfaça o vínculo antes de mudar a natureza ou o valor.',
     );
   }
+  const isCard = Boolean(findAccount(database, tx.accountId).creditCard);
+  // Credit on a card is a refund, an expense with a positive value: never income by hand (the
+  // category of income is the way, `applyCardCreditNature`).
+  if (nature === 'income' && nature !== tx.nature && isCard) {
+    fail(400, 'VALIDATION_FAILED', 'Entrada fora do contrato', {
+      issues: [{ path: 'nature', message: 'Crédito no cartão nunca é receita.' }],
+    });
+  }
+  // On a card a positive expense is a refund, so `expense` always fits the sign there.
   if (
     nature !== tx.nature &&
-    ((nature === 'expense' && tx.amountCents > 0) || (nature === 'income' && tx.amountCents < 0))
+    ((nature === 'expense' && tx.amountCents > 0 && !isCard) ||
+      (nature === 'income' && tx.amountCents < 0))
   ) {
     fail(422, 'TRANSACTION_NATURE_SIGN_MISMATCH', 'Natureza e sinal do valor não combinam');
   }

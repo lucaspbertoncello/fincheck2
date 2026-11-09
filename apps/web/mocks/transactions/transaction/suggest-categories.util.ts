@@ -1,6 +1,7 @@
 import { normalizeDescription } from '@fincheck/shared/common/text/normalize-description.util.ts';
 import { normalizeText } from '@fincheck/shared/common/text/normalize-text.util.ts';
 
+import { findAccount } from '#mocks/accounts/account/find-account.util.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
 
 interface CategorySuggestion {
@@ -19,9 +20,16 @@ export function suggestCategories(
 ): CategorySuggestion[] {
   const kind = tx.amountCents < 0 ? 'expense' : 'income';
   const amount = Math.abs(tx.amountCents);
+  // A credit on a card takes either kind, "Abate gasto" (expense) first.
+  const isCardCredit =
+    tx.amountCents > 0 && Boolean(findAccount(database, tx.accountId).creditCard);
+  const kinds = isCardCredit ? (['expense', 'income'] as const) : ([kind] as const);
   const isUsable = (categoryId: string) =>
     database.categories.some(
-      (category) => category.id === categoryId && category.kind === kind && !category.archivedAt,
+      (category) =>
+        category.id === categoryId &&
+        kinds.some((one) => one === category.kind) &&
+        !category.archivedAt,
     );
 
   const description = normalizeDescription(tx.description);
@@ -45,12 +53,21 @@ export function suggestCategories(
     if (!rule.enabled || !rule.categoryId || !rule.descriptionContains) continue;
     if (rule.counterpartyContains || rule.accountId) continue;
     if (!description.includes(normalizeText(rule.descriptionContains))) continue;
-    if (rule.kind && rule.kind !== kind) continue;
+    if (rule.kind && !kinds.some((one) => one === rule.kind)) continue;
     if (rule.amountMinCents != null && amount < rule.amountMinCents) continue;
     if (rule.amountMaxCents != null && amount > rule.amountMaxCents) continue;
     if (!isUsable(rule.categoryId)) continue;
     if (suggestions.some((item) => item.categoryId === rule.categoryId)) continue;
     suggestions.push({ categoryId: rule.categoryId, reason: 'rule' });
+  }
+
+  const kindOf = (categoryId: string) =>
+    database.categories.find((category) => category.id === categoryId)?.kind;
+  if (isCardCredit) {
+    suggestions.sort(
+      (a, b) =>
+        Number(kindOf(a.categoryId) === 'income') - Number(kindOf(b.categoryId) === 'income'),
+    );
   }
 
   return suggestions.slice(0, 3);

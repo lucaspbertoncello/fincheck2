@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 import { ChoiceChip } from '#/components/chips/index.ts';
 import type { CategoryOption } from '#/components/transactions/category-option.type.ts';
 import {} from '#/components/forms/field-classes.constant.ts';
@@ -10,6 +12,8 @@ type CategoryChoicesProps = {
   /** Selected category id; null shows none selected ("Sem categoria"). */
   value: string | null;
   onChange: (categoryId: string) => void;
+  /** A line under the chips, linked to the group as its description. */
+  description?: string;
   error?: string;
   className?: string;
 };
@@ -20,11 +24,19 @@ export function CategoryChoices({
   categories,
   value,
   onChange,
+  description,
   error,
   className,
 }: CategoryChoicesProps) {
+  const descriptionId = useId();
+
   return (
-    <div role="group" aria-label={label} className={cx('flex flex-col gap-s8', className)}>
+    <div
+      role="group"
+      aria-label={label}
+      aria-describedby={description ? descriptionId : undefined}
+      className={cx('flex flex-col gap-s8', className)}
+    >
       <span className="text-label text-fg-secondary">{label}</span>
       <div className="flex flex-wrap gap-s8">
         {categories.map((category) => (
@@ -38,6 +50,11 @@ export function CategoryChoices({
           </ChoiceChip>
         ))}
       </div>
+      {description ? (
+        <p id={descriptionId} className="text-meta text-fg-secondary">
+          {description}
+        </p>
+      ) : null}
       <FieldErrorMessage error={error} gap="s8" inField={false} />
     </div>
   );

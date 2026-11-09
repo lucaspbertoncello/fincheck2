@@ -1,7 +1,7 @@
 import type { Category } from '@fincheck/shared/categories/category/category.type.ts';
 import { describe, expect, it } from 'vitest';
 
-import { buildCategoryOptions } from '#/features/transactions/utils/build-category-options.util.ts';
+import { buildCategoryOptions } from '#/shared/utils/transactions/build-category-options.util.ts';
 
 function category(overrides: Partial<Category.Dto>): Category.Dto {
   return {

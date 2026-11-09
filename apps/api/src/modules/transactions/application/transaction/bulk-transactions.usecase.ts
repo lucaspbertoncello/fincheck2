@@ -3,6 +3,7 @@ import type { TransactionBulk } from '@fincheck/shared/transactions/transaction-
 import type { Kysely } from 'kysely';
 
 import type { Database } from '#/database/database.type.ts';
+import type { TransactionAccountReader } from '#/modules/transactions/application/transaction/transaction-account-reader.interface.ts';
 import type { TransactionLinksReader } from '#/modules/transactions/application/transaction/transaction-links-reader.interface.ts';
 import type { TransactionReferenceResolver } from '#/modules/transactions/application/transaction/transaction-reference-resolver.service.ts';
 import type { Transaction } from '#/modules/transactions/domain/transaction/transaction.entity.ts';
@@ -18,6 +19,7 @@ import type { UnitOfWork } from '#/shared/unit-of-work/unit-of-work.interface.ts
 export class BulkTransactionsUseCase {
   private readonly transactions: TransactionRepository<Kysely<Database>>;
   private readonly references: TransactionReferenceResolver;
+  private readonly accounts: TransactionAccountReader;
   private readonly links: TransactionLinksReader | undefined;
   private readonly unitOfWork: UnitOfWork<Kysely<Database>>;
   private readonly clock: Clock;
@@ -25,12 +27,14 @@ export class BulkTransactionsUseCase {
   constructor(
     transactions: TransactionRepository<Kysely<Database>>,
     references: TransactionReferenceResolver,
+    accounts: TransactionAccountReader,
     links: TransactionLinksReader | undefined,
     unitOfWork: UnitOfWork<Kysely<Database>>,
     clock: Clock,
   ) {
     this.transactions = transactions;
     this.references = references;
+    this.accounts = accounts;
     this.links = links;
     this.unitOfWork = unitOfWork;
     this.clock = clock;
@@ -57,7 +61,7 @@ export class BulkTransactionsUseCase {
         }
 
         const state = transaction.previousState();
-        const reason = apply(transaction, now);
+        const reason = await apply(transaction, now);
         if (reason !== null) {
           skipped.push({ transactionId, reason });
           continue;
@@ -80,23 +84,28 @@ export class BulkTransactionsUseCase {
     (
       transaction: Transaction,
       now: string,
-    ) => TransactionBulk.Result['skipped'][number]['reason'] | null
+    ) => BulkTransactionsUseCase.Skip | null | Promise<BulkTransactionsUseCase.Skip | null>
   > {
     if (action.type === 'categorize') {
       const category = await this.references.category(action.categoryId, executor);
       if (category === null) throw new RangeError('The reader answered no category');
       if (category.isArchived) throw new TransactionCategoryArchivedError();
 
-      // The category that is a transfer changes the nature, which a link to an occurrence or a
-      // bill locks (a card or an invoice does not matter to choosing it): read them once.
-      const links =
-        category.isTransfer === true && this.links
-          ? await this.links.linksOf(transactionIds, executor)
-          : new Map<string, TransactionContract.LinksDto>();
+      // The category changes the nature of a transfer and of a credit on a card, which a link to an
+      // occurrence or a bill locks (an invoice link too): read them once. The card is read once
+      // per account.
+      const links = this.links
+        ? await this.links.linksOf(transactionIds, executor)
+        : new Map<string, TransactionContract.LinksDto>();
+      const cardByAccount = new Map<string, boolean>();
 
-      return (transaction, now) => {
+      return async (transaction, now) => {
+        if (!cardByAccount.has(transaction.accountId)) {
+          const account = await this.accounts.requireAccount(transaction.accountId, executor);
+          cardByAccount.set(transaction.accountId, account.isCard);
+        }
         const context = {
-          isCardAccount: false,
+          isCardAccount: cardByAccount.get(transaction.accountId) === true,
           hasActiveInvoiceLink: Boolean(links.get(transaction.id)?.invoicePayment),
           hasActiveOccurrenceLink: Boolean(links.get(transaction.id)?.occurrence),
           hasActiveBillLink: links.get(transaction.id)?.bill?.role === 'payment',
@@ -136,6 +145,7 @@ export class BulkTransactionsUseCase {
 }
 
 export namespace BulkTransactionsUseCase {
+  export type Skip = TransactionBulk.Result['skipped'][number]['reason'];
   export type Input = TransactionBulk.Request;
   export type Output = TransactionBulk.Result;
 }

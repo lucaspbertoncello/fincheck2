@@ -37,12 +37,51 @@ describe('GetOccurrenceTransactionsQuery', () => {
       accountId: account,
       amountCents: 42500,
       nature: 'income',
+      isOnCard: false,
       isSplit: false,
       counts: true,
       occurredOn: '2026-10-03',
       description: 'Pix recebido',
       counterparty: 'PAI',
     });
+  });
+
+  it('says whether a transaction is on the credit card (method credit)', async () => {
+    const pix = await insertTestExpense(database.db, account, { cents: 1, on: '2026-10-03' });
+    const card = await insertTestExpense(database.db, account, {
+      cents: 1,
+      on: '2026-10-03',
+      overrides: { method: 'credit' },
+    });
+
+    const found = await query.findMany([pix, card]);
+
+    expect([pix, card].map((id) => found.get(id)?.isOnCard)).toEqual([false, true]);
+  });
+
+  it('never offers a credit on the card as a candidate, of either kind, and keeps its purchases', async () => {
+    const credit = { method: 'credit', invoice_month: '2026-11' } as const;
+    await insertTestIncome(database.db, account, {
+      cents: 3000,
+      on: '2026-10-10',
+      overrides: credit,
+    });
+    await insertTestExpense(database.db, account, {
+      cents: -3000,
+      on: '2026-10-10',
+      overrides: credit,
+    });
+    const purchase = await insertTestExpense(database.db, account, {
+      cents: 5590,
+      on: '2026-10-10',
+      overrides: credit,
+    });
+    const criteria = { from: '2026-10-01', to: '2026-10-20' };
+
+    expect(await query.findCandidates({ kind: 'income', ...criteria })).toEqual([]);
+    expect(
+      (await query.findCandidates({ kind: 'expense', ...criteria })).map((item) => item.id),
+    ).toEqual([purchase]);
   });
 
   it('says whether a transaction counts: not when ignored, not when the bank removed it without an edit', async () => {

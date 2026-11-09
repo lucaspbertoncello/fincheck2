@@ -1,10 +1,4 @@
-import {
-  useToast,
-  type CategoryOption,
-  type IconName,
-  type ReviewChoice,
-  type TagPickerProps,
-} from '@fincheck/ui';
+import { useToast, type IconName, type ReviewChoice, type TagPickerProps } from '@fincheck/ui';
 import type { Tag } from '@fincheck/shared/categories/tag/tag.type.ts';
 import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
@@ -26,6 +20,7 @@ import {
   ReviewQueueView,
   type ReviewQueueViewProps,
 } from '#/features/review/review-queue/review-queue.view.tsx';
+import { getAcceptedCategoryKinds } from '#/domain/transactions/transaction/rules/get-accepted-category-kinds.rule.ts';
 import { getTransactionDirection } from '#/domain/transactions/transaction/rules/get-transaction-direction.rule.ts';
 import { buildAmbiguity } from '#/features/review/review-queue/utils/build-ambiguity.util.ts';
 import { buildTransactionDetail } from '#/features/review/review-queue/utils/build-transaction-detail.util.ts';
@@ -34,6 +29,9 @@ import { orderQueue } from '#/domain/transactions/review-queue/rules/order-queue
 import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 import { hasApiErrorCode } from '#/shared/api/api.error.ts';
 import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
+import { buildCategoryOptionsForKinds } from '#/shared/utils/transactions/build-category-options-for-kinds.util.ts';
+import { describeCreditCategoryGroup } from '#/shared/utils/transactions/describe-credit-category-group.util.ts';
+import { groupCategoryOptions } from '#/shared/utils/transactions/group-category-options.util.ts';
 
 const LISTED_IN_QUEUE = 8;
 const MIN_PATTERN_LENGTH = 2;
@@ -74,11 +72,23 @@ function ReviewVisit({ month }: { month: string }) {
   const currentItem = reopened?.item ?? ordered[0] ?? null;
   const transaction = currentItem?.transaction ?? null;
   const kind = transaction ? getTransactionDirection(transaction.amountCents) : 'expense';
+  // The kinds of category it takes: its sign's, or both for a credit on a card (a refund).
+  const categoryKinds = getAcceptedCategoryKinds({
+    nature: kind,
+    amountCents: transaction?.amountCents ?? 0,
+    isCardAccount:
+      accounts.find((account) => account.id === transaction?.accountId)?.type === 'credit_card',
+    isSplit: false,
+  });
 
+  // The suggestions the card shows and starts with. On a credit on a card only "Abate gasto" (a
+  // category of expense) is suggested: "Conta como receita" is never marked for one click.
+  const offeredSuggestions = (currentItem?.categorySuggestions ?? []).filter((suggestion) => {
+    const category = categoryById.get(suggestion.categoryId);
+    return category !== undefined && (categoryKinds.length < 2 || category.kind === 'expense');
+  });
   // What the card starts with; the draft only exists once the person changes something.
-  const suggestedCategoryId =
-    currentItem?.categorySuggestions.find((suggestion) => categoryById.has(suggestion.categoryId))
-      ?.categoryId ?? null;
+  const suggestedCategoryId = offeredSuggestions[0]?.categoryId ?? null;
   const initialCategoryId = reopened ? reopened.categoryId : suggestedCategoryId;
   const initialDraft: ReviewDraft | null =
     currentItem && transaction
@@ -109,8 +119,12 @@ function ReviewVisit({ month }: { month: string }) {
   const selectedId = activeDraft?.categoryId ?? null;
   const ruleOffered =
     reopened === null && selectedId !== null && pattern.length >= MIN_PATTERN_LENGTH;
+  // A rule has the kind of its category; on a credit on a card that is the one chosen, not the sign.
+  const ruleKind =
+    categoryKinds.length > 1 && selectedId ? (categoryById.get(selectedId)?.kind ?? kind) : kind;
   const { preview, suggestions } = useReviewRuleModel({
-    rulePreview: ruleOffered && selectedId ? { pattern, kind, categoryId: selectedId } : null,
+    rulePreview:
+      ruleOffered && selectedId ? { pattern, kind: ruleKind, categoryId: selectedId } : null,
     reviewedIds: [...reviewedIds],
   });
 
@@ -121,7 +135,7 @@ function ReviewVisit({ month }: { month: string }) {
       : null;
   }
 
-  const suggestionChoices = (currentItem?.categorySuggestions ?? []).flatMap(
+  const suggestionChoices = offeredSuggestions.flatMap(
     (suggestion) => choiceFor(suggestion.categoryId) ?? [],
   );
   const pickedElsewhere =
@@ -132,13 +146,17 @@ function ReviewVisit({ month }: { month: string }) {
   const selectedIcon = cardChoices.find((choice) => choice.id === selectedId)?.icon;
 
   // The category that is a transfer ("Rotação entre contas") fits both legs of a rotation.
-  const pickerCategories: CategoryOption[] = categories
-    .filter((category) => category.kind === kind || category.isTransfer)
-    .map((category) => ({
-      id: category.id,
-      name: category.name,
-      icon: mapCategoryIcon(category.icon),
-    }));
+  const pickerCategories = buildCategoryOptionsForKinds(categories, categoryKinds, {
+    withTransfer: true,
+  });
+  // On a credit on a card, a line says what the group of the chosen category does to it.
+  const categoryNote =
+    categoryKinds.length > 1
+      ? describeCreditCategoryGroup(
+          (pickerCategories.find((category) => category.id === selectedId) ?? pickerCategories[0])
+            ?.group,
+        )
+      : undefined;
 
   // Progress: what was saved in this visit against what is left. The server may still list a
   // transaction saved a moment ago, so those do not count as left.
@@ -171,7 +189,7 @@ function ReviewVisit({ month }: { month: string }) {
       item: currentItem,
       categoryId,
       tagIds: activeDraft.tagIds,
-      rule: ruleOffered && activeDraft.ruleEnabled ? { pattern, kind } : null,
+      rule: ruleOffered && activeDraft.ruleEnabled ? { pattern, kind: ruleKind } : null,
     });
     if (!entry) {
       setSaving(false);
@@ -272,6 +290,7 @@ function ReviewVisit({ month }: { month: string }) {
           selectedCategoryId: activeDraft.categoryId,
           onSelectCategory: (categoryId) => changeDraft({ categoryId }),
           onOtherCategory: () => setPickerOpen(true),
+          categoryNote,
           tagPicker,
           rule: ruleOffered
             ? {
@@ -351,7 +370,7 @@ function ReviewVisit({ month }: { month: string }) {
       categoryPicker={{
         isOpen: pickerOpen,
         onClose: () => setPickerOpen(false),
-        categories: pickerCategories,
+        groups: groupCategoryOptions(pickerCategories),
         value: selectedId,
         onSelect: (categoryId) => {
           changeDraft({ categoryId });

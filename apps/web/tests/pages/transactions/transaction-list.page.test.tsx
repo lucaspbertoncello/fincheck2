@@ -3,7 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it, vi } from 'vitest';
 
-import { CURRENT_MONTH } from '#mocks/support/dates/mock-clock.store.ts';
+import { makeTransactionRecord } from '#mocks/state/seed/make-transaction-record.util.ts';
+import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { server } from '#mocks/setup/server.util.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
 import { renderApp } from '#tests/support/app/render-app.util.tsx';
@@ -298,7 +299,9 @@ describe('TransactionListPage', () => {
     // The category is the transfer: no other leg is asked of someone who only changes the text.
     const description = within(dialog).getByRole('textbox', { name: 'Descrição' });
     await userEvent.setup().type(description, ' 2');
-    await userEvent.setup().click(within(dialog).getByRole('button', { name: 'Salvar' }));
+    await userEvent
+      .setup()
+      .click(within(dialog).getByRole('button', { name: 'Salvar', hidden: true }));
     await waitFor(() => expect(window.location.search).not.toContain('edit='), LONG_WAIT);
     expect(cinema).toMatchObject({ nature: 'transfer', categoryId: rotation.id });
   });
@@ -384,6 +387,273 @@ describe('TransactionListPage', () => {
     await waitFor(() =>
       expect(screen.getAllByText('Para revisar').length).toBeGreaterThanOrEqual(2),
     );
+  });
+
+  describe('a credit on a card (a refund)', () => {
+    function addCardTransaction(description: string, amountCents: number) {
+      const card = db.accounts.find((account) => account.creditCard);
+      if (!card) throw new Error('seed without a card');
+      const record = makeTransactionRecord({
+        accountId: card.id,
+        method: 'credit',
+        description,
+        amountCents,
+        occurredOn: TODAY,
+        nature: 'expense',
+        invoiceMonth: CURRENT_MONTH,
+      });
+      db.transactions.push(record);
+
+      return record;
+    }
+
+    // The bank sends a refund as an expense with a positive value.
+    const addRefund = () => addCardTransaction('ESTORNO LOJA TESTE', 5990);
+
+    // The search list stays open after the pick in jsdom (it hides the footer from the roles), so
+    // the button the test presses next is asked with `hidden`.
+    async function pickFromSearch(dialog: HTMLElement, search: string, option: string) {
+      const user = userEvent.setup();
+      await user.click(within(dialog).getByRole('button', { name: 'Outras…' }));
+      await user.type(
+        await screen.findByRole('combobox', { name: 'Buscar outra categoria' }),
+        search,
+      );
+      await user.click(await screen.findByRole('option', { name: option }));
+    }
+
+    // The search lists the categories of expense and none of income.
+    async function expectOnlyExpenseCategories(dialog: HTMLElement) {
+      const user = userEvent.setup();
+      await user.click(within(dialog).getByRole('button', { name: 'Outras…' }));
+      await user.click(await screen.findByRole('combobox', { name: 'Buscar outra categoria' }));
+      await user.keyboard('{ArrowDown}');
+      expect(await screen.findByRole('option', { name: 'Lazer' })).toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: 'Salário' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('group', { name: /^Conta como receita/ })).not.toBeInTheDocument();
+    }
+
+    it('abates the spending with a category of expense and stays an expense', async () => {
+      const refund = addRefund();
+      renderApp(PAGE);
+      await openRowMenu(refund.description, 'Editar');
+      const dialog = await screen.findByRole('dialog', { name: 'Editar transação' });
+
+      // The shortcuts are the expense group; its line says what it does to the credit.
+      expect(within(dialog).getByText(/^Abate gasto: /)).toBeInTheDocument();
+      await pickFromSearch(dialog, 'Laz', 'Lazer');
+      await userEvent
+        .setup()
+        .click(within(dialog).getByRole('button', { name: 'Salvar', hidden: true }));
+
+      expect(
+        await screen.findByText(/ESTORNO LOJA TESTE agora está em Lazer/, undefined, LONG_WAIT),
+      ).toBeInTheDocument();
+      expect(refund.nature).toBe('expense');
+      expect(db.categories.find((category) => category.id === refund.categoryId)?.name).toBe(
+        'Lazer',
+      );
+    });
+
+    it('counts as income with a category of income and the edit shows it as Receita', async () => {
+      const refund = addRefund();
+      renderApp(PAGE);
+      await openRowMenu(refund.description, 'Editar');
+      const dialog = await screen.findByRole('dialog', { name: 'Editar transação' });
+
+      await pickFromSearch(dialog, 'Salár', 'Salário');
+      expect(within(dialog).getByText(/^Conta como receita: /)).toBeInTheDocument();
+      await userEvent
+        .setup()
+        .click(within(dialog).getByRole('button', { name: 'Salvar', hidden: true }));
+
+      expect(
+        await screen.findByText(/ESTORNO LOJA TESTE agora está em Salário/, undefined, LONG_WAIT),
+      ).toBeInTheDocument();
+      expect(refund.nature).toBe('income');
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await openRowMenu(refund.description, 'Editar');
+      const reopened = await screen.findByRole('dialog', { name: 'Editar transação' });
+      await waitFor(() =>
+        expect(within(reopened).getByRole('radio', { name: 'Receita' })).toBeChecked(),
+      );
+    });
+
+    it('does not offer Receita as the type of a transaction on a card (the API refuses it)', async () => {
+      const refund = addRefund();
+      renderApp(PAGE);
+      await openRowMenu(refund.description, 'Editar');
+      const dialog = await screen.findByRole('dialog', { name: 'Editar transação' });
+
+      const types = within(dialog).getByRole('radiogroup', { name: 'Tipo da transação' });
+      expect(
+        within(types)
+          .getAllByRole('radio')
+          .map((radio) => radio.textContent),
+      ).toEqual(['Despesa', 'Transferência']);
+    });
+
+    it('still offers Receita on a transaction of an ordinary account', async () => {
+      renderApp(PAGE);
+      await openRowMenu('COMPRA DEBITO ELETROPECAS', 'Editar');
+      const dialog = await screen.findByRole('dialog', { name: 'Editar transação' });
+
+      expect(within(dialog).getByRole('radio', { name: 'Receita' })).toBeInTheDocument();
+    });
+
+    it('keeps showing Receita on a credit that is income by its category, and Despesa lets go of the category', async () => {
+      const refund = addRefund();
+      const salary = db.categories.find((category) => category.name === 'Salário');
+      if (!salary) throw new Error('seed without Salário');
+      Object.assign(refund, { nature: 'income', categoryId: salary.id, categorySource: 'user' });
+      renderApp(PAGE);
+      await openRowMenu(refund.description, 'Editar');
+      const dialog = await screen.findByRole('dialog', { name: 'Editar transação' });
+
+      expect(within(dialog).getByRole('radio', { name: 'Receita' })).toBeChecked();
+      await userEvent.setup().click(within(dialog).getByRole('radio', { name: 'Despesa' }));
+      // The category that made it income goes with it.
+      expect(within(dialog).queryByRole('button', { name: 'Salário', pressed: true })).toBeNull();
+      await userEvent.setup().click(within(dialog).getByRole('button', { name: 'Salvar' }));
+
+      await waitFor(() => expect(refund.nature).toBe('expense'), LONG_WAIT);
+      expect(refund.categoryId).toBeNull();
+    });
+
+    it('offers the parts of a split refund the categories of its nature (expense), not of its sign', async () => {
+      const refund = addRefund();
+      const user = userEvent.setup();
+      renderApp(PAGE);
+      await openRowMenu(refund.description, 'Dividir');
+      const dialog = await screen.findByRole('dialog', { name: 'Dividir transação' });
+
+      await user.click(within(dialog).getByRole('combobox', { name: 'Categoria da parte 1' }));
+      await user.keyboard('{ArrowDown}');
+
+      expect(await screen.findByRole('option', { name: 'Lazer' })).toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: 'Salário' })).not.toBeInTheDocument();
+    });
+
+    it('says why nothing is offered when no selected transaction takes a category', async () => {
+      const refund = addRefund();
+      refund.nature = 'transfer';
+      const user = userEvent.setup();
+      renderApp(PAGE);
+      await screen.findByText(refund.description, undefined, LONG_WAIT);
+
+      await user.click(screen.getByRole('button', { name: 'Selecionar' }));
+      await user.click(
+        await screen.findByRole('checkbox', { name: `Selecionar ${refund.description}` }),
+      );
+      await user.click(screen.getByRole('button', { name: 'Categorizar' }));
+      const dialog = await screen.findByRole('dialog', { name: 'Categorizar' });
+
+      expect(within(dialog).getByText(/Nenhuma das transações selecionadas aceita categoria/));
+      expect(within(dialog).queryByText(/despesas e receitas não dividem/)).not.toBeInTheDocument();
+    });
+
+    it('says the mixed case apart: expenses and incomes share no category', async () => {
+      const user = userEvent.setup();
+      renderApp(PAGE);
+      await screen.findByText('CINEMARK', undefined, LONG_WAIT);
+      const income = db.transactions.find(
+        (tx) =>
+          tx.nature === 'income' &&
+          tx.splits.length === 0 &&
+          tx.occurredOn.startsWith(CURRENT_MONTH),
+      );
+      if (!income) throw new Error('seed without an income this month');
+
+      await user.click(screen.getByRole('button', { name: 'Selecionar' }));
+      await user.click(
+        (await screen.findAllByRole('checkbox', { name: `Selecionar ${income.description}` }))[0]!,
+      );
+      await user.click(
+        screen.getByRole('checkbox', { name: 'Selecionar COMPRA DEBITO ELETROPECAS' }),
+      );
+      await user.click(screen.getByRole('button', { name: 'Categorizar' }));
+      const dialog = await screen.findByRole('dialog', { name: 'Categorizar' });
+
+      expect(within(dialog).getByText(/despesas e receitas não dividem categoria/)).toBeVisible();
+    });
+
+    it('links the group line to the field, and puts the rotation in a group of its own with no line', async () => {
+      const refund = addRefund();
+      const user = userEvent.setup();
+      renderApp(PAGE);
+      await openRowMenu(refund.description, 'Editar');
+      const dialog = await screen.findByRole('dialog', { name: 'Editar transação' });
+
+      expect(within(dialog).getByRole('group', { name: 'Categoria' })).toHaveAccessibleDescription(
+        /^Abate gasto: /,
+      );
+      await user.click(within(dialog).getByRole('button', { name: 'Outras…' }));
+      await user.click(await screen.findByRole('combobox', { name: 'Buscar outra categoria' }));
+      await user.keyboard('{ArrowDown}');
+      await screen.findAllByRole('option');
+
+      const abate = screen.getByRole('group', { name: /^Abate gasto/ });
+      expect(abate).toHaveAccessibleName(
+        /^Abate gasto\s*O crédito reduz o gasto da categoria e a fatura\.$/,
+      );
+      expect(within(abate).queryByRole('option', { name: /Rotação entre contas/ })).toBeNull();
+      const transfer = screen.getByRole('group', { name: 'Transferência' });
+      expect(within(transfer).getByRole('option', { name: /Rotação entre contas/ })).toBeVisible();
+      expect(transfer).toHaveAccessibleName('Transferência');
+    });
+
+    it('offers a debit on a card only the categories of expense: no groups, none that would fail', async () => {
+      const debit = addCardTransaction('COMPRA LOJA TESTE', -5990);
+      renderApp(PAGE);
+      await openRowMenu(debit.description, 'Editar');
+      const dialog = await screen.findByRole('dialog', { name: 'Editar transação' });
+
+      expect(within(dialog).queryByText(/^Abate gasto: /)).not.toBeInTheDocument();
+      await expectOnlyExpenseCategories(dialog);
+    });
+
+    it('categorizes a selection of refunds in bulk with a category of income', async () => {
+      const refund = addRefund();
+      const user = userEvent.setup();
+      renderApp(PAGE);
+      await screen.findByText(refund.description, undefined, LONG_WAIT);
+
+      await user.click(screen.getByRole('button', { name: 'Selecionar' }));
+      await user.click(
+        await screen.findByRole('checkbox', { name: `Selecionar ${refund.description}` }),
+      );
+      await user.click(screen.getByRole('button', { name: 'Categorizar' }));
+      const dialog = await screen.findByRole('dialog', { name: 'Categorizar' });
+      expect(within(dialog).getByText(/^Abate gasto: /)).toBeInTheDocument();
+      await pickFromSearch(dialog, 'Salár', 'Salário');
+      await user.click(within(dialog).getByRole('button', { name: 'Aplicar', hidden: true }));
+
+      expect(
+        await screen.findByText(/1 transação foi para Salário/, undefined, LONG_WAIT),
+      ).toBeInTheDocument();
+      expect(refund.nature).toBe('income');
+    });
+
+    it('offers only the kind that fits all when the selection mixes the refund with a debit', async () => {
+      const refund = addRefund();
+      const user = userEvent.setup();
+      renderApp(PAGE);
+      await screen.findByText(refund.description, undefined, LONG_WAIT);
+
+      await user.click(screen.getByRole('button', { name: 'Selecionar' }));
+      await user.click(
+        await screen.findByRole('checkbox', { name: `Selecionar ${refund.description}` }),
+      );
+      await user.click(
+        screen.getByRole('checkbox', { name: 'Selecionar COMPRA DEBITO ELETROPECAS' }),
+      );
+      await user.click(screen.getByRole('button', { name: 'Categorizar' }));
+      const dialog = await screen.findByRole('dialog', { name: 'Categorizar' });
+
+      expect(within(dialog).queryByText(/^Abate gasto: /)).not.toBeInTheDocument();
+      await expectOnlyExpenseCategories(dialog);
+    });
   });
 
   it('switches to "Por categoria" and opens a category on the list', async () => {

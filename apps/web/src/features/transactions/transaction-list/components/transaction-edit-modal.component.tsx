@@ -36,7 +36,7 @@ function kindOf(nature: TransactionNature, direction: AmountKind): AmountKind {
 
 /**
  * "Editar transação": the same modal as "Nova transação" (form-modal pattern), with the values of
- * the transaction. Nature (Despesa | Receita | Transferência, R6) is a full-width row above the two columns, so four options still fit on one line; a
+ * the transaction. Nature (Despesa | Receita | Transferência, R6) is a full-width row above the two columns, so four options still fit on one line ("Receita" is left out on a card, where the API never makes income by hand, unless it already is one); a
  * transfer asks for its other leg instead of a category (one that is a transfer by its category,
  * "Rotação entre contas", shows that category too, to change or take off, and keeps its tags). Tags
  * wait in "Mais opções" and are the ones of the chosen category (or of the parts of a split), the bank's
@@ -48,7 +48,10 @@ export function TransactionEditModal({ editor }: TransactionEditModalProps) {
   const patch = (changes: Partial<TransactionEditValues>) =>
     editor.onChange({ ...values, ...changes });
   const isTransfer = values.nature === 'transfer';
-  const natures = values.nature === 'out_of_account' ? [...NATURES, OUT_OF_ACCOUNT] : NATURES;
+  const offered = editor.canBeIncome
+    ? NATURES
+    : NATURES.filter((nature) => nature.key !== 'income');
+  const natures = values.nature === 'out_of_account' ? [...offered, OUT_OF_ACCOUNT] : offered;
 
   return (
     <FormModal
