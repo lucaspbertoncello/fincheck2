@@ -9,9 +9,11 @@ import { createLocalTokenMiddleware } from '#/main/http/middlewares/local-token.
 import { createCategoriesModule } from '#/main/http/create-categories-module.util.ts';
 import { composeTransactionLinksReaders } from '#/main/http/compose-transaction-links-readers.util.ts';
 import { createInvoicesModule } from '#/main/http/create-invoices-module.util.ts';
+import { createProfileModule } from '#/main/http/create-profile-module.util.ts';
 import { createRecurrencesModule } from '#/main/http/create-recurrences-module.util.ts';
 import { createTransactionsCategoryPorts } from '#/main/http/create-transactions-category-ports.util.ts';
 import { createTransactionsInvoicePorts } from '#/main/http/create-transactions-invoice-ports.util.ts';
+import { createTransactionsProfilePorts } from '#/main/http/create-transactions-profile-ports.util.ts';
 import { createTransactionsRecurrencePorts } from '#/main/http/create-transactions-recurrence-ports.util.ts';
 import { createTransactionsModule } from '#/main/http/create-transactions-module.util.ts';
 import { AccountPresenter } from '#/modules/accounts/application/account/account-presenter.service.ts';
@@ -124,6 +126,13 @@ export function createAppParts({
       recurrenceCandidates: recurrences.transactionReaders.recurrenceCandidates,
     },
   });
+  const profile = createProfileModule({
+    db,
+    unitOfWork,
+    clock,
+    incomeSources: recurrences.profileReaders.incomeSources,
+    ...createTransactionsProfilePorts({ db }),
+  });
   // bulkRoute exists when the readers of categories are plugged in, which they are just above.
   // Failing to start is better than a silent 404 on POST /transactions/bulk.
   if (transactions.bulkRoute === undefined) {
@@ -222,7 +231,8 @@ export function createAppParts({
     .route('/', transactions.bulkRoute)
     .route('/', transactions.installmentPlanRoute)
     .route('/', invoices.routes)
-    .route('/', recurrences.routes);
+    .route('/', recurrences.routes)
+    .route('/', profile.routes);
 
   return { app, ensureOccurrences: recurrences.ensureOccurrences };
 }

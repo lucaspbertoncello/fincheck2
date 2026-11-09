@@ -218,9 +218,10 @@ packages/ui/
 | Contexto       | Assuntos                                                                                                      |
 | -------------- | ------------------------------------------------------------------------------------------------------------- |
 | `accounts`     | `account` · `credit-card` · `wallet` (carteira manual) · `institution` (bancos pré-cadastrados)              |
-| `transactions` | `transaction` · `installment-plan` (compra parcelada) · `account-balance` e `account-deletion` (o que `accounts` pede) · `card-invoice` e `invoice-payment` (o que `invoices` pede) · `occurrence-payment` e `subscription-charge` (o que `recurrences` pede) · `category-rule-history` e `category-usage` (o que `categories` pede). Ainda sem arquivo: `transfer`, `friend-debt`, `provenance` |
+| `transactions` | `transaction` · `installment-plan` (compra parcelada) · `account-balance` e `account-deletion` (o que `accounts` pede) · `card-invoice` e `invoice-payment` (o que `invoices` pede) · `occurrence-payment` e `subscription-charge` (o que `recurrences` pede) · `category-rule-history` e `category-usage` (o que `categories` pede) · `highlight` (o que `profile` pede: linhas de gasto e maior Pix). Ainda sem arquivo: `transfer`, `friend-debt`, `provenance` |
 | `invoices`     | `invoice` (competência e caixa, fechamento) · `invoice-payment`                                               |
-| `recurrences`  | `recurrence` · `occurrence` · `occurrence-payment` · `matching` · `subscription` (o dia útil e o feriado moram em `shared/calendar`) |
+| `recurrences`  | `recurrence` (inclui `list-income-sources`, o que `profile` pede) · `occurrence` · `occurrence-payment` · `matching` · `subscription` (o dia útil e o feriado moram em `shared/calendar`) |
+| `profile`      | `profile` (nome, iniciais, avatar; a renda vem de `recurrences`) · `highlight` (as seis curiosidades) |
 | `bills`        | `bill` (contas a pagar e a receber) · `settlement` (baixa)                                                    |
 | `categories`   | `category` · `tag` · `rule` (regra de categorização) · `suggestion`                                           |
 | `dashboard`    | `summary` · `projection` (projeção do mês) · `month-comparison` · `free-balance` (o quanto ainda pode gastar) |

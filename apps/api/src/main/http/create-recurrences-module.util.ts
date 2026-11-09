@@ -29,6 +29,7 @@ import { GetRecurrenceSummaryQuery } from '#/modules/recurrences/application/rec
 import { GetRecurrenceQuery } from '#/modules/recurrences/application/recurrence/get-recurrence.query.ts';
 import { ListRecurrencesQuery } from '#/modules/recurrences/application/recurrence/list-recurrences.query.ts';
 import { PauseRecurrenceUseCase } from '#/modules/recurrences/application/recurrence/pause-recurrence.usecase.ts';
+import { ListIncomeSourcesQuery } from '#/modules/recurrences/application/recurrence/list-income-sources.query.ts';
 import { PreviewRecurrenceQuery } from '#/modules/recurrences/application/recurrence/preview-recurrence.query.ts';
 import { RecurrenceActivator } from '#/modules/recurrences/application/recurrence/recurrence-activator.service.ts';
 import { RecurrenceAmountUpdater } from '#/modules/recurrences/application/recurrence/recurrence-amount-updater.service.ts';
@@ -275,6 +276,10 @@ export function createRecurrencesModule(deps: {
     invoiceReaders: {
       expectations: new GetOccurrenceExpectationsQuery(db, occurrences, builder),
       linkedTransactions: new FindOccurrenceLinkedTransactionsQuery(occurrences),
+    },
+    // The reader `profile` declares and `recurrences` fulfils.
+    profileReaders: {
+      incomeSources: new ListIncomeSourcesQuery(recurrences, calendar, clock),
     },
   };
 }
