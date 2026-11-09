@@ -81,29 +81,32 @@ export function CategoryPageView(props: CategoryPageViewProps) {
         kind={props.kind}
         icon={props.icon}
         archived={props.archived}
+        isTransfer={props.isTransfer}
         status={props.figuresStatus}
         figures={props.figures}
         onEdit={props.onEdit}
         onRetry={props.onRetry}
       />
 
-      <Section title="Últimos 12 meses">
-        {props.trendStatus === 'ready' && props.trend ? (
-          <MonthBarsChart
-            title={props.trend.title}
-            valueLabel={props.trend.valueLabel}
-            bars={props.trend.bars}
-            highlightKey={props.trend.highlightKey}
-            emptyMessage={props.trend.emptyMessage}
-          />
-        ) : null}
-        {props.trendStatus === 'loading' ? (
-          <div aria-hidden="true" className="skeleton-pulse h-50 w-full rounded-panel bg-track" />
-        ) : null}
-        {props.trendStatus === 'error' ? (
-          <SectionError what="as barras" onRetry={props.onRetry} />
-        ) : null}
-      </Section>
+      {props.isTransfer ? null : (
+        <Section title="Últimos 12 meses">
+          {props.trendStatus === 'ready' && props.trend ? (
+            <MonthBarsChart
+              title={props.trend.title}
+              valueLabel={props.trend.valueLabel}
+              bars={props.trend.bars}
+              highlightKey={props.trend.highlightKey}
+              emptyMessage={props.trend.emptyMessage}
+            />
+          ) : null}
+          {props.trendStatus === 'loading' ? (
+            <div aria-hidden="true" className="skeleton-pulse h-50 w-full rounded-panel bg-track" />
+          ) : null}
+          {props.trendStatus === 'error' ? (
+            <SectionError what="as barras" onRetry={props.onRetry} />
+          ) : null}
+        </Section>
+      )}
 
       {props.listStatus === 'loading' ? <ContentSkeleton variant="list" /> : null}
       {props.listStatus === 'error' ? <LoadFailed onRetry={props.onRetry} /> : null}

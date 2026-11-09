@@ -38,6 +38,8 @@ type CategorySummaryProps = {
   kind: CategoryPageKind;
   icon: IconName;
   archived: boolean;
+  /** Does not count as spending: the total says so instead of a value. */
+  isTransfer: boolean;
   status: PartStatus;
   figures: CategoryFiguresView | null;
   onEdit: () => void;
@@ -46,13 +48,15 @@ type CategorySummaryProps = {
 
 /**
  * The top of the category page: its icon and "Editar", then the total of the period, the number of
- * transactions and the average per month. Each figure has a fixed height, so the skeleton, a dash
+ * transactions and the average per month (a category that is a transfer has neither a value nor
+ * an average: it does not count as spending). Each figure has a fixed height, so the skeleton, a dash
  * and the number are the same box.
  */
 export function CategorySummary({
   kind,
   icon,
   archived,
+  isTransfer,
   status,
   figures,
   onEdit,
@@ -80,7 +84,11 @@ export function CategorySummary({
                 figures?.totalLabel ?? (isExpense ? 'Gasto no período' : 'Recebido no período')
               }
             >
-              {figures ? (
+              {isTransfer ? (
+                <span className="text-body font-medium text-fg-secondary">
+                  Não conta como gasto
+                </span>
+              ) : figures ? (
                 <Money
                   cents={figures.totalCents}
                   sign="none"
@@ -101,22 +109,24 @@ export function CategorySummary({
               <Skeleton className="h-6 w-12" />
             )}
           </Figure>
-          <Figure icon="calendar" label="Média por mês">
-            {figures ? (
-              figures.monthlyAverageCents === null ? (
-                DASH
+          {isTransfer ? null : (
+            <Figure icon="calendar" label="Média por mês">
+              {figures ? (
+                figures.monthlyAverageCents === null ? (
+                  DASH
+                ) : (
+                  <Money
+                    cents={figures.monthlyAverageCents}
+                    sign="none"
+                    tone={isExpense ? 'expense' : 'income'}
+                    className="text-money-md"
+                  />
+                )
               ) : (
-                <Money
-                  cents={figures.monthlyAverageCents}
-                  sign="none"
-                  tone={isExpense ? 'expense' : 'income'}
-                  className="text-money-md"
-                />
-              )
-            ) : (
-              <Skeleton className="h-6 w-28" />
-            )}
-          </Figure>
+                <Skeleton className="h-6 w-28" />
+              )}
+            </Figure>
+          )}
         </div>
       )}
     </section>

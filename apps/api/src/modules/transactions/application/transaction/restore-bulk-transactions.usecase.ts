@@ -2,6 +2,7 @@ import type { TransactionBulk } from '@fincheck/shared/transactions/transaction-
 import type { Kysely } from 'kysely';
 
 import type { Database } from '#/database/database.type.ts';
+import type { TransactionAccountReader } from '#/modules/transactions/application/transaction/transaction-account-reader.interface.ts';
 import type { TransactionReferenceResolver } from '#/modules/transactions/application/transaction/transaction-reference-resolver.service.ts';
 import { RequestValidationError } from '#/shared/errors/request-validation.error.ts';
 import type { CategoryRuleReader } from '#/modules/transactions/application/transaction/category-rule-reader.interface.ts';
@@ -17,6 +18,7 @@ export class RestoreBulkTransactionsUseCase {
   private readonly transactions: TransactionRepository<Kysely<Database>>;
   private readonly rules: CategoryRuleReader;
   private readonly references: TransactionReferenceResolver;
+  private readonly accounts: TransactionAccountReader;
   private readonly unitOfWork: UnitOfWork<Kysely<Database>>;
   private readonly clock: Clock;
 
@@ -24,12 +26,14 @@ export class RestoreBulkTransactionsUseCase {
     transactions: TransactionRepository<Kysely<Database>>,
     rules: CategoryRuleReader,
     references: TransactionReferenceResolver,
+    accounts: TransactionAccountReader,
     unitOfWork: UnitOfWork<Kysely<Database>>,
     clock: Clock,
   ) {
     this.transactions = transactions;
     this.rules = rules;
     this.references = references;
+    this.accounts = accounts;
     this.unitOfWork = unitOfWork;
     this.clock = clock;
   }
@@ -58,9 +62,17 @@ export class RestoreBulkTransactionsUseCase {
         const transaction = found.get(item.transactionId);
         if (!transaction) continue;
 
+        // What the action made a transfer (by the category that is a transfer) goes back by the
+        // sign, and a card turns a positive value into an expense: the account is then needed.
+        const isCardAccount = transaction.isTransferByCategory()
+          ? (await this.accounts.requireAccount(transaction.accountId, executor)).isCard
+          : false;
         transaction.restoreState(
           item,
-          { ruleStillExists: item.categoryRuleId !== null && aliveRules.has(item.categoryRuleId) },
+          {
+            ruleStillExists: item.categoryRuleId !== null && aliveRules.has(item.categoryRuleId),
+            isCardAccount,
+          },
           now,
         );
         await this.transactions.save(transaction, executor);

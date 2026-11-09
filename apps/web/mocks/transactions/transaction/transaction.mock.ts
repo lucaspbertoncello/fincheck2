@@ -38,6 +38,10 @@ import type { MockState } from '#mocks/state/mock-state.type.ts';
 import { NOW_ISO } from '#mocks/support/dates/mock-clock.store.ts';
 import { fail } from '#mocks/support/http/fail.util.ts';
 import { handleRoute } from '#mocks/support/http/handle-route.util.ts';
+import { canTakeTransferCategory } from '#mocks/transactions/transaction/can-take-transfer-category.util.ts';
+import { giveNatureBack } from '#mocks/transactions/transaction/give-nature-back.util.ts';
+import { isTransferByCategory } from '#mocks/transactions/transaction/is-transfer-by-category.util.ts';
+import { takeTransferCategory } from '#mocks/transactions/transaction/take-transfer-category.util.ts';
 import { assertNatureChange } from '#mocks/transactions/transaction/assert-nature-change.util.ts';
 import { assertTransferCounterpart } from '#mocks/transactions/transaction/assert-transfer-counterpart.util.ts';
 import { assertUsableCategory } from '#mocks/transactions/transaction/assert-usable-category.util.ts';
@@ -248,7 +252,13 @@ export const transactionMock = [
             if (tx.splits.length > 0) skipped.push({ transactionId, reason: 'split' });
             else if (tx.nature !== 'expense' && tx.nature !== 'income')
               skipped.push({ transactionId, reason: 'outside_account' });
-            else if (tx.nature !== category.kind)
+            // The category that is a transfer changes the nature: a locked one is skipped.
+            else if (category.isTransfer && !canTakeTransferCategory(db, tx))
+              skipped.push({ transactionId, reason: 'outside_account' });
+            else if (category.isTransfer) {
+              previous.push(toPreviousState(tx));
+              takeTransferCategory(tx, category.id, { source: 'user' });
+            } else if (tx.nature !== category.kind)
               skipped.push({ transactionId, reason: 'category_kind_mismatch' });
             else if (tx.categoryId === category.id && tx.categorySource === 'user')
               skipped.push({ transactionId, reason: 'no_change' });
@@ -319,6 +329,9 @@ export const transactionMock = [
         for (const item of body.items) {
           const tx = db.transactions.find((entry) => entry.id === item.transactionId);
           if (!tx) continue;
+          // What the action made a transfer goes back by the sign before the category is written.
+          if (isTransferByCategory(tx) && item.categoryId !== tx.categoryId)
+            giveNatureBack(db, tx, item.natureSetBy);
           // The category only fits a whole expense or income: if the nature changed since, or the
           // transaction was split, the saved category is dropped.
           const keepsCategory =
@@ -435,14 +448,30 @@ export const transactionMock = [
           );
         }
         const nature = body.nature ?? tx.nature;
-        if (body.categoryId) {
-          if (nature !== 'expense' && nature !== 'income')
-            fail(
-              422,
-              'TRANSACTION_CATEGORY_NOT_ALLOWED',
-              'Natureza fora da conta não tem categoria',
-            );
-          assertUsableCategory(db, body.categoryId, nature);
+        const category = body.categoryId ? findCategory(db, body.categoryId) : null;
+        const takesTransfer = category?.isTransfer === true;
+        const wasTransferByCategory = isTransferByCategory(tx);
+        if (category) {
+          if (category.archivedAt)
+            fail(422, 'TRANSACTION_CATEGORY_ARCHIVED', 'Categoria arquivada');
+          if (takesTransfer) {
+            // The same locks as choosing the nature `transfer` by hand.
+            if (nature !== 'transfer') assertNatureChange(db, tx, 'transfer');
+          } else {
+            // Replacing the category that is a transfer gives the nature back first.
+            const effective = wasTransferByCategory
+              ? tx.amountCents >= 0 && !account.creditCard
+                ? 'income'
+                : 'expense'
+              : nature;
+            if (effective !== 'expense' && effective !== 'income')
+              fail(
+                422,
+                'TRANSACTION_CATEGORY_NOT_ALLOWED',
+                'Natureza fora da conta não tem categoria',
+              );
+            assertUsableCategory(db, category.id, effective);
+          }
         }
         if (body.tagIds) {
           for (const tagId of body.tagIds.filter((id) => !tx.tagIds.includes(id)))
@@ -456,7 +485,9 @@ export const transactionMock = [
         if (body.nature !== undefined) {
           tx.nature = body.nature;
           tx.natureSetBy = 'user';
-          if (body.nature === 'transfer') {
+          // A transfer has no category but the one that is a transfer, which it keeps while it
+          // stays a transfer (to link the other leg) and loses when it leaves.
+          if (wasTransferByCategory ? body.nature !== 'transfer' : body.nature === 'transfer') {
             tx.categoryId = null;
             tx.categorySource = null;
             tx.categoryRuleId = null;
@@ -481,9 +512,16 @@ export const transactionMock = [
             tx.invoiceMonth = invoiceMonthFor(account.creditCard.closingDay, body.occurredOn);
         }
         if (body.categoryId !== undefined) {
-          tx.categoryId = body.categoryId;
-          tx.categorySource = body.categoryId ? 'user' : null;
-          tx.categoryRuleId = null;
+          if (takesTransfer && body.categoryId) {
+            takeTransferCategory(tx, body.categoryId, { source: 'user' });
+          } else {
+            // Taking off or replacing the category that is a transfer gives the nature back by the
+            // sign (it stays a transfer only if Lucas chose the nature `transfer` in this same edit).
+            if (wasTransferByCategory && tx.nature === 'transfer') giveNatureBack(db, tx);
+            tx.categoryId = body.categoryId;
+            tx.categorySource = body.categoryId ? 'user' : null;
+            tx.categoryRuleId = null;
+          }
         }
         if (body.tagIds !== undefined) tx.tagIds = body.tagIds;
         if (body.editNote !== undefined) tx.editNote = body.editNote;

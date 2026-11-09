@@ -50,6 +50,7 @@ describe('buildArchiveCategoryImpact', () => {
     kind: 'expense',
     name: 'Delivery',
     icon: 'deliv',
+    isTransfer: false,
     isDefault: false,
     archivedAt: null,
     transactionCount: 112,

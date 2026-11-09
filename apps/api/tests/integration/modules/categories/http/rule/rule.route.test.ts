@@ -7,6 +7,7 @@ import {
 import { apiErrorSchema } from '@fincheck/shared/common/api-error/api-error.schema.ts';
 import { listResponseSchema } from '@fincheck/shared/common/list/list.schema.ts';
 import { restoreBulkResultSchema } from '@fincheck/shared/transactions/transaction-bulk/transaction-bulk.schema.ts';
+import { sql } from 'kysely';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { generateId } from '#/shared/id/generate-id.util.ts';
@@ -832,6 +833,108 @@ describe('rules routes', () => {
       expect(restoreBulkResultSchema.parse(await undo.json()).restoredCount).toBe(2);
       expect((await world.categoryOf(first)).category_id).toBeNull();
       expect(await world.tagsOf(second)).toEqual([]);
+    });
+
+    describe('with a category that is a transfer ("Rotação entre contas")', () => {
+      const natureOf = (id: string) =>
+        database.db
+          .selectFrom('transactions')
+          .select(['nature', 'nature_set_by', 'transfer_counterpart_id'])
+          .where('id', '=', id)
+          .executeTakeFirstOrThrow();
+
+      it('turns what it matches into transfers that keep the category, and the undo gives the nature back', async () => {
+        const rotation = await insertTestCategory(database.db, {
+          name: 'Giro teste',
+          is_transfer: 1,
+        });
+        const first = await world.addTransaction('Pix Nubank para Itau');
+        const second = await world.addTransaction('Pix Nubank para Itau 2');
+        const byLucas = await world.addTransaction('Pix Nubank para Itau 3', {
+          category_id: world.delivery,
+          category_source: 'user',
+        });
+        const { rule } = await createRule({
+          descriptionContains: 'pix nubank',
+          categoryId: rotation,
+        });
+
+        const result = await apply(rule.id);
+
+        expect(result.changedCount).toBe(2);
+        expect(await natureOf(first)).toEqual({
+          nature: 'transfer',
+          nature_set_by: 'user',
+          transfer_counterpart_id: null,
+        });
+        expect(await world.categoryOf(second)).toEqual({
+          category_id: rotation,
+          category_source: 'rule',
+          category_rule_id: rule.id,
+        });
+        expect((await natureOf(byLucas)).nature).toBe('expense');
+
+        const undo = await send('POST', '/transactions/bulk/restore', { items: result.previous });
+
+        expect(restoreBulkResultSchema.parse(await undo.json()).restoredCount).toBe(2);
+        expect((await natureOf(first)).nature).toBe('expense');
+        expect((await world.categoryOf(first)).category_id).toBeNull();
+      });
+
+      it('sees both legs (an income too) and accepts a rule on income with it', async () => {
+        const rotation = await insertTestCategory(database.db, {
+          name: 'Giro teste',
+          is_transfer: 1,
+        });
+        const out = await world.addTransaction('Pix Nubank para Itau');
+        const into = await world.addTransaction('Pix Nubank de Nubank', {
+          nature: 'income',
+          amount_cents: 1250,
+        });
+        const { rule } = await createRule({
+          descriptionContains: 'pix nubank',
+          categoryId: rotation,
+          kind: 'income',
+        });
+
+        const result = await apply(rule.id);
+
+        expect(result.changedCount).toBe(1);
+        expect((await natureOf(into)).nature).toBe('transfer');
+        expect((await natureOf(out)).nature).toBe('expense');
+      });
+
+      it('leaves alone a transaction that settles an occurrence or pays a bill', async () => {
+        const rotation = await insertTestCategory(database.db, {
+          name: 'Giro teste',
+          is_transfer: 1,
+        });
+        const linked = await world.addTransaction('Pix Nubank para Itau');
+        const free = await world.addTransaction('Pix Nubank para Itau 2');
+        await sql`PRAGMA foreign_keys = OFF`.execute(database.db);
+        await database.db
+          .insertInto('occurrence_payments')
+          .values({
+            id: generateId(),
+            occurrence_id: generateId(),
+            transaction_id: linked,
+            amount_cents: 1250,
+            linked_by: 'user',
+            created_at: NOW,
+          })
+          .execute();
+        await sql`PRAGMA foreign_keys = ON`.execute(database.db);
+        const { rule } = await createRule({
+          descriptionContains: 'pix nubank',
+          categoryId: rotation,
+        });
+
+        const result = await apply(rule.id);
+
+        expect(result.changedCount).toBe(1);
+        expect((await natureOf(linked)).nature).toBe('expense');
+        expect((await natureOf(free)).nature).toBe('transfer');
+      });
     });
 
     it('applies the same as the preview announced', async () => {

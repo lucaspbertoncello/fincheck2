@@ -257,6 +257,52 @@ describe('TransactionListPage', () => {
     ).toBeVisible();
   });
 
+  it('offers the category that is a transfer on an income too (the incoming leg of a rotation)', async () => {
+    const income = db.transactions.find(
+      (tx) =>
+        tx.nature === 'income' &&
+        tx.occurredOn.startsWith(CURRENT_MONTH) &&
+        tx.splits.length === 0 &&
+        tx.installment === null,
+    );
+    if (!income) throw new Error('seed without an income this month');
+    renderApp(PAGE);
+    await openRowMenu(income.description, 'Editar');
+
+    const dialog = await screen.findByRole('dialog', { name: 'Editar transação' });
+
+    // Past the five shortcuts, the search of "Outras…" finds it.
+    await userEvent.setup().click(within(dialog).getByRole('button', { name: 'Outras…' }));
+    await userEvent
+      .setup()
+      .type(await screen.findByRole('combobox', { name: 'Buscar outra categoria' }), 'Rotação');
+    expect(await screen.findByRole('option', { name: /Rotação entre contas/ })).toBeInTheDocument();
+  });
+
+  it('shows the category of a transfer that has one, next to the other leg', async () => {
+    const rotation = db.categories.find((category) => category.isTransfer);
+    const cinema = db.transactions.find((tx) => tx.description === 'CINEMARK');
+    if (!rotation || !cinema) throw new Error('seed without the rotation or CINEMARK');
+    cinema.nature = 'transfer';
+    cinema.categoryId = rotation.id;
+    cinema.categorySource = 'user';
+    renderApp(PAGE);
+    await openRowMenu('CINEMARK', 'Editar');
+
+    const dialog = await screen.findByRole('dialog', { name: 'Editar transação' });
+
+    expect(
+      within(dialog).getByRole('button', { name: /Rotação entre contas/ }),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText('Outra perna da transferência')).toBeInTheDocument();
+    // The category is the transfer: no other leg is asked of someone who only changes the text.
+    const description = within(dialog).getByRole('textbox', { name: 'Descrição' });
+    await userEvent.setup().type(description, ' 2');
+    await userEvent.setup().click(within(dialog).getByRole('button', { name: 'Salvar' }));
+    await waitFor(() => expect(window.location.search).not.toContain('edit='), LONG_WAIT);
+    expect(cinema).toMatchObject({ nature: 'transfer', categoryId: rotation.id });
+  });
+
   it('splits a transaction in two parts', async () => {
     const user = userEvent.setup();
     renderApp(PAGE);
@@ -385,7 +431,7 @@ describe('TransactionListPage', () => {
     expect(market).toHaveAttribute('aria-pressed', 'false');
 
     // The rest of the categories sit behind "Outras…", a search that picks one.
-    await user.click(within(dialog).getByRole('button', { name: /Outras/ }));
+    await user.click(within(dialog).getByRole('button', { name: 'Outras…' }));
     const search = await screen.findByRole('combobox', { name: 'Buscar outra categoria' });
     await user.type(search, 'Pets');
     await user.click(await screen.findByRole('option', { name: 'Pets' }));

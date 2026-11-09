@@ -12,6 +12,7 @@ import { InvoiceMonthResolver } from '#/modules/transactions/application/transac
 import { KyselyTransactionRepository } from '#/modules/transactions/infra/transaction/transaction.repository.ts';
 import { BusinessDate } from '#/shared/date/business-date.value-object.ts';
 import { insertTestAccount } from '#tests/support/accounts/account/insert-test-account.util.ts';
+import { insertTestCategory } from '#tests/support/categories/category/insert-test-category.util.ts';
 import { insertTestCreditCard } from '#tests/support/accounts/account/insert-test-credit-card.util.ts';
 import { createTestDatabase } from '#tests/support/database/create-test-database.util.ts';
 import { createFixedClock } from '#tests/support/shared/clock/create-fixed-clock.util.ts';
@@ -279,6 +280,46 @@ describe('the use cases and queries of transactions that the sync calls', () => 
       expect(await row(id)).toMatchObject({ bank_status: 'posted', description: 'Pix enviado' });
     });
 
+    it('keeps the transfer and its category when the bank sends a new version of the transaction', async () => {
+      const rotation = await insertTestCategory(database.db, { name: 'Giro', is_transfer: 1 });
+      const id = await insertTestExpense(database.db, checking, {
+        cents: 100,
+        on: '2026-11-05',
+        overrides: {
+          nature: 'transfer',
+          nature_set_by: 'user',
+          category_id: rotation,
+          category_source: 'user',
+        },
+      });
+
+      await unitOfWork.run((executor) =>
+        build().execute(
+          {
+            updates: [
+              {
+                transactionId: id,
+                description: 'Pix enviado',
+                amountCents: -150,
+                occurredOn: '2026-11-06',
+                counterparty: null,
+                status: 'posted',
+              },
+            ],
+          },
+          executor,
+        ),
+      );
+
+      expect(await row(id)).toMatchObject({
+        amount_cents: -150,
+        nature: 'transfer',
+        nature_set_by: 'user',
+        category_id: rotation,
+        category_source: 'user',
+      });
+    });
+
     it('ignores a transaction that does not exist or is not from the bank', async () => {
       const manual = await insertTestTransaction(database.db, checking);
 
@@ -378,6 +419,39 @@ describe('the use cases and queries of transactions that the sync calls', () => 
       expect(answer.transfers).toEqual([]);
       expect((await row(into)).nature).toBe('income');
       expect((await row(out)).nature).toBe('expense');
+    });
+
+    it('never takes what Lucas made a transfer with the category that is a transfer', async () => {
+      const rotation = await insertTestCategory(database.db, { name: 'Giro', is_transfer: 1 });
+      const chosen = await insertTestExpense(database.db, checking, {
+        cents: 100,
+        on: '2026-11-05',
+        overrides: {
+          nature: 'transfer',
+          nature_set_by: 'user',
+          category_id: rotation,
+          category_source: 'user',
+        },
+      });
+      const savings = await insertTestAccount(database.db);
+      const into = await insertTestIncome(database.db, savings, { cents: 100, on: '2026-11-05' });
+
+      const answer = await unitOfWork.run((executor) =>
+        build().execute(
+          { payments: [chosen], transfers: [{ firstId: chosen, secondId: into }] },
+          executor,
+        ),
+      );
+
+      expect(answer).toEqual({ payments: [], transfers: [] });
+      expect(await row(chosen)).toMatchObject({
+        nature: 'transfer',
+        nature_set_by: 'user',
+        category_id: rotation,
+        category_source: 'user',
+        transfer_counterpart_id: null,
+      });
+      expect((await row(into)).nature).toBe('income');
     });
 
     it('never takes the nature of what Lucas chose as a payment', async () => {
@@ -482,6 +556,56 @@ describe('the use cases and queries of transactions that the sync calls', () => 
       });
       expect((await row(withoutRule)).category_id).toBeNull();
       expect(await row(byLucas)).toMatchObject({ category_id: category, category_source: 'user' });
+    });
+  });
+
+  describe('ApplyImportRulesUseCase, with the category that is a transfer', () => {
+    it('makes a new expense a transfer that keeps the category, set by the rule', async () => {
+      const rotation = await insertTestCategory(database.db, { name: 'Giro', is_transfer: 1 });
+      await database.db
+        .insertInto('category_rules')
+        .values({
+          id: 'rule-1',
+          description_contains: 'PIX',
+          counterparty_contains: null,
+          kind: null,
+          account_id: null,
+          amount_min_cents: null,
+          amount_max_cents: null,
+          category_id: rotation,
+          enabled: 1,
+          created_at: '2026-11-01T00:00:00.000Z',
+          updated_at: '2026-11-01T00:00:00.000Z',
+        })
+        .execute();
+      const expense = await insertTestExpense(database.db, checking, {
+        cents: 100,
+        on: '2026-11-05',
+      });
+
+      const answer = await unitOfWork.run((executor) =>
+        new ApplyImportRulesUseCase(repository, clock).execute(
+          {
+            items: [
+              {
+                transactionId: expense,
+                ruleId: 'rule-1',
+                category: { id: rotation, kind: 'expense', isArchived: false, isTransfer: true },
+                tagIds: [],
+              },
+            ],
+          },
+          executor,
+        ),
+      );
+
+      expect(answer.changedCount).toBe(1);
+      expect(await row(expense)).toMatchObject({
+        nature: 'transfer',
+        category_id: rotation,
+        category_source: 'rule',
+        category_rule_id: 'rule-1',
+      });
     });
   });
 

@@ -30,4 +30,8 @@ export const CATEGORY_ICON_LABELS: Record<Category.Icon, string> = {
   trend: 'Investimento',
   wallet: 'Carteira',
   tag: 'Etiqueta',
+  leaf: 'Folha',
+  stadium: 'Futebol',
+  transfer: 'Transferência',
+  people: 'Pessoas',
 };

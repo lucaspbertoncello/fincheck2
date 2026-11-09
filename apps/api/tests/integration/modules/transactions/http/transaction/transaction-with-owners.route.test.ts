@@ -518,6 +518,7 @@ describe('transactions routes (with the owners wired)', () => {
           categoryRuleId: null,
           tagIds: [],
           ignoredAt: null,
+          natureSetBy: 'user',
         },
       ]);
       expect((await dtoOf(await send('GET', `/transactions/${plain}`))).categoryId).toBe(food);

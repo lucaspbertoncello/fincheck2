@@ -246,6 +246,67 @@ describe('GET /dashboard/categories and /dashboard/categories/:id/trend', () => 
     );
   });
 
+  describe('the category that is a transfer ("Rotação entre contas")', () => {
+    // A transaction in it is a `transfer` that keeps the category: money moving between the
+    // accounts of Lucas, never spending.
+    async function seedWithRotation() {
+      const { food } = await seedSpending();
+      const rotation = await world.category('expense', 'Giro entre bancos');
+      await world.db
+        .updateTable('categories')
+        .set({ is_transfer: 1 })
+        .where('id', '=', rotation)
+        .execute();
+      for (const [cents, on] of [
+        [20000, '2026-10-06'],
+        [8000, '2026-09-11'],
+      ] as const) {
+        await insertTestTransaction(world.db, account, {
+          description: 'Pix entre contas',
+          amount_cents: -cents,
+          occurred_on: on,
+          nature: 'transfer',
+          nature_set_by: 'user',
+          category_id: rotation,
+          category_source: 'user',
+        });
+      }
+
+      return { food, rotation };
+    }
+
+    it('is not in the breakdown, and the total stays what the ordinary spending makes', async () => {
+      const { rotation } = await seedWithRotation();
+
+      const dto = await breakdown('?month=2026-10');
+
+      expect(dto.expenses.totalCents).toBe(18100);
+      expect(dto.expenses.previousTotalCents).toBe(7000);
+      expect(dto.expenses.items.map((item) => item.categoryId)).not.toContain(rotation);
+    });
+
+    it('has no spending and no trend of its own', async () => {
+      const { rotation } = await seedWithRotation();
+
+      const dto = await trend(rotation);
+
+      expect(
+        dto.months.every((month) => month.totalCents === 0 && month.transactionCount === 0),
+      ).toBe(true);
+    });
+
+    it('does not enter the summary of the month', async () => {
+      await seedWithRotation();
+
+      const summary = await world.get(
+        '/dashboard/month-summary?month=2026-10',
+        monthSummaryDtoSchema,
+      );
+
+      expect(summary.expenses.spentCents).toBe(18100);
+    });
+  });
+
   describe('trend', () => {
     it('has the 12 months of an expense category up to the current month, oldest first, with 0 where nothing happened', async () => {
       const { food } = await seedSpending();

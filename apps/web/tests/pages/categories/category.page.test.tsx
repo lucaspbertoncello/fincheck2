@@ -194,3 +194,28 @@ describe('Categorias → the category page', () => {
     expect(window.location.pathname).toBe('/categories');
   });
 });
+
+describe('CategoryPage: the category that is a transfer', () => {
+  it('says it does not count as spending, in place of the total', async () => {
+    await openPage('Rotação entre contas');
+
+    const summary = await screen.findByRole('region', { name: 'Resumo da categoria' }, LONG_WAIT);
+    expect(within(summary).getByText('Não conta como gasto')).toBeInTheDocument();
+  });
+
+  it('hides the average per month and the 12 months, which have no value to show', async () => {
+    await openPage('Rotação entre contas');
+
+    const summary = await screen.findByRole('region', { name: 'Resumo da categoria' }, LONG_WAIT);
+    expect(within(summary).queryByText('Média por mês')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Últimos 12 meses' })).not.toBeInTheDocument();
+  });
+
+  it('keeps the total for an ordinary category', async () => {
+    await openPage('Mercado');
+
+    const summary = await screen.findByRole('region', { name: 'Resumo da categoria' }, LONG_WAIT);
+    expect(within(summary).queryByText('Não conta como gasto')).not.toBeInTheDocument();
+    expect(within(summary).getByText('Média por mês')).toBeInTheDocument();
+  });
+});

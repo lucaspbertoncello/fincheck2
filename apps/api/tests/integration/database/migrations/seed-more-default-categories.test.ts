@@ -9,7 +9,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { createMigrator } from '#/database/create-migrator.util.ts';
 import type { Database } from '#/database/database.type.ts';
-import { migrateToLatest } from '#/database/migrate-to-latest.util.ts';
 import { createSqliteClient } from '#/database/sqlite.client.ts';
 
 const FIRST_SEED = '202611061100-seed-default-categories';
@@ -58,7 +57,7 @@ describe('seed of the ten more categories', () => {
       .execute();
 
   it('leaves 25 default categories in a new database, with the table of the PM', async () => {
-    await migrateToLatest(db);
+    await createMigrator(db).migrateTo(MORE_SEED);
 
     const rows = await db.selectFrom('categories').selectAll().orderBy('id').execute();
     expect(rows).toHaveLength(25);
@@ -94,7 +93,7 @@ describe('seed of the ten more categories', () => {
     // The same name in the other kind is another category: it does not block the new one.
     await insertByHand('44444444-4444-7444-8444-444444444444', 'income', 'Esportes');
 
-    await migrateToLatest(db);
+    await migrator.migrateTo(MORE_SEED);
 
     const rows = await db.selectFrom('categories').select(['kind', 'name']).execute();
     expect(rows).toHaveLength(15 + 4 + 7);
@@ -111,7 +110,7 @@ describe('seed of the ten more categories', () => {
     const migrator = createMigrator(db);
     await migrator.migrateTo(FIRST_SEED);
     await insertByHand('11111111-1111-7111-8111-111111111111', 'expense', 'Pets');
-    await migrateToLatest(db);
+    await migrator.migrateTo(MORE_SEED);
 
     const { error } = await migrator.migrateTo(FIRST_SEED);
 
@@ -130,11 +129,11 @@ describe('seed of the ten more categories', () => {
 
   it('applies again after undoing it, and a second run changes nothing', async () => {
     const migrator = createMigrator(db);
-    await migrateToLatest(db);
+    await migrator.migrateTo(MORE_SEED);
     await migrator.migrateTo(FIRST_SEED);
 
     await migrator.migrateTo(MORE_SEED);
-    await migrateToLatest(db);
+    await migrator.migrateTo(MORE_SEED);
 
     expect(await db.selectFrom('categories').select('id').execute()).toHaveLength(25);
   });

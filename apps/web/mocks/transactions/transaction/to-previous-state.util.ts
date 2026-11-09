@@ -11,5 +11,6 @@ export function toPreviousState(tx: MockState.TransactionRecord): TransactionBul
     categoryRuleId: tx.categoryRuleId,
     tagIds: [...tx.tagIds],
     ignoredAt: tx.ignoredAt,
+    natureSetBy: tx.natureSetBy,
   };
 }

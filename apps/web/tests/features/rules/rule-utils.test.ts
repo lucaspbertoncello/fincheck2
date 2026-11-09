@@ -25,6 +25,7 @@ const DELIVERY: Category.Dto = {
   name: 'Delivery',
   icon: 'deliv',
   isDefault: true,
+  isTransfer: false,
   archivedAt: null,
   transactionCount: 0,
   ruleCount: 1,

@@ -4,7 +4,7 @@ import { toInstant } from '#mocks/support/dates/to-instant.util.ts';
 import { addDays } from '#mocks/support/dates/add-days.util.ts';
 import { TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 
-// Categories and tags: the 25 defaults, plus two made by Lucas (one archived) and tags.
+// Categories and tags: the 30 defaults, plus two made by Lucas (one archived) and tags.
 export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
   const { cat } = ids;
   const archivedAt = toInstant(addDays(TODAY, -90));
@@ -16,6 +16,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Mercado',
       icon: 'cart',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -24,6 +25,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Restaurantes',
       icon: 'food',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -32,6 +34,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Delivery',
       icon: 'deliv',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -40,6 +43,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Transporte',
       icon: 'car',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -48,6 +52,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Combustível',
       icon: 'fuel',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -56,6 +61,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Moradia',
       icon: 'house',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -64,6 +70,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Saúde',
       icon: 'health',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -72,6 +79,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Cuidados pessoais',
       icon: 'care',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -80,6 +88,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Esportes',
       icon: 'gym',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -88,6 +97,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Lazer',
       icon: 'fun',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -96,6 +106,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Viagem',
       icon: 'plane',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -104,6 +115,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Assinaturas',
       icon: 'subs',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -112,6 +124,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Educação',
       icon: 'book',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -120,6 +133,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Compras',
       icon: 'shirt',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -128,6 +142,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Tecnologia',
       icon: 'phone',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -136,6 +151,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Pets',
       icon: 'pet',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -144,14 +160,61 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Presentes e doações',
       icon: 'gift',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
       id: cat.impostos,
       kind: 'expense',
-      name: 'Impostos e taxas',
+      name: 'Impostos',
       icon: 'receipt',
       isDefault: true,
+      isTransfer: false,
+      archivedAt: null,
+    },
+    {
+      id: cat.rotacaoContas,
+      kind: 'expense',
+      name: 'Rotação entre contas',
+      icon: 'transfer',
+      isDefault: true,
+      isTransfer: true,
+      archivedAt: null,
+    },
+    {
+      id: cat.estadio,
+      kind: 'expense',
+      name: 'Estádio',
+      icon: 'stadium',
+      isDefault: true,
+      isTransfer: false,
+      archivedAt: null,
+    },
+    {
+      id: cat.maconha,
+      kind: 'expense',
+      name: 'Maconha',
+      icon: 'leaf',
+      isDefault: true,
+      isTransfer: false,
+      archivedAt: null,
+    },
+    {
+      id: cat.amigosFamilia,
+      kind: 'expense',
+      name: 'Amigos e família',
+      icon: 'people',
+      isDefault: true,
+      isTransfer: false,
+      archivedAt: null,
+    },
+    {
+      id: cat.taxas,
+      kind: 'expense',
+      name: 'Taxas',
+      icon: 'receipt',
+      isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -160,6 +223,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Outros',
       icon: 'tag',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -168,6 +232,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Salário',
       icon: 'salary',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -176,6 +241,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Freelance',
       icon: 'coins',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -184,6 +250,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Benefícios',
       icon: 'wallet',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -192,6 +259,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Rendimentos',
       icon: 'trend',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -200,6 +268,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Vendas',
       icon: 'handmoney',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -208,6 +277,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Outras receitas',
       icon: 'dollar',
       isDefault: true,
+      isTransfer: false,
       archivedAt: null,
     },
     {
@@ -216,6 +286,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Viagem de 2025',
       icon: 'ticket',
       isDefault: false,
+      isTransfer: false,
       archivedAt: archivedAt,
     },
     {
@@ -224,6 +295,7 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
       name: 'Mesada',
       icon: 'handmoney',
       isDefault: false,
+      isTransfer: false,
       archivedAt: null,
     },
   );

@@ -29,6 +29,7 @@ import { TransactionTagArchivedError } from '#/modules/transactions/domain/trans
 import { TransactionSplit } from '#/modules/transactions/domain/transaction/transaction-split.value-object.ts';
 import { BusinessDate } from '#/shared/date/business-date.value-object.ts';
 import type { Month } from '#/shared/date/month.value-object.ts';
+import { DomainError } from '#/shared/errors/domain.error.ts';
 import { RequestValidationError } from '#/shared/errors/request-validation.error.ts';
 import { generateId } from '#/shared/id/generate-id.util.ts';
 import { Money } from '#/shared/money/money.value-object.ts';
@@ -136,7 +137,7 @@ export class Transaction {
       tagIds: [],
       createdAt: now,
     });
-    transaction.assignCategory(input.category, now);
+    transaction.assignCategory(input.category, now, { isCardAccount: input.account.isCard });
     transaction.replaceTags(input.tags, now);
 
     return transaction;
@@ -385,15 +386,26 @@ export class Transaction {
   // paid invoice) keep it. A transfer has no category; leaving a transfer cuts the link.
   changeNature(
     nature: 'expense' | 'income' | 'transfer',
-    options: {
-      hasActiveInvoiceLink: boolean;
-      // It settles an occurrence of a recurrence: the nature is what makes it count there.
-      hasActiveOccurrenceLink?: boolean;
-      // It pays a bill: the nature is what makes it count there.
-      hasActiveBillLink?: boolean;
-      isCardAccount: boolean;
-    },
+    options: Transaction.NatureContext,
     now: string,
+  ): void {
+    this.assertNatureChange(nature, options);
+
+    // A transfer has no category, except the one that is a transfer itself (`isTransfer`): staying
+    // a transfer keeps it (to link the other leg), leaving it (to expense or income) takes it off,
+    // the nature no longer comes from it.
+    const dropsCategory = this.isTransferByCategory()
+      ? nature !== 'transfer'
+      : nature === 'transfer';
+    this.nature = nature;
+    this.natureSetBy = 'user';
+    if (dropsCategory) this.clearCategory();
+    this.updatedAt = now;
+  }
+
+  private assertNatureChange(
+    nature: 'expense' | 'income' | 'transfer',
+    options: Transaction.NatureContext,
   ): void {
     if (this.isSplit()) throw new TransactionIsSplitError();
     if (
@@ -428,11 +440,25 @@ export class Transaction {
     ) {
       throw new TransactionNatureSignMismatchError();
     }
+  }
 
-    this.nature = nature;
-    this.natureSetBy = 'user';
-    if (nature === 'transfer') this.clearCategory();
-    this.updatedAt = now;
+  // The nature is `transfer` because of a category that is a transfer (`isTransfer`): only that
+  // one carries a category on a transfer.
+  isTransferByCategory(): boolean {
+    return this.nature === 'transfer' && this.categoryId !== null;
+  }
+
+  // Whether the category that is a transfer may be put here: the same locks the nature has (a
+  // split, a debt, an adjustment, a paid invoice, an occurrence or a bill), as a question.
+  canTakeTransferCategory(options: Transaction.NatureContext): boolean {
+    try {
+      this.assertNatureChange('transfer', options);
+    } catch (error) {
+      if (error instanceof DomainError || error instanceof RequestValidationError) return false;
+      throw error;
+    }
+
+    return true;
   }
 
   // The other leg of a transfer follows an edited amount: the same value with the opposite sign,
@@ -451,10 +477,14 @@ export class Transaction {
   // The nature goes back by the sign when the link that had changed it is undone: negative is an
   // expense, positive an income, and positive on a card is an expense (a refund: credit on a card
   // is never income). The system decides it again, so the detection may act on it.
-  returnNature(options: { isCardAccount: boolean }, now: string): void {
+  returnNature(
+    options: { isCardAccount: boolean },
+    now: string,
+    natureSetBy: 'system' | 'user' = 'system',
+  ): void {
     const income = !this.amount.isNegative() && !options.isCardAccount;
     this.nature = income ? 'income' : 'expense';
-    this.natureSetBy = 'system';
+    this.natureSetBy = natureSetBy;
     this.transferCounterpartId = null;
     this.updatedAt = now;
   }
@@ -520,21 +550,59 @@ export class Transaction {
   }
 
   // Sets or clears the category chosen by Lucas. The category lives on the parts of a split
-  // transaction, only `expense` and `income` have one, and its kind is the transaction's.
-  assignCategory(category: Transaction.CategoryRef | null, now: string): void {
+  // transaction, only `expense` and `income` have one, and its kind is the transaction's. One
+  // exception: a category that is a transfer (`isTransfer`, "Rotação entre contas") makes the
+  // transaction a `transfer` and stays on it, whatever the kind of the category; taking it off (or
+  // replacing it) gives the nature back by the sign (negative is expense, positive is income). The
+  // other leg of a transfer is cut by the caller, who knows the other transaction.
+  assignCategory(
+    category: Transaction.CategoryRef | null,
+    now: string,
+    context: Transaction.NatureContext = { isCardAccount: false },
+  ): void {
     if (category === null) {
+      if (this.isTransferByCategory()) this.returnNature(context, now);
       this.clearCategory();
       this.updatedAt = now;
       return;
     }
     if (this.isSplit()) throw new TransactionIsSplitError();
-    if (!this.hasCountedNature()) throw new TransactionCategoryNotAllowedError();
     if (category.isArchived) throw new TransactionCategoryArchivedError();
+    if (category.isTransfer === true) {
+      this.takeTransferCategory(category, now, context);
+      return;
+    }
+    if (this.isTransferByCategory()) {
+      this.returnNature(context, now);
+      this.clearCategory();
+    }
+    if (!this.hasCountedNature()) throw new TransactionCategoryNotAllowedError();
     if (category.kind !== this.nature) throw new TransactionCategoryKindMismatchError();
 
     this.categoryId = category.id;
     this.categorySource = 'user';
     this.categoryRuleId = null;
+    this.updatedAt = now;
+  }
+
+  // The category that is a transfer: the nature changes as Lucas would change it by hand (so the
+  // same locks hold, `TransactionNatureLockedError` first of them), by his choice, and the category
+  // stays. A transaction that already was a transfer keeps the other leg; one that was not has none.
+  private takeTransferCategory(
+    category: Transaction.CategoryRef,
+    now: string,
+    context: Transaction.NatureContext,
+    source: { origin: 'user' } | { origin: 'rule'; ruleId: string } = { origin: 'user' },
+  ): void {
+    if (this.nature === 'transfer') {
+      this.assertNatureChange('transfer', context);
+    } else {
+      this.changeNature('transfer', context, now);
+    }
+
+    this.categoryId = category.id;
+    this.categorySource = source.origin;
+    this.categoryRuleId = source.origin === 'rule' ? source.ruleId : null;
     this.updatedAt = now;
   }
 
@@ -569,7 +637,9 @@ export class Transaction {
     now: string,
   ): boolean {
     if (this.categoryId !== null || this.isSplit() || !this.hasCountedNature()) return false;
-    if (category.isArchived || category.kind !== this.nature) return false;
+    if (category.isArchived || category.kind !== this.nature || category.isTransfer === true) {
+      return false;
+    }
 
     this.categoryId = category.id;
     this.categorySource = source;
@@ -652,12 +722,19 @@ export class Transaction {
   }
 
   // Why a bulk categorization skips this transaction, as the reason of the skip; null when the
-  // category fits. The same rules `assignCategory` enforces, as a question instead of an error.
+  // category fits. The same rules `assignCategory` enforces, as a question instead of an error. The
+  // category that is a transfer only goes to a whole expense or income whose nature is free to
+  // change (a locked one is skipped, as `outside_account`): the undo of the action then always
+  // knows the nature to give back.
   whyCannotTakeCategory(
     category: Transaction.CategoryRef,
+    context: Transaction.NatureContext = { isCardAccount: false },
   ): 'split' | 'outside_account' | 'category_kind_mismatch' | null {
     if (this.isSplit()) return 'split';
     if (!this.hasCountedNature()) return 'outside_account';
+    if (category.isTransfer === true) {
+      return this.canTakeTransferCategory(context) ? null : 'outside_account';
+    }
     if (category.kind !== this.nature) return 'category_kind_mismatch';
 
     return null;
@@ -719,6 +796,7 @@ export class Transaction {
     rule: { id: string; category: Transaction.CategoryRef | null; tagIds: string[] },
     olderRuleIds: ReadonlySet<string>,
     now: string,
+    context: Transaction.NatureContext = { isCardAccount: false },
   ): boolean {
     if (this.isSplit() || this.ignoredAt !== null || !this.hasCountedNature()) return false;
 
@@ -727,12 +805,22 @@ export class Transaction {
 
     let changed = false;
     if (rule.category !== null) {
-      if (rule.category.kind !== this.nature) return false;
+      // A category that is a transfer is for both directions (the outgoing and the incoming leg).
+      if (rule.category.isTransfer !== true && rule.category.kind !== this.nature) return false;
       if (!canRuleSetCategory(this, olderRuleIds)) return false;
       if (this.categoryId !== rule.category.id) {
-        this.categoryId = rule.category.id;
-        this.categorySource = 'rule';
-        this.categoryRuleId = rule.id;
+        if (rule.category.isTransfer === true) {
+          // The nature locks apply as to Lucas: what cannot become a transfer is left as it is.
+          if (!this.canTakeTransferCategory(context)) return false;
+          this.takeTransferCategory(rule.category, now, context, {
+            origin: 'rule',
+            ruleId: rule.id,
+          });
+        } else {
+          this.categoryId = rule.category.id;
+          this.categorySource = 'rule';
+          this.categoryRuleId = rule.id;
+        }
         changed = true;
       }
     }
@@ -791,6 +879,7 @@ export class Transaction {
     for (const part of parts) {
       if (part.category === null) continue;
       if (part.category.isArchived) throw new TransactionCategoryArchivedError();
+      if (part.category.isTransfer === true) throw new TransactionCategoryNotAllowedError();
       if (part.category.kind !== this.nature) throw new TransactionCategoryKindMismatchError();
     }
 
@@ -947,15 +1036,26 @@ export class Transaction {
       categoryRuleId: this.categoryRuleId,
       tagIds: [...this.tagIds],
       ignoredAt: this.ignoredAt,
+      natureSetBy: this.natureSetBy,
     };
   }
 
   // Writes back what `previousState` captured. A rule that was deleted since leaves no id.
   restoreState(
     state: TransactionBulk.PreviousState,
-    options: { ruleStillExists: boolean },
+    options: { ruleStillExists: boolean; isCardAccount?: boolean },
     now: string,
   ): void {
+    // The action had made it a transfer (by the category that is a transfer): the nature goes
+    // back by the sign before the saved category (if any) is written.
+    if (this.isTransferByCategory() && state.categoryId !== this.categoryId) {
+      this.returnNature(
+        { isCardAccount: options.isCardAccount ?? false },
+        now,
+        state.natureSetBy ?? 'system',
+      );
+      this.clearCategory();
+    }
     // The category only fits a whole expense or income: if the nature changed since, or the
     // transaction was split, the saved category is dropped instead of breaking the database rule.
     const keepsCategory = state.categoryId !== null && this.hasCountedNature() && !this.isSplit();
@@ -1030,7 +1130,23 @@ export namespace Transaction {
 
   // What the aggregate needs to know of the other contexts, as plain values read by a port.
   export type AccountRef = { id: string; isCard: boolean; isArchived: boolean };
-  export type CategoryRef = { id: string; kind: 'expense' | 'income'; isArchived: boolean };
+  // `isTransfer`: the category is a transfer between own accounts ("Rotação entre contas"); absent
+  // means it is not.
+  export type CategoryRef = {
+    id: string;
+    kind: 'expense' | 'income';
+    isArchived: boolean;
+    isTransfer?: boolean;
+  };
+  // What the nature of a transaction depends on, besides itself: the account and the links.
+  export type NatureContext = {
+    isCardAccount: boolean;
+    hasActiveInvoiceLink?: boolean;
+    // It settles an occurrence of a recurrence: the nature is what makes it count there.
+    hasActiveOccurrenceLink?: boolean;
+    // It pays a bill: the nature is what makes it count there.
+    hasActiveBillLink?: boolean;
+  };
   export type TagRef = { id: string; isArchived: boolean };
 
   export type BankVersion = {

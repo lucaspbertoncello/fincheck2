@@ -46,7 +46,7 @@ export const ruleMock = [
       if (body.accountId) findAccount(db, body.accountId);
       const category = body.categoryId ? findCategory(db, body.categoryId) : null;
       for (const tagId of body.tagIds ?? []) findTag(db, tagId);
-      if (category && body.kind && body.kind !== category.kind)
+      if (category && body.kind && !category.isTransfer && body.kind !== category.kind)
         fail(422, 'RULE_CATEGORY_KIND_MISMATCH', 'Tipo diferente do da categoria');
       const effect = computeRuleEffect(db, body, NOW_ISO);
 
@@ -100,7 +100,7 @@ export const ruleMock = [
       if (!next.categoryId && next.tagIds.length === 0)
         fail(422, 'RULE_ACTION_REQUIRED', 'Escolha uma categoria ou uma tag');
       // The kind is checked whenever it or the category is in play, also when only `kind` changes.
-      if (category && next.kind && next.kind !== category.kind)
+      if (category && next.kind && !category.isTransfer && next.kind !== category.kind)
         fail(422, 'RULE_CATEGORY_KIND_MISMATCH', 'Tipo diferente do da categoria');
       // The category the rule already had may be archived by now; only a newly chosen one is refused.
       if (category?.archivedAt && category.id !== rule.categoryId)

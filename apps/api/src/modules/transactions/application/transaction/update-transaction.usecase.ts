@@ -83,7 +83,12 @@ export class UpdateTransactionUseCase {
       await this.edit(transaction, input, now, executor);
 
       if (input.categoryId !== undefined) {
-        transaction.assignCategory(await this.references.category(input.categoryId, executor), now);
+        await this.assignCategory(
+          transaction,
+          await this.references.category(input.categoryId, executor),
+          now,
+          executor,
+        );
       }
       if (input.tagIds !== undefined) {
         transaction.replaceTags(await this.references.tagsById(input.tagIds, executor), now);
@@ -140,6 +145,32 @@ export class UpdateTransactionUseCase {
       );
       await this.transactions.save(other, executor);
     }
+  }
+
+  // The category that is a transfer (`isTransfer`) changes the nature with it, so what the nature
+  // depends on (the card, the links) is loaded when it is in play: choosing that category, or
+  // leaving it (taking it off or replacing it), which also cuts the other leg on both sides.
+  private async assignCategory(
+    transaction: Transaction,
+    category: Transaction.CategoryRef | null,
+    now: string,
+    executor: Kysely<Database>,
+  ): Promise<void> {
+    const leaving = transaction.isTransferByCategory() && category?.isTransfer !== true;
+    if (!leaving && category?.isTransfer !== true) {
+      transaction.assignCategory(category, now);
+      return;
+    }
+
+    const account = await this.accounts.requireAccount(transaction.accountId, executor);
+    const context = {
+      isCardAccount: account.isCard,
+      hasActiveInvoiceLink: await this.hasInvoiceLink(transaction.id, executor),
+      hasActiveOccurrenceLink: await this.hasOccurrenceLink(transaction.id, executor),
+      hasActiveBillLink: await this.hasBillLink(transaction.id, executor),
+    };
+    if (leaving) await this.unlinkTransfer(transaction, now, executor);
+    transaction.assignCategory(category, now, context);
   }
 
   // Cuts the link with the other leg, on both sides.

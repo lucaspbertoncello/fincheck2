@@ -25,13 +25,35 @@ export function buildUpdateBody(
     body.amountCents = values.amountCents;
   }
   if (values.date !== transaction.occurredOn) body.occurredOn = values.date;
-  if (natureChanged && values.nature !== 'out_of_account') body.nature = values.nature;
-  if (values.nature === 'transfer') {
-    if (natureChanged || values.counterpartId !== transaction.transferCounterpartId) {
-      body.transferCounterpartId = values.counterpartId;
+  const categoryChanged = values.categoryId !== transaction.categoryId;
+  // A transfer that is one by its category ("Rotação entre contas"): taking the category off gives
+  // the nature back by the sign on the server, so the other leg no longer matters.
+  const dropsTransferCategory =
+    transaction.nature === 'transfer' &&
+    transaction.categoryId !== null &&
+    values.nature === 'transfer' &&
+    values.categoryId === null;
+
+  if (dropsTransferCategory) {
+    body.categoryId = null;
+  } else {
+    if (values.nature === 'transfer') {
+      if (natureChanged || values.counterpartId !== transaction.transferCounterpartId) {
+        // The other leg only goes together with the nature, which the server keeps if it is the
+        // same, and so keeps the category of a transfer too.
+        body.nature = 'transfer';
+        body.transferCounterpartId = values.counterpartId;
+      }
+    } else if (natureChanged && values.nature !== 'out_of_account') {
+      body.nature = values.nature;
     }
-  } else if (finalNature !== 'transfer' && values.categoryId !== transaction.categoryId) {
-    body.categoryId = values.categoryId;
+    // Where the nature itself takes the category off (to or from a transfer) a cleared category
+    // does not need to be sent.
+    const natureTakesIt =
+      natureChanged && (finalNature === 'transfer' || transaction.nature === 'transfer');
+    if (categoryChanged && !(natureTakesIt && values.categoryId === null)) {
+      body.categoryId = values.categoryId;
+    }
   }
   if (!sameSet(tagIds, transaction.tagIds)) body.tagIds = [...tagIds];
 

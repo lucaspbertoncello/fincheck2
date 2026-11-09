@@ -30,4 +30,8 @@ export const CATEGORY_ICONS = [
   'trend',
   'wallet',
   'tag',
+  'leaf',
+  'stadium',
+  'transfer',
+  'people',
 ] as const;

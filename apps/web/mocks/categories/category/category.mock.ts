@@ -61,6 +61,7 @@ export const categoryMock = [
           name: body.name,
           icon: body.icon,
           isDefault: false,
+          isTransfer: false,
           archivedAt: null,
         };
         db.categories.push(record);

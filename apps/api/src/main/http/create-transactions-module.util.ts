@@ -190,13 +190,14 @@ export function createTransactionsModule(deps: {
     readers.categories && readers.tags && readers.categoryRules
       ? createTransactionBulkRoute({
           bulkTransactions: new BulkTransactionsController(
-            new BulkTransactionsUseCase(transactions, references, unitOfWork, clock),
+            new BulkTransactionsUseCase(transactions, references, readers.links, unitOfWork, clock),
           ),
           restoreBulkTransactions: new RestoreBulkTransactionsController(
             new RestoreBulkTransactionsUseCase(
               transactions,
               readers.categoryRules,
               references,
+              accounts,
               unitOfWork,
               clock,
             ),

@@ -1,7 +1,9 @@
+import type { Transaction as TransactionContract } from '@fincheck/shared/transactions/transaction/transaction.type.ts';
 import type { TransactionBulk } from '@fincheck/shared/transactions/transaction-bulk/transaction-bulk.type.ts';
 import type { Kysely } from 'kysely';
 
 import type { Database } from '#/database/database.type.ts';
+import type { TransactionLinksReader } from '#/modules/transactions/application/transaction/transaction-links-reader.interface.ts';
 import type { TransactionReferenceResolver } from '#/modules/transactions/application/transaction/transaction-reference-resolver.service.ts';
 import type { Transaction } from '#/modules/transactions/domain/transaction/transaction.entity.ts';
 import { TransactionCategoryArchivedError } from '#/modules/transactions/domain/transaction/transaction-category-archived.error.ts';
@@ -16,17 +18,20 @@ import type { UnitOfWork } from '#/shared/unit-of-work/unit-of-work.interface.ts
 export class BulkTransactionsUseCase {
   private readonly transactions: TransactionRepository<Kysely<Database>>;
   private readonly references: TransactionReferenceResolver;
+  private readonly links: TransactionLinksReader | undefined;
   private readonly unitOfWork: UnitOfWork<Kysely<Database>>;
   private readonly clock: Clock;
 
   constructor(
     transactions: TransactionRepository<Kysely<Database>>,
     references: TransactionReferenceResolver,
+    links: TransactionLinksReader | undefined,
     unitOfWork: UnitOfWork<Kysely<Database>>,
     clock: Clock,
   ) {
     this.transactions = transactions;
     this.references = references;
+    this.links = links;
     this.unitOfWork = unitOfWork;
     this.clock = clock;
   }
@@ -34,7 +39,7 @@ export class BulkTransactionsUseCase {
   async execute(input: BulkTransactionsUseCase.Input): Promise<BulkTransactionsUseCase.Output> {
     return this.unitOfWork.run(async (executor) => {
       const now = this.clock.now();
-      const apply = await this.prepare(input.action, executor);
+      const apply = await this.prepare(input.action, input.transactionIds, executor);
       const found = new Map(
         (await this.transactions.findByIds(input.transactionIds, executor)).map((transaction) => [
           transaction.id,
@@ -69,6 +74,7 @@ export class BulkTransactionsUseCase {
   // it applies it and answers null, or answers the reason to skip without touching it.
   private async prepare(
     action: TransactionBulk.Action,
+    transactionIds: string[],
     executor: Kysely<Database>,
   ): Promise<
     (
@@ -81,11 +87,24 @@ export class BulkTransactionsUseCase {
       if (category === null) throw new RangeError('The reader answered no category');
       if (category.isArchived) throw new TransactionCategoryArchivedError();
 
+      // The category that is a transfer changes the nature, which a link to an occurrence or a
+      // bill locks (a card or an invoice does not matter to choosing it): read them once.
+      const links =
+        category.isTransfer === true && this.links
+          ? await this.links.linksOf(transactionIds, executor)
+          : new Map<string, TransactionContract.LinksDto>();
+
       return (transaction, now) => {
-        const reason = transaction.whyCannotTakeCategory(category);
+        const context = {
+          isCardAccount: false,
+          hasActiveInvoiceLink: Boolean(links.get(transaction.id)?.invoicePayment),
+          hasActiveOccurrenceLink: Boolean(links.get(transaction.id)?.occurrence),
+          hasActiveBillLink: links.get(transaction.id)?.bill?.role === 'payment',
+        };
+        const reason = transaction.whyCannotTakeCategory(category, context);
         if (reason !== null) return reason;
         if (transaction.hasCategoryChosenBy(category.id)) return 'no_change';
-        transaction.assignCategory(category, now);
+        transaction.assignCategory(category, now, context);
 
         return null;
       };

@@ -3,6 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 
 import { server } from '#mocks/setup/server.util.ts';
+import { db } from '#mocks/state/mock-database.store.ts';
 import { renderApp } from '#tests/support/app/render-app.util.tsx';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
 
@@ -135,6 +136,18 @@ describe('ReviewQueuePage', () => {
       await within(card).findByRole('button', { name: 'Compras', pressed: true }),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: SAVE_LABEL })).toBeEnabled();
+  });
+
+  it('offers the category that is a transfer to an incoming transaction too (the other leg of a rotation)', async () => {
+    const incoming = db.transactions.find((tx) => tx.description === 'PIX LANCHONETE ZE');
+    if (!incoming) throw new Error('seed without PIX LANCHONETE ZE');
+    incoming.nature = 'income';
+    incoming.amountCents = Math.abs(incoming.amountCents);
+    const card = await openQueue();
+
+    fireEvent.click(within(card).getByRole('button', { name: 'Outra' }));
+
+    expect(await screen.findByRole('button', { name: 'Rotação entre contas' })).toBeInTheDocument();
   });
 
   it('shows "Tudo revisado" when the queue is empty and goes back to the transactions', async () => {

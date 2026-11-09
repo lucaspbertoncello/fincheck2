@@ -33,6 +33,10 @@ const ICON_BY_CATEGORY_ICON: Record<CategoryIconName, IconName> = {
   trend: 'trend',
   wallet: 'wallet',
   tag: 'tag',
+  leaf: 'leaf',
+  stadium: 'stadium',
+  transfer: 'transfer',
+  people: 'people',
 };
 
 /**

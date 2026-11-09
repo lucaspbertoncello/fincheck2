@@ -61,6 +61,8 @@ export type CategoryPageViewProps = {
   description: string;
   icon: IconName;
   archived: boolean;
+  /** A transfer between own accounts ("Rotação entre contas"): it does not count as spending. */
+  isTransfer: boolean;
   /** The header picker: the month and the period menu of Transações. */
   picker: ReactNode;
   actionError: { message: string; onClose: () => void } | null;

@@ -13,6 +13,8 @@ export const categoryDtoSchema = z.object({
   name: z.string(),
   icon: categoryIconSchema,
   isDefault: z.boolean(),
+  // A transfer between own accounts ("Rotação entre contas"): a transaction in it is not spending.
+  isTransfer: z.boolean(),
   archivedAt: instantSchema.nullable(),
   transactionCount: z.int().nonnegative(),
   ruleCount: z.int().nonnegative(),

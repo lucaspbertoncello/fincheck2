@@ -35,8 +35,9 @@ export function computeRuleEffect(
 
   const matches = database.transactions.filter((tx) => {
     if (tx.ignoredAt || tx.splits.length > 0 || !ruleMatches(rule, tx)) return false;
-    // A rule of expenses never puts a category in an income.
-    return !category || category.kind === tx.nature;
+    // A rule of expenses never puts a category in an income; the category that is a transfer
+    // sees both directions (the outgoing and the incoming leg of a rotation).
+    return !category || category.isTransfer || category.kind === tx.nature;
   });
 
   const olderRuleWins = (tx: MockState.TransactionRecord) => {

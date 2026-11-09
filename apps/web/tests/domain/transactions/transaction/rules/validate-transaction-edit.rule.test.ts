@@ -37,4 +37,11 @@ describe('validateTransactionEdit', () => {
       validateTransactionEdit({ ...values, nature: 'transfer', counterpartId: 'leg-1' }),
     ).toEqual({});
   });
+
+  it('does not ask for the other leg of a transfer that is one by its category', () => {
+    const rotation = { ...values, nature: 'transfer' as const, categoryId: 'rotation' };
+
+    expect(validateTransactionEdit(rotation, { legOptional: true })).toEqual({});
+    expect(validateTransactionEdit(rotation).counterpart).toBeDefined();
+  });
 });

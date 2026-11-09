@@ -113,8 +113,9 @@ function ReviewVisit({ month }: { month: string }) {
   const cardChoices = pickedElsewhere ? [...suggestionChoices, pickedElsewhere] : suggestionChoices;
   const selectedIcon = cardChoices.find((choice) => choice.id === selectedId)?.icon;
 
+  // The category that is a transfer ("Rotação entre contas") fits both legs of a rotation.
   const pickerCategories: CategoryOption[] = categories
-    .filter((category) => category.kind === kind)
+    .filter((category) => category.kind === kind || category.isTransfer)
     .map((category) => ({
       id: category.id,
       name: category.name,

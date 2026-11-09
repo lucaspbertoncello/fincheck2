@@ -9,7 +9,8 @@ import { canRuleSetCategory } from '#/modules/transactions/domain/transaction/ca
 //
 // - `matches`: the matching of `categories`, handed over as a function, so there is one matching
 //   for the import, the preview and the history. A rule with a category only sees transactions of
-//   its kind (an expense rule never puts a category in an income).
+//   its kind (an expense rule never puts a category in an income), except a category that is a
+//   transfer, which sees both directions.
 // - A rule with a category changes a match when the category is free for it (not put by an older
 //   rule) and differs from the current one, or a tag is missing.
 //   A rule with no category (tags only) adds its tags to the matches that are free.
@@ -21,7 +22,9 @@ export function classifyRuleEffect(
 ): classifyRuleEffect.Output {
   const matched = candidates.filter(
     (candidate) =>
-      (definition.categoryKind === null || definition.categoryKind === candidate.nature) &&
+      (definition.categoryKind === null ||
+        definition.categoryIsTransfer === true ||
+        definition.categoryKind === candidate.nature) &&
       definition.matches(candidate),
   );
 
@@ -56,6 +59,8 @@ export namespace classifyRuleEffect {
   export type Definition = {
     categoryId: string | null;
     categoryKind: 'expense' | 'income' | null;
+    // The category is a transfer between own accounts: what it takes becomes a `transfer`.
+    categoryIsTransfer?: boolean;
     tagIds: string[];
     // The rules older than this one: what they categorized stays (N9).
     olderRuleIds: ReadonlySet<string>;

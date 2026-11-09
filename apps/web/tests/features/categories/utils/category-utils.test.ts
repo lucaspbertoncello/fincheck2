@@ -14,6 +14,7 @@ function category(overrides: Partial<Category.Dto>): Category.Dto {
     name: 'Mercado',
     icon: 'cart',
     isDefault: false,
+    isTransfer: false,
     archivedAt: null,
     transactionCount: 12,
     ruleCount: 0,

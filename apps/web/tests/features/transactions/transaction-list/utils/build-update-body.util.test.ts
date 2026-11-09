@@ -56,4 +56,58 @@ describe('buildUpdateBody', () => {
       buildUpdateBody(outside, { ...values, nature: 'out_of_account', categoryId: null }, []),
     ).toBeNull();
   });
+
+  describe('a transfer that carries the category that is a transfer', () => {
+    const rotation = makeTransaction({
+      nature: 'transfer',
+      categoryId: 'rotation',
+      amountCents: -5000,
+    });
+    const asRotation = {
+      ...values,
+      nature: 'transfer' as const,
+      categoryId: 'rotation',
+    };
+
+    it('choosing the other leg sends the nature with it and keeps the category', () => {
+      expect(buildUpdateBody(rotation, { ...asRotation, counterpartId: 'trx-2' }, [])).toEqual({
+        nature: 'transfer',
+        transferCounterpartId: 'trx-2',
+      });
+    });
+
+    it('taking the category off sends only that (the nature goes back by the sign)', () => {
+      expect(
+        buildUpdateBody(rotation, { ...asRotation, categoryId: null, counterpartId: 'trx-2' }, []),
+      ).toEqual({ categoryId: null });
+    });
+
+    it('swapping it for another transfer category sends the new one', () => {
+      expect(buildUpdateBody(rotation, { ...asRotation, categoryId: 'other' }, [])).toEqual({
+        categoryId: 'other',
+      });
+    });
+
+    it('turning it into an expense sends the nature and does not send a category too', () => {
+      expect(
+        buildUpdateBody(rotation, { ...values, nature: 'expense', categoryId: null }, []),
+      ).toEqual({ nature: 'expense' });
+    });
+
+    it('picking it on an expense sends the category', () => {
+      expect(buildUpdateBody(base, { ...values, categoryId: 'rotation' }, ['t1'])).toEqual({
+        categoryId: 'rotation',
+      });
+    });
+  });
+
+  it('a transfer with no link: choosing the other leg sends the nature with it', () => {
+    const unlinked = makeTransaction({ nature: 'transfer', categoryId: null });
+    const body = buildUpdateBody(
+      unlinked,
+      { ...values, nature: 'transfer', categoryId: null, counterpartId: 'trx-2' },
+      [],
+    );
+    expect(body).toEqual({ nature: 'transfer', transferCounterpartId: 'trx-2' });
+  });
 });

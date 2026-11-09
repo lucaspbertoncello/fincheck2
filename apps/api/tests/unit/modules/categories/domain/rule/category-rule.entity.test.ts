@@ -88,6 +88,20 @@ describe('CategoryRule', () => {
       expect(CategoryRule.create(input({ kind: null }), NOW)).toBeDefined();
     });
 
+    it('accepts a category that is a transfer with a rule of either kind', () => {
+      const rotation = {
+        id: 'rotation',
+        kind: 'expense',
+        isArchived: false,
+        isTransfer: true,
+      } as const;
+
+      expect(CategoryRule.create(input({ kind: 'income', category: rotation }), NOW)).toBeDefined();
+      expect(
+        CategoryRule.create(input({ kind: 'expense', category: rotation }), NOW),
+      ).toBeDefined();
+    });
+
     it('refuses an archived category and an archived tag', () => {
       expect(() => CategoryRule.create(input({ category: ARCHIVED }), NOW)).toThrow(
         RuleCategoryArchivedError,

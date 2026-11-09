@@ -41,6 +41,7 @@ export class CategoryPresenter {
       // Written only by the API, from the list of the contract.
       icon: row.icon as Category.Icon,
       isDefault: row.is_default === 1,
+      isTransfer: row.is_transfer === 1,
       archivedAt: row.archived_at,
       transactionCount: usage.get(row.id)?.transactionCount ?? 0,
       ruleCount: ruleCounts.get(row.id) ?? 0,

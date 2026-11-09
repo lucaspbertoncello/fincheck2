@@ -154,6 +154,7 @@ export function CategoryPageViewModel() {
     description: `Categoria de ${isExpense ? 'despesa' : 'receita'}${category?.archivedAt ? ' · arquivada' : ''}`,
     icon: mapCategoryIcon(category?.icon),
     archived: Boolean(category?.archivedAt),
+    isTransfer: category?.isTransfer ?? false,
     picker: <TransactionPeriodPickerViewModel />,
     actionError: error.message ? { message: error.message, onClose: error.clear } : null,
     onEdit: () => setEditing(true),

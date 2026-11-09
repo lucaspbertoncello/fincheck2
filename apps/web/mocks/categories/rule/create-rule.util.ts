@@ -28,7 +28,8 @@ export function createRule(database: MockState.Database, input: NewRule): Rule.C
     fail(422, 'RULE_ACTION_REQUIRED', 'Escolha uma categoria ou uma tag');
   if (input.categoryId) {
     const category = findCategory(database, input.categoryId);
-    if (input.kind && input.kind !== category.kind)
+    // A category that is a transfer fits a rule of either kind.
+    if (input.kind && !category.isTransfer && input.kind !== category.kind)
       fail(422, 'RULE_CATEGORY_KIND_MISMATCH', 'Tipo diferente do da categoria');
     if (category.archivedAt) fail(422, 'RULE_CATEGORY_ARCHIVED', 'Categoria arquivada');
   }

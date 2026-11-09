@@ -57,11 +57,22 @@ export function useTransactionEditing({
   const mine = problem?.id === transaction.id ? problem : undefined;
   const kind = values.nature === 'income' ? 'income' : 'expense';
 
-  // Switching between expense and income drops a category of the other kind.
+  // A transfer that is one by its category ("Rotação entre contas") shows that category next to
+  // the other leg, and the other leg is optional.
+  const transferByCategory = transaction.nature === 'transfer' && transaction.categoryId !== null;
+  const allCategories = [...lookups.categories.values()];
+
+  // Switching the nature drops the category that no longer fits: one of the other kind going to
+  // expense or income, any but the one that is a transfer going to a transfer, and the one that
+  // is a transfer leaving it (the nature no longer comes from it).
   function withValidCategory(next: typeof values): typeof values {
     if (next.nature === values.nature || !next.categoryId) return next;
+    const category = lookups.categories.get(next.categoryId);
+    if (next.nature === 'transfer') {
+      return category?.isTransfer === true ? next : { ...next, categoryId: null };
+    }
     if (next.nature !== 'expense' && next.nature !== 'income') return next;
-    return lookups.categories.get(next.categoryId)?.kind === next.nature
+    return category?.kind === next.nature && category.isTransfer !== true
       ? next
       : { ...next, categoryId: null };
   }
@@ -80,7 +91,7 @@ export function useTransactionEditing({
 
   async function save() {
     if (!transaction) return;
-    const errors = validateTransactionEdit(values);
+    const errors = validateTransactionEdit(values, { legOptional: transferByCategory });
     if (Object.keys(errors).length > 0) {
       setProblem({ id: transaction.id, errors });
       focusFirstInvalid();
@@ -116,7 +127,15 @@ export function useTransactionEditing({
     values,
     onChange: (next: typeof values) =>
       setDraft({ id: transaction.id, values: withValidCategory(next) }),
-    categories: buildCategoryOptions([...lookups.categories.values()], kind),
+    // The category that is a transfer fits both legs of a rotation, so it shows for any kind.
+    categories: buildCategoryOptions(allCategories, kind, { withTransfer: true }),
+    transferCategories: transferByCategory
+      ? buildCategoryOptions(
+          allCategories.filter((category) => category.isTransfer),
+          'expense',
+          { withTransfer: true },
+        )
+      : [],
     counterparts: buildCounterpartOptions(
       transaction,
       model.monthTransactions.data?.items ??

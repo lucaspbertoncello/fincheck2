@@ -1,5 +1,7 @@
 import type { TransactionBulk } from '@fincheck/shared/transactions/transaction-bulk/transaction-bulk.type.ts';
 
+import { canTakeTransferCategory } from '#mocks/transactions/transaction/can-take-transfer-category.util.ts';
+import { takeTransferCategory } from '#mocks/transactions/transaction/take-transfer-category.util.ts';
 import { computeRuleEffect } from '#mocks/categories/rule/compute-rule-effect.util.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
 import { NOW_ISO } from '#mocks/support/dates/mock-clock.store.ts';
@@ -17,14 +19,23 @@ export function applyRule(
   );
   if (!rule.categoryId && tagIds.length === 0) return { changedCount: 0, previous: [] };
 
-  const { changes } = computeRuleEffect(database, { ...rule, tagIds }, rule.createdAt);
+  const category = database.categories.find((item) => item.id === rule.categoryId);
+  const effect = computeRuleEffect(database, { ...rule, tagIds }, rule.createdAt);
+  // What cannot become a transfer (an occurrence or a bill ties its nature) is left as it is.
+  const changes = category?.isTransfer
+    ? effect.changes.filter((tx) => canTakeTransferCategory(database, tx))
+    : effect.changes;
   const previous = changes.map(toPreviousState);
 
   for (const tx of changes) {
     if (rule.categoryId && tx.categoryId !== rule.categoryId) {
-      tx.categoryId = rule.categoryId;
-      tx.categorySource = 'rule';
-      tx.categoryRuleId = rule.id;
+      if (category?.isTransfer) {
+        takeTransferCategory(tx, rule.categoryId, { source: 'rule', ruleId: rule.id });
+      } else {
+        tx.categoryId = rule.categoryId;
+        tx.categorySource = 'rule';
+        tx.categoryRuleId = rule.id;
+      }
     }
     tx.tagIds = [...new Set([...tx.tagIds, ...tagIds])];
     tx.updatedAt = NOW_ISO;

@@ -2,7 +2,7 @@ import { newId } from '#mocks/state/mock-id.store.ts';
 
 // Every id the seed steps share, made once and in a fixed order (so a reset gives the same ids).
 export function buildSeedIds() {
-  return {
+  const base = {
     cat: {
       mercado: newId(),
       restaurantes: newId(),
@@ -54,6 +54,20 @@ export function buildSeedIds() {
       diarista: newId(),
       streaming: newId(),
       celular: newId(),
+    },
+  };
+
+  // The five categories asked by Lucas on 09/11 take the last ids, so the ones above (that tests
+  // and the capture targets name by number) stay where they were.
+  return {
+    ...base,
+    cat: {
+      ...base.cat,
+      rotacaoContas: newId(),
+      estadio: newId(),
+      maconha: newId(),
+      amigosFamilia: newId(),
+      taxas: newId(),
     },
   };
 }

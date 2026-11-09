@@ -60,6 +60,8 @@ export type TransactionEditorView = {
   values: TransactionEditValues;
   onChange: (values: TransactionEditValues) => void;
   categories: CategoryOption[];
+  /** The categories that are a transfer, offered next to the other leg when the transaction has one. */
+  transferCategories: CategoryOption[];
   counterparts: ChoiceOption[];
   errors: TransactionEditErrors;
   /** One line under the title: where the transaction is from. */

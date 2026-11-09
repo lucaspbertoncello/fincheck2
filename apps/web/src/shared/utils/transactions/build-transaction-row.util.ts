@@ -44,7 +44,10 @@ export function buildTransactionRow(
       ? ''
       : counts
         ? (category?.name ?? '')
-        : OUT_OF_ACCOUNT_LABELS[transaction.nature],
+        : transaction.nature === 'transfer' && category
+          ? // A transfer made by the category that is a transfer says which one.
+            category.name
+          : OUT_OF_ACCOUNT_LABELS[transaction.nature],
     accountLabel: accountLabel(transaction, lookups),
     tags,
     installment: transaction.installment

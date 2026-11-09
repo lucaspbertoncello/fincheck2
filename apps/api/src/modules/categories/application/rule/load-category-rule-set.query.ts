@@ -62,7 +62,12 @@ export class LoadCategoryRuleSetQuery {
 
           if (category !== null || rule.categoryId === null) continue;
           const ref = categories.get(rule.categoryId);
-          if (ref && !ref.isArchived && ref.kind === candidate.nature) {
+          // A category that is a transfer serves both directions.
+          if (
+            ref &&
+            !ref.isArchived &&
+            (ref.isTransfer === true || ref.kind === candidate.nature)
+          ) {
             ruleId = rule.id;
             category = ref;
           }
@@ -80,7 +85,12 @@ export namespace LoadCategoryRuleSetQuery {
   export type Resolution = {
     // The rule that defined the category; null when only tags came out.
     ruleId: string | null;
-    category: { id: string; kind: 'expense' | 'income'; isArchived: boolean } | null;
+    category: {
+      id: string;
+      kind: 'expense' | 'income';
+      isArchived: boolean;
+      isTransfer?: boolean;
+    } | null;
     tagIds: string[];
   };
 

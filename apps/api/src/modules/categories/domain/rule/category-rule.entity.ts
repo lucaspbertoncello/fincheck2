@@ -177,7 +177,13 @@ export class CategoryRule {
     kind: 'expense' | 'income' | null,
     category: CategoryRule.CategoryRef | null,
   ): void {
-    if (kind !== null && category !== null && kind !== category.kind) {
+    // A category that is a transfer fits a rule of either kind (both legs of a rotation).
+    if (
+      kind !== null &&
+      category !== null &&
+      category.isTransfer !== true &&
+      kind !== category.kind
+    ) {
       throw new RuleCategoryKindMismatchError();
     }
   }
@@ -200,7 +206,13 @@ export namespace CategoryRule {
   };
 
   // What the rule needs to know of the other aggregates, as plain values read by the use case.
-  export type CategoryRef = { id: string; kind: 'expense' | 'income'; isArchived: boolean };
+  export type CategoryRef = {
+    id: string;
+    kind: 'expense' | 'income';
+    isArchived: boolean;
+    // A transfer between own accounts: a transaction in it is a transfer, not spending.
+    isTransfer?: boolean;
+  };
   export type TagRef = { id: string; isArchived: boolean };
 
   // The six fields that say which transactions a rule sees.

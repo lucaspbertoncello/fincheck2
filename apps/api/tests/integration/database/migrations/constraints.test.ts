@@ -44,12 +44,15 @@ describe('database constraints', () => {
       );
     });
 
-    it('block A: refuses a category on a transfer', async () => {
+    it('block A: refuses a category on a paid invoice (a transfer may keep one)', async () => {
       const accountId = await insertTestAccount(db());
       const categoryId = await insertTestCategory(db());
 
       await expect(
-        insertTestTransaction(db(), accountId, { nature: 'transfer', category_id: categoryId }),
+        insertTestTransaction(db(), accountId, {
+          nature: 'invoice_payment',
+          category_id: categoryId,
+        }),
       ).rejects.toThrow(/CHECK constraint failed/);
     });
 

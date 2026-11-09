@@ -19,7 +19,7 @@ export function createTestCategoryReader(db: Kysely<Database>): TransactionCateg
     async requireCategories(categoryIds, executor = db) {
       const rows = await executor
         .selectFrom('categories')
-        .select(['id', 'kind', 'archived_at'])
+        .select(['id', 'kind', 'archived_at', 'is_transfer'])
         .where('id', 'in', categoryIds)
         .execute();
       if (rows.length !== categoryIds.length) throw new FakeCategoryNotFoundError();
@@ -27,7 +27,12 @@ export function createTestCategoryReader(db: Kysely<Database>): TransactionCateg
       return new Map(
         rows.map((row) => [
           row.id,
-          { id: row.id, kind: row.kind, isArchived: row.archived_at !== null },
+          {
+            id: row.id,
+            kind: row.kind,
+            isArchived: row.archived_at !== null,
+            isTransfer: row.is_transfer === 1,
+          },
         ]),
       );
     },

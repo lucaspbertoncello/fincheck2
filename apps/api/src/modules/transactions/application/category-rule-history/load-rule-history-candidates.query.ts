@@ -70,9 +70,48 @@ export class LoadRuleHistoryCandidatesQuery {
       tagIds: tagsByTransaction.get(row.id) ?? [],
     }));
   }
+
+  // The links that lock the nature of a transaction (the ones that make it count where it is):
+  // which of these ids settle an occurrence of a recurrence, pay a bill or pay an invoice. Read
+  // from the link tables, the way `links` does, only for a rule whose category is a transfer.
+  async lockedByLinks(
+    transactionIds: string[],
+    executor: Kysely<Database> = this.db,
+  ): Promise<LoadRuleHistoryCandidatesQuery.Links> {
+    if (transactionIds.length === 0) {
+      return { occurrence: new Set(), bill: new Set(), invoice: new Set() };
+    }
+    const [occurrence, bill, invoice] = await Promise.all([
+      executor
+        .selectFrom('occurrence_payments')
+        .select('transaction_id')
+        .where('transaction_id', 'in', transactionIds)
+        .execute(),
+      executor
+        .selectFrom('bill_payments')
+        .select('transaction_id')
+        .where('transaction_id', 'in', transactionIds)
+        .execute(),
+      executor
+        .selectFrom('invoice_payments')
+        .select('transaction_id')
+        .where('transaction_id', 'in', transactionIds)
+        .execute(),
+    ]);
+    const ids = (rows: { transaction_id: string | null }[]) =>
+      new Set(rows.flatMap((row) => (row.transaction_id === null ? [] : [row.transaction_id])));
+
+    return { occurrence: ids(occurrence), bill: ids(bill), invoice: ids(invoice) };
+  }
 }
 
 export namespace LoadRuleHistoryCandidatesQuery {
+  export type Links = {
+    occurrence: ReadonlySet<string>;
+    bill: ReadonlySet<string>;
+    invoice: ReadonlySet<string>;
+  };
+
   export type Candidate = {
     id: string;
     // In use.

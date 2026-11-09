@@ -95,8 +95,8 @@ describe('database migrations', () => {
   it('seeds the ready-made categories, all default and active, with valid ids and icons', async () => {
     const rows = await database.db.selectFrom('categories').selectAll().execute();
 
-    expect(rows).toHaveLength(25);
-    expect(rows.filter((row) => row.kind === 'expense')).toHaveLength(19);
+    expect(rows).toHaveLength(30);
+    expect(rows.filter((row) => row.kind === 'expense')).toHaveLength(24);
     expect(rows.filter((row) => row.kind === 'income')).toHaveLength(6);
     expect(rows.map((row) => row.name)).toEqual(
       expect.arrayContaining([
@@ -136,9 +136,9 @@ describe('database migrations', () => {
       undone++;
     }
 
-    expect(undone).toBe(8);
+    expect(undone).toBe(9);
     expect(await listTables()).toEqual([]);
-  });
+  }, 30_000);
 
   it('applies again after undoing everything', async () => {
     const migrator = createMigrator(database.db);

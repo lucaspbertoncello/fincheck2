@@ -23,7 +23,12 @@ export namespace SyncRules {
   export type Resolution = {
     // The rule that defined the category; null when only tags came out.
     ruleId: string | null;
-    category: { id: string; kind: 'expense' | 'income'; isArchived: boolean } | null;
+    category: {
+      id: string;
+      kind: 'expense' | 'income';
+      isArchived: boolean;
+      isTransfer?: boolean;
+    } | null;
     tagIds: string[];
   };
 

@@ -5,6 +5,7 @@ import { InstallmentPlanNotManualError } from '#/modules/transactions/domain/ins
 import { TransactionAccountArchivedError } from '#/modules/transactions/domain/transaction/transaction-account-archived.error.ts';
 import { TransactionCategoryArchivedError } from '#/modules/transactions/domain/transaction/transaction-category-archived.error.ts';
 import { TransactionCategoryKindMismatchError } from '#/modules/transactions/domain/transaction/transaction-category-kind-mismatch.error.ts';
+import { TransactionCategoryNotAllowedError } from '#/modules/transactions/domain/transaction/transaction-category-not-allowed.error.ts';
 import { TransactionTagArchivedError } from '#/modules/transactions/domain/transaction/transaction-tag-archived.error.ts';
 import { Transaction } from '#/modules/transactions/domain/transaction/transaction.entity.ts';
 import type { BusinessDate } from '#/shared/date/business-date.value-object.ts';
@@ -65,6 +66,7 @@ export class InstallmentPlan {
     }
     if (input.category !== null) {
       if (input.category.isArchived) throw new TransactionCategoryArchivedError();
+      if (input.category.isTransfer === true) throw new TransactionCategoryNotAllowedError();
       if (input.category.kind !== 'expense') throw new TransactionCategoryKindMismatchError();
     }
     if (input.tags.some((tag) => tag.isArchived)) throw new TransactionTagArchivedError();

@@ -20,6 +20,8 @@ export namespace RuleHistoryPreviewer {
     categoryId: string | null;
     // The kind of the category: a rule with a category only sees transactions of its kind.
     categoryKind: 'expense' | 'income' | null;
+    // The category is a transfer between own accounts: what it takes becomes a `transfer`.
+    categoryIsTransfer?: boolean;
     tagIds: string[];
     // The rules older than this one: what they categorized stays (N9). For a rule that is not
     // saved yet, all of them.

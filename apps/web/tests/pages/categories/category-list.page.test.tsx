@@ -31,7 +31,7 @@ describe('CategoryListPage', () => {
     expect(within(table).getByText('Delivery')).toBeInTheDocument();
     expect(within(table).getByText('Mercado')).toBeInTheDocument();
     expect(within(table).queryByText('Viagem de 2025')).not.toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: /Despesas 19/ })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Despesas 24/ })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: /Receitas 7/ })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: /Arquivadas 1/ })).toBeInTheDocument();
 
@@ -131,7 +131,7 @@ describe('CategoryListPage', () => {
       await screen.findByText('Delivery arquivada. Sai da escolha de categoria.'),
     ).toBeInTheDocument();
     await waitFor(() => expect(within(table).queryByText('Delivery')).not.toBeInTheDocument());
-    expect(screen.getByRole('radio', { name: /Despesas 18/ })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Despesas 23/ })).toBeInTheDocument();
 
     fireEvent.click(await screen.findByText('Desfazer'));
     await waitFor(() => expect(within(table).getByText('Delivery')).toBeInTheDocument());
@@ -193,7 +193,7 @@ describe('CategoryListPage', () => {
     await waitFor(() =>
       expect(within(dialog).getByRole('textbox', { name: 'Nome' })).toHaveFocus(),
     );
-    expect(within(dialog).getAllByRole('radio', { name: /^(?!Despesa|Receita)/ }).length).toBe(28);
+    expect(within(dialog).getAllByRole('radio', { name: /^(?!Despesa|Receita)/ }).length).toBe(32);
 
     await user.click(within(dialog).getByRole('radio', { name: 'Academia' }));
     expect(within(dialog).getByRole('radio', { name: 'Academia' })).toBeChecked();

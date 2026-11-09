@@ -13,6 +13,9 @@ export const previousStateSchema = z.object({
   categoryRuleId: idSchema.nullable(),
   tagIds: z.array(idSchema),
   ignoredAt: instantSchema.nullable(),
+  // Who had set the nature; the undo of a category that is a transfer gives it back. Older
+  // responses carry none: the system.
+  natureSetBy: z.enum(['system', 'user']).optional(),
 });
 
 const bulkActionSchema = z.discriminatedUnion('type', [

@@ -1,6 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { DpapiSecretCipher } from '#/modules/sync/infra/secret/dpapi-secret-cipher.service.ts';
+
+// Each call opens PowerShell, which takes longer than the default 5 s on a busy machine.
+vi.setConfig({ testTimeout: 30_000 });
 
 const SECRETS = [
   'my-client-secret',

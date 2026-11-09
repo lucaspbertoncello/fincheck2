@@ -287,6 +287,7 @@ export function TransactionListViewModel() {
           values: editing.values,
           onChange: editing.onChange,
           categories: editing.categories,
+          transferCategories: editing.transferCategories,
           counterparts: editing.counterparts,
           errors: editing.errors,
           description: editing.description,

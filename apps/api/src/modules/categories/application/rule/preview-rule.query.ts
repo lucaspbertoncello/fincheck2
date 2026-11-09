@@ -33,7 +33,12 @@ export class PreviewRuleQuery {
     const category = await this.references.category(input.categoryId ?? null);
     const tagIds = [...new Set(input.tagIds ?? [])];
     await this.references.tagsOf(tagIds);
-    if (kind !== null && category !== null && kind !== category.kind) {
+    if (
+      kind !== null &&
+      category !== null &&
+      category.isTransfer !== true &&
+      kind !== category.kind
+    ) {
       throw new RuleCategoryKindMismatchError();
     }
 

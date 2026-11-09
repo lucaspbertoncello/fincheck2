@@ -64,10 +64,11 @@ describe('categories routes', () => {
     it('brings the ready-made categories, active, by name with no difference for accent', async () => {
       const items = await list();
 
-      expect(items).toHaveLength(25);
+      expect(items).toHaveLength(30);
       expect(items.every((item) => item.isDefault && item.archivedAt === null)).toBe(true);
       const expenses = items.filter((item) => item.kind === 'expense').map((item) => item.name);
       expect(expenses).toEqual([
+        'Amigos e família',
         'Assinaturas',
         'Combustível',
         'Compras',
@@ -75,20 +76,33 @@ describe('categories routes', () => {
         'Delivery',
         'Educação',
         'Esportes',
-        'Impostos e taxas',
+        'Estádio',
+        'Impostos',
         'Lazer',
+        'Maconha',
         'Mercado',
         'Moradia',
         'Outros',
         'Pets',
         'Presentes e doações',
         'Restaurantes',
+        'Rotação entre contas',
         'Saúde',
+        'Taxas',
         'Tecnologia',
         'Transporte',
         'Viagem',
       ]);
       expect(items[0]).toMatchObject({ transactionCount: 0, ruleCount: 0, lastUsedOn: null });
+    });
+
+    it('marks only "Rotação entre contas" as a transfer (it does not count as spending)', async () => {
+      const items = await list();
+
+      expect(items.filter((item) => item.isTransfer).map((item) => item.name)).toEqual([
+        'Rotação entre contas',
+      ]);
+      expect(items.every((item) => typeof item.isTransfer === 'boolean')).toBe(true);
     });
 
     it('filters by kind and by status', async () => {
@@ -220,12 +234,13 @@ describe('categories routes', () => {
         name: 'Marmitas',
         icon: 'pet',
         isDefault: false,
+        isTransfer: false,
         archivedAt: null,
         transactionCount: 0,
         ruleCount: 0,
         lastUsedOn: null,
       });
-      expect(await list()).toHaveLength(26);
+      expect(await list()).toHaveLength(31);
     });
 
     it('refuses a name the same kind already has, whatever the case or the accent', async () => {
@@ -275,7 +290,7 @@ describe('categories routes', () => {
         );
       }
       await expectError(await send('POST', '/categories', {}), 400, 'VALIDATION_FAILED');
-      expect(await list()).toHaveLength(25);
+      expect(await list()).toHaveLength(30);
     });
 
     it('takes a name of exactly 40 characters', async () => {
@@ -297,6 +312,17 @@ describe('categories routes', () => {
 
       expect(dto).toMatchObject({ id, kind: 'expense', name: 'Supermercado', icon: 'gift' });
       expect(dto.isDefault).toBe(true);
+      expect(dto.isTransfer).toBe(false);
+    });
+
+    it('does not let the body make a category a transfer', async () => {
+      const id = await idOf('Mercado');
+
+      await expectError(
+        await send('PATCH', `/categories/${id}`, { isTransfer: true }),
+        400,
+        'VALIDATION_FAILED',
+      );
     });
 
     it('takes only the name, or only the icon', async () => {
@@ -425,7 +451,7 @@ describe('categories routes', () => {
     const id = await idOf('Mercado');
 
     await expectError(await send('DELETE', `/categories/${id}`), 404, 'ROUTE_NOT_FOUND');
-    expect(await list()).toHaveLength(25);
+    expect(await list()).toHaveLength(30);
   });
 
   it('answers 401 on every route without the local token', async () => {

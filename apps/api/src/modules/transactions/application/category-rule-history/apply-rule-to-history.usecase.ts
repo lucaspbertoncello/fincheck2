@@ -42,7 +42,20 @@ export class ApplyRuleToHistoryUseCase {
     const category =
       definition.categoryId === null || definition.categoryKind === null
         ? null
-        : { id: definition.categoryId, kind: definition.categoryKind, isArchived: false };
+        : {
+            id: definition.categoryId,
+            kind: definition.categoryKind,
+            isArchived: false,
+            isTransfer: definition.categoryIsTransfer === true,
+          };
+    // A category that is a transfer changes the nature, which a link locks: read them once.
+    const links =
+      category?.isTransfer === true
+        ? await this.candidates.lockedByLinks(
+            found.map((transaction) => transaction.id),
+            executor,
+          )
+        : undefined;
 
     const previous: TransactionBulk.PreviousState[] = [];
     for (const transaction of found) {
@@ -51,6 +64,12 @@ export class ApplyRuleToHistoryUseCase {
         { id: input.ruleId, category, tagIds: definition.tagIds },
         definition.olderRuleIds,
         now,
+        {
+          isCardAccount: false,
+          hasActiveInvoiceLink: links?.invoice.has(transaction.id) ?? false,
+          hasActiveOccurrenceLink: links?.occurrence.has(transaction.id) ?? false,
+          hasActiveBillLink: links?.bill.has(transaction.id) ?? false,
+        },
       );
       if (!changed) continue;
       previous.push(before);

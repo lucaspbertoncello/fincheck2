@@ -12,6 +12,7 @@ export function buildHistoryDefinition(input: {
   return {
     categoryId: input.category?.id ?? null,
     categoryKind: input.category?.kind ?? null,
+    categoryIsTransfer: input.category?.isTransfer === true,
     tagIds: input.tagIds,
     olderRuleIds: input.olderRuleIds,
     matches: (candidate) => matchesRuleCondition(input.condition, candidate),

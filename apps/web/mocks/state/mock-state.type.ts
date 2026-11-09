@@ -103,6 +103,8 @@ export namespace MockState {
     name: string;
     icon: Category.Icon;
     isDefault: boolean;
+    /** A transfer between own accounts ("Rotação entre contas"): a transaction in it is not spending. */
+    isTransfer: boolean;
     archivedAt: string | null;
   }
 
