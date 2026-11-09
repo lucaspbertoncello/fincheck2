@@ -48,6 +48,7 @@ export class SplitTransactionUseCase {
           description: part.description ?? null,
         })),
         this.clock.now(),
+        await this.references.tagsById(transaction.tagIds, executor),
       );
       await this.transactions.save(transaction, executor);
 

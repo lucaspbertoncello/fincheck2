@@ -6,6 +6,7 @@ import { RuleCategoryArchivedError } from '#/modules/categories/domain/rule/rule
 import { RuleCategoryKindMismatchError } from '#/modules/categories/domain/rule/rule-category-kind-mismatch.error.ts';
 import { RuleDisabledError } from '#/modules/categories/domain/rule/rule-disabled.error.ts';
 import { RuleTagArchivedError } from '#/modules/categories/domain/rule/rule-tag-archived.error.ts';
+import { RuleTagCategoryMismatchError } from '#/modules/categories/domain/rule/rule-tag-category-mismatch.error.ts';
 import { RequestValidationError } from '#/shared/errors/request-validation.error.ts';
 
 const NOW = '2026-11-06T12:00:00.000Z';
@@ -13,8 +14,9 @@ const LATER = '2026-11-07T09:00:00.000Z';
 const DELIVERY = { id: 'delivery', kind: 'expense', isArchived: false } as const;
 const SALARY = { id: 'salary', kind: 'income', isArchived: false } as const;
 const ARCHIVED = { id: 'old', kind: 'expense', isArchived: true } as const;
-const TAG = { id: 'tag-1', isArchived: false };
-const OTHER_TAG = { id: 'tag-2', isArchived: false };
+const TAG = { id: 'tag-1', categoryId: 'delivery', isArchived: false };
+const OTHER_TAG = { id: 'tag-2', categoryId: 'delivery', isArchived: false };
+const FOREIGN_TAG = { id: 'tag-x', categoryId: 'salary', isArchived: false };
 
 function input(overrides: Partial<CategoryRule.CreateInput> = {}): CategoryRule.CreateInput {
   return {
@@ -46,11 +48,13 @@ describe('CategoryRule', () => {
       expect(rule.id).toMatch(/^[0-9a-f-]{36}$/);
     });
 
-    it('takes a rule that only adds tags', () => {
-      const rule = CategoryRule.create(input({ category: null, tags: [TAG] }), NOW);
-
-      expect(rule.categoryId).toBeNull();
-      expect(rule.tagIds).toEqual(['tag-1']);
+    it('refuses a tag of another category, and any tag when the rule has no category', () => {
+      expect(() => CategoryRule.create(input({ tags: [TAG, FOREIGN_TAG] }), NOW)).toThrow(
+        RuleTagCategoryMismatchError,
+      );
+      expect(() => CategoryRule.create(input({ category: null, tags: [TAG] }), NOW)).toThrow(
+        RuleTagCategoryMismatchError,
+      );
     });
 
     it('needs a category or a tag', () => {
@@ -107,7 +111,10 @@ describe('CategoryRule', () => {
         RuleCategoryArchivedError,
       );
       expect(() =>
-        CategoryRule.create(input({ tags: [{ id: 'old-tag', isArchived: true }] }), NOW),
+        CategoryRule.create(
+          input({ tags: [{ id: 'old-tag', categoryId: 'delivery', isArchived: true }] }),
+          NOW,
+        ),
       ).toThrow(RuleTagArchivedError);
     });
   });
@@ -123,7 +130,7 @@ describe('CategoryRule', () => {
 
       rule.edit(
         { counterpartyContains: null, kind: null, enabled: false },
-        { category: DELIVERY, newTags: [] },
+        { category: DELIVERY, tags: [] },
         LATER,
       );
 
@@ -138,21 +145,42 @@ describe('CategoryRule', () => {
       });
     });
 
-    it('replaces the set of tags and takes the category away', () => {
+    it('replaces the set of tags', () => {
       const rule = base();
 
-      rule.edit({ tagIds: ['tag-2'] }, { category: null, newTags: [OTHER_TAG] }, LATER);
+      rule.edit({ tagIds: ['tag-2'] }, { category: DELIVERY, tags: [OTHER_TAG] }, LATER);
 
-      expect(rule).toMatchObject({ categoryId: null, tagIds: ['tag-2'] });
+      expect(rule).toMatchObject({ categoryId: 'delivery', tagIds: ['tag-2'] });
+    });
+
+    it('refuses to take the category away while tags stay, and a tag of another category', () => {
+      const rule = base();
+
+      expect(() => rule.edit({}, { category: null, tags: [TAG] }, LATER)).toThrow(
+        RuleTagCategoryMismatchError,
+      );
+      expect(() =>
+        rule.edit({ tagIds: ['tag-x'] }, { category: DELIVERY, tags: [FOREIGN_TAG] }, LATER),
+      ).toThrow(RuleTagCategoryMismatchError);
+    });
+
+    it('refuses to move the rule to another category and keep the old tags', () => {
+      const rule = base();
+
+      expect(() => rule.edit({}, { category: SALARY, tags: [TAG] }, LATER)).toThrow(
+        RuleTagCategoryMismatchError,
+      );
+      rule.edit({ tagIds: [] }, { category: SALARY, tags: [] }, LATER);
+      expect(rule).toMatchObject({ categoryId: 'salary', tagIds: [] });
     });
 
     it('cannot end up without a category and without tags', () => {
       const rule = CategoryRule.create(input(), NOW);
 
-      expect(() => rule.edit({}, { category: null, newTags: [] }, LATER)).toThrow(
+      expect(() => rule.edit({}, { category: null, tags: [] }, LATER)).toThrow(
         RuleActionRequiredError,
       );
-      expect(() => rule.edit({ tagIds: [] }, { category: null, newTags: [] }, LATER)).toThrow(
+      expect(() => rule.edit({ tagIds: [] }, { category: null, tags: [] }, LATER)).toThrow(
         RuleActionRequiredError,
       );
     });
@@ -161,7 +189,7 @@ describe('CategoryRule', () => {
       const rule = CategoryRule.create(input(), NOW);
 
       expect(() =>
-        rule.edit({ descriptionContains: null }, { category: DELIVERY, newTags: [] }, LATER),
+        rule.edit({ descriptionContains: null }, { category: DELIVERY, tags: [] }, LATER),
       ).toThrow(RequestValidationError);
     });
 
@@ -169,27 +197,27 @@ describe('CategoryRule', () => {
       const rule = CategoryRule.create(input({ amountMinCents: 5000 }), NOW);
 
       expect(() =>
-        rule.edit({ amountMaxCents: 100 }, { category: DELIVERY, newTags: [] }, LATER),
+        rule.edit({ amountMaxCents: 100 }, { category: DELIVERY, tags: [] }, LATER),
       ).toThrow(RequestValidationError);
     });
 
     it('checks the new kind against the category it keeps', () => {
       const rule = CategoryRule.create(input(), NOW);
 
-      expect(() =>
-        rule.edit({ kind: 'income' }, { category: DELIVERY, newTags: [] }, LATER),
-      ).toThrow(RuleCategoryKindMismatchError);
+      expect(() => rule.edit({ kind: 'income' }, { category: DELIVERY, tags: [] }, LATER)).toThrow(
+        RuleCategoryKindMismatchError,
+      );
     });
 
     it('refuses a new archived category, but keeps one that was archived after the rule', () => {
       const rule = CategoryRule.create(input(), NOW);
       const archivedLater = { ...DELIVERY, isArchived: true };
 
-      expect(() => rule.edit({}, { category: ARCHIVED, newTags: [] }, LATER)).toThrow(
+      expect(() => rule.edit({}, { category: ARCHIVED, tags: [] }, LATER)).toThrow(
         RuleCategoryArchivedError,
       );
       // N10: the rule stays on; switching it off is not a new choice of category.
-      rule.edit({ enabled: false }, { category: archivedLater, newTags: [] }, LATER);
+      rule.edit({ enabled: false }, { category: archivedLater, tags: [] }, LATER);
       expect(rule).toMatchObject({ categoryId: 'delivery', enabled: false });
     });
 
@@ -199,10 +227,22 @@ describe('CategoryRule', () => {
       expect(() =>
         rule.edit(
           { tagIds: ['tag-1', 'old-tag'] },
-          { category: DELIVERY, newTags: [{ id: 'old-tag', isArchived: true }] },
+          {
+            category: DELIVERY,
+            tags: [TAG, { id: 'old-tag', categoryId: 'delivery', isArchived: true }],
+          },
           LATER,
         ),
       ).toThrow(RuleTagArchivedError);
+    });
+
+    it('keeps an archived tag the rule already had', () => {
+      const rule = base();
+      const archivedLater = { ...TAG, isArchived: true };
+
+      rule.edit({ enabled: false }, { category: DELIVERY, tags: [archivedLater] }, LATER);
+
+      expect(rule.tagIds).toEqual(['tag-1']);
     });
   });
 

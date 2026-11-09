@@ -122,7 +122,7 @@ describe('classifyRuleEffect', () => {
     expect(ids(result.changes)).toEqual(['expense']);
   });
 
-  it('adds the tags of a tags-only rule to the free matches, never to what was put by hand', () => {
+  it('changes nothing when the rule has tags but no category: the tags only go with the category they belong to', () => {
     const result = classifyRuleEffect(
       [
         candidate({ id: 'by-hand', categoryId: 'food', categorySource: 'user' }),
@@ -133,8 +133,7 @@ describe('classifyRuleEffect', () => {
     );
 
     expect(result.matchCount).toBe(3);
-    expect(ids(result.changes)).toEqual(['income']);
-    expect(result.examples.map((example) => example.toCategoryId)).toEqual([null]);
+    expect(result.changes).toEqual([]);
   });
 
   it('counts every match as a change when the rule has no action yet (a preview of a form being filled)', () => {

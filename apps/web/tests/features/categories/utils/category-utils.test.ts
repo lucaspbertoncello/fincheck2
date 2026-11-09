@@ -1,6 +1,8 @@
 import type { Category } from '@fincheck/shared/categories/category/category.type.ts';
 import { describe, expect, it } from 'vitest';
 
+import type { Tag } from '@fincheck/shared/categories/tag/tag.type.ts';
+import { buildTagGroups } from '#/features/categories/utils/build-tag-groups.util.ts';
 import { describeArchivedCategory } from '#/features/categories/utils/describe-archived-category.util.ts';
 import { filterCategories } from '#/features/categories/utils/filter-categories.util.ts';
 import { countCategoriesByFilter } from '#/features/categories/utils/count-categories-by-filter.util.ts';
@@ -110,5 +112,53 @@ describe('toManagedCategory', () => {
 
     expect(row.archived).toBe(true);
     expect(row.archivedNote).toContain('Despesa');
+  });
+});
+
+describe('buildTagGroups', () => {
+  const tag = (overrides: Partial<Tag.Dto>): Tag.Dto => ({
+    id: 't1',
+    categoryId: 'c1',
+    name: 'feira',
+    archivedAt: null,
+    transactionCount: 0,
+    ...overrides,
+  });
+
+  it('groups the tags by category, expense before income, each by name, and gives every active category a group', () => {
+    const groups = buildTagGroups(
+      [
+        category({ id: 'c1', name: 'Mercado' }),
+        category({ id: 'c2', name: 'Salário', kind: 'income' }),
+        category({ id: 'c3', name: 'Casa' }),
+      ],
+      [tag({ id: 't1', name: 'feira' }), tag({ id: 't2', categoryId: 'c2', name: 'bônus' })],
+    );
+
+    expect(groups.map((group) => [group.name, group.tags.map((item) => item.name)])).toEqual([
+      ['Casa', []],
+      ['Mercado', ['feira']],
+      ['Salário', ['bônus']],
+    ]);
+    expect(groups.every((group) => group.canCreate)).toBe(true);
+  });
+
+  it('keeps the archived tags apart and shows an archived category only while it holds tags, with no way to create', () => {
+    const groups = buildTagGroups(
+      [
+        category({ id: 'c1', name: 'Mercado' }),
+        category({ id: 'c4', name: 'Velha', archivedAt: '2026-01-01T00:00:00.000Z' }),
+        category({ id: 'c5', name: 'Vazia', archivedAt: '2026-01-01T00:00:00.000Z' }),
+      ],
+      [
+        tag({ id: 't1', archivedAt: '2026-01-01T00:00:00.000Z' }),
+        tag({ id: 't4', categoryId: 'c4', name: 'resto' }),
+      ],
+    );
+
+    expect(groups.map((group) => group.name)).toEqual(['Mercado', 'Velha']);
+    expect(groups[0]?.tags).toEqual([]);
+    expect(groups[0]?.archivedTags.map((item) => item.name)).toEqual(['feira']);
+    expect(groups[1]?.canCreate).toBe(false);
   });
 });

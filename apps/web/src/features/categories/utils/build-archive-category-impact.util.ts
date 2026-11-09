@@ -20,8 +20,8 @@ export function buildArchiveCategoryImpact(category: Category.Dto): ConfirmChang
       icon: 'magic',
       text:
         category.ruleCount === 1
-          ? '1 regra segue ligada, mas só soma tags: a categoria deixa de ser posta.'
-          : `${category.ruleCount} regras seguem ligadas, mas só somam tags: a categoria deixa de ser posta.`,
+          ? '1 regra segue ligada, mas a categoria deixa de ser posta, e as tags dela junto.'
+          : `${category.ruleCount} regras seguem ligadas, mas a categoria deixa de ser posta, e as tags delas junto.`,
     });
   }
 

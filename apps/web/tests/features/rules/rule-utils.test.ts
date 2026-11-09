@@ -38,8 +38,20 @@ const OLD: Category.Dto = {
   name: 'Viagem',
   archivedAt: '2026-07-01T00:00:00.000Z',
 };
-const TAG_DELIVERY: Tag.Dto = { id: 't1', name: 'delivery', archivedAt: null, transactionCount: 0 };
-const TAG_WORK: Tag.Dto = { id: 't2', name: 'trabalho', archivedAt: null, transactionCount: 0 };
+const TAG_DELIVERY: Tag.Dto = {
+  id: 't1',
+  categoryId: 'cat-1',
+  name: 'delivery',
+  archivedAt: null,
+  transactionCount: 0,
+};
+const TAG_WORK: Tag.Dto = {
+  id: 't2',
+  categoryId: 'cat-1',
+  name: 'trabalho',
+  archivedAt: null,
+  transactionCount: 0,
+};
 
 function rule(overrides: Partial<Rule.Dto> = {}): Rule.Dto {
   return {
@@ -243,12 +255,12 @@ describe('validateRuleForm', () => {
       ok: false,
       errors: {
         description: 'Escreva um trecho da descrição, com pelo menos 2 letras.',
-        action: 'Escolha uma categoria ou ao menos uma tag.',
+        action: 'Escolha a categoria da regra. As tags dela se escolhem depois.',
       },
     });
   });
 
-  it('accepts tags alone', () => {
+  it('needs a category: tags alone are refused, they belong to the category', () => {
     expect(
       validateRuleForm({
         mode: 'description',
@@ -257,7 +269,7 @@ describe('validateRuleForm', () => {
         categoryId: null,
         tagIds: ['0194f3a0-0000-7000-8000-000000000021'],
       }).ok,
-    ).toBe(true);
+    ).toBe(false);
   });
 });
 

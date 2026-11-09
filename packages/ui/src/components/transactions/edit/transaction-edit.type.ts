@@ -12,8 +12,8 @@ export type TransactionEditValues = {
   /** Business date, `YYYY-MM-DD`. */
   date: string;
   categoryId: string | null;
-  /** Tag names without the "#". */
-  tags: string[];
+  /** Ids of the tags marked; they all belong to the category. */
+  tagIds: string[];
   nature: TransactionNature;
   /** The other leg of a transfer. */
   counterpartId: string | null;

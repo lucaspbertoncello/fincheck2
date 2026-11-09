@@ -73,9 +73,10 @@ describe('createApp wires categories into transactions', () => {
   });
 
   it('creates a transaction with tags: 201', async () => {
-    const tagId = await insertTestTag(database.db);
+    const categoryId = await insertTestCategory(database.db);
+    const tagId = await insertTestTag(database.db, { category_id: categoryId });
 
-    const response = await newExpense({ tagIds: [tagId] });
+    const response = await newExpense({ categoryId, tagIds: [tagId] });
 
     expect(response.status).toBe(201);
     expect(transactionDtoSchema.parse(await response.json()).tagIds).toEqual([tagId]);
@@ -191,7 +192,7 @@ describe('createApp wires categories into transactions', () => {
     it('still restores a valid state', async () => {
       const first = transactionDtoSchema.parse(await (await newExpense()).json());
       const category = await insertTestCategory(database.db);
-      const tag = await insertTestTag(database.db);
+      const tag = await insertTestTag(database.db, { category_id: category });
 
       const response = await restore(
         stateOf(first.id, { categoryId: category, categorySource: 'user', tagIds: [tag] }),
@@ -203,8 +204,9 @@ describe('createApp wires categories into transactions', () => {
   });
 
   it('adds a tag in bulk through the real reader', async () => {
-    const tagId = await insertTestTag(database.db);
-    const first = transactionDtoSchema.parse(await (await newExpense()).json());
+    const categoryId = await insertTestCategory(database.db);
+    const tagId = await insertTestTag(database.db, { category_id: categoryId });
+    const first = transactionDtoSchema.parse(await (await newExpense({ categoryId })).json());
 
     const bulk = await send('POST', '/transactions/bulk', {
       transactionIds: [first.id],

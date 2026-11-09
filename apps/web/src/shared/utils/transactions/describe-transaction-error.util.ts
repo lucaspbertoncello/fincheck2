@@ -31,6 +31,11 @@ const BY_CODE: Record<string, ErrorDescription> = {
   TRANSACTION_NOT_MANUAL: { message: 'Só transação lançada à mão pode ser excluída.' },
   TRANSACTION_IS_INSTALLMENT: { message: 'Parcela se exclui junto com a compra parcelada.' },
   TRANSACTION_ACCOUNT_ARCHIVED: { message: 'A conta está arquivada.' },
+  TRANSACTION_TAG_CATEGORY_MISMATCH: { message: 'Uma das tags não é da categoria da transação.' },
+  TRANSACTION_TAG_NEEDS_CATEGORY: {
+    message: 'Escolha a categoria da transação antes de usar tags.',
+  },
+  TRANSACTION_TAG_ARCHIVED: { message: 'Uma das tags está arquivada.' },
 };
 
 /** What to tell the person about a failed transaction call, and which field it belongs to. */

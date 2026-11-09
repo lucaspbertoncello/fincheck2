@@ -71,7 +71,7 @@ describe('buildArchiveCategoryImpact', () => {
     const many = buildArchiveCategoryImpact({ ...base, ruleCount: 3 }).map((change) => change.text);
 
     expect(one).toContain(
-      '1 regra segue ligada, mas só soma tags: a categoria deixa de ser posta.',
+      '1 regra segue ligada, mas a categoria deixa de ser posta, e as tags dela junto.',
     );
     expect(many.some((text) => text.startsWith('3 regras seguem ligadas'))).toBe(true);
   });

@@ -13,7 +13,8 @@ import type { UnarchiveTagController } from '#/modules/categories/http/tag/unarc
 import type { UpdateTagController } from '#/modules/categories/http/tag/update-tag.controller.ts';
 import { validateRequest } from '#/shared/http/validate-request.util.ts';
 
-// The tags (RF-CAT-003): free, several per transaction, archived and never deleted.
+// The tags (RF-CAT-003): each one belongs to a category, several per transaction, archived and
+// never deleted.
 export function createTagRoute(controllers: {
   listTags: ListTagsController;
   createTag: CreateTagController;

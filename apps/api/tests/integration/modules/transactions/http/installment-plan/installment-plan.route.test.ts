@@ -267,8 +267,8 @@ describe('installment plan routes (real app)', () => {
 
     it('gives the category and every tag to each parcel, dropping the repeated tags', async () => {
       const food = await insertTestCategory(database.db);
-      const tagA = await insertTestTag(database.db);
-      const tagB = await insertTestTag(database.db);
+      const tagA = await insertTestTag(database.db, { category_id: food });
+      const tagB = await insertTestTag(database.db, { category_id: food });
 
       const plan = await createPlan({
         totalCents: 30000,
@@ -697,13 +697,36 @@ describe('installment plan routes (real app)', () => {
     });
 
     it('answers 422 TRANSACTION_TAG_ARCHIVED when one of the tags is archived', async () => {
-      const fine = await insertTestTag(database.db);
-      const old = await insertTestTag(database.db, { archived_at: ARCHIVED_AT });
+      const food = await insertTestCategory(database.db);
+      const fine = await insertTestTag(database.db, { category_id: food });
+      const old = await insertTestTag(database.db, { category_id: food, archived_at: ARCHIVED_AT });
 
       await expectError(
-        await send('POST', '/installment-plans', planBody({ tagIds: [fine, old] })),
+        await send(
+          'POST',
+          '/installment-plans',
+          planBody({ categoryId: food, tagIds: [fine, old] }),
+        ),
         422,
         'TRANSACTION_TAG_ARCHIVED',
+      );
+      expect(await countRows()).toEqual({ plans: 0, transactions: 0 });
+    });
+
+    it('answers 422 when a tag is of another category or the plan has no category', async () => {
+      const food = await insertTestCategory(database.db);
+      const fun = await insertTestCategory(database.db);
+      const funTag = await insertTestTag(database.db, { category_id: fun });
+
+      await expectError(
+        await send('POST', '/installment-plans', planBody({ categoryId: food, tagIds: [funTag] })),
+        422,
+        'TRANSACTION_TAG_CATEGORY_MISMATCH',
+      );
+      await expectError(
+        await send('POST', '/installment-plans', planBody({ tagIds: [funTag] })),
+        422,
+        'TRANSACTION_TAG_NEEDS_CATEGORY',
       );
       expect(await countRows()).toEqual({ plans: 0, transactions: 0 });
     });
@@ -718,10 +741,15 @@ describe('installment plan routes (real app)', () => {
     });
 
     it('answers 404 TAG_NOT_FOUND for a tag that does not exist', async () => {
-      const fine = await insertTestTag(database.db);
+      const food = await insertTestCategory(database.db);
+      const fine = await insertTestTag(database.db, { category_id: food });
 
       await expectError(
-        await send('POST', '/installment-plans', planBody({ tagIds: [fine, generateId()] })),
+        await send(
+          'POST',
+          '/installment-plans',
+          planBody({ categoryId: food, tagIds: [fine, generateId()] }),
+        ),
         404,
         'TAG_NOT_FOUND',
       );

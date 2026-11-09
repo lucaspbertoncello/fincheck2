@@ -10,7 +10,7 @@ import {
   SelectionBar,
   SelectionToggle,
   SplitSumIndicator,
-  TagEditor,
+  TagPicker,
   TransactionDayGroup,
   TransactionDayList,
   TransactionDetailBox,
@@ -26,6 +26,12 @@ import { checkSplit } from '#/domain/transactions/transaction-split/rules/check-
 import type { GallerySectionDef } from '#gallery/types/gallery-group.type.ts';
 import { GalleryVariant } from '#gallery/components/shell/gallery-variant.component.tsx';
 import { State } from '#gallery/components/shell/state.component.tsx';
+
+const SAMPLE_TAG_OPTIONS = [
+  { id: 'feira', name: 'feira' },
+  { id: 'mes', name: 'compra do mês' },
+  { id: 'promo', name: 'promoção' },
+];
 
 const noop = () => undefined;
 const FIRST_ROW = ROW_SAMPLES[0]!.row;
@@ -280,15 +286,62 @@ export const TRANSACTIONS_SECTIONS: GallerySectionDef[] = [
         <GalleryVariant caption="EditDateField com erro" width={260}>
           <EditDateField label="Data" value="" onChange={noop} error="Data inválida." />
         </GalleryVariant>
-        <State initial={['almoço', 'trabalho']}>
-          {(tags, set) => (
-            <GalleryVariant caption="TagEditor (Enter adiciona)" width={420}>
-              <TagEditor label="Tags" tags={tags} onChange={set} />
+        <State initial={['feira']}>
+          {(ids, set) => (
+            <GalleryVariant caption="TagPicker (tags da categoria)" width={420}>
+              <TagPicker
+                label="Tags"
+                categoryName="Mercado"
+                options={SAMPLE_TAG_OPTIONS}
+                selected={SAMPLE_TAG_OPTIONS.filter((tag) => ids.includes(tag.id))}
+                onChange={set}
+                onCreate={(name) => Promise.resolve(name)}
+              />
             </GalleryVariant>
           )}
         </State>
-        <GalleryVariant caption="TagEditor vazio" width={420}>
-          <TagEditor label="Tags" tags={[]} onChange={noop} />
+        <GalleryVariant caption="TagPicker, categoria sem tags" width={420}>
+          <TagPicker
+            label="Tags"
+            categoryName="Pets"
+            options={[]}
+            selected={[]}
+            onChange={noop}
+            onCreate={(name) => Promise.resolve(name)}
+          />
+        </GalleryVariant>
+        <GalleryVariant caption="TagPicker, sem categoria" width={420}>
+          <TagPicker
+            label="Tags"
+            categoryName={null}
+            options={[]}
+            selected={[]}
+            onChange={noop}
+            onCreate={(name) => Promise.resolve(name)}
+          />
+        </GalleryVariant>
+        <GalleryVariant caption="TagPicker carregando" width={420}>
+          <TagPicker
+            label="Tags"
+            categoryName="Mercado"
+            options={[]}
+            selected={[]}
+            status="loading"
+            onChange={noop}
+            onCreate={(name) => Promise.resolve(name)}
+          />
+        </GalleryVariant>
+        <GalleryVariant caption="TagPicker com erro" width={420}>
+          <TagPicker
+            label="Tags"
+            categoryName="Mercado"
+            options={[]}
+            selected={[]}
+            status="error"
+            onRetry={noop}
+            onChange={noop}
+            onCreate={(name) => Promise.resolve(name)}
+          />
         </GalleryVariant>
         <GalleryVariant caption="OriginalFromBankNote" width={520}>
           <OriginalFromBankNote

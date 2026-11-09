@@ -375,6 +375,11 @@ describe('rule suggestions routes', () => {
         'RULE_CATEGORY_ARCHIVED',
       );
       await expectError(await accept({ tagIds: [world.workTag] }), 422, 'RULE_TAG_ARCHIVED');
+      await expectError(
+        await accept({ tagIds: [world.deliveryTag] }),
+        422,
+        'RULE_TAG_CATEGORY_MISMATCH',
+      );
       await expectError(await accept({ categoryId: generateId() }), 404, 'CATEGORY_NOT_FOUND');
       await expectError(await accept({ tagIds: [generateId()] }), 404, 'TAG_NOT_FOUND');
       expect(await database.db.selectFrom('rule_suggestions').selectAll().execute()).toEqual([]);

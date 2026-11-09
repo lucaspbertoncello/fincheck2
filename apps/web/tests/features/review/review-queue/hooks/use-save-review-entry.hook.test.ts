@@ -6,6 +6,7 @@ import { useCategories } from '#/domain/categories/category/hooks/use-categories
 import { useReviewQueue } from '#/domain/transactions/review-queue/hooks/use-review-queue.hook.ts';
 import type { ReviewedEntry } from '#/features/review/review-queue/review-queue.type.ts';
 import { useSaveReviewEntry } from '#/features/review/review-queue/hooks/use-save-review-entry.hook.ts';
+import { db } from '#mocks/state/mock-database.store.ts';
 import { server } from '#mocks/setup/server.util.ts';
 import { createQueryWrapper } from '#tests/support/api/create-query-wrapper.util.tsx';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
@@ -19,7 +20,7 @@ async function setup() {
     () => ({
       queue: useReviewQueue({ month: '2026-10' }),
       categories: useCategories({ status: 'active' }),
-      save: useSaveReviewEntry({ tags: [], onError }),
+      save: useSaveReviewEntry({ onError }),
     }),
     { wrapper },
   );
@@ -32,22 +33,24 @@ async function setup() {
   const category = result.current.categories.data!.items.find(
     (candidate) => candidate.kind === 'expense',
   )!;
-  const params = { item, categoryId: category.id, tagNames: [] as string[] };
+  const params = { item, categoryId: category.id, tagIds: [] as string[] };
   return { result, onError, params, category };
 }
 
 describe('useSaveReviewEntry', () => {
-  it('saves the category and the tags, creating the tag that does not exist yet', async () => {
+  it('saves the category and the tags of that category', async () => {
     const { result, onError, params, category } = await setup();
+    const tagId = '019a5a00-0000-7000-8000-0000000000aa';
+    db.tags.push({ id: tagId, categoryId: category.id, name: 'zzz-tag', archivedAt: null });
 
     let entry: ReviewedEntry | null | undefined;
     await act(async () => {
-      entry = await result.current.save({ ...params, tagNames: ['zzz-new-tag'], rule: null });
+      entry = await result.current.save({ ...params, tagIds: [tagId], rule: null });
     });
 
     expect(entry).toMatchObject({
       categoryId: category.id,
-      tags: ['zzz-new-tag'],
+      tagIds: [tagId],
       ruleId: null,
       historyPrevious: [],
     });

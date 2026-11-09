@@ -20,6 +20,7 @@ export class ListTagsQuery {
   async execute(input: ListTagsQuery.Input): Promise<ListTagsQuery.Output> {
     let query = this.db.selectFrom('tags').selectAll();
     if (!input.includeArchived) query = query.where('archived_at', 'is', null);
+    if (input.categoryId !== undefined) query = query.where('category_id', '=', input.categoryId);
     const rows = await query.execute();
 
     rows.sort((a, b) => nameCollator.compare(a.name, b.name) || a.id.localeCompare(b.id));

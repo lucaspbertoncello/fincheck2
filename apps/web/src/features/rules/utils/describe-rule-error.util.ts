@@ -2,7 +2,8 @@ import { isApiError, type ApiError } from '#/shared/api/api.error.ts';
 
 const MESSAGES: Record<string, string> = {
   RULE_DUPLICATE: 'Já existe uma regra com essa condição.',
-  RULE_ACTION_REQUIRED: 'Escolha uma categoria ou ao menos uma tag.',
+  RULE_ACTION_REQUIRED: 'Escolha a categoria da regra. As tags dela se escolhem depois.',
+  RULE_TAG_CATEGORY_MISMATCH: 'A regra só pode usar tags da categoria que ela aplica.',
   RULE_CATEGORY_ARCHIVED: 'Essa categoria está arquivada. Escolha outra.',
   RULE_TAG_ARCHIVED: 'Uma das tags está arquivada. Tire-a da regra ou desarquive.',
   RULE_CATEGORY_KIND_MISMATCH: 'A categoria não combina com o tipo da regra (despesa ou receita).',

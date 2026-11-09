@@ -115,7 +115,15 @@ export class BulkTransactionsUseCase {
       if (tag === undefined) throw new RangeError('The reader answered no tag');
       if (tag.isArchived) throw new TransactionTagArchivedError();
 
-      return (transaction, now) => (transaction.addTag(tag, now) ? null : 'no_change');
+      return (transaction, now) => {
+        if (transaction.tagIds.includes(tag.id)) return 'no_change';
+        // A tag only fits the transactions of its own category: the others are skipped.
+        const reason = transaction.whyCannotTakeTag(tag);
+        if (reason !== null) return reason;
+        transaction.addTag(tag, now);
+
+        return null;
+      };
     }
 
     return (transaction, now) => {

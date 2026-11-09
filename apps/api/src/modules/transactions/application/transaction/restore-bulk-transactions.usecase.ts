@@ -96,9 +96,29 @@ export class RestoreBulkTransactionsUseCase {
       [...new Set(items.flatMap((item) => (item.categoryId === null ? [] : [item.categoryId])))],
       executor,
     );
-    await this.references.tagsById([...new Set(items.flatMap((item) => item.tagIds))], executor);
+    const tags = new Map(
+      (
+        await this.references.tagsById([...new Set(items.flatMap((item) => item.tagIds))], executor)
+      ).map((tag) => [tag.id, tag]),
+    );
 
     items.forEach((item, index) => {
+      // The tags of a state belong to the category of that state or, for a split transaction, to
+      // a category of its parts.
+      const transaction = found.get(item.transactionId);
+      const categoryIds = transaction?.isSplit()
+        ? transaction.taggableCategoryIds()
+        : item.categoryId === null
+          ? []
+          : [item.categoryId];
+      if (item.tagIds.some((tagId) => !categoryIds.includes(tags.get(tagId)?.categoryId ?? ''))) {
+        throw new RequestValidationError([
+          {
+            path: `items.${String(index)}.tagIds`,
+            message: 'The tags must belong to the category of the state.',
+          },
+        ]);
+      }
       if (item.categoryId === null) return;
       if (item.categorySource === null) {
         throw new RequestValidationError([
@@ -108,7 +128,6 @@ export class RestoreBulkTransactionsUseCase {
           },
         ]);
       }
-      const transaction = found.get(item.transactionId);
       const category = categories.get(item.categoryId);
       if (
         transaction &&

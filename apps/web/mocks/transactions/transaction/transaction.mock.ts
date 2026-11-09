@@ -46,6 +46,8 @@ import { assertNatureChange } from '#mocks/transactions/transaction/assert-natur
 import { assertTransferCounterpart } from '#mocks/transactions/transaction/assert-transfer-counterpart.util.ts';
 import { assertUsableCategory } from '#mocks/transactions/transaction/assert-usable-category.util.ts';
 import { assertUsableTags } from '#mocks/transactions/transaction/assert-usable-tags.util.ts';
+import { dropTagsOfOtherCategories } from '#mocks/transactions/transaction/drop-tags-of-other-categories.util.ts';
+import { getTaggableCategoryIds } from '#mocks/transactions/transaction/get-taggable-category-ids.util.ts';
 import { buildLines } from '#mocks/transactions/transaction/build-lines.util.ts';
 import { compareTransactionKeys } from '#mocks/transactions/transaction/compare-transaction-keys.util.ts';
 import { competenceOn } from '#mocks/transactions/transaction/competence-on.util.ts';
@@ -273,6 +275,8 @@ export const transactionMock = [
           } else if (action.type === 'addTag') {
             if (tx.tagIds.includes(action.tagId))
               skipped.push({ transactionId, reason: 'no_change' });
+            else if (!getTaggableCategoryIds(tx).includes(findTag(db, action.tagId).categoryId))
+              skipped.push({ transactionId, reason: 'tag_category_mismatch' });
             else {
               previous.push(toPreviousState(tx));
               tx.tagIds = [...tx.tagIds, action.tagId];
@@ -301,6 +305,24 @@ export const transactionMock = [
           findCategory(db, categoryId);
         for (const tagId of new Set(body.items.flatMap((item) => item.tagIds))) findTag(db, tagId);
         body.items.forEach((item, index) => {
+          // The tags of a state belong to the category of that state or, for a split transaction,
+          // to a category of its parts.
+          const found = db.transactions.find((entry) => entry.id === item.transactionId);
+          const categoryIds =
+            found && found.splits.length > 0
+              ? getTaggableCategoryIds(found)
+              : item.categoryId === null
+                ? []
+                : [item.categoryId];
+          if (item.tagIds.some((tagId) => !categoryIds.includes(findTag(db, tagId).categoryId)))
+            fail(400, 'VALIDATION_FAILED', 'Entrada fora do contrato', {
+              issues: [
+                {
+                  path: `items.${index}.tagIds`,
+                  message: 'The tags must belong to the category of the state.',
+                },
+              ],
+            });
           if (item.categoryId === null) return;
           if (item.categorySource === null)
             fail(400, 'VALIDATION_FAILED', 'Entrada fora do contrato', {
@@ -334,9 +356,12 @@ export const transactionMock = [
             giveNatureBack(db, tx, item.natureSetBy);
           // The category only fits a whole expense or income: if the nature changed since, or the
           // transaction was split, the saved category is dropped.
+          // A transfer that keeps the category it had (by category) keeps it too.
           const keepsCategory =
             item.categoryId !== null &&
-            (tx.nature === 'expense' || tx.nature === 'income') &&
+            (tx.nature === 'expense' ||
+              tx.nature === 'income' ||
+              (tx.nature === 'transfer' && tx.categoryId === item.categoryId)) &&
             tx.splits.length === 0;
           tx.categoryId = keepsCategory ? item.categoryId : null;
           tx.categorySource = keepsCategory ? item.categorySource : null;
@@ -344,7 +369,7 @@ export const transactionMock = [
             keepsCategory && db.rules.some((rule) => rule.id === item.categoryRuleId)
               ? item.categoryRuleId
               : null;
-          tx.tagIds = [...new Set(item.tagIds)];
+          tx.tagIds = keepsCategory || tx.splits.length > 0 ? [...new Set(item.tagIds)] : [];
           tx.ignoredAt = item.ignoredAt;
           tx.updatedAt = NOW_ISO;
           restoredCount += 1;
@@ -377,8 +402,7 @@ export const transactionMock = [
             'Meio de pagamento e conta não combinam',
           );
         if (body.categoryId) assertUsableCategory(db, body.categoryId, body.type);
-        for (const tagId of body.tagIds ?? []) findTag(db, tagId);
-        assertUsableTags(db, body.tagIds ?? []);
+        assertUsableTags(db, body.tagIds ?? [], body.categoryId ? [body.categoryId] : []);
 
         const record = makeTransactionRecord({
           accountId: account.id,
@@ -473,12 +497,25 @@ export const transactionMock = [
             assertUsableCategory(db, category.id, effective);
           }
         }
+        // The category the transaction ends up with: another one leaves the old tags behind, so
+        // the new set is checked against it and against what is left.
+        const natureTakesCategory =
+          body.nature !== undefined &&
+          (wasTransferByCategory ? body.nature !== 'transfer' : body.nature === 'transfer');
+        const finalCategoryId =
+          body.categoryId !== undefined
+            ? body.categoryId
+            : natureTakesCategory
+              ? null
+              : tx.categoryId;
+        const categoryChanged = finalCategoryId !== tx.categoryId;
+        const keptTagIds = categoryChanged ? [] : tx.tagIds;
         if (body.tagIds) {
-          for (const tagId of body.tagIds.filter((id) => !tx.tagIds.includes(id)))
-            findTag(db, tagId);
           assertUsableTags(
             db,
-            body.tagIds.filter((id) => !tx.tagIds.includes(id)),
+            body.tagIds,
+            getTaggableCategoryIds({ categoryId: finalCategoryId, splits: tx.splits }),
+            keptTagIds,
           );
         }
 
@@ -523,6 +560,7 @@ export const transactionMock = [
             tx.categoryRuleId = null;
           }
         }
+        if (categoryChanged) tx.tagIds = [];
         if (body.tagIds !== undefined) tx.tagIds = body.tagIds;
         if (body.editNote !== undefined) tx.editNote = body.editNote;
 
@@ -677,6 +715,8 @@ export const transactionMock = [
         tx.categoryId = null;
         tx.categorySource = null;
         tx.categoryRuleId = null;
+        // The answer already carries the tags a part kept (the route settles them after it too).
+        dropTagsOfOtherCategories(db);
 
         return present(tx);
       },
@@ -694,6 +734,7 @@ export const transactionMock = [
       tx.categoryId = null;
       tx.categorySource = null;
       tx.categoryRuleId = null;
+      dropTagsOfOtherCategories(db);
 
       return present(tx);
     }),

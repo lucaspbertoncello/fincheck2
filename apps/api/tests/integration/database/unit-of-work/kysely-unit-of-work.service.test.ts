@@ -4,7 +4,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { Database } from '#/database/database.type.ts';
 import { KyselyUnitOfWork } from '#/database/unit-of-work/kysely-unit-of-work.service.ts';
-import { generateId } from '#/shared/id/generate-id.util.ts';
+import { insertTestCategory } from '#tests/support/categories/category/insert-test-category.util.ts';
+import { insertTestTag } from '#tests/support/categories/tag/insert-test-tag.util.ts';
 import { createTestDatabase } from '#tests/support/database/create-test-database.util.ts';
 
 describe('KyselyUnitOfWork', () => {
@@ -20,17 +21,7 @@ describe('KyselyUnitOfWork', () => {
     await database.destroy();
   });
 
-  const insertTag = (executor: Kysely<Database>, name: string) =>
-    executor
-      .insertInto('tags')
-      .values({
-        id: generateId(),
-        name,
-        archived_at: null,
-        created_at: '2026-11-06T12:00:00.000Z',
-        updated_at: '2026-11-06T12:00:00.000Z',
-      })
-      .execute();
+  const insertTag = (executor: Kysely<Database>, name: string) => insertTestTag(executor, { name });
 
   const countTags = async () =>
     (await database.db.selectFrom('tags').select('id').execute()).length;
@@ -58,10 +49,12 @@ describe('KyselyUnitOfWork', () => {
   });
 
   it('rolls back when the database refuses a write halfway', async () => {
+    const categoryId = await insertTestCategory(database.db);
     await expect(
       unitOfWork.run(async (executor) => {
-        await insertTag(executor, 'viagem');
-        await insertTag(executor, 'VIAGEM'); // same tag, another case: UNIQUE NOCASE
+        await insertTestTag(executor, { name: 'viagem', category_id: categoryId });
+        // Same tag in the same category, another case: UNIQUE NOCASE.
+        await insertTestTag(executor, { name: 'VIAGEM', category_id: categoryId });
       }),
     ).rejects.toThrow(/UNIQUE/);
 

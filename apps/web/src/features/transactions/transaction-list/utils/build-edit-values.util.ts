@@ -1,13 +1,8 @@
 import type { Transaction } from '@fincheck/shared/transactions/transaction/transaction.type.ts';
 import type { TransactionEditValues } from '@fincheck/ui';
 
-import type { TransactionLookups } from '#/shared/types/transactions/transaction-lookups.type.ts';
-
 /** The values the edit panel starts with. A nature outside expense, income and transfer shows as "Fora da conta". */
-export function buildEditValues(
-  transaction: Transaction.Dto,
-  lookups: TransactionLookups,
-): TransactionEditValues {
+export function buildEditValues(transaction: Transaction.Dto): TransactionEditValues {
   const { nature } = transaction;
   const editable = nature === 'expense' || nature === 'income' || nature === 'transfer';
 
@@ -16,9 +11,7 @@ export function buildEditValues(
     amountCents: Math.abs(transaction.amountCents),
     date: transaction.occurredOn,
     categoryId: transaction.categoryId,
-    tags: transaction.tagIds
-      .map((id) => lookups.tags.get(id)?.name)
-      .filter((name): name is string => Boolean(name)),
+    tagIds: [...transaction.tagIds],
     nature: editable ? nature : 'out_of_account',
     counterpartId: transaction.transferCounterpartId,
   };

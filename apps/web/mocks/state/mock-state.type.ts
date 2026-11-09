@@ -110,6 +110,7 @@ export namespace MockState {
 
   export interface TagRecord {
     id: string;
+    categoryId: string;
     name: string;
     archivedAt: string | null;
   }

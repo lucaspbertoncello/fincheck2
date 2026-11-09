@@ -1,6 +1,7 @@
 import type { Transaction } from '@fincheck/shared/transactions/transaction/transaction.type.ts';
-import type { TransactionEditErrors } from '@fincheck/ui';
+import type { TagPickerProps, TransactionEditErrors } from '@fincheck/ui';
 import { useState } from 'react';
+import type { Tag } from '@fincheck/shared/categories/tag/tag.type.ts';
 
 import { getTransactionDirection } from '#/domain/transactions/transaction/rules/get-transaction-direction.rule.ts';
 import { validateTransactionEdit } from '#/domain/transactions/transaction/rules/validate-transaction-edit.rule.ts';
@@ -11,6 +12,7 @@ import { buildCounterpartOptions } from '#/features/transactions/transaction-lis
 import { buildEditValues } from '#/features/transactions/transaction-list/utils/build-edit-values.util.ts';
 import { describeEditError } from '#/features/transactions/transaction-list/utils/describe-edit-error.util.ts';
 import { buildUpdateBody } from '#/features/transactions/transaction-list/utils/build-update-body.util.ts';
+import { hasApiErrorCode } from '#/shared/api/api.error.ts';
 import { focusFirstInvalid } from '#/features/transactions/utils/focus-first-invalid.util.ts';
 
 function describeOrigin(transaction: Transaction.Dto, lookups: TransactionLookups): string {
@@ -31,8 +33,8 @@ type EditingArgs = {
 
 /**
  * The edit modal of one transaction: the draft values, the validation with the contract's
- * rules (R6: nature and the other leg of a transfer), the tags by name turned into ids (new names
- * become new tags) and the save. A save that only picks a category goes through the recategorize
+ * rules (R6: nature and the other leg of a transfer), the tags of the category of the transaction
+ * (picked or created on the spot, in that category) and the save. A save that only picks a category goes through the recategorize
  * route, which brings the undo and the rule question.
  */
 export function useTransactionEditing({
@@ -44,6 +46,8 @@ export function useTransactionEditing({
   askRule,
 }: EditingArgs) {
   const [draft, setDraft] = useState<{ id: string; values: ReturnType<typeof buildEditValues> }>();
+  // Tags made in this modal, until the list of tags catches up with them.
+  const [created, setCreated] = useState<Tag.Dto[]>([]);
   const [problem, setProblem] = useState<{
     id: string;
     errors: TransactionEditErrors;
@@ -52,8 +56,7 @@ export function useTransactionEditing({
 
   if (!transaction) return null;
 
-  const values =
-    draft?.id === transaction.id ? draft.values : buildEditValues(transaction, lookups);
+  const values = draft?.id === transaction.id ? draft.values : buildEditValues(transaction);
   const mine = problem?.id === transaction.id ? problem : undefined;
   const kind = values.nature === 'income' ? 'income' : 'expense';
 
@@ -77,16 +80,80 @@ export function useTransactionEditing({
       : { ...next, categoryId: null };
   }
 
-  async function resolveTagIds(names: readonly string[]): Promise<string[]> {
-    const existing = new Map(
-      [...lookups.tags.values()].map((tag) => [tag.name.toLowerCase(), tag]),
-    );
-    const ids: string[] = [];
-    for (const name of names) {
-      const found = existing.get(name.toLowerCase());
-      ids.push(found ? found.id : (await model.createTag.mutateAsync({ name })).id);
-    }
-    return ids;
+  // The categories of the transaction: its own or, when it is split, the ones of its parts. The
+  // tags a transaction takes are the ones of those categories.
+  const isSplit = transaction.splits.length > 0;
+  const categoryIds = [
+    ...new Set(
+      isSplit
+        ? transaction.splits.flatMap((part) => (part.categoryId ? [part.categoryId] : []))
+        : values.categoryId
+          ? [values.categoryId]
+          : [],
+    ),
+  ];
+  const categoryId = categoryIds.length === 1 ? categoryIds[0] : null;
+  const categoryName =
+    categoryIds.length > 0
+      ? categoryIds.map((id) => lookups.categories.get(id)?.name ?? '').join(', ')
+      : null;
+  const knownTags = new Map<string, Tag.Dto>(lookups.tags);
+  for (const tag of created) knownTags.set(tag.id, tag);
+  // The name is only unique inside a category: with several, each tag says which one is its own.
+  const labelOfTag = (tag: Tag.Dto) =>
+    categoryIds.length > 1
+      ? `${tag.name} · ${lookups.categories.get(tag.categoryId)?.name ?? ''}`
+      : tag.name;
+  const tagOptions = [...knownTags.values()]
+    .filter((tag) => categoryIds.includes(tag.categoryId) && tag.archivedAt === null)
+    .map((tag) => ({ id: tag.id, name: labelOfTag(tag) }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
+  const tagsStatus =
+    model.tags.isError && !model.tags.data ? 'error' : model.tags.isPending ? 'loading' : 'ready';
+
+  const tagPicker: Omit<TagPickerProps, 'label' | 'className'> = {
+    categoryName,
+    noCategoryMessage: isSplit
+      ? 'Categorize uma das partes da divisão antes de usar tags: cada tag pertence a uma categoria.'
+      : undefined,
+    options: tagOptions,
+    selected: values.tagIds.flatMap((id) => {
+      const tag = knownTags.get(id);
+      return tag ? [{ id: tag.id, name: labelOfTag(tag) }] : [];
+    }),
+    onChange: (tagIds) => setDraft({ id: transaction.id, values: { ...values, tagIds } }),
+    onCreate: async (name) => {
+      if (!categoryId) {
+        throw new Error(
+          categoryIds.length > 1
+            ? 'Esta transação está dividida em várias categorias: crie a tag em Categorias.'
+            : 'Escolha a categoria antes de criar uma tag.',
+        );
+      }
+      try {
+        const tag = await model.createTag.mutateAsync({ categoryId, name });
+        setCreated((current) => [...current, tag]);
+        return tag.id;
+      } catch (error) {
+        throw new Error(
+          hasApiErrorCode(error, 'TAG_NAME_TAKEN')
+            ? 'Já existe uma tag com esse nome nessa categoria (pode estar arquivada).'
+            : 'Não deu para criar a tag. Tente de novo.',
+          { cause: error },
+        );
+      }
+    },
+    status: tagsStatus,
+    onRetry: () => void model.tags.refetch(),
+  };
+
+  // The tags belong to the category: another category, or none, leaves them behind. A split
+  // transaction has no category of its own (its parts have), so its tags stay.
+  function withTagsOfCategory(next: typeof values): typeof values {
+    if (isSplit) return next;
+    return next.categoryId === values.categoryId || next.tagIds.length === 0
+      ? next
+      : { ...next, tagIds: [] };
   }
 
   async function save() {
@@ -98,7 +165,7 @@ export function useTransactionEditing({
       return;
     }
     try {
-      const body = buildUpdateBody(transaction, values, await resolveTagIds(values.tags));
+      const body = buildUpdateBody(transaction, values);
       if (!body) {
         close();
         return;
@@ -126,7 +193,8 @@ export function useTransactionEditing({
     transactionId: transaction.id,
     values,
     onChange: (next: typeof values) =>
-      setDraft({ id: transaction.id, values: withValidCategory(next) }),
+      setDraft({ id: transaction.id, values: withTagsOfCategory(withValidCategory(next)) }),
+    tagPicker,
     // The category that is a transfer fits both legs of a rotation, so it shows for any kind.
     categories: buildCategoryOptions(allCategories, kind, { withTransfer: true }),
     transferCategories: transferByCategory
@@ -152,7 +220,7 @@ export function useTransactionEditing({
       transaction.isEdited && transaction.bank
         ? { description: transaction.bank.description, amountCents: transaction.bank.amountCents }
         : undefined,
-    saving: model.updateTransaction.isPending || model.createTag.isPending,
+    saving: model.updateTransaction.isPending,
     canDelete: transaction.origin === 'manual' && transaction.installment === null,
     save,
   };

@@ -1,25 +1,9 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { EditDateField, normalizeTag } from '#/components/transactions/index.ts';
+import { EditDateField } from '#/components/transactions/index.ts';
 
 const noop = () => {};
-
-describe('normalizeTag', () => {
-  it('drops the "#", lowercases and joins words with hyphens', () => {
-    expect(normalizeTag('  # Café  da Manhã ')).toBe('café-da-manhã');
-    expect(normalizeTag('##delivery')).toBe('delivery');
-  });
-
-  it('gives an empty text when nothing is left', () => {
-    expect(normalizeTag('   ')).toBe('');
-    expect(normalizeTag('#')).toBe('');
-  });
-
-  it('caps the length', () => {
-    expect(normalizeTag('a'.repeat(40))).toHaveLength(24);
-  });
-});
 
 describe('EditDateField', () => {
   it('writes the date as dd/mm/aaaa in pt-BR', () => {

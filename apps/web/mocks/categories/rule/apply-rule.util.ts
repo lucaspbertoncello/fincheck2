@@ -17,7 +17,8 @@ export function applyRule(
   const tagIds = rule.tagIds.filter(
     (tagId) => !database.tags.find((tag) => tag.id === tagId)?.archivedAt,
   );
-  if (!rule.categoryId && tagIds.length === 0) return { changedCount: 0, previous: [] };
+  // The tags of a rule go with the category it puts: with no category there is nothing to do.
+  if (!rule.categoryId) return { changedCount: 0, previous: [] };
 
   const category = database.categories.find((item) => item.id === rule.categoryId);
   const effect = computeRuleEffect(database, { ...rule, tagIds }, rule.createdAt);
@@ -35,6 +36,8 @@ export function applyRule(
         tx.categoryId = rule.categoryId;
         tx.categorySource = 'rule';
         tx.categoryRuleId = rule.id;
+        // The tags of the old category do not follow it.
+        tx.tagIds = [];
       }
     }
     tx.tagIds = [...new Set([...tx.tagIds, ...tagIds])];

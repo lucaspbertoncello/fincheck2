@@ -7,13 +7,12 @@ function sameSet(a: readonly string[], b: readonly string[]): boolean {
 
 /**
  * Only what the person changed, so a field the server locks (the value of a split, the nature of
- * a linked invoice payment) is never sent by accident. `tagIds` are the ids of the edited tags.
+ * a linked invoice payment) is never sent by accident.
  * Returns null when nothing changed.
  */
 export function buildUpdateBody(
   transaction: Transaction.Dto,
   values: TransactionEditValues,
-  tagIds: readonly string[],
 ): Transaction.UpdateRequest | null {
   const body: Transaction.UpdateRequest = {};
   const description = values.description.trim();
@@ -55,7 +54,7 @@ export function buildUpdateBody(
       body.categoryId = values.categoryId;
     }
   }
-  if (!sameSet(tagIds, transaction.tagIds)) body.tagIds = [...tagIds];
+  if (!sameSet(values.tagIds, transaction.tagIds)) body.tagIds = [...values.tagIds];
 
   return Object.keys(body).length > 0 ? body : null;
 }

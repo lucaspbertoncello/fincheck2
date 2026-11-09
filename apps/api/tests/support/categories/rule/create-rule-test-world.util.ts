@@ -8,7 +8,7 @@ import { insertTestTag } from '#tests/support/categories/tag/insert-test-tag.uti
 import { insertTestTransaction } from '#tests/support/transactions/transaction/insert-test-transaction.util.ts';
 
 // The ground the tests of rules and suggestions stand on: an account, two expense categories, one
-// income category, two tags, and a way to put a transaction in the table with the few fields a
+// income category, three tags (two in transport, one in delivery), and a way to put a transaction in the table with the few fields a
 // rule looks at.
 export async function createRuleTestWorld(db: Kysely<Database>) {
   const accountId = await insertTestAccount(db, { name: 'Conta corrente' });
@@ -16,8 +16,10 @@ export async function createRuleTestWorld(db: Kysely<Database>) {
   const transport = await insertTestCategory(db, { kind: 'expense', name: 'Transporte teste' });
   const delivery = await insertTestCategory(db, { kind: 'expense', name: 'Delivery teste' });
   const salary = await insertTestCategory(db, { kind: 'income', name: 'Salário teste' });
-  const tripTag = await insertTestTag(db, { name: 'viagem teste' });
-  const workTag = await insertTestTag(db, { name: 'trabalho teste' });
+  // The tags belong to a category: two in transport and one in delivery.
+  const tripTag = await insertTestTag(db, { name: 'viagem teste', category_id: transport });
+  const workTag = await insertTestTag(db, { name: 'trabalho teste', category_id: transport });
+  const deliveryTag = await insertTestTag(db, { name: 'entrega teste', category_id: delivery });
 
   const addTransaction = (
     description: string,
@@ -55,6 +57,7 @@ export async function createRuleTestWorld(db: Kysely<Database>) {
     salary,
     tripTag,
     workTag,
+    deliveryTag,
     addTransaction,
     tagsOf,
     categoryOf,

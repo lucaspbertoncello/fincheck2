@@ -4,7 +4,6 @@ import {
   Button,
   CategoryFilter,
   CategoryList,
-  Collapse,
   ConfirmDialog,
   ContentSkeleton,
   CountBadge,
@@ -43,12 +42,12 @@ export function CategoryListView({
   onEditCategory,
   onRequestArchive,
   onRestoreCategory,
-  tags,
-  archivedTags,
+  tagGroups,
   activeTagCount,
   archivedTagCount,
   showArchivedTags,
   onToggleArchivedTags,
+  onCreateTag,
   onRenameTag,
   onArchiveTag,
   onRestoreTag,
@@ -130,36 +129,37 @@ export function CategoryListView({
               }
             >
               <p className="text-label text-fg-secondary">
-                Número de transações com cada tag, em todo o histórico. Use o menu … de cada tag
-                para renomear ou arquivar.
+                Cada tag pertence a uma categoria e só aparece nas transações dela. Para criar uma,
+                use “Nova tag” dentro da categoria. Número de transações com cada tag, em todo o
+                histórico; o menu … renomeia ou arquiva.
               </p>
-              {tags.length === 0 ? (
-                <p className="text-label text-fg-secondary">
-                  Nenhuma tag ainda. Use o “+” (Nova tag) para criar a primeira.
-                </p>
-              ) : null}
-              <TagList
-                tags={tags}
-                label="Tags"
-                onRename={onRenameTag}
-                onArchive={onArchiveTag}
-                onRestore={onRestoreTag}
-              />
-              {archivedTagCount > 0 ? (
-                <Collapse
-                  isOpen={showArchivedTags}
-                  trackClassName="-mt-s16"
-                  contentClassName="pt-s16"
+              {tagGroups.map((group) => (
+                <section
+                  key={group.categoryId}
+                  aria-label={`Tags de ${group.name}`}
+                  className="flex flex-col gap-s12"
                 >
+                  <h3 className="text-label font-emphasis text-fg-primary">{group.name}</h3>
                   <TagList
-                    tags={archivedTags}
-                    label="Tags arquivadas"
+                    tags={group.tags}
+                    label={`Tags de ${group.name}`}
                     onRename={onRenameTag}
                     onArchive={onArchiveTag}
                     onRestore={onRestoreTag}
+                    onCreate={group.canCreate ? () => onCreateTag(group.categoryId) : undefined}
+                    createLabel="Nova tag"
                   />
-                </Collapse>
-              ) : null}
+                  {showArchivedTags && group.archivedTags.length > 0 ? (
+                    <TagList
+                      tags={group.archivedTags}
+                      label={`Tags arquivadas de ${group.name}`}
+                      onRename={onRenameTag}
+                      onArchive={onArchiveTag}
+                      onRestore={onRestoreTag}
+                    />
+                  ) : null}
+                </section>
+              ))}
             </Section>
           ) : null}
         </>

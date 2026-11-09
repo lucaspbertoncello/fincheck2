@@ -62,7 +62,7 @@ export const installmentPlanMock = [
           fail(422, 'INSTALLMENT_ACCOUNT_NOT_CARD', 'A conta não é cartão de crédito');
         if (account.archivedAt) fail(422, 'TRANSACTION_ACCOUNT_ARCHIVED', 'Cartão arquivado');
         if (body.categoryId) assertUsableCategory(db, body.categoryId, 'expense');
-        assertUsableTags(db, body.tagIds ?? []);
+        assertUsableTags(db, body.tagIds ?? [], body.categoryId ? [body.categoryId] : []);
 
         const plan: MockState.InstallmentPlanRecord = {
           id: newId(),

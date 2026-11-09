@@ -318,17 +318,16 @@ describe('ApplicationLayout', () => {
     expect(await screen.findByRole('dialog', { name: title })).toBeInTheDocument();
   });
 
-  it('the "+" of Categorias says "Nova tag" and opens it while the Tags part is active', async () => {
+  it('the "+" of Categorias stays "Nova categoria" in the Tags part: a tag is only born inside a category', async () => {
     renderApp('/categories?filter=tags&month=2026-10');
     await screen.findByRole('heading', { level: 1 });
-    expect(
-      within(floatingPlus()).queryByRole('button', { name: 'Nova categoria' }),
-    ).not.toBeInTheDocument();
-    fireEvent.click(within(floatingPlus()).getByRole('button', { name: 'Nova tag' }));
 
-    await waitFor(() => expect(window.location.search).toContain('new=tag'));
-    expect(window.location.search).toContain('month=2026-10');
-    expect(await screen.findByRole('dialog', { name: 'Nova tag' })).toBeInTheDocument();
+    expect(
+      within(floatingPlus()).getByRole('button', { name: 'Nova categoria' }),
+    ).toBeInTheDocument();
+    expect(
+      within(floatingPlus()).queryByRole('button', { name: 'Nova tag' }),
+    ).not.toBeInTheDocument();
   });
 
   it.each(['/', '/recurrences/bills', '/settings'])(

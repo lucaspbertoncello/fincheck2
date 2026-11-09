@@ -7,9 +7,15 @@ export type {
 export type { CategoryOption } from '#/components/transactions/category-option.type.ts';
 export { CategoryChoices } from '#/components/transactions/edit/category-choices.component.tsx';
 export { EditDateField } from '#/components/transactions/edit/edit-date-field.component.tsx';
-export { normalizeTag } from '#/components/transactions/edit/normalize-tag.util.ts';
+export { TagPicker } from '#/components/transactions/tags/tag-picker.component.tsx';
+export type { TagPickerProps } from '#/components/transactions/tags/tag-picker.component.tsx';
+export type {
+  TagPickerOption,
+  TagPickerRow,
+} from '#/components/transactions/tags/tag-picker-row.type.ts';
+export { buildTagRows } from '#/components/transactions/tags/build-tag-rows.util.ts';
+export { moveActiveRow } from '#/components/transactions/tags/move-active-row.util.ts';
 export { OriginalFromBankNote } from '#/components/transactions/edit/original-from-bank-note.component.tsx';
-export { TagEditor } from '#/components/transactions/edit/tag-editor.component.tsx';
 export type {
   OriginalFromBank,
   TransactionEditErrors,

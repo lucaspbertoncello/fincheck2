@@ -28,6 +28,7 @@ export class TagPresenter {
 
     return rows.map((row) => ({
       id: row.id,
+      categoryId: row.category_id,
       name: row.name,
       archivedAt: row.archived_at,
       transactionCount: counts.get(row.id) ?? 0,

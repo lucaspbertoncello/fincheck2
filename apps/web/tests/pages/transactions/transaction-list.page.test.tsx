@@ -303,6 +303,41 @@ describe('TransactionListPage', () => {
     expect(cinema).toMatchObject({ nature: 'transfer', categoryId: rotation.id });
   });
 
+  it('lists, for a split transaction, the tags of the categories of its parts', async () => {
+    const split = db.transactions.find(
+      (tx) => tx.splits.length > 1 && tx.occurredOn.startsWith(CURRENT_MONTH),
+    );
+    const categoryIds = [
+      ...new Set(split?.splits.flatMap((part) => (part.categoryId ? [part.categoryId] : []))),
+    ];
+    const outside = db.categories.find((category) => !categoryIds.includes(category.id));
+    if (!split || categoryIds.length === 0 || !outside) throw new Error('seed without a split');
+    categoryIds.forEach((categoryId, index) =>
+      db.tags.push({
+        id: `0194f3a0-0000-7000-8000-00000000090${String(index)}`,
+        categoryId,
+        name: `Parte ${String(index)}`,
+        archivedAt: null,
+      }),
+    );
+    db.tags.push({
+      id: '0194f3a0-0000-7000-8000-000000000999',
+      categoryId: outside.id,
+      name: 'Fora das partes',
+      archivedAt: null,
+    });
+    renderApp(PAGE);
+    await openRowMenu(split.description, 'Editar');
+
+    const dialog = await screen.findByRole('dialog', { name: 'Editar transação' });
+    await userEvent.setup().click(within(dialog).getByRole('button', { name: /Mais opções/ }));
+
+    expect(await within(dialog).findByRole('option', { name: /Parte 0/ }, LONG_WAIT)).toBeVisible();
+    expect(
+      within(dialog).queryByRole('option', { name: /Fora das partes/ }),
+    ).not.toBeInTheDocument();
+  });
+
   it('splits a transaction in two parts', async () => {
     const user = userEvent.setup();
     renderApp(PAGE);

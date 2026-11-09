@@ -301,9 +301,9 @@ export function seedCatalog(database: MockState.Database, ids: SeedIds): void {
   );
 
   database.tags.push(
-    { id: ids.tag.viagem, name: 'viagem', archivedAt: null },
-    { id: ids.tag.trabalho, name: 'trabalho', archivedAt: null },
-    { id: ids.tag.delivery, name: 'delivery', archivedAt: null },
-    { id: ids.tag.presente, name: 'presente', archivedAt },
+    { id: ids.tag.viagem, categoryId: cat.viagem, name: 'viagem', archivedAt: null },
+    { id: ids.tag.trabalho, categoryId: cat.freelance, name: 'trabalho', archivedAt: null },
+    { id: ids.tag.delivery, categoryId: cat.delivery, name: 'delivery', archivedAt: null },
+    { id: ids.tag.presente, categoryId: cat.presentes, name: 'presente', archivedAt },
   );
 }

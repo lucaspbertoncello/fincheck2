@@ -65,7 +65,8 @@ export function BulkPickerModal({ bulk }: BulkPickerModalProps) {
         </>
       ) : bulk.tags.length === 0 ? (
         <p className="text-body text-fg-secondary">
-          Ainda não há tags. Crie uma na edição de uma transação.
+          Ainda não há tags. Crie uma dentro de uma categoria, em Categorias › Tags, ou na edição de
+          uma transação.
         </p>
       ) : bulk.tags.length > TAG_CHIP_LIMIT ? (
         <SelectField
@@ -83,6 +84,11 @@ export function BulkPickerModal({ bulk }: BulkPickerModalProps) {
           onChange={bulk.onTagChange}
         />
       )}
+      {!isCategory && bulk.tags.length > 0 ? (
+        <p className="text-label text-fg-secondary">
+          A tag só entra nas transações da categoria dela. As outras ficam como estavam.
+        </p>
+      ) : null}
     </FormModal>
   );
 }

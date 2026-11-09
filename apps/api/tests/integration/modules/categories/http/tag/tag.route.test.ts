@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { generateId } from '#/shared/id/generate-id.util.ts';
 import { insertTestAccount } from '#tests/support/accounts/account/insert-test-account.util.ts';
+import { insertTestCategory } from '#tests/support/categories/category/insert-test-category.util.ts';
 import { createTestApp } from '#tests/support/app/create-test-app.util.ts';
 import { createTestDatabase } from '#tests/support/database/create-test-database.util.ts';
 import { createFixedClock } from '#tests/support/shared/clock/create-fixed-clock.util.ts';
@@ -16,10 +17,12 @@ const listSchema = listResponseSchema(tagDtoSchema);
 describe('tags routes', () => {
   let database: Awaited<ReturnType<typeof createTestDatabase>>;
   let app: ReturnType<typeof createTestApp>;
+  let categoryId: string;
 
   beforeEach(async () => {
     database = await createTestDatabase();
     app = createTestApp(database.db, { clock: createFixedClock(NOW) });
+    categoryId = await insertTestCategory(database.db, { name: 'Categoria A' });
   });
 
   afterEach(async () => {
@@ -41,8 +44,8 @@ describe('tags routes', () => {
     return listSchema.parse(await response.json()).items;
   };
 
-  const create = async (name: string) => {
-    const response = await send('POST', '/tags', { name });
+  const create = async (name: string, inCategory = categoryId) => {
+    const response = await send('POST', '/tags', { categoryId: inCategory, name });
     expect(response.status).toBe(201);
 
     return tagDtoSchema.parse(await response.json());
@@ -79,6 +82,19 @@ describe('tags routes', () => {
       ]);
     });
 
+    it('filters by category and shows the category of each tag', async () => {
+      const other = await insertTestCategory(database.db, { name: 'Categoria B' });
+      await create('viagem');
+      await create('obra', other);
+
+      const inTrip = await list(`?categoryId=${categoryId}`);
+      expect(inTrip.map((tag) => [tag.name, tag.categoryId])).toEqual([['viagem', categoryId]]);
+      expect((await list()).map((tag) => tag.categoryId).sort()).toEqual(
+        [categoryId, other].sort(),
+      );
+      expect(await list(`?categoryId=${generateId()}`)).toEqual([]);
+    });
+
     it('counts the transactions with the tag, the ignored ones too', async () => {
       const trip = await create('viagem');
       const accountId = await insertTestAccount(database.db);
@@ -102,20 +118,60 @@ describe('tags routes', () => {
     it('creates a tag, trimmed, active and unused', async () => {
       const dto = await create('  viagem  ');
 
-      expect(dto).toEqual({ id: dto.id, name: 'viagem', archivedAt: null, transactionCount: 0 });
+      expect(dto).toEqual({
+        id: dto.id,
+        categoryId,
+        name: 'viagem',
+        archivedAt: null,
+        transactionCount: 0,
+      });
     });
 
-    it('refuses a name already taken, whatever the case or the accent, archived or not', async () => {
+    it('refuses a name already taken in the category, whatever the case or the accent, archived or not', async () => {
       const tag = await create('Promoção');
       await send('POST', `/tags/${tag.id}/archive`);
 
       for (const name of ['promoção', 'PROMOCAO', ' promocao ']) {
-        await expectError(await send('POST', '/tags', { name }), 409, 'TAG_NAME_TAKEN');
+        await expectError(await send('POST', '/tags', { categoryId, name }), 409, 'TAG_NAME_TAKEN');
       }
     });
 
-    it('refuses what the schema refuses', async () => {
-      for (const body of [{}, { name: '' }, { name: '   ' }, { name: 'x'.repeat(31) }]) {
+    it('lets two categories have a tag of the same name', async () => {
+      const other = await insertTestCategory(database.db, { name: 'Categoria B' });
+      await create('Promoção');
+
+      const second = await create('promoção', other);
+
+      expect(second.categoryId).toBe(other);
+    });
+
+    it('answers 404 for a category that does not exist and 422 for an archived one', async () => {
+      await expectError(
+        await send('POST', '/tags', { categoryId: generateId(), name: 'x' }),
+        404,
+        'CATEGORY_NOT_FOUND',
+      );
+      const archived = await insertTestCategory(database.db, {
+        name: 'Categoria velha',
+        archived_at: NOW,
+      });
+
+      await expectError(
+        await send('POST', '/tags', { categoryId: archived, name: 'x' }),
+        422,
+        'TAG_CATEGORY_ARCHIVED',
+      );
+    });
+
+    it('refuses what the schema refuses, a tag with no category included', async () => {
+      for (const body of [
+        {},
+        { name: 'sem categoria' },
+        { categoryId, name: '' },
+        { categoryId, name: '   ' },
+        { categoryId, name: 'x'.repeat(31) },
+        { categoryId: 'nope', name: 'x' },
+      ]) {
         await expectError(await send('POST', '/tags', body), 400, 'VALIDATION_FAILED');
       }
       expect(await list()).toEqual([]);
@@ -141,7 +197,29 @@ describe('tags routes', () => {
       });
     });
 
-    it('lets a tag change only the case of its own name, and refuses another tag name', async () => {
+    it('keeps the category on a rename, even if the body carries another one', async () => {
+      const tag = await create('viagem');
+      const other = await insertTestCategory(database.db, { name: 'Categoria B' });
+
+      const response = await send('PATCH', `/tags/${tag.id}`, {
+        name: 'férias',
+        categoryId: other,
+      });
+
+      expect(tagDtoSchema.parse(await response.json()).categoryId).toBe(categoryId);
+    });
+
+    it('lets another category use the name a tag is renamed to', async () => {
+      const other = await insertTestCategory(database.db, { name: 'Categoria B' });
+      await create('obra', other);
+      const tag = await create('viagem');
+
+      const response = await send('PATCH', `/tags/${tag.id}`, { name: 'obra' });
+
+      expect(response.status).toBe(200);
+    });
+
+    it('lets a tag change only the case of its own name, and refuses another tag name of its category', async () => {
       const tag = await create('viagem');
       await create('trabalho');
 

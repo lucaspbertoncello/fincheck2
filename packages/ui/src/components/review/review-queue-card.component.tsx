@@ -8,7 +8,7 @@ import type {
   ReviewRule,
   ReviewTransaction,
 } from '#/components/review/review.type.ts';
-import { TagEditor } from '#/components/transactions/index.ts';
+import { TagPicker, type TagPickerProps } from '#/components/transactions/index.ts';
 import { cx } from '#/utils/class-names.util.ts';
 
 type ReviewQueueCardProps = {
@@ -19,8 +19,8 @@ type ReviewQueueCardProps = {
   onSelectCategory: (categoryId: string) => void;
   /** "Outra": opens the full category choice (the screen's). */
   onOtherCategory: () => void;
-  tags: readonly string[];
-  onTagsChange: (tags: string[]) => void;
+  /** The tag picker of the category on the card (all but the label). */
+  tagPicker: Omit<TagPickerProps, 'label' | 'className'>;
   /** The rule the save would create; leave out when there is none to offer. */
   rule?: ReviewRule;
   /** False on the first transaction: "Voltar à anterior" is disabled. */
@@ -45,8 +45,7 @@ export function ReviewQueueCard({
   selectedCategoryId,
   onSelectCategory,
   onOtherCategory,
-  tags,
-  onTagsChange,
+  tagPicker,
   rule,
   canGoBack,
   onBack,
@@ -94,7 +93,7 @@ export function ReviewQueueCard({
           </Button>
         </div>
       </div>
-      <TagEditor label="Tags" tags={tags} onChange={onTagsChange} />
+      <TagPicker label="Tags" {...tagPicker} />
       {rule ? (
         <div className="flex flex-col">
           <Checkbox isSelected={rule.enabled} onChange={rule.onEnabledChange}>

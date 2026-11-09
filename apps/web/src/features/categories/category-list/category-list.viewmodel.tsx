@@ -13,7 +13,7 @@ import { filterCategories } from '#/features/categories/utils/filter-categories.
 import { countCategoriesByFilter } from '#/features/categories/utils/count-categories-by-filter.util.ts';
 import { getBusinessDate } from '#/shared/utils/date/get-business-date.util.ts';
 import { toManagedCategory } from '#/features/categories/utils/to-managed-category.util.ts';
-import { toTagItem } from '#/features/categories/utils/to-tag-item.util.ts';
+import { buildTagGroups } from '#/features/categories/utils/build-tag-groups.util.ts';
 import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
 import { buildHref } from '#/shared/layouts/application/navigation/build-href.util.ts';
 import { navigateToHref } from '#/shared/layouts/application/navigation/navigate-to-href.util.ts';
@@ -47,7 +47,7 @@ export function useCategoryListViewModel() {
   const [showArchivedTags, setShowArchivedTags] = useState(false);
   const [archiveTargetId, setArchiveTargetId] = useState<string | null>(null);
   const [archiveError, setArchiveError] = useState<string | null>(null);
-  const [renamingTag, setRenamingTag] = useState<TagFormTarget | null>(null);
+  const [tagFormTarget, setTagFormTarget] = useState<TagFormTarget | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const allCategories = model.categories.data?.items ?? [];
@@ -64,12 +64,8 @@ export function useCategoryListViewModel() {
         ? { mode: 'edit', category: editing }
         : null;
 
-  // "Nova tag" from the "+" lives in the URL (`?new=tag`); "Renomear" is local.
-  const tagTarget: TagFormTarget | null = search.new === 'tag' ? { mode: 'create' } : renamingTag;
-
   const archiveTarget = allCategories.find((item) => item.id === archiveTargetId);
   const archivedTags = allTags.filter((tag) => tag.archivedAt !== null);
-  const activeTags = allTags.filter((tag) => tag.archivedAt === null);
 
   async function moveCategory(
     id: string,
@@ -186,13 +182,25 @@ export function useCategoryListViewModel() {
     onRequestArchive,
     onRestoreCategory: restoreCategory,
 
-    tags: activeTags.map(toTagItem),
-    archivedTags: archivedTags.map(toTagItem),
+    tagGroups: buildTagGroups(allCategories, allTags),
     activeTagCount: allTags.length - archivedTags.length,
     archivedTagCount: archivedTags.length,
     showArchivedTags,
     onToggleArchivedTags: () => setShowArchivedTags((shown) => !shown),
-    onRenameTag: (id: string) => withTag(id, (tag) => setRenamingTag({ mode: 'rename', tag })),
+    onCreateTag: (categoryId: string) => {
+      const category = allCategories.find((item) => item.id === categoryId);
+      if (category) {
+        setTagFormTarget({ mode: 'create', category: { id: category.id, name: category.name } });
+      }
+    },
+    onRenameTag: (id: string) =>
+      withTag(id, (tag) =>
+        setTagFormTarget({
+          mode: 'rename',
+          tag,
+          categoryName: allCategories.find((item) => item.id === tag.categoryId)?.name ?? '',
+        }),
+      ),
     onArchiveTag,
     onRestoreTag: (id: string) => withTag(id, (tag) => moveTag(id, tag.name, 'restore')),
 
@@ -207,10 +215,9 @@ export function useCategoryListViewModel() {
       onRestore: restoreCategory,
     },
     tagForm: {
-      target: tagTarget,
+      target: tagFormTarget,
       onClose: () => {
-        setRenamingTag(null);
-        if (search.new === 'tag') update({ new: undefined });
+        setTagFormTarget(null);
       },
       onArchive: (id: string) => onArchiveTag(id),
     },

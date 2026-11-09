@@ -3,6 +3,8 @@ import { idSchema } from '@fincheck/shared/common/id/id.schema.ts';
 import { HttpResponse, type HttpResponseResolver } from 'msw';
 import type { z } from 'zod';
 
+import { db } from '#mocks/state/mock-database.store.ts';
+import { dropTagsOfOtherCategories } from '#mocks/transactions/transaction/drop-tags-of-other-categories.util.ts';
 import { MockApiError } from '#mocks/support/http/mock-api.error.ts';
 
 type Output<S> = S extends z.ZodType ? z.output<S> : undefined;
@@ -87,6 +89,8 @@ export function handleRoute<
       }
 
       const result = await run({ params: pathParams, query, body } as RouteInput<Q, B>);
+      // Whatever a route did to the category of a transaction, its tags follow (rule 3 of the tags).
+      if (request.method !== 'GET') dropTagsOfOtherCategories(db);
 
       if (!spec.response) return new HttpResponse(null, { status: spec.status ?? 204 });
 

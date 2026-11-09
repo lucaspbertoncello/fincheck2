@@ -9,7 +9,7 @@ import {
   OriginalFromBankNote,
   SegmentedControl,
   SelectField,
-  TagEditor,
+  TagPicker,
   TextField,
   type AmountKind,
   type TransactionEditValues,
@@ -38,7 +38,8 @@ function kindOf(nature: TransactionNature, direction: AmountKind): AmountKind {
  * "Editar transação": the same modal as "Nova transação" (form-modal pattern), with the values of
  * the transaction. Nature (Despesa | Receita | Transferência, R6) is a full-width row above the two columns, so four options still fit on one line; a
  * transfer asks for its other leg instead of a category (one that is a transfer by its category,
- * "Rotação entre contas", shows that category too, to change or take off). Tags wait in "Mais opções", the bank's
+ * "Rotação entre contas", shows that category too, to change or take off, and keeps its tags). Tags
+ * wait in "Mais opções" and are the ones of the chosen category (or of the parts of a split), the bank's
  * original shows when the transaction was edited, and "Excluir" (manual ones only) is at the left
  * of the footer. Creating and editing differ only in the words and the values.
  */
@@ -139,12 +140,14 @@ export function TransactionEditModal({ editor }: TransactionEditModalProps) {
           tone={kindOf(values.nature, editor.direction)}
         />
       ) : null}
-      <FormModalMore
-        defaultOpen={values.tags.length > 0}
-        summary={values.tags.length > 0 ? undefined : 'tags'}
-      >
-        <TagEditor label="Tags" tags={values.tags} onChange={(tags) => patch({ tags })} />
-      </FormModalMore>
+      {isTransfer && values.categoryId === null ? null : (
+        <FormModalMore
+          defaultOpen={values.tagIds.length > 0 || values.categoryId !== null}
+          summary={values.tagIds.length > 0 ? undefined : 'tags'}
+        >
+          <TagPicker label="Tags" {...editor.tagPicker} />
+        </FormModalMore>
+      )}
     </FormModal>
   );
 }

@@ -35,9 +35,11 @@ export function useRuleSuggestionViewModel() {
 
   const suggestions = model.suggestions.data?.items ?? [];
   const categories = model.categories.data?.items ?? [];
-  const tagOptions: TagOption[] = (model.tags.data?.items ?? [])
-    .filter((tag) => tag.archivedAt === null)
-    .map((tag) => ({ id: tag.id, name: tag.name }));
+  // A rule only adds tags of the category it puts.
+  const tagOptionsOf = (categoryId: string): TagOption[] =>
+    (model.tags.data?.items ?? [])
+      .filter((tag) => tag.archivedAt === null && tag.categoryId === categoryId)
+      .map((tag) => ({ id: tag.id, name: tag.name }));
 
   const nameOf = (id: string | null) =>
     categories.find((item) => item.id === id)?.name ?? 'Sem categoria';
@@ -115,7 +117,7 @@ export function useRuleSuggestionViewModel() {
         kind: suggestion.kind,
         selectedId: suggestion.categoryId,
       }),
-      tagOptions,
+      tagOptions: tagOptionsOf(suggestion.categoryId),
       tagIds: draft.tagIds,
       preview: buildRulePreview(suggestion),
       historyOption:

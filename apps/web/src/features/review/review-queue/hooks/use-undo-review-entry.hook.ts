@@ -23,7 +23,7 @@ export function useUndoReviewEntry({ onUndone, onError }: UndoReviewEntryInput) 
       if (entry.ruleId) await deleteRule.mutateAsync(entry.ruleId);
       await updateTransaction.mutateAsync({
         id: entry.item.transaction.id,
-        body: { categoryId: null, tagIds: entry.item.transaction.tagIds },
+        body: { categoryId: null },
       });
       onUndone(entry);
     } catch (error) {

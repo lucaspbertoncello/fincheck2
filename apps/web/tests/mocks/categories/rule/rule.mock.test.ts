@@ -17,6 +17,14 @@ function category(kind: 'expense' | 'income', index = 0): string {
   return db.categories.filter((item) => item.kind === kind && !item.archivedAt)[index]?.id ?? '';
 }
 
+// A tag of a category: the tags of a rule are the ones of the category it puts.
+function addTag(categoryId: string, name: string): string {
+  const id = `0194f3a0-0000-7000-8000-${String(db.tags.length + 100).padStart(12, '0')}`;
+  db.tags.push({ id, categoryId, name, archivedAt: null });
+
+  return id;
+}
+
 function addTransaction(
   description: string,
   extra: Partial<MockState.TransactionRecord> = {},
@@ -47,7 +55,7 @@ function codeOf(answer: { json: unknown }) {
 
 describe('rule on the history: what is put by hand stays (mock vs api 20, 38, 40)', () => {
   it('does not touch what Lucas, a recurrence or a bill categorized, not even the tags', async () => {
-    const tag = db.tags.find((item) => !item.archivedAt)?.id ?? '';
+    const tag = addTag(category('expense', 4), 'da-regra');
     const mine = addTransaction('LOJA RULETA', {
       categoryId: category('expense', 1),
       categorySource: 'user',
@@ -75,21 +83,23 @@ describe('rule on the history: what is put by hand stays (mock vs api 20, 38, 40
     expect(free.tagIds).toEqual([tag]);
   });
 
-  it('a rule with tags only is no change for a transaction put by hand, in the preview and in the apply', async () => {
-    const tag = db.tags.find((item) => !item.archivedAt)?.id ?? '';
+  it('a rule with its category and tags is no change for a transaction put by hand, in the preview and in the apply', async () => {
+    const tag = addTag(category('expense', 4), 'da-regra');
     const mine = addTransaction('LOJA SOTAGS', {
       categoryId: category('expense', 1),
       categorySource: 'user',
     });
     const free = addTransaction('LOJA SOTAGS');
-
-    const preview = await callApi('POST', '/rules/preview', {
+    const body = {
       descriptionContains: 'LOJA SOTAGS',
+      categoryId: category('expense', 4),
       tagIds: [tag],
-    });
+    };
+
+    const preview = await callApi('POST', '/rules/preview', body);
     expect(preview.json).toMatchObject({ matchCount: 2, willChangeCount: 1 });
 
-    const id = await createRule({ descriptionContains: 'LOJA SOTAGS', tagIds: [tag] });
+    const id = await createRule(body);
     const applied = await callApi('POST', `/rules/${id}/apply`);
 
     expect(applied.json).toMatchObject({ changedCount: 1 });
@@ -97,33 +107,76 @@ describe('rule on the history: what is put by hand stays (mock vs api 20, 38, 40
     expect(free.tagIds).toEqual([tag]);
   });
 
+  it('a rule takes the tags of the old category off and puts the ones of its own', async () => {
+    const oldCategory = category('expense', 1);
+    const oldTag = addTag(oldCategory, 'antiga');
+    const newCategory = category('expense', 4);
+    const newTag = addTag(newCategory, 'nova');
+    const record = addTransaction('LOJA TROCA', {
+      categoryId: oldCategory,
+      categorySource: 'rule',
+      tagIds: [oldTag],
+    });
+    const id = await createRule({
+      descriptionContains: 'LOJA TROCA',
+      categoryId: newCategory,
+      tagIds: [newTag],
+    });
+
+    await callApi('POST', `/rules/${id}/apply`);
+
+    expect(record).toMatchObject({ categoryId: newCategory, tagIds: [newTag] });
+  });
+
+  it('refuses a tag of another category and any tag on a rule with no category (422)', async () => {
+    const tag = addTag(category('expense', 1), 'de-outra');
+    const other = await callApi('POST', '/rules', {
+      descriptionContains: 'LOJA X',
+      categoryId: category('expense', 4),
+      tagIds: [tag],
+    });
+    const none = await callApi('POST', '/rules', { descriptionContains: 'LOJA Y', tagIds: [tag] });
+
+    expect([other.status, none.status]).toEqual([422, 422]);
+    expect([codeOf(other), codeOf(none)]).toEqual([
+      'RULE_TAG_CATEGORY_MISMATCH',
+      'RULE_TAG_CATEGORY_MISMATCH',
+    ]);
+  });
+
   it('does not add a tag that was archived after the rule was made', async () => {
-    const tag = db.tags.find((item) => !item.archivedAt);
-    const kept = db.tags.find((item) => !item.archivedAt && item.id !== tag?.id);
+    const tag = addTag(category('expense', 1), 'a');
+    const kept = addTag(category('expense', 1), 'b');
     const id = await createRule({
       descriptionContains: 'LOJA ARQUIVADA',
       categoryId: category('expense', 1),
-      tagIds: [tag?.id, kept?.id],
+      tagIds: [tag, kept],
     });
     const record = addTransaction('LOJA ARQUIVADA');
-    if (tag) tag.archivedAt = ARCHIVED_AT;
+    const found = db.tags.find((item) => item.id === tag);
+    if (found) found.archivedAt = ARCHIVED_AT;
 
     const applied = await callApi('POST', `/rules/${id}/apply`);
 
     expect(applied.json).toMatchObject({ changedCount: 1 });
-    expect(record.tagIds).toEqual([kept?.id]);
+    expect(record.tagIds).toEqual([kept]);
   });
 
-  it('applies nothing when the only tag of a tags-only rule is archived', async () => {
-    const tag = db.tags.find((item) => !item.archivedAt);
-    const id = await createRule({ descriptionContains: 'LOJA SEMTAG', tagIds: [tag?.id] });
+  it('still puts the category, with no tag, when the only tag of the rule is archived', async () => {
+    const tag = addTag(category('expense', 1), 'a');
+    const id = await createRule({
+      descriptionContains: 'LOJA SEMTAG',
+      categoryId: category('expense', 1),
+      tagIds: [tag],
+    });
     const record = addTransaction('LOJA SEMTAG');
-    if (tag) tag.archivedAt = ARCHIVED_AT;
+    const found = db.tags.find((item) => item.id === tag);
+    if (found) found.archivedAt = ARCHIVED_AT;
 
     const applied = await callApi('POST', `/rules/${id}/apply`);
 
-    expect(applied.json).toEqual({ changedCount: 0, previous: [] });
-    expect(record.tagIds).toEqual([]);
+    expect(applied.json).toMatchObject({ changedCount: 1 });
+    expect(record).toMatchObject({ categoryId: category('expense', 1), tagIds: [] });
   });
 });
 
@@ -196,7 +249,10 @@ describe('rule edit: the checks of the api (mock vs api 22, 35, 36)', () => {
   });
 
   it('refuses a new tag that is archived, and keeps an old one that is archived now', async () => {
-    const [first, second] = db.tags.filter((item) => !item.archivedAt);
+    const firstId = addTag(category('expense', 1), 'a');
+    const secondId = addTag(category('expense', 1), 'b');
+    const first = db.tags.find((item) => item.id === firstId);
+    const second = db.tags.find((item) => item.id === secondId);
     const id = await newRule({ tagIds: [first?.id] });
     if (first) first.archivedAt = ARCHIVED_AT;
     if (second) second.archivedAt = ARCHIVED_AT;

@@ -44,8 +44,8 @@ export function validateRuleForm(values: RuleFormValues): RuleFormResult {
           : 'Escreva o nome de quem mandou ou recebeu, com pelo menos 2 letras.';
     }
   }
-  if (values.categoryId === null && values.tagIds.length === 0) {
-    errors.action = 'Escolha uma categoria ou ao menos uma tag.';
+  if (values.categoryId === null) {
+    errors.action = 'Escolha a categoria da regra. As tags dela se escolhem depois.';
   }
 
   if (parsed.success && !errors.action) return { ok: true, body: parsed.data };

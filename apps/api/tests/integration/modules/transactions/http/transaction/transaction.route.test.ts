@@ -222,7 +222,7 @@ describe('transactions routes (mounted in main)', () => {
 
     it('takes a category and a tag now that categories is wired in main', async () => {
       const category = await insertTestCategory(database.db);
-      const tag = await insertTestTag(database.db);
+      const tag = await insertTestTag(database.db, { category_id: category });
 
       const dto = await create({ categoryId: category, tagIds: [tag] });
 

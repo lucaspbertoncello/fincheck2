@@ -80,8 +80,8 @@ describe('transactions routes (with the owners wired)', () => {
   describe('categories and tags', () => {
     it("creates with a category of the same kind, as the user's choice, and with tags", async () => {
       const food = await insertTestCategory(database.db);
-      const tagA = await insertTestTag(database.db);
-      const tagB = await insertTestTag(database.db);
+      const tagA = await insertTestTag(database.db, { category_id: food });
+      const tagB = await insertTestTag(database.db, { category_id: food });
 
       const dto = await create({ categoryId: food, tagIds: [tagA, tagB] });
 
@@ -129,18 +129,105 @@ describe('transactions routes (with the owners wired)', () => {
     }
 
     it('refuses an archived tag and one that does not exist', async () => {
-      const old = await insertTestTag(database.db, { archived_at: ARCHIVED_AT });
+      const food = await insertTestCategory(database.db);
+      const old = await insertTestTag(database.db, { category_id: food, archived_at: ARCHIVED_AT });
 
       await expectError(
-        await send('POST', '/transactions', body({ tagIds: [old] })),
+        await send('POST', '/transactions', body({ categoryId: food, tagIds: [old] })),
         422,
         'TRANSACTION_TAG_ARCHIVED',
       );
       await expectError(
-        await send('POST', '/transactions', body({ tagIds: [generateId()] })),
+        await send('POST', '/transactions', body({ categoryId: food, tagIds: [generateId()] })),
         404,
         'TAG_NOT_FOUND',
       );
+    });
+
+    it('refuses a tag of another category (422) and any tag on a transaction with no category (422)', async () => {
+      const food = await insertTestCategory(database.db);
+      const fun = await insertTestCategory(database.db);
+      const funTag = await insertTestTag(database.db, { category_id: fun });
+
+      await expectError(
+        await send('POST', '/transactions', body({ categoryId: food, tagIds: [funTag] })),
+        422,
+        'TRANSACTION_TAG_CATEGORY_MISMATCH',
+      );
+      await expectError(
+        await send('POST', '/transactions', body({ tagIds: [funTag] })),
+        422,
+        'TRANSACTION_TAG_NEEDS_CATEGORY',
+      );
+      expect(await database.db.selectFrom('transactions').select('id').execute()).toEqual([]);
+    });
+
+    it('takes the tags of the old category off when the category changes, in the same request', async () => {
+      const food = await insertTestCategory(database.db);
+      const fun = await insertTestCategory(database.db);
+      const foodTag = await insertTestTag(database.db, { category_id: food });
+      const funTag = await insertTestTag(database.db, { category_id: fun });
+      const { id } = await create({ categoryId: food, tagIds: [foodTag] });
+
+      const moved = await dtoOf(await patch(id, { categoryId: fun }));
+      expect(moved).toMatchObject({ categoryId: fun, tagIds: [] });
+
+      const movedWithTag = await dtoOf(await patch(id, { categoryId: food, tagIds: [foodTag] }));
+      expect(movedWithTag).toMatchObject({ categoryId: food, tagIds: [foodTag] });
+      await expectError(
+        await patch(id, { categoryId: fun, tagIds: [foodTag] }),
+        422,
+        'TRANSACTION_TAG_CATEGORY_MISMATCH',
+      );
+      expect((await dtoOf(await send('GET', `/transactions/${id}`))).tagIds).toEqual([foodTag]);
+      expect(funTag).toBeDefined();
+    });
+
+    it('keeps the tags when the same category is sent again, and drops them when it is cleared', async () => {
+      const food = await insertTestCategory(database.db);
+      const foodTag = await insertTestTag(database.db, { category_id: food });
+      const { id } = await create({ categoryId: food, tagIds: [foodTag] });
+
+      expect(await dtoOf(await patch(id, { categoryId: food }))).toMatchObject({
+        tagIds: [foodTag],
+      });
+      expect(await dtoOf(await patch(id, { categoryId: null }))).toMatchObject({
+        categoryId: null,
+        tagIds: [],
+      });
+    });
+
+    it('a split transaction takes the tags of the categories of its parts, and the split keeps only those', async () => {
+      const food = await insertTestCategory(database.db);
+      const fun = await insertTestCategory(database.db);
+      const other = await insertTestCategory(database.db);
+      const foodTag = await insertTestTag(database.db, { category_id: food });
+      const funTag = await insertTestTag(database.db, { category_id: fun });
+      const otherTag = await insertTestTag(database.db, { category_id: other });
+      const { id } = await create({ categoryId: food, tagIds: [foodTag] });
+      const split = (categories: string[]) =>
+        send('PUT', `/transactions/${id}/splits`, {
+          parts: [
+            { amountCents: 500, categoryId: categories[0] },
+            { amountCents: 750, categoryId: categories[1] },
+          ],
+        });
+
+      expect(await dtoOf(await split([food, fun]))).toMatchObject({ tagIds: [foodTag] });
+      expect(await dtoOf(await patch(id, { tagIds: [foodTag, funTag] }))).toMatchObject({
+        tagIds: [foodTag, funTag],
+      });
+      await expectError(
+        await patch(id, { tagIds: [otherTag] }),
+        422,
+        'TRANSACTION_TAG_CATEGORY_MISMATCH',
+      );
+
+      expect(await dtoOf(await split([fun, fun]))).toMatchObject({ tagIds: [funTag] });
+      expect(await dtoOf(await send('DELETE', `/transactions/${id}/splits`))).toMatchObject({
+        categoryId: null,
+        tagIds: [],
+      });
     });
 
     it('changes the category and drops the rule that had set it', async () => {
@@ -206,10 +293,17 @@ describe('transactions routes (with the owners wired)', () => {
     });
 
     it('replaces the tags, letting an archived one that was there stay and refusing a new archived one', async () => {
-      const old = await insertTestTag(database.db, { archived_at: ARCHIVED_AT });
-      const fresh = await insertTestTag(database.db);
-      const archivedNew = await insertTestTag(database.db, { archived_at: ARCHIVED_AT });
-      const id = await insertTestTransaction(database.db, accountId);
+      const food = await insertTestCategory(database.db);
+      const old = await insertTestTag(database.db, { category_id: food, archived_at: ARCHIVED_AT });
+      const fresh = await insertTestTag(database.db, { category_id: food });
+      const archivedNew = await insertTestTag(database.db, {
+        category_id: food,
+        archived_at: ARCHIVED_AT,
+      });
+      const id = await insertTestTransaction(database.db, accountId, {
+        category_id: food,
+        category_source: 'user',
+      });
       await database.db
         .insertInto('transaction_tags')
         .values({ transaction_id: id, tag_id: old })
@@ -525,10 +619,12 @@ describe('transactions routes (with the owners wired)', () => {
     });
 
     it('adds a tag to the ones that do not have it and keeps the others', async () => {
-      const tag = await insertTestTag(database.db);
-      const other = await insertTestTag(database.db);
-      const plain = await insertTestTransaction(database.db, accountId);
-      const tagged = await insertTestTransaction(database.db, accountId);
+      const food = await insertTestCategory(database.db);
+      const tag = await insertTestTag(database.db, { category_id: food });
+      const other = await insertTestTag(database.db, { category_id: food });
+      const inFood = { category_id: food, category_source: 'user' } as const;
+      const plain = await insertTestTransaction(database.db, accountId, inFood);
+      const tagged = await insertTestTransaction(database.db, accountId, inFood);
       await database.db
         .insertInto('transaction_tags')
         .values([
@@ -536,7 +632,7 @@ describe('transactions routes (with the owners wired)', () => {
           { transaction_id: plain, tag_id: other },
         ])
         .execute();
-      const fresh = await insertTestTransaction(database.db, accountId);
+      const fresh = await insertTestTransaction(database.db, accountId, inFood);
 
       const result = await bulk([plain, tagged, fresh], { type: 'addTag', tagId: tag });
 
@@ -545,6 +641,30 @@ describe('transactions routes (with the owners wired)', () => {
       expect([...(await dtoOf(await send('GET', `/transactions/${plain}`))).tagIds].sort()).toEqual(
         [tag, other].sort(),
       );
+    });
+
+    it('skips, with its own reason, the transactions of another category and the ones with none', async () => {
+      const food = await insertTestCategory(database.db);
+      const fun = await insertTestCategory(database.db);
+      const tag = await insertTestTag(database.db, { category_id: food });
+      const fits = await insertTestTransaction(database.db, accountId, {
+        category_id: food,
+        category_source: 'user',
+      });
+      const other = await insertTestTransaction(database.db, accountId, {
+        category_id: fun,
+        category_source: 'user',
+      });
+      const none = await insertTestTransaction(database.db, accountId);
+
+      const result = await bulk([fits, other, none], { type: 'addTag', tagId: tag });
+
+      expect(result.updatedCount).toBe(1);
+      expect(result.skipped).toEqual([
+        { transactionId: other, reason: 'tag_category_mismatch' },
+        { transactionId: none, reason: 'tag_category_mismatch' },
+      ]);
+      expect((await dtoOf(await send('GET', `/transactions/${other}`))).tagIds).toEqual([]);
     });
 
     it('ignores, skipping the ones already ignored', async () => {
@@ -607,9 +727,56 @@ describe('transactions routes (with the owners wired)', () => {
       }
     });
 
+    it('undoes "Ignorar" on a split transaction with a tag of a part, with no error and the tags kept', async () => {
+      const food = await insertTestCategory(database.db);
+      const home = await insertTestCategory(database.db);
+      const tag = await insertTestTag(database.db, { category_id: food });
+      const { id } = await create({ categoryId: food, tagIds: [tag] });
+      await send('PUT', `/transactions/${id}/splits`, {
+        parts: [
+          { amountCents: 500, categoryId: food },
+          { amountCents: 750, categoryId: home },
+        ],
+      });
+      const { previous } = await bulk([id], { type: 'ignore' });
+
+      const response = await send('POST', '/transactions/bulk/restore', { items: previous });
+
+      expect(restoreBulkResultSchema.parse(await response.json())).toEqual({ restoredCount: 1 });
+      expect(await dtoOf(await send('GET', `/transactions/${id}`))).toMatchObject({
+        ignoredAt: null,
+        tagIds: [tag],
+      });
+    });
+
+    it('undoes "Ignorar" on a transfer by category, giving back the category and its tags', async () => {
+      const rotation = await insertTestCategory(database.db, { is_transfer: 1 });
+      const tag = await insertTestTag(database.db, { category_id: rotation });
+      const id = await insertTestTransaction(database.db, accountId, {
+        nature: 'transfer',
+        category_id: rotation,
+        category_source: 'user',
+      });
+      await database.db
+        .insertInto('transaction_tags')
+        .values({ transaction_id: id, tag_id: tag })
+        .execute();
+      const { previous } = await bulk([id], { type: 'ignore' });
+
+      const response = await send('POST', '/transactions/bulk/restore', { items: previous });
+
+      expect(response.status).toBe(200);
+      expect(await dtoOf(await send('GET', `/transactions/${id}`))).toMatchObject({
+        nature: 'transfer',
+        categoryId: rotation,
+        tagIds: [tag],
+        ignoredAt: null,
+      });
+    });
+
     it('undoes: writes back category, source, rule, tags and ignore, and skips what vanished', async () => {
       const food = await insertTestCategory(database.db);
-      const tag = await insertTestTag(database.db);
+      const tag = await insertTestTag(database.db, { category_id: food });
       const id = await insertTestTransaction(database.db, accountId, {
         category_id: food,
         category_source: 'user',
@@ -649,6 +816,29 @@ describe('transactions routes (with the owners wired)', () => {
         tagIds: [tag],
         ignoredAt: null,
       });
+    });
+
+    it('refuses a state whose tags are not of its category (400), changing nothing', async () => {
+      const food = await insertTestCategory(database.db);
+      const fun = await insertTestCategory(database.db);
+      const funTag = await insertTestTag(database.db, { category_id: fun });
+      const id = await insertTestTransaction(database.db, accountId);
+
+      const response = await send('POST', '/transactions/bulk/restore', {
+        items: [
+          {
+            transactionId: id,
+            categoryId: food,
+            categorySource: 'user',
+            categoryRuleId: null,
+            tagIds: [funTag],
+            ignoredAt: null,
+          },
+        ],
+      });
+
+      await expectError(response, 400, 'VALIDATION_FAILED');
+      expect((await dtoOf(await send('GET', `/transactions/${id}`))).categoryId).toBeNull();
     });
 
     it('restores without breaking when the nature changed since the action', async () => {
@@ -819,7 +1009,7 @@ describe('transactions routes (with the owners wired)', () => {
 
     it('gives the category and the tags to every parcel, and the next parcel and what is left from the open invoice on', async () => {
       const food = await insertTestCategory(database.db);
-      const tag = await insertTestTag(database.db);
+      const tag = await insertTestTag(database.db, { category_id: food });
       const plan = await createPlan({
         totalCents: 40000,
         installmentCount: 4,

@@ -74,9 +74,8 @@ export const ruleMock = [
       if (body.accountId) findAccount(db, body.accountId);
       const nextCategoryId = body.categoryId === undefined ? rule.categoryId : body.categoryId;
       const category = nextCategoryId ? findCategory(db, nextCategoryId) : null;
-      const newTags = [
-        ...new Set((body.tagIds ?? []).filter((id) => !rule.tagIds.includes(id))),
-      ].map((tagId) => findTag(db, tagId));
+      // The whole set the rule ends up with: it must fit the category it ends up with.
+      const nextTags = [...new Set(body.tagIds ?? rule.tagIds)].map((tagId) => findTag(db, tagId));
       const next = {
         descriptionContains:
           body.descriptionContains === undefined
@@ -105,7 +104,14 @@ export const ruleMock = [
       // The category the rule already had may be archived by now; only a newly chosen one is refused.
       if (category?.archivedAt && category.id !== rule.categoryId)
         fail(422, 'RULE_CATEGORY_ARCHIVED', 'Categoria arquivada');
-      if (newTags.some((tag) => tag.archivedAt)) fail(422, 'RULE_TAG_ARCHIVED', 'Tag arquivada');
+      if (nextTags.some((tag) => tag.archivedAt && !rule.tagIds.includes(tag.id)))
+        fail(422, 'RULE_TAG_ARCHIVED', 'Tag arquivada');
+      if (nextTags.some((tag) => tag.categoryId !== next.categoryId))
+        fail(
+          422,
+          'RULE_TAG_CATEGORY_MISMATCH',
+          'A regra só pode usar tags da categoria que ela aplica',
+        );
       const duplicate = db.rules.some(
         (other) =>
           other.id !== rule.id &&

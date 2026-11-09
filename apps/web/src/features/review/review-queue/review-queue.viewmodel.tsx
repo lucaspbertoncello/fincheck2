@@ -1,4 +1,11 @@
-import { useToast, type CategoryOption, type IconName, type ReviewChoice } from '@fincheck/ui';
+import {
+  useToast,
+  type CategoryOption,
+  type IconName,
+  type ReviewChoice,
+  type TagPickerProps,
+} from '@fincheck/ui';
+import type { Tag } from '@fincheck/shared/categories/tag/tag.type.ts';
 import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 
@@ -25,6 +32,7 @@ import { buildTransactionDetail } from '#/features/review/review-queue/utils/bui
 import { countRuleCatches } from '#/domain/transactions/review-queue/rules/count-rule-catches.rule.ts';
 import { orderQueue } from '#/domain/transactions/review-queue/rules/order-queue.rule.ts';
 import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
+import { hasApiErrorCode } from '#/shared/api/api.error.ts';
 import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
 
 const LISTED_IN_QUEUE = 8;
@@ -51,6 +59,8 @@ function ReviewVisit({ month }: { month: string }) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  // Tags made on the card, until the list of tags catches up with them.
+  const [createdTags, setCreatedTags] = useState<Tag.Dto[]>([]);
 
   const categories = model.categories.data?.items ?? [];
   const tags = model.tags.data?.items ?? [];
@@ -66,25 +76,33 @@ function ReviewVisit({ month }: { month: string }) {
   const kind = transaction ? getTransactionDirection(transaction.amountCents) : 'expense';
 
   // What the card starts with; the draft only exists once the person changes something.
+  const suggestedCategoryId =
+    currentItem?.categorySuggestions.find((suggestion) => categoryById.has(suggestion.categoryId))
+      ?.categoryId ?? null;
+  const initialCategoryId = reopened ? reopened.categoryId : suggestedCategoryId;
   const initialDraft: ReviewDraft | null =
     currentItem && transaction
       ? {
           transactionId: transaction.id,
-          categoryId: reopened
-            ? reopened.categoryId
-            : (currentItem.categorySuggestions.find((suggestion) =>
-                categoryById.has(suggestion.categoryId),
-              )?.categoryId ?? null),
-          tags: reopened
-            ? reopened.tags
-            : transaction.tagIds.flatMap((id) => tags.find((tag) => tag.id === id)?.name ?? []),
+          categoryId: initialCategoryId,
+          // The tags belong to the category: the ones the transaction has only count while its own
+          // category is the one on the card.
+          tagIds: reopened
+            ? reopened.tagIds
+            : transaction.categoryId === initialCategoryId
+              ? transaction.tagIds
+              : [],
           ruleEnabled: true,
         }
       : null;
   const activeDraft = draft && draft.transactionId === transaction?.id ? draft : initialDraft;
 
   function changeDraft(patch: Partial<ReviewDraft>) {
-    if (activeDraft) setDraft({ ...activeDraft, ...patch });
+    if (!activeDraft) return;
+    // Another category leaves the tags of the old one behind.
+    const movesCategory =
+      patch.categoryId !== undefined && patch.categoryId !== activeDraft.categoryId;
+    setDraft({ ...activeDraft, ...(movesCategory ? { tagIds: [] } : {}), ...patch });
   }
 
   const pattern = currentItem?.rulePattern ?? '';
@@ -141,7 +159,7 @@ function ReviewVisit({ month }: { month: string }) {
     },
     onError: setActionError,
   });
-  const saveEntry = useSaveReviewEntry({ tags, onError: setActionError });
+  const saveEntry = useSaveReviewEntry({ onError: setActionError });
 
   async function save() {
     if (!currentItem || !transaction || !activeDraft?.categoryId) return;
@@ -152,7 +170,7 @@ function ReviewVisit({ month }: { month: string }) {
     const entry = await saveEntry({
       item: currentItem,
       categoryId,
-      tagNames: activeDraft.tags,
+      tagIds: activeDraft.tagIds,
       rule: ruleOffered && activeDraft.ruleEnabled ? { pattern, kind } : null,
     });
     if (!entry) {
@@ -203,6 +221,43 @@ function ReviewVisit({ month }: { month: string }) {
 
   const accountName = (accountId: string) => accounts.find((item) => item.id === accountId)?.name;
 
+  const draftCategory = activeDraft?.categoryId
+    ? categoryById.get(activeDraft.categoryId)
+    : undefined;
+  const tagsOfDraftCategory = tags.filter((tag) => tag.categoryId === draftCategory?.id);
+  const tagPicker: Omit<TagPickerProps, 'label' | 'className'> = {
+    categoryName: draftCategory?.name ?? null,
+    options: tagsOfDraftCategory
+      .filter((tag) => tag.archivedAt === null)
+      .map((tag) => ({ id: tag.id, name: tag.name }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' })),
+    selected: (activeDraft?.tagIds ?? []).flatMap((id) => {
+      const tag =
+        tagsOfDraftCategory.find((item) => item.id === id) ??
+        createdTags.find((item) => item.id === id);
+      return tag ? [{ id: tag.id, name: tag.name }] : [];
+    }),
+    onChange: (tagIds) => changeDraft({ tagIds }),
+    onCreate: async (name) => {
+      if (!draftCategory) throw new Error('Escolha a categoria antes de criar uma tag.');
+      try {
+        const tag = await model.createTag.mutateAsync({ categoryId: draftCategory.id, name });
+        setCreatedTags((current) => [...current, tag]);
+        return tag.id;
+      } catch (error) {
+        throw new Error(
+          hasApiErrorCode(error, 'TAG_NAME_TAKEN')
+            ? 'Já existe uma tag com esse nome nessa categoria (pode estar arquivada).'
+            : 'Não deu para criar a tag. Tente de novo.',
+          { cause: error },
+        );
+      }
+    },
+    status:
+      model.tags.isError && !model.tags.data ? 'error' : model.tags.isPending ? 'loading' : 'ready',
+    onRetry: () => void model.tags.refetch(),
+  };
+
   const card: ReviewQueueViewProps['card'] =
     currentItem && transaction && activeDraft
       ? {
@@ -217,8 +272,7 @@ function ReviewVisit({ month }: { month: string }) {
           selectedCategoryId: activeDraft.categoryId,
           onSelectCategory: (categoryId) => changeDraft({ categoryId }),
           onOtherCategory: () => setPickerOpen(true),
-          tags: activeDraft.tags,
-          onTagsChange: (next) => changeDraft({ tags: next }),
+          tagPicker,
           rule: ruleOffered
             ? {
                 keyword: pattern,

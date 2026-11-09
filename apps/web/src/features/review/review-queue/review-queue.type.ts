@@ -8,8 +8,8 @@ type RuleHistoryPrevious = NonNullable<Rule.CreateResult['applied']>['previous']
 export type ReviewedEntry = {
   item: ReviewQueue.ItemDto;
   categoryId: string;
-  /** Tag names, as the editor shows them. */
-  tags: string[];
+  /** The tags marked, all of the category. */
+  tagIds: string[];
   /** The rule this save created, when there was one. */
   ruleId: string | null;
   historyPrevious: RuleHistoryPrevious;
@@ -19,6 +19,6 @@ export type ReviewedEntry = {
 export type ReviewDraft = {
   transactionId: string;
   categoryId: string | null;
-  tags: string[];
+  tagIds: string[];
   ruleEnabled: boolean;
 };

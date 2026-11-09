@@ -19,7 +19,7 @@ export function createTestTagReader(db: Kysely<Database>): TransactionTagReader 
     async requireTags(tagIds, executor = db) {
       const rows = await executor
         .selectFrom('tags')
-        .select(['id', 'archived_at'])
+        .select(['id', 'category_id', 'archived_at'])
         .where('id', 'in', tagIds)
         .execute();
       const byId = new Map(rows.map((row) => [row.id, row]));
@@ -28,7 +28,7 @@ export function createTestTagReader(db: Kysely<Database>): TransactionTagReader 
         const row = byId.get(id);
         if (!row) throw new FakeTagNotFoundError();
 
-        return { id, isArchived: row.archived_at !== null };
+        return { id, categoryId: row.category_id, isArchived: row.archived_at !== null };
       });
     },
   };

@@ -14,7 +14,6 @@ export const PLUS_ACTION_PATHS: Record<string, string> = {
   'new-subscription': '/recurrences/subscriptions?new=subscription',
   'connect-account': '/accounts?new=account',
   'new-category': '/categories?new=category',
-  'new-tag': '/categories?filter=tags&new=tag',
   'new-rule': '/categories/rules?new=rule',
   'new-income-source': '/recurrences?new=recurrence',
 };

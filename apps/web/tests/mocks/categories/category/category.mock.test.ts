@@ -76,8 +76,33 @@ describe('categories routes', () => {
     expect(
       tags.parse((await callApi('GET', '/tags?includeArchived=true')).json).items,
     ).toHaveLength(4);
-    const created = tagDtoSchema.parse((await callApi('POST', '/tags', { name: 'Reforma' })).json);
-    expect((await callApi('POST', '/tags', { name: 'reforma' })).status).toBe(409);
+    const categories = listResponseSchema(categoryDtoSchema).parse(
+      (await callApi('GET', '/categories')).json,
+    ).items;
+    const mercado = categories.find((category) => category.name === 'Mercado')!;
+    const casa = categories.find((category) => category.name === 'Moradia')!;
+    const created = tagDtoSchema.parse(
+      (await callApi('POST', '/tags', { categoryId: mercado.id, name: 'Reforma' })).json,
+    );
+    expect(created.categoryId).toBe(mercado.id);
+    // The name is unique inside the category: another category may repeat it.
+    expect(
+      (await callApi('POST', '/tags', { categoryId: mercado.id, name: 'reforma' })).status,
+    ).toBe(409);
+    expect((await callApi('POST', '/tags', { categoryId: casa.id, name: 'reforma' })).status).toBe(
+      201,
+    );
+    expect(
+      tags.parse((await callApi('GET', `/tags?categoryId=${mercado.id}`)).json).items,
+    ).toHaveLength(1);
+    expect(
+      (
+        await callApi('POST', '/tags', {
+          categoryId: '01939000-0000-7000-8000-00000000dead',
+          name: 'x',
+        })
+      ).status,
+    ).toBe(404);
     expect(
       tagDtoSchema.parse((await callApi('PATCH', `/tags/${created.id}`, { name: 'Obra' })).json)
         .name,

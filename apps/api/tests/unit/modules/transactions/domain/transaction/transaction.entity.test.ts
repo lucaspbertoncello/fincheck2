@@ -118,7 +118,13 @@ describe('Transaction.createManual', () => {
       Transaction.createManual(manualInput({ category: { ...FOOD, isArchived: true } }), TEST_NOW),
     ).toThrow(expect.objectContaining({ code: 'TRANSACTION_CATEGORY_ARCHIVED' }));
     expect(() =>
-      Transaction.createManual(manualInput({ tags: [{ id: 'old', isArchived: true }] }), TEST_NOW),
+      Transaction.createManual(
+        manualInput({
+          category: FOOD,
+          tags: [{ id: 'old', categoryId: 'food', isArchived: true }],
+        }),
+        TEST_NOW,
+      ),
     ).toThrow(expect.objectContaining({ code: 'TRANSACTION_TAG_ARCHIVED' }));
   });
 
@@ -134,9 +140,10 @@ describe('Transaction.createManual', () => {
   it('does not repeat a tag', () => {
     const transaction = Transaction.createManual(
       manualInput({
+        category: FOOD,
         tags: [
-          { id: 'a', isArchived: false },
-          { id: 'a', isArchived: false },
+          { id: 'a', categoryId: 'food', isArchived: false },
+          { id: 'a', categoryId: 'food', isArchived: false },
         ],
       }),
       TEST_NOW,
@@ -579,32 +586,185 @@ describe('Transaction.assignCategory', () => {
   });
 });
 
+const foodTag = (id: string, isArchived = false) => ({ id, categoryId: 'food', isArchived });
+const marketTag = (id: string) => ({ id, categoryId: 'market', isArchived: false });
+
 describe('Transaction tags', () => {
+  const inFood = (tagIds: string[] = []) =>
+    buildTestTransaction({ categoryId: 'food', categorySource: 'user', tagIds });
+
   it('replaces the set and lets an archived tag stay when it was already there', () => {
-    const transaction = buildTestTransaction({ tagIds: ['old'] });
-    transaction.replaceTags(
-      [
-        { id: 'old', isArchived: true },
-        { id: 'new', isArchived: false },
-      ],
-      LATER,
-    );
+    const transaction = inFood(['old']);
+    transaction.replaceTags([foodTag('old', true), foodTag('new')], LATER);
 
     expect(transaction.tagIds).toEqual(['old', 'new']);
-    expect(() => transaction.replaceTags([{ id: 'other', isArchived: true }], LATER)).toThrow(
+    expect(() => transaction.replaceTags([foodTag('other', true)], LATER)).toThrow(
       expect.objectContaining({ code: 'TRANSACTION_TAG_ARCHIVED' }),
     );
   });
 
   it('adds one tag and keeps the others, saying whether it changed', () => {
-    const transaction = buildTestTransaction({ tagIds: ['a'] });
+    const transaction = inFood(['a']);
 
-    expect(transaction.addTag({ id: 'b', isArchived: false }, LATER)).toBe(true);
-    expect(transaction.addTag({ id: 'a', isArchived: false }, LATER)).toBe(false);
+    expect(transaction.addTag(foodTag('b'), LATER)).toBe(true);
+    expect(transaction.addTag(foodTag('a'), LATER)).toBe(false);
     expect(transaction.tagIds).toEqual(['a', 'b']);
-    expect(() => transaction.addTag({ id: 'c', isArchived: true }, LATER)).toThrow(
+    expect(() => transaction.addTag(foodTag('c', true), LATER)).toThrow(
       expect.objectContaining({ code: 'TRANSACTION_TAG_ARCHIVED' }),
     );
+  });
+
+  it('only takes tags of its own category: another category is refused with its own code', () => {
+    const transaction = inFood(['a']);
+
+    expect(() => transaction.replaceTags([foodTag('a'), marketTag('m')], LATER)).toThrow(
+      expect.objectContaining({ code: 'TRANSACTION_TAG_CATEGORY_MISMATCH' }),
+    );
+    expect(() => transaction.addTag(marketTag('m'), LATER)).toThrow(
+      expect.objectContaining({ code: 'TRANSACTION_TAG_CATEGORY_MISMATCH' }),
+    );
+    expect(transaction.tagIds).toEqual(['a']);
+  });
+
+  it('takes no tag at all while it has no category, and can still clear them', () => {
+    const transaction = buildTestTransaction();
+
+    expect(() => transaction.replaceTags([foodTag('a')], LATER)).toThrow(
+      expect.objectContaining({ code: 'TRANSACTION_TAG_NEEDS_CATEGORY' }),
+    );
+    expect(() => transaction.addTag(foodTag('a'), LATER)).toThrow(
+      expect.objectContaining({ code: 'TRANSACTION_TAG_NEEDS_CATEGORY' }),
+    );
+    expect(() => transaction.replaceTags([], LATER)).not.toThrow();
+  });
+
+  it('answers why a bulk tag cannot be added, without changing anything', () => {
+    const transaction = inFood();
+
+    expect(transaction.whyCannotTakeTag(foodTag('a'))).toBeNull();
+    expect(transaction.whyCannotTakeTag(marketTag('m'))).toBe('tag_category_mismatch');
+    expect(buildTestTransaction().whyCannotTakeTag(foodTag('a'))).toBe('tag_category_mismatch');
+    expect(transaction.tagIds).toEqual([]);
+  });
+
+  it('loses its tags when the category changes, and keeps them when it is the same', () => {
+    const transaction = inFood(['a', 'b']);
+
+    transaction.assignCategory(FOOD, LATER);
+    expect(transaction.tagIds).toEqual(['a', 'b']);
+
+    transaction.assignCategory({ id: 'market', kind: 'expense', isArchived: false }, LATER);
+    expect(transaction).toMatchObject({ categoryId: 'market', tagIds: [] });
+  });
+
+  it('loses its tags when the category is cleared, the nature leaves the counted ones or it is split', () => {
+    const cleared = inFood(['a']);
+    cleared.assignCategory(null, LATER);
+    expect(cleared.tagIds).toEqual([]);
+
+    const transfer = inFood(['a']);
+    transfer.changeNature('transfer', { hasActiveInvoiceLink: false, isCardAccount: false }, LATER);
+    expect(transfer.tagIds).toEqual([]);
+
+    const unsplit = inFood(['a']);
+    unsplit.splitInto([split(1000, FOOD), split(250)], LATER, [foodTag('a')]);
+    unsplit.unsplit(LATER);
+    expect(unsplit.tagIds).toEqual([]);
+  });
+});
+
+// A split transaction has no category of its own: its tags are the ones of the categories of its
+// parts (decision of 09/11/2026), and nothing else changes where the tag lives (the transaction).
+describe('Transaction tags of a split transaction', () => {
+  const MARKET = { id: 'market', kind: 'expense', isArchived: false } as const;
+  const inFood = (tagIds: string[] = []) =>
+    buildTestTransaction({ categoryId: 'food', categorySource: 'user', tagIds });
+
+  it('keeps the tags of the categories a part kept and drops the others when it splits', () => {
+    const transaction = inFood(['a']);
+    transaction.splitInto([split(1000, FOOD), split(250, MARKET)], LATER, [foodTag('a')]);
+    expect(transaction.tagIds).toEqual(['a']);
+
+    const lost = inFood(['a']);
+    lost.splitInto([split(1000, MARKET), split(250)], LATER, [foodTag('a')]);
+    expect(lost.tagIds).toEqual([]);
+
+    const noPart = inFood(['a']);
+    noPart.splitInto([split(1000), split(250)], LATER, [foodTag('a')]);
+    expect(noPart.tagIds).toEqual([]);
+  });
+
+  it('redoing the split keeps only the tags of the categories the new parts have', () => {
+    const transaction = inFood(['a']);
+    transaction.splitInto([split(1000, FOOD), split(250, MARKET)], LATER, [foodTag('a')]);
+    transaction.replaceTags([foodTag('a'), marketTag('m')], LATER);
+
+    transaction.splitInto([split(600, MARKET), split(650, MARKET)], LATER, [
+      foodTag('a'),
+      marketTag('m'),
+    ]);
+
+    expect(transaction.tagIds).toEqual(['m']);
+  });
+
+  it('takes the tags of the categories of any part, and refuses the ones of another category', () => {
+    const transaction = inFood();
+    transaction.splitInto([split(1000, FOOD), split(250, MARKET)], LATER);
+
+    transaction.replaceTags([foodTag('a'), marketTag('m')], LATER);
+    expect(transaction.tagIds).toEqual(['a', 'm']);
+    expect(transaction.addTag({ id: 'x', categoryId: 'market', isArchived: false }, LATER)).toBe(
+      true,
+    );
+    expect(() =>
+      transaction.replaceTags([{ id: 'z', categoryId: 'other', isArchived: false }], LATER),
+    ).toThrow(expect.objectContaining({ code: 'TRANSACTION_TAG_CATEGORY_MISMATCH' }));
+    expect(transaction.whyCannotTakeTag(marketTag('m'))).toBeNull();
+    expect(transaction.whyCannotTakeTag({ id: 'z', categoryId: 'other', isArchived: false })).toBe(
+      'tag_category_mismatch',
+    );
+  });
+
+  it('a split with no category on any part takes no tag', () => {
+    const transaction = inFood();
+    transaction.splitInto([split(1000), split(250)], LATER);
+
+    expect(() => transaction.replaceTags([foodTag('a')], LATER)).toThrow(
+      expect.objectContaining({ code: 'TRANSACTION_TAG_NEEDS_CATEGORY' }),
+    );
+  });
+
+  it('clearing the category of a split one changes nothing: its tags stay', () => {
+    const transaction = inFood();
+    transaction.splitInto([split(1000, FOOD), split(250, MARKET)], LATER);
+    transaction.replaceTags([foodTag('a'), marketTag('m')], LATER);
+
+    transaction.assignCategory(null, LATER);
+
+    expect(transaction.tagIds).toEqual(['a', 'm']);
+  });
+
+  it('restores a state of a split one with the tags its parts justify', () => {
+    const transaction = inFood();
+    transaction.splitInto([split(1000, FOOD), split(250, MARKET)], LATER);
+    transaction.replaceTags([foodTag('a'), marketTag('m')], LATER);
+    const before = transaction.previousState();
+
+    transaction.ignore(LATER);
+    transaction.restoreState(before, { ruleStillExists: false }, LATER);
+
+    expect(transaction.tagIds).toEqual(['a', 'm']);
+    expect(transaction.ignoredAt).toBeNull();
+  });
+
+  it('undoing the split leaves no category, so no tag', () => {
+    const transaction = inFood();
+    transaction.splitInto([split(1000, FOOD), split(250, MARKET)], LATER);
+    transaction.replaceTags([foodTag('a'), marketTag('m')], LATER);
+
+    transaction.unsplit(LATER);
+
+    expect(transaction.tagIds).toEqual([]);
   });
 });
 
@@ -1115,6 +1275,25 @@ describe('previous state of a bulk action', () => {
     });
   });
 
+  it('drops the saved tags together with a category that cannot be restored', () => {
+    const transfer = buildTestTransaction({ nature: 'transfer' });
+
+    transfer.restoreState(
+      {
+        transactionId: transfer.id,
+        categoryId: 'food',
+        categorySource: 'user',
+        categoryRuleId: null,
+        tagIds: ['a'],
+        ignoredAt: null,
+      },
+      { ruleStillExists: true },
+      LATER,
+    );
+
+    expect(transfer.tagIds).toEqual([]);
+  });
+
   it('leaves no id of a rule that was deleted meanwhile', () => {
     const transaction = buildTestTransaction();
     transaction.restoreState(
@@ -1138,7 +1317,7 @@ describe('Transaction.applyRule (BR-CAT-006)', () => {
   const RULE = { id: 'rule-1', category: FOOD, tagIds: ['trip'] };
   const NONE: ReadonlySet<string> = new Set();
 
-  it('sets the category as the rule did and adds the tags it lacks', () => {
+  it('sets the category as the rule did, drops the tags of the old category and adds the tags of the rule', () => {
     const transaction = buildTestTransaction({ tagIds: ['mine'] });
 
     const changed = transaction.applyRule(RULE, NONE, LATER);
@@ -1148,7 +1327,7 @@ describe('Transaction.applyRule (BR-CAT-006)', () => {
       categoryId: 'food',
       categorySource: 'rule',
       categoryRuleId: 'rule-1',
-      tagIds: ['mine', 'trip'],
+      tagIds: ['trip'],
       updatedAt: LATER,
     });
   });
@@ -1227,17 +1406,32 @@ describe('Transaction.applyRule (BR-CAT-006)', () => {
     }
   });
 
-  it('adds only the tags when the rule has no category, but never to what was put by hand', () => {
+  it('adds the tags of the rule to a transaction that already has its category, and keeps the other tags of it', () => {
+    const same = buildTestTransaction({
+      categoryId: 'food',
+      categorySource: 'rule',
+      categoryRuleId: 'rule-1',
+      tagIds: ['mine'],
+    });
+
+    expect(same.applyRule(RULE, NONE, LATER)).toBe(true);
+    expect(same.tagIds).toEqual(['mine', 'trip']);
+  });
+
+  it('adds no tag when it does not put the category: a rule with no category, or one that an older rule blocks', () => {
     const free = buildTestTransaction({ categoryId: 'market', categorySource: 'rule' });
     expect(free.applyRule({ id: 'rule-2', category: null, tagIds: ['trip'] }, NONE, LATER)).toBe(
-      true,
+      false,
     );
-    expect(free).toMatchObject({
+    expect(free.tagIds).toEqual([]);
+
+    const blocked = buildTestTransaction({
       categoryId: 'market',
       categorySource: 'rule',
-      categoryRuleId: null,
-      tagIds: ['trip'],
+      categoryRuleId: 'older',
     });
+    expect(blocked.applyRule(RULE, new Set(['older']), LATER)).toBe(false);
+    expect(blocked.tagIds).toEqual([]);
 
     for (const source of ['user', 'recurrence', 'bill'] as const) {
       const byHand = buildTestTransaction({ categoryId: 'market', categorySource: source });

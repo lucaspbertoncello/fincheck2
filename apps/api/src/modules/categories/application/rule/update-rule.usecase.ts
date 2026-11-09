@@ -42,10 +42,11 @@ export class UpdateRuleUseCase {
       if (body.accountId) await this.references.account(body.accountId, executor);
       const nextCategoryId = body.categoryId === undefined ? rule.categoryId : body.categoryId;
       const category = await this.references.category(nextCategoryId, executor);
-      const newTagIds = (body.tagIds ?? []).filter((tagId) => !rule.tagIds.includes(tagId));
-      const newTags = await this.references.tagsOf([...new Set(newTagIds)], executor);
+      // The whole set the rule ends up with: its tags must fit the category it ends up with.
+      const nextTagIds = [...new Set(body.tagIds ?? rule.tagIds)];
+      const tags = await this.references.tagsOf(nextTagIds, executor);
 
-      rule.edit(body, { category, newTags }, this.clock.now());
+      rule.edit(body, { category, tags }, this.clock.now());
 
       const others = (await this.rules.list(executor)).filter((other) => other.id !== rule.id);
       if (others.some((other) => other.hasSameConditionAs(rule.condition()))) {

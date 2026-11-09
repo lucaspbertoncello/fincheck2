@@ -235,7 +235,7 @@ describe('Transaction.inheritChoices', () => {
     });
   });
 
-  it('keeps no category on a nature that has none, but keeps the tags', () => {
+  it('keeps no category on a nature that has none, and no tag either (the tags belong to the category)', () => {
     const transaction = buildTestBankTransaction({ nature: 'transfer' });
 
     transaction.inheritChoices(
@@ -244,6 +244,6 @@ describe('Transaction.inheritChoices', () => {
     );
 
     expect(transaction.categoryId).toBeNull();
-    expect(transaction.tagIds).toEqual(['t1']);
+    expect(transaction.tagIds).toEqual([]);
   });
 });

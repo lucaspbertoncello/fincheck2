@@ -13,9 +13,10 @@ import type { CategoryRuleRepository } from '#/modules/categories/domain/rule/ca
 //
 // Resolving a transaction: the oldest enabled rule that matches and has a category that is not
 // archived and has the kind of the transaction defines the category (and `ruleId`); a rule whose
-// category is archived, of another kind, or that has only tags, defines none (N10) but its tags
-// still count. The tags are the union, with no repeats, of the tags of every enabled rule that
-// matches, the oldest rule first; an archived tag is dropped. Nothing to apply gives `null`.
+// category is archived or of another kind defines none (N10). The tags are the union, with no
+// repeats, of the tags of every enabled rule that matches, the oldest rule first; an archived tag is
+// dropped, and so is every tag that is not of the category that came out (a transaction only has
+// tags of its own category, and with no category it has no tag). Nothing to apply gives `null`.
 export class LoadCategoryRuleSetQuery {
   private readonly db: Kysely<Database>;
   private readonly rules: CategoryRuleRepository<Kysely<Database>>;
@@ -45,19 +46,21 @@ export class LoadCategoryRuleSetQuery {
       this.categoryRefs.requireCategories(categoryIds, executor),
       this.tagRefs.requireTags(tagIds, executor),
     ]);
-    const activeTagIds = new Set(tags.filter((tag) => !tag.isArchived).map((tag) => tag.id));
+    const activeTagCategories = new Map(
+      tags.filter((tag) => !tag.isArchived).map((tag) => [tag.id, tag.categoryId]),
+    );
 
     return {
       resolve: (candidate) => {
         let ruleId: string | null = null;
         let category: LoadCategoryRuleSetQuery.Resolution['category'] = null;
-        const resolvedTagIds = new Set<string>();
+        const wantedTagIds = new Set<string>();
 
         for (const rule of enabledRules) {
           if (!rule.matches(candidate)) continue;
 
           for (const tagId of rule.tagIds) {
-            if (activeTagIds.has(tagId)) resolvedTagIds.add(tagId);
+            if (activeTagCategories.has(tagId)) wantedTagIds.add(tagId);
           }
 
           if (category !== null || rule.categoryId === null) continue;
@@ -73,9 +76,13 @@ export class LoadCategoryRuleSetQuery {
           }
         }
 
-        if (category === null && resolvedTagIds.size === 0) return null;
+        if (category === null) return null;
+        const chosen = category;
+        const tagIds = [...wantedTagIds].filter(
+          (tagId) => activeTagCategories.get(tagId) === chosen.id,
+        );
 
-        return { ruleId, category, tagIds: [...resolvedTagIds] };
+        return { ruleId, category, tagIds };
       },
     };
   }
@@ -83,7 +90,7 @@ export class LoadCategoryRuleSetQuery {
 
 export namespace LoadCategoryRuleSetQuery {
   export type Resolution = {
-    // The rule that defined the category; null when only tags came out.
+    // The rule that defined the category.
     ruleId: string | null;
     category: {
       id: string;
@@ -91,11 +98,12 @@ export namespace LoadCategoryRuleSetQuery {
       isArchived: boolean;
       isTransfer?: boolean;
     } | null;
+    // Only tags of that category (a transfer category keeps its tags too).
     tagIds: string[];
   };
 
   export type RuleSet = {
-    // `null` when no enabled rule that matches gives a category or a tag.
+    // `null` when no enabled rule that matches gives a category.
     resolve(candidate: CategoryRule.Candidate): Resolution | null;
   };
 }

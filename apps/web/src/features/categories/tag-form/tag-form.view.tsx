@@ -5,6 +5,8 @@ type TagFormViewProps = {
   formRef: RefObject<HTMLDivElement | null>;
   title: string;
   subtitle: string;
+  /** The category the tag belongs to. */
+  categoryName: string;
   submitLabel: string;
   name: string;
   onNameChange: (name: string) => void;
@@ -24,6 +26,7 @@ export function TagFormView({
   formRef,
   title,
   subtitle,
+  categoryName,
   submitLabel,
   name,
   onNameChange,
@@ -53,7 +56,7 @@ export function TagFormView({
       }
     >
       <div ref={formRef}>
-        <FormModalGroup label="Tag">
+        <FormModalGroup label={`Tag em ${categoryName}`}>
           <TextField
             label="Nome da tag"
             value={name}

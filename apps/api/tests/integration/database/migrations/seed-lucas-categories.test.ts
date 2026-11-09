@@ -13,7 +13,6 @@ import { migrateToLatest } from '#/database/migrate-to-latest.util.ts';
 import { createSqliteClient } from '#/database/sqlite.client.ts';
 import { insertTestAccount } from '#tests/support/accounts/account/insert-test-account.util.ts';
 import { insertTestCategory } from '#tests/support/categories/category/insert-test-category.util.ts';
-import { insertTestTag } from '#tests/support/categories/tag/insert-test-tag.util.ts';
 import { insertTestTransaction } from '#tests/support/transactions/transaction/insert-test-transaction.util.ts';
 
 const MORE_SEED = '202611081000-seed-more-default-categories';
@@ -212,7 +211,13 @@ describe('seed of the five categories asked by Lucas', () => {
       await migrator.migrateTo(MORE_SEED);
       const accountId = await insertTestAccount(db);
       const otherAccountId = await insertTestAccount(db);
-      const tagId = await insertTestTag(db);
+      // The old shape of `tags` (before the tags belong to a category), and a part in `food`: the
+      // tag stays with the split transaction when `scope-tags-to-category` runs after this one.
+      const tagId = 'tag-before-scope';
+      await sql`insert into tags (id, name, archived_at, created_at, updated_at)
+        values (${tagId}, 'promo', null, '2026-11-06T12:00:00.000Z', '2026-11-06T12:00:00.000Z')`.execute(
+        db,
+      );
       const food = await insertTestCategory(db);
       const first = await insertTestTransaction(db, accountId, {
         nature: 'transfer',
@@ -240,7 +245,7 @@ describe('seed of the five categories asked by Lucas', () => {
           position: 1,
           amount_cents: -3000,
           nature: 'expense',
-          category_id: null,
+          category_id: food,
           description: null,
         })
         .execute();

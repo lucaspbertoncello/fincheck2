@@ -29,8 +29,13 @@ function card(overrides: Partial<Parameters<typeof ReviewQueueCard>[0]> = {}) {
       selectedCategoryId="food"
       onSelectCategory={noop}
       onOtherCategory={noop}
-      tags={['delivery']}
-      onTagsChange={noop}
+      tagPicker={{
+        categoryName: 'Restaurantes',
+        options: [{ id: 'delivery', name: 'delivery' }],
+        selected: [{ id: 'delivery', name: 'delivery' }],
+        onChange: noop,
+        onCreate: () => Promise.resolve('new'),
+      }}
       canGoBack
       onBack={noop}
       onSkip={noop}
@@ -96,8 +101,13 @@ describe('ReviewQueueCard', () => {
             selectedCategoryId={null}
             onSelectCategory={noop}
             onOtherCategory={noop}
-            tags={[]}
-            onTagsChange={noop}
+            tagPicker={{
+              categoryName: null,
+              options: [],
+              selected: [],
+              onChange: noop,
+              onCreate: () => Promise.resolve('new'),
+            }}
             canGoBack={false}
             onBack={noop}
             onSkip={noop}

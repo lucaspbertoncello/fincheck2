@@ -17,7 +17,7 @@ async function openCategories(url = '/categories', label = 'Categorias de despes
 
 async function openTags() {
   renderApp('/categories?filter=tags');
-  return screen.findByRole('list', { name: 'Tags' });
+  return screen.findByRole('list', { name: 'Tags de Delivery' });
 }
 
 function typeInto(label: string, value: string, role: 'textbox' | 'searchbox' = 'textbox') {
@@ -36,7 +36,7 @@ describe('CategoryListPage', () => {
     expect(screen.getByRole('radio', { name: /Arquivadas 1/ })).toBeInTheDocument();
 
     expect(screen.getByRole('radio', { name: /Tags 3/ })).toBeInTheDocument();
-    expect(screen.queryByRole('list', { name: 'Tags' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('list', { name: 'Tags de Delivery' })).not.toBeInTheDocument();
     // The only "Nova categoria" left is the "+" of the shell, not a row of the list.
     expect(within(table).queryByText('Nova categoria')).not.toBeInTheDocument();
   });
@@ -46,20 +46,24 @@ describe('CategoryListPage', () => {
 
     fireEvent.click(screen.getByRole('radio', { name: /Tags 3/ }));
 
-    const tags = await screen.findByRole('list', { name: 'Tags' });
+    // The tags come grouped by their category.
+    const tags = await screen.findByRole('list', { name: 'Tags de Delivery' });
     expect(within(tags).getByText('delivery')).toBeInTheDocument();
-    expect(within(tags).queryByText('presente')).not.toBeInTheDocument();
+    const travel = screen.getByRole('list', { name: 'Tags de Viagem' });
+    expect(within(travel).getByText('viagem')).toBeInTheDocument();
+    expect(screen.queryByText('presente')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Arquivadas (1)' })).toBeInTheDocument();
     expect(screen.queryByRole('searchbox', { name: 'Buscar categoria' })).not.toBeInTheDocument();
     expect(screen.queryByRole('list', { name: 'Categorias de despesa' })).not.toBeInTheDocument();
     expect(window.location.search).toContain('filter=tags');
   });
 
-  it('says there are no tags yet when the API has none (it starts with 0 tags)', async () => {
+  it('still offers "Nova tag" in every category when the API has no tag at all', async () => {
     server.use(http.get('/api/tags', () => HttpResponse.json({ items: [] })));
     renderApp('/categories?filter=tags');
 
-    expect(await screen.findByText(/Nenhuma tag ainda/)).toBeInTheDocument();
+    const market = await screen.findByRole('list', { name: 'Tags de Mercado' });
+    expect(within(market).getByRole('button', { name: 'Nova tag' })).toBeInTheDocument();
   });
 
   it('shows the skeleton first and then the list', async () => {
@@ -123,7 +127,9 @@ describe('CategoryListPage', () => {
     expect(
       within(dialog).getByText(/continuam nela e seguem somando no histórico/),
     ).toBeInTheDocument();
-    expect(within(dialog).getByText(/regra segue ligada, mas só soma tags/)).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(/regra segue ligada, mas a categoria deixa de ser posta/),
+    ).toBeInTheDocument();
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Arquivar' }));
 
@@ -293,13 +299,16 @@ describe('CategoryListPage', () => {
   });
 
   it('creates, renames and archives a tag, with undo for the archive', async () => {
-    renderApp('/categories?filter=tags&new=tag');
+    renderApp('/categories?filter=tags');
+    // A tag is only born inside a category: "Nova tag" is in the group of Mercado.
+    const market = await screen.findByRole('list', { name: 'Tags de Mercado' });
+    fireEvent.click(within(market).getByRole('button', { name: 'Nova tag' }));
     let dialog = await screen.findByRole('dialog', { name: 'Nova tag' });
+    expect(within(dialog).getByText('Tag em Mercado')).toBeInTheDocument();
     typeInto('Nome da tag', 'mercado-mensal');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Criar tag' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(window.location.search).not.toContain('new=');
-    const tags = await screen.findByRole('list', { name: 'Tags' });
+    const tags = await screen.findByRole('list', { name: 'Tags de Mercado' });
     expect(await within(tags).findByText('mercado-mensal')).toBeInTheDocument();
 
     fireEvent.click(within(tags).getByRole('button', { name: 'Ações da tag mercado-mensal' }));
@@ -325,14 +334,18 @@ describe('CategoryListPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Arquivadas (1)' }));
 
-    const archived = await screen.findByRole('list', { name: 'Tags arquivadas' });
+    const archived = await screen.findByRole('list', {
+      name: 'Tags arquivadas de Presentes e doações',
+    });
     expect(within(archived).getByText('presente')).toBeInTheDocument();
     const hide = screen.getByRole('button', { name: 'Esconder arquivadas' });
     expect(hide).toHaveAttribute('aria-expanded', 'true');
 
     fireEvent.click(hide);
 
-    expect(screen.queryByRole('list', { name: 'Tags arquivadas' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('list', { name: 'Tags arquivadas de Presentes e doações' }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Arquivadas (1)' })).toHaveAttribute(
       'aria-expanded',
       'false',

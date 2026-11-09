@@ -36,6 +36,13 @@ export function createRule(database: MockState.Database, input: NewRule): Rule.C
   for (const tagId of tagIds) {
     if (findTag(database, tagId).archivedAt) fail(422, 'RULE_TAG_ARCHIVED', 'Tag arquivada');
   }
+  // A rule only adds tags of the category it puts; with no category it has no tag.
+  if (tagIds.some((tagId) => findTag(database, tagId).categoryId !== (input.categoryId ?? null)))
+    fail(
+      422,
+      'RULE_TAG_CATEGORY_MISMATCH',
+      'A regra só pode usar tags da categoria que ela aplica',
+    );
   if (input.accountId && !database.accounts.some((account) => account.id === input.accountId)) {
     fail(404, 'ACCOUNT_NOT_FOUND', 'A conta não existe');
   }

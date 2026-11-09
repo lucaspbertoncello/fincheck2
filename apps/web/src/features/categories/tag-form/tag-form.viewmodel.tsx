@@ -45,8 +45,8 @@ export function useTagFormViewModel({ target, onClose, onArchive }: Options) {
         if (result.name !== renaming.name) {
           await model.update.mutateAsync({ id: renaming.id, body: { name: result.name } });
         }
-      } else {
-        await model.create.mutateAsync({ name: result.name });
+      } else if (target.mode === 'create') {
+        await model.create.mutateAsync({ categoryId: target.category.id, name: result.name });
       }
       onClose();
     } catch (failure) {
@@ -62,6 +62,7 @@ export function useTagFormViewModel({ target, onClose, onArchive }: Options) {
   return {
     formRef,
     title: renaming ? 'Renomear tag' : 'Nova tag',
+    categoryName: target.mode === 'rename' ? target.categoryName : target.category.name,
     subtitle: 'As transações e as regras que usam a tag continuam com ela.',
     submitLabel: renaming ? 'Salvar' : 'Criar tag',
     name,

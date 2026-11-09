@@ -19,7 +19,7 @@ export function TagForm({ target, ...handlers }: TagFormProps) {
 
   return (
     <OpenTagForm
-      key={target.mode === 'rename' ? target.tag.id : 'new'}
+      key={target.mode === 'rename' ? target.tag.id : `new-${target.category.id}`}
       target={target}
       {...handlers}
     />

@@ -10,10 +10,20 @@ import type { GallerySectionDef } from '#gallery/types/gallery-group.type.ts';
 import { GalleryVariant } from '#gallery/components/shell/gallery-variant.component.tsx';
 
 const noop = () => undefined;
+const SAMPLE_TAGS = [
+  { id: 'almoco', name: 'almoço' },
+  { id: 'trabalho', name: 'trabalho' },
+];
+const EMPTY_PICKER = {
+  options: [],
+  selected: [],
+  onChange: noop,
+  onCreate: (name: string) => Promise.resolve(name),
+};
 
 function QueueCardDemo({ withRule, canGoBack }: { withRule: boolean; canGoBack: boolean }) {
   const [selected, setSelected] = useState<string | null>('cat-food');
-  const [tags, setTags] = useState<string[]>(['almoço']);
+  const [tagIds, setTagIds] = useState<string[]>(['almoco']);
   const [enabled, setEnabled] = useState(true);
   return (
     <ReviewQueueCard
@@ -22,8 +32,13 @@ function QueueCardDemo({ withRule, canGoBack }: { withRule: boolean; canGoBack: 
       selectedCategoryId={selected}
       onSelectCategory={setSelected}
       onOtherCategory={noop}
-      tags={tags}
-      onTagsChange={setTags}
+      tagPicker={{
+        categoryName: 'Restaurantes',
+        options: SAMPLE_TAGS,
+        selected: SAMPLE_TAGS.filter((tag) => tagIds.includes(tag.id)),
+        onChange: setTagIds,
+        onCreate: (name) => Promise.resolve(name),
+      }}
       rule={
         withRule
           ? { keyword: 'MOCOTO', matchCount: 14, enabled, onEnabledChange: setEnabled }
@@ -82,8 +97,7 @@ export const REVIEW_SECTIONS: GallerySectionDef[] = [
             selectedCategoryId={null}
             onSelectCategory={noop}
             onOtherCategory={noop}
-            tags={[]}
-            onTagsChange={noop}
+            tagPicker={{ ...EMPTY_PICKER, categoryName: null }}
             canGoBack
             onBack={noop}
             onSkip={noop}
@@ -104,8 +118,7 @@ export const REVIEW_SECTIONS: GallerySectionDef[] = [
             selectedCategoryId="inc-1"
             onSelectCategory={noop}
             onOtherCategory={noop}
-            tags={[]}
-            onTagsChange={noop}
+            tagPicker={{ ...EMPTY_PICKER, categoryName: 'Salário' }}
             canGoBack
             onBack={noop}
             onSkip={noop}

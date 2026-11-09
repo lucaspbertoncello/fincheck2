@@ -44,6 +44,7 @@ export const bulkTransactionsResultSchema = z.object({
         'split',
         'outside_account',
         'category_kind_mismatch',
+        'tag_category_mismatch',
         'not_found',
         'no_change',
       ]),

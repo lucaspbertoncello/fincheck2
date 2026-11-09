@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Database } from '#/database/database.type.ts';
 import type { ReplaceableDatabase } from '#/database/replaceable/replaceable-database.client.ts';
 import { createSqliteClient } from '#/database/sqlite.client.ts';
-import { generateId } from '#/shared/id/generate-id.util.ts';
+import { insertTestTag } from '#tests/support/categories/tag/insert-test-tag.util.ts';
 import { createTestDatabase } from '#tests/support/database/create-test-database.util.ts';
 
 describe('ReplaceableDatabase', () => {
@@ -25,17 +25,7 @@ describe('ReplaceableDatabase', () => {
     rmSync(join(other, '..'), { recursive: true, force: true });
   });
 
-  const insertTag = (db: Kysely<Database>, name: string) =>
-    db
-      .insertInto('tags')
-      .values({
-        id: generateId(),
-        name,
-        archived_at: null,
-        created_at: '2026-11-08T12:00:00.000Z',
-        updated_at: '2026-11-08T12:00:00.000Z',
-      })
-      .execute();
+  const insertTag = (db: Kysely<Database>, name: string) => insertTestTag(db, { name });
   const names = async (db: ReplaceableDatabase) =>
     (await db.selectFrom('tags').select('name').orderBy('name').execute()).map((row) => row.name);
 

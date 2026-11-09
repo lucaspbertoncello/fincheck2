@@ -84,7 +84,9 @@ export function useRuleFormViewModel({ target, onClose, onSaved, onDelete }: Opt
     kind: editing?.kind ?? null,
     selectedId: categoryId,
   });
+  // A rule only adds tags of the category it puts: with no category there is none to choose.
   const tagOptions: TagOption[] = (model.tags.data?.items ?? [])
+    .filter((tag) => categoryId !== null && tag.categoryId === categoryId)
     .filter((tag) => tag.archivedAt === null || tagIds.includes(tag.id))
     .map((tag) => ({ id: tag.id, name: tag.name }));
   const accountOptions: AccountOption[] = (model.accounts.data?.items ?? [])
@@ -95,7 +97,7 @@ export function useRuleFormViewModel({ target, onClose, onSaved, onDelete }: Opt
     allCategories.find((item) => item.id === id)?.name ?? 'Sem categoria';
 
   const preview = model.preview.data;
-  const hasAction = categoryId !== null || tagIds.length > 0;
+  const hasAction = categoryId !== null;
   const willChange = preview?.willChangeCount ?? 0;
   const isSaving = model.create.isPending || model.update.isPending || model.apply.isPending;
 
@@ -191,7 +193,11 @@ export function useRuleFormViewModel({ target, onClose, onSaved, onDelete }: Opt
     onAccountChange: setAccountId,
     categoryId,
     categoryGroups,
-    onCategoryChange: setCategoryId,
+    // Another category leaves the tags of the old one behind.
+    onCategoryChange: (next: string | null) => {
+      if (next !== categoryId) setTagIds([]);
+      setCategoryId(next);
+    },
     tagOptions,
     tagIds,
     onTagIdsChange: setTagIds,

@@ -4,6 +4,7 @@ import { RuleDisabledError } from '#/modules/categories/domain/rule/rule-disable
 import { RuleCategoryArchivedError } from '#/modules/categories/domain/rule/rule-category-archived.error.ts';
 import { RuleCategoryKindMismatchError } from '#/modules/categories/domain/rule/rule-category-kind-mismatch.error.ts';
 import { RuleTagArchivedError } from '#/modules/categories/domain/rule/rule-tag-archived.error.ts';
+import { RuleTagCategoryMismatchError } from '#/modules/categories/domain/rule/rule-tag-category-mismatch.error.ts';
 import { RequestValidationError } from '#/shared/errors/request-validation.error.ts';
 import { generateId } from '#/shared/id/generate-id.util.ts';
 
@@ -49,6 +50,7 @@ export class CategoryRule {
     CategoryRule.assertKindFits(input.kind, input.category);
     if (input.category?.isArchived) throw new RuleCategoryArchivedError();
     if (input.tags.some((tag) => tag.isArchived)) throw new RuleTagArchivedError();
+    CategoryRule.assertTagsFit(input.category, input.tags);
 
     return new CategoryRule({
       descriptionContains: input.descriptionContains,
@@ -94,7 +96,10 @@ export class CategoryRule {
     if (refs.category?.isArchived && refs.category.id !== this.categoryId) {
       throw new RuleCategoryArchivedError();
     }
-    if (refs.newTags.some((tag) => tag.isArchived)) throw new RuleTagArchivedError();
+    if (refs.tags.some((tag) => tag.isArchived && !this.tagIds.includes(tag.id))) {
+      throw new RuleTagArchivedError();
+    }
+    CategoryRule.assertTagsFit(refs.category, refs.tags);
 
     this.descriptionContains = next.descriptionContains;
     this.counterpartyContains = next.counterpartyContains;
@@ -187,6 +192,16 @@ export class CategoryRule {
       throw new RuleCategoryKindMismatchError();
     }
   }
+
+  // Every tag belongs to the category the rule puts; with no category the rule has no tag.
+  private static assertTagsFit(
+    category: CategoryRule.CategoryRef | null,
+    tags: CategoryRule.TagRef[],
+  ): void {
+    if (tags.some((tag) => tag.categoryId !== category?.id)) {
+      throw new RuleTagCategoryMismatchError();
+    }
+  }
 }
 
 export namespace CategoryRule {
@@ -213,7 +228,7 @@ export namespace CategoryRule {
     // A transfer between own accounts: a transaction in it is a transfer, not spending.
     isTransfer?: boolean;
   };
-  export type TagRef = { id: string; isArchived: boolean };
+  export type TagRef = { id: string; categoryId: string; isArchived: boolean };
 
   // The six fields that say which transactions a rule sees.
   export type Condition = {
@@ -244,6 +259,6 @@ export namespace CategoryRule {
     [Field in keyof Condition]?: Condition[Field] | undefined;
   } & { tagIds?: string[] | undefined; enabled?: boolean | undefined };
 
-  // The category the rule ends up with and the tags that are new to it.
-  export type EditRefs = { category: CategoryRef | null; newTags: TagRef[] };
+  // The category the rule ends up with and the whole set of tags it ends up with.
+  export type EditRefs = { category: CategoryRef | null; tags: TagRef[] };
 }

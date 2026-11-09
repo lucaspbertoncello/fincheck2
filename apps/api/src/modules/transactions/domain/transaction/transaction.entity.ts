@@ -26,6 +26,8 @@ import { TransactionSplitLinkedToBillError } from '#/modules/transactions/domain
 import { TransactionSplitNotAllowedError } from '#/modules/transactions/domain/transaction/transaction-split-not-allowed.error.ts';
 import { TransactionSplitSumMismatchError } from '#/modules/transactions/domain/transaction/transaction-split-sum-mismatch.error.ts';
 import { TransactionTagArchivedError } from '#/modules/transactions/domain/transaction/transaction-tag-archived.error.ts';
+import { TransactionTagCategoryMismatchError } from '#/modules/transactions/domain/transaction/transaction-tag-category-mismatch.error.ts';
+import { TransactionTagNeedsCategoryError } from '#/modules/transactions/domain/transaction/transaction-tag-needs-category.error.ts';
 import { TransactionSplit } from '#/modules/transactions/domain/transaction/transaction-split.value-object.ts';
 import { BusinessDate } from '#/shared/date/business-date.value-object.ts';
 import type { Month } from '#/shared/date/month.value-object.ts';
@@ -561,6 +563,8 @@ export class Transaction {
     context: Transaction.NatureContext = { isCardAccount: false },
   ): void {
     if (category === null) {
+      // A split one has no category of its own to clear: its parts keep theirs, and so the tags.
+      if (this.isSplit()) return;
       if (this.isTransferByCategory()) this.returnNature(context, now);
       this.clearCategory();
       this.updatedAt = now;
@@ -579,6 +583,8 @@ export class Transaction {
     if (!this.hasCountedNature()) throw new TransactionCategoryNotAllowedError();
     if (category.kind !== this.nature) throw new TransactionCategoryKindMismatchError();
 
+    // The tags belong to the category: another category leaves the old tags behind.
+    if (this.categoryId !== category.id) this.tagIds = [];
     this.categoryId = category.id;
     this.categorySource = 'user';
     this.categoryRuleId = null;
@@ -600,6 +606,9 @@ export class Transaction {
       this.changeNature('transfer', context, now);
     }
 
+    // A transfer by category keeps its tags (they are of the category it keeps); another category
+    // leaves the old tags behind.
+    if (this.categoryId !== category.id) this.tagIds = [];
     this.categoryId = category.id;
     this.categorySource = source.origin;
     this.categoryRuleId = source.origin === 'rule' ? source.ruleId : null;
@@ -673,6 +682,8 @@ export class Transaction {
     } else {
       const sign = this.amount.isNegative() ? -1 : 1;
       const kept = this.categoryId;
+      // The rest of Lucas keeps the category, so it keeps the tags of it too.
+      const keptTagIds = this.tagIds;
       this.splits = [
         new TransactionSplit({
           id: generateId(),
@@ -692,6 +703,7 @@ export class Transaction {
         }),
       ];
       this.clearCategory();
+      this.tagIds = keptTagIds;
     }
     this.updatedAt = now;
   }
@@ -716,6 +728,8 @@ export class Transaction {
     this.categoryId = kept?.categoryId ?? null;
     this.categorySource = this.categoryId === null ? null : 'user';
     this.categoryRuleId = null;
+    // The tags of the category it goes back to stay (the friend part never had one).
+    if (this.categoryId === null) this.tagIds = [];
     this.updatedAt = now;
 
     return true;
@@ -745,16 +759,34 @@ export class Transaction {
     return this.categoryId === categoryId && this.categorySource === 'user';
   }
 
+  // The categories whose tags the transaction may take: its own or, when it is split, the ones of
+  // its parts. With none there is no tag. The tag itself stays on the transaction, not on a part.
+  taggableCategoryIds(): string[] {
+    if (!this.isSplit()) return this.categoryId === null ? [] : [this.categoryId];
+
+    return [...new Set(this.splits.flatMap((part) => (part.categoryId ? [part.categoryId] : [])))];
+  }
+
   // Replaces the set of tags. A tag already on the transaction may stay archived; a new one must
-  // be active.
+  // be active. Every tag belongs to a category of the transaction (see `taggableCategoryIds`), so
+  // with none there is no tag (an empty set always goes).
   replaceTags(tags: Transaction.TagRef[], now: string): void {
     const unique = [...new Map(tags.map((tag) => [tag.id, tag])).values()];
+    const categoryIds = this.taggableCategoryIds();
+    if (unique.length > 0 && categoryIds.length === 0) throw new TransactionTagNeedsCategoryError();
     for (const tag of unique) {
+      if (!categoryIds.includes(tag.categoryId)) throw new TransactionTagCategoryMismatchError();
       if (tag.isArchived && !this.tagIds.includes(tag.id)) throw new TransactionTagArchivedError();
     }
 
     this.tagIds = unique.map((tag) => tag.id);
     this.updatedAt = now;
+  }
+
+  // Why a bulk "Tag" skips this transaction instead of failing: the tag is of another category, or
+  // the transaction has none. Null when the tag fits.
+  whyCannotTakeTag(tag: Transaction.TagRef): 'tag_category_mismatch' | null {
+    return this.taggableCategoryIds().includes(tag.categoryId) ? null : 'tag_category_mismatch';
   }
 
   // The parcel of the bank takes the place of one that was not the bank's (a generated one, or the
@@ -768,18 +800,23 @@ export class Transaction {
     },
     now: string,
   ): void {
-    if (choices.categoryId !== null && this.hasCountedNature() && !this.isSplit()) {
+    const takesCategory = choices.categoryId !== null && this.hasCountedNature() && !this.isSplit();
+    if (takesCategory) {
       this.categoryId = choices.categoryId;
       this.categorySource = choices.categorySource;
       this.categoryRuleId = choices.categoryRuleId;
     }
-    this.tagIds = [...new Set(choices.tagIds)];
+    // The tags go with the category they belong to.
+    this.tagIds = takesCategory ? [...new Set(choices.tagIds)] : [];
     this.updatedAt = now;
   }
 
   // Adds one tag and keeps the others (bulk "Tag"). False when it was already there.
   addTag(tag: Transaction.TagRef, now: string): boolean {
     if (this.tagIds.includes(tag.id)) return false;
+    const categoryIds = this.taggableCategoryIds();
+    if (categoryIds.length === 0) throw new TransactionTagNeedsCategoryError();
+    if (!categoryIds.includes(tag.categoryId)) throw new TransactionTagCategoryMismatchError();
     if (tag.isArchived) throw new TransactionTagArchivedError();
 
     this.tagIds = [...this.tagIds, tag.id];
@@ -820,15 +857,19 @@ export class Transaction {
           this.categoryId = rule.category.id;
           this.categorySource = 'rule';
           this.categoryRuleId = rule.id;
+          // The tags of the old category do not follow it.
+          this.tagIds = [];
         }
         changed = true;
       }
-    }
 
-    const missing = rule.tagIds.filter((tagId) => !this.tagIds.includes(tagId));
-    if (missing.length > 0) {
-      this.tagIds = [...this.tagIds, ...missing];
-      changed = true;
+      // The tags of a rule are the ones of the category it puts, and a transaction only has tags of
+      // its own category: with no category on the rule there is nothing to add.
+      const missing = rule.tagIds.filter((tagId) => !this.tagIds.includes(tagId));
+      if (missing.length > 0) {
+        this.tagIds = [...this.tagIds, ...missing];
+        changed = true;
+      }
     }
     if (changed) this.updatedAt = now;
 
@@ -856,9 +897,14 @@ export class Transaction {
 
   // Splits the transaction into parts (RF-TRX-005); a second call redoes the split. The parts
   // have the sign and the nature of the transaction and add up to its value, and the category
-  // moves to them. The parts of a friend (`lent`, `reimbursed`) belong to the bills flow: while
+  // moves to them; the tags stay only where a part kept their category (`tags` are the ones the
+  // transaction has now, read by the caller). The parts of a friend (`lent`, `reimbursed`) belong to the bills flow: while
   // they exist the split is not redone nor undone.
-  splitInto(parts: Transaction.SplitPartInput[], now: string): void {
+  splitInto(
+    parts: Transaction.SplitPartInput[],
+    now: string,
+    tags: readonly Transaction.TagRef[] = [],
+  ): void {
     if (!this.hasCountedNature()) throw new TransactionSplitNotAllowedError();
     if (this.splits.some((part) => part.isOutsideSpending())) {
       throw new TransactionSplitLinkedToBillError();
@@ -884,6 +930,7 @@ export class Transaction {
     }
 
     const nature = this.nature as TransactionSplit.Nature;
+    const originalTagIds = this.tagIds;
     this.splits = parts.map(
       (part, index) =>
         new TransactionSplit({
@@ -896,6 +943,10 @@ export class Transaction {
         }),
     );
     this.clearCategory();
+    const keptCategoryIds = new Set(this.taggableCategoryIds());
+    this.tagIds = tags
+      .filter((tag) => keptCategoryIds.has(tag.categoryId) && originalTagIds.includes(tag.id))
+      .map((tag) => tag.id);
     this.updatedAt = now;
   }
 
@@ -1058,19 +1109,29 @@ export class Transaction {
     }
     // The category only fits a whole expense or income: if the nature changed since, or the
     // transaction was split, the saved category is dropped instead of breaking the database rule.
-    const keepsCategory = state.categoryId !== null && this.hasCountedNature() && !this.isSplit();
+    // A transfer that keeps the category it had (by category) is not counted but keeps it too.
+    const keepsTransferCategory =
+      this.nature === 'transfer' && this.categoryId === state.categoryId;
+    const keepsCategory =
+      state.categoryId !== null &&
+      (this.hasCountedNature() || keepsTransferCategory) &&
+      !this.isSplit();
     this.categoryId = keepsCategory ? state.categoryId : null;
     this.categorySource = keepsCategory ? state.categorySource : null;
     this.categoryRuleId = keepsCategory && options.ruleStillExists ? state.categoryRuleId : null;
-    this.tagIds = [...new Set(state.tagIds)];
+    // The tags go with the category they belong to.
+    // A split one keeps the tags its parts justify (the caller checked them against the parts).
+    this.tagIds = keepsCategory || this.isSplit() ? [...new Set(state.tagIds)] : [];
     this.ignoredAt = state.ignoredAt;
     this.updatedAt = now;
   }
 
+  // No category, no tag: the tags belong to the category.
   private clearCategory(): void {
     this.categoryId = null;
     this.categorySource = null;
     this.categoryRuleId = null;
+    this.tagIds = [];
   }
 
   // Joins the changes found now with the ones still pending: the same field keeps the earliest
@@ -1147,7 +1208,7 @@ export namespace Transaction {
     // It pays a bill: the nature is what makes it count there.
     hasActiveBillLink?: boolean;
   };
-  export type TagRef = { id: string; isArchived: boolean };
+  export type TagRef = { id: string; categoryId: string; isArchived: boolean };
 
   export type BankVersion = {
     description: string;

@@ -50,8 +50,9 @@ export function computeRuleEffect(
     if (!rule.categoryId && tagIds.length === 0) return true;
     // Put by hand, by a recurrence or by a bill: no rule touches it.
     if (tx.categorySource !== null && tx.categorySource !== 'rule') return false;
+    // The tags of a rule go with the category it puts: with no category there is nothing to do.
+    if (!rule.categoryId) return false;
     const tagsChange = tagIds.some((tagId) => !tx.tagIds.includes(tagId));
-    if (!rule.categoryId) return tagsChange;
     if (olderRuleWins(tx)) return false;
 
     return tx.categoryId !== rule.categoryId || tagsChange;

@@ -8,7 +8,7 @@ const values: TransactionEditValues = {
   amountCents: 4590,
   date: '2026-10-19',
   categoryId: 'food',
-  tags: ['padaria'],
+  tagIds: ['t1'],
   nature: 'expense',
   counterpartId: null,
 };

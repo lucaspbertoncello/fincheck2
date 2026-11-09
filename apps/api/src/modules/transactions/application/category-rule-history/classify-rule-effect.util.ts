@@ -13,7 +13,7 @@ import { canRuleSetCategory } from '#/modules/transactions/domain/transaction/ca
 //   transfer, which sees both directions.
 // - A rule with a category changes a match when the category is free for it (not put by an older
 //   rule) and differs from the current one, or a tag is missing.
-//   A rule with no category (tags only) adds its tags to the matches that are free.
+//   A rule with no category changes nothing (its tags would have no category to belong to).
 // - What Lucas, a recurrence or a bill categorized is never touched, by any rule (PM, 06/11).
 //   With no action at all (a preview of a rule not finished) every match counts as a change.
 export function classifyRuleEffect(
@@ -33,9 +33,12 @@ export function classifyRuleEffect(
     if (definition.categoryId === null && definition.tagIds.length === 0) return true;
     // Edited by hand (and by a recurrence or a bill): no rule touches it, category or tags.
     if (candidate.categorySource !== null && candidate.categorySource !== 'rule') return false;
-    const missingTag = definition.tagIds.some((tagId) => !candidate.tagIds.includes(tagId));
-    if (definition.categoryId === null) return missingTag;
+    // The tags of a rule go with the category it puts: with no category there is nothing to do.
+    if (definition.categoryId === null) return false;
     if (!canRuleSetCategory(candidate, definition.olderRuleIds)) return false;
+    // Another category takes the transaction over (its old tags go away); the same one only needs
+    // the tags it lacks.
+    const missingTag = definition.tagIds.some((tagId) => !candidate.tagIds.includes(tagId));
 
     return candidate.categoryId !== definition.categoryId || missingTag;
   });

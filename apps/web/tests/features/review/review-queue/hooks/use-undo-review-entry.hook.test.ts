@@ -16,7 +16,7 @@ function entryWith(item: ReviewQueue.ItemDto, overrides: Partial<ReviewedEntry> 
   const entry: ReviewedEntry = {
     item,
     categoryId: 'cat-1',
-    tags: [],
+    tagIds: [],
     ruleId: null,
     historyPrevious: [],
     ...overrides,
@@ -40,7 +40,7 @@ async function setup() {
 }
 
 describe('useUndoReviewEntry', () => {
-  it('clears the category, keeps the tags and tells it was undone', async () => {
+  it('clears the category (the tags go with it) and tells it was undone', async () => {
     const bodies: unknown[] = [];
     server.events.on('request:start', ({ request }) => {
       if (request.method === 'PATCH')
@@ -57,7 +57,7 @@ describe('useUndoReviewEntry', () => {
     });
 
     server.events.removeAllListeners();
-    expect(bodies).toEqual([{ categoryId: null, tagIds: item.transaction.tagIds }]);
+    expect(bodies).toEqual([{ categoryId: null }]);
     expect(onUndone).toHaveBeenCalledWith(entry);
     expect(onError).not.toHaveBeenCalled();
   });

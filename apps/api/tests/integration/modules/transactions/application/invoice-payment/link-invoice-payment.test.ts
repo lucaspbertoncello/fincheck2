@@ -141,9 +141,12 @@ describe('LinkInvoicePaymentUseCase', () => {
     }
   });
 
-  it('leaves the rest of the transaction alone: tags, bank version and edit note', async () => {
-    const tag = await insertTestTag(database.db);
+  it('leaves the rest of the transaction alone: bank version and edit note; the tags go with the category', async () => {
+    const category = await insertTestCategory(database.db);
+    const tag = await insertTestTag(database.db, { category_id: category });
     const id = await insertTestTransaction(database.db, checking, {
+      category_id: category,
+      category_source: 'user',
       origin: 'bank',
       nature_set_by: 'system',
       description: 'PIX ENVIADO',
@@ -176,7 +179,8 @@ describe('LinkInvoicePaymentUseCase', () => {
         .select('tag_id')
         .where('transaction_id', '=', id)
         .execute(),
-    ).toEqual([{ tag_id: tag }]);
+    ).toEqual([]);
+    expect(tag).toBeDefined();
   });
 
   it('keeps the mark of the system on a transaction the detector already marked as a payment', async () => {

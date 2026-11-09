@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 
+import { db } from '#mocks/state/mock-database.store.ts';
 import { server } from '#mocks/setup/server.util.ts';
 import { renderApp } from '#tests/support/app/render-app.util.tsx';
 import { callApi } from '#tests/support/mocks/call-api.util.ts';
@@ -327,7 +328,7 @@ describe('RuleListPage', () => {
         await within(dialog).findByText('Escreva um trecho da descrição, com pelo menos 2 letras.'),
       ).toBeInTheDocument();
       expect(
-        within(dialog).getByText('Escolha uma categoria ou ao menos uma tag.'),
+        within(dialog).getByText('Escolha a categoria da regra. As tags dela se escolhem depois.'),
       ).toBeInTheDocument();
       await waitFor(() =>
         expect(within(dialog).getByRole('textbox', { name: 'Trecho da descrição' })).toHaveFocus(),
@@ -386,7 +387,9 @@ describe('RuleListPage', () => {
       await user.keyboard('{Enter}');
 
       expect(
-        await within(dialog).findByText('Escolha uma categoria ou ao menos uma tag.'),
+        await within(dialog).findByText(
+          'Escolha a categoria da regra. As tags dela se escolhem depois.',
+        ),
       ).toBeInTheDocument();
     });
 
@@ -598,6 +601,13 @@ describe('RuleListPage', () => {
 
     it('edits a rule from the menu, starting from what it has, and sends only what changed', async () => {
       const user = userEvent.setup();
+      // The tags of a rule are the ones of its category (Combustível).
+      db.tags.push({
+        id: '019a5a00-0000-7000-8000-0000000000bb',
+        categoryId: db.categories.find((category) => category.name === 'Combustível')!.id,
+        name: 'trabalho',
+        archivedAt: null,
+      });
       await openRules();
 
       await user.click(within(rowOf('POSTO')).getByRole('button', { name: 'Ações da regra' }));

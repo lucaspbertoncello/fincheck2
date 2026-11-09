@@ -117,6 +117,35 @@ describe('Transaction.moveToFriend: reimbursed', () => {
   });
 });
 
+describe('tags with a friend part', () => {
+  const withTags = () =>
+    buildTestTransaction({
+      amount: Money.fromCents(-30000),
+      categoryId: 'cat-food',
+      categorySource: 'user',
+      tagIds: ['a'],
+    });
+
+  it('a part keeps the tags of the category the rest of Lucas keeps, and the undo too', () => {
+    const transaction = withTags();
+
+    transaction.moveToFriend('lent', 11600, NOW);
+    expect(transaction.tagIds).toEqual(['a']);
+
+    transaction.returnFromFriend('lent', NOW);
+    expect(transaction.tagIds).toEqual(['a']);
+    expect(transaction.categoryId).toBe('cat-food');
+  });
+
+  it('the whole value leaves no category, so no tag', () => {
+    const transaction = withTags();
+
+    transaction.moveToFriend('lent', 30000, NOW);
+
+    expect(transaction.tagIds).toEqual([]);
+  });
+});
+
 describe('Transaction.returnFromFriend', () => {
   it('a whole lent goes back to expense, decided by the system, with no category', () => {
     const transaction = dinner();

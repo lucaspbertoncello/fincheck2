@@ -302,4 +302,81 @@ describe('a category that is a transfer (isTransfer)', () => {
       expect(transaction).toMatchObject({ nature: 'expense', natureSetBy: 'user' });
     });
   });
+
+  // Rule of the rebase on the tags of a category (PM, 09/11/2026): a transfer by category keeps the
+  // category, so it keeps the tags of that category too; only really taking the category away (or
+  // the nature leaving it) takes the tags.
+  describe('tags', () => {
+    const rotationTag = (id: string) => ({ id, categoryId: 'rotation', isArchived: false });
+
+    it('takes the tags of the old category off when the transfer category replaces it', () => {
+      const transaction = buildTestTransaction({
+        categoryId: 'food',
+        categorySource: 'user',
+        tagIds: ['feira'],
+      });
+
+      transaction.assignCategory(ROTATION, NOW, CHECKING);
+
+      expect(transaction).toMatchObject({ categoryId: 'rotation', tagIds: [] });
+    });
+
+    it('takes tags of its own category and keeps them when the category is chosen again', () => {
+      const transaction = buildTestTransaction();
+      transaction.assignCategory(ROTATION, NOW, CHECKING);
+      transaction.replaceTags([rotationTag('conta')], NOW);
+
+      transaction.assignCategory(ROTATION, NOW, CHECKING);
+      expect(transaction.tagIds).toEqual(['conta']);
+    });
+
+    it('a rule that puts it takes the tags of the old category off', () => {
+      const transaction = buildTestTransaction({
+        categoryId: 'food',
+        categorySource: 'rule',
+        categoryRuleId: 'rule-0',
+        tagIds: ['feira'],
+      });
+
+      transaction.applyRule(
+        { id: 'rule-1', category: ROTATION, tagIds: ['conta'] },
+        new Set(),
+        NOW,
+        CHECKING,
+      );
+
+      expect(transaction).toMatchObject({ categoryId: 'rotation', tagIds: ['conta'] });
+    });
+
+    it('the undo of a bulk action gives back the category and the tags of a transfer by category', () => {
+      const transaction = buildTestTransaction();
+      transaction.assignCategory(ROTATION, NOW, CHECKING);
+      transaction.replaceTags([rotationTag('conta')], NOW);
+      const before = transaction.previousState();
+
+      transaction.ignore(NOW);
+      transaction.restoreState(before, { ruleStillExists: false }, NOW);
+
+      expect(transaction).toMatchObject({
+        nature: 'transfer',
+        categoryId: 'rotation',
+        tagIds: ['conta'],
+        ignoredAt: null,
+      });
+    });
+
+    it('loses them when the category is taken off or the nature leaves the transfer', () => {
+      const taken = buildTestTransaction();
+      taken.assignCategory(ROTATION, NOW, CHECKING);
+      taken.replaceTags([rotationTag('conta')], NOW);
+      taken.assignCategory(null, NOW, CHECKING);
+      expect(taken).toMatchObject({ categoryId: null, tagIds: [] });
+
+      const left = buildTestTransaction();
+      left.assignCategory(ROTATION, NOW, CHECKING);
+      left.replaceTags([rotationTag('conta')], NOW);
+      left.changeNature('expense', CHECKING, NOW);
+      expect(left).toMatchObject({ categoryId: null, tagIds: [] });
+    });
+  });
 });

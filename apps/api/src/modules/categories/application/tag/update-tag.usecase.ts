@@ -23,7 +23,11 @@ export class UpdateTagUseCase {
   async execute(input: UpdateTagUseCase.Input): Promise<UpdateTagUseCase.Output> {
     return this.unitOfWork.run(async (executor) => {
       const current = await requireTagRow(executor, input.tagId);
-      await assertTagNameFree(executor, { name: input.body.name, exceptId: current.id });
+      await assertTagNameFree(executor, {
+        categoryId: current.category_id,
+        name: input.body.name,
+        exceptId: current.id,
+      });
 
       const row = await executor
         .updateTable('tags')

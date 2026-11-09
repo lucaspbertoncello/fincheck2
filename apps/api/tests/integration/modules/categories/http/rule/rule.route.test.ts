@@ -88,7 +88,7 @@ describe('rules routes', () => {
         await createRule({
           descriptionContains: 'ifood',
           categoryId: world.delivery,
-          tagIds: [world.tripTag, world.workTag],
+          tagIds: [world.deliveryTag],
         })
       ).rule;
       await send('PATCH', `/rules/${first.id}`, { enabled: false });
@@ -106,7 +106,7 @@ describe('rules routes', () => {
         enabled: false,
         appliedCount: 0,
       });
-      expect(rules[1]?.tagIds.sort()).toEqual([world.tripTag, world.workTag].sort());
+      expect(rules[1]?.tagIds).toEqual([world.deliveryTag]);
       expect(rules[1]?.appliedCount).toBe(1);
     });
   });
@@ -334,7 +334,7 @@ describe('rules routes', () => {
         amountMinCents: 100,
         amountMaxCents: 9900,
         categoryId: world.delivery,
-        tagIds: [world.tripTag],
+        tagIds: [world.deliveryTag],
       });
 
       expect(applied).toBeNull();
@@ -346,7 +346,7 @@ describe('rules routes', () => {
         amountMinCents: 100,
         amountMaxCents: 9900,
         categoryId: world.delivery,
-        tagIds: [world.tripTag],
+        tagIds: [world.deliveryTag],
         enabled: true,
         appliedCount: 0,
         createdAt: NOW,
@@ -355,14 +355,30 @@ describe('rules routes', () => {
       expect(await listRules()).toHaveLength(1);
     });
 
-    it('takes a rule that only adds tags, and one that only looks at the sender', async () => {
-      const tags = await createRule({ descriptionContains: 'uber', tagIds: [world.tripTag] });
+    it('refuses a tag of another category (422), and any tag on a rule with no category (422)', async () => {
+      await expectError(
+        await send('POST', '/rules', {
+          descriptionContains: 'uber',
+          categoryId: world.delivery,
+          tagIds: [world.tripTag],
+        }),
+        422,
+        'RULE_TAG_CATEGORY_MISMATCH',
+      );
+      await expectError(
+        await send('POST', '/rules', { descriptionContains: 'uber', tagIds: [world.tripTag] }),
+        422,
+        'RULE_TAG_CATEGORY_MISMATCH',
+      );
+      expect(await listRules()).toEqual([]);
+    });
+
+    it('takes a rule that only looks at the sender', async () => {
       const sender = await createRule({
         counterpartyContains: 'treetools',
         categoryId: world.salary,
       });
 
-      expect(tags.rule).toMatchObject({ categoryId: null, tagIds: [world.tripTag] });
       expect(sender.rule).toMatchObject({
         descriptionContains: null,
         counterpartyContains: 'TREETOOLS',
@@ -378,12 +394,15 @@ describe('rules routes', () => {
     });
 
     describe('with applyToHistory', () => {
-      it('recategorizes in the same stroke, adds the tags and gives the way back', async () => {
+      it('recategorizes in the same stroke, swaps the tags of the old category for the ones of the rule and gives the way back', async () => {
         const fresh = await world.addTransaction('Uber *Trip 1');
-        const withTag = await world.addTransaction('Uber *Trip 2');
+        const withTag = await world.addTransaction('Uber *Trip 2', {
+          category_id: world.delivery,
+          category_source: 'rule',
+        });
         await database.db
           .insertInto('transaction_tags')
-          .values({ transaction_id: withTag, tag_id: world.workTag })
+          .values({ transaction_id: withTag, tag_id: world.deliveryTag })
           .execute();
         const byHand = await world.addTransaction('Uber *Trip 3', {
           category_id: world.delivery,
@@ -408,7 +427,8 @@ describe('rules routes', () => {
           category_rule_id: rule.id,
         });
         expect(await world.tagsOf(fresh)).toEqual([world.tripTag]);
-        expect(await world.tagsOf(withTag)).toEqual([world.tripTag, world.workTag].sort());
+        // The tag of the old category went away with it.
+        expect(await world.tagsOf(withTag)).toEqual([world.tripTag]);
         // What Lucas put by hand stays, tags included.
         expect(await world.categoryOf(byHand)).toMatchObject({
           category_id: world.delivery,
@@ -426,7 +446,7 @@ describe('rules routes', () => {
         });
         await database.db
           .insertInto('transaction_tags')
-          .values({ transaction_id: second, tag_id: world.workTag })
+          .values({ transaction_id: second, tag_id: world.deliveryTag })
           .execute();
         const { applied } = await createRule({
           descriptionContains: 'uber',
@@ -452,7 +472,7 @@ describe('rules routes', () => {
           category_source: 'rule',
           category_rule_id: null,
         });
-        expect(await world.tagsOf(second)).toEqual([world.workTag]);
+        expect(await world.tagsOf(second)).toEqual([world.deliveryTag]);
       });
 
       it('applies with changedCount 0 when there is nothing to change', async () => {
@@ -556,6 +576,15 @@ describe('rules routes', () => {
         'RULE_TAG_ARCHIVED',
       );
       await expectError(
+        await send('POST', '/rules', {
+          descriptionContains: 'ifood',
+          categoryId: world.transport,
+          tagIds: [world.deliveryTag],
+        }),
+        422,
+        'RULE_TAG_CATEGORY_MISMATCH',
+      );
+      await expectError(
         await send('POST', '/rules', { descriptionContains: 'ifood', categoryId: generateId() }),
         404,
         'CATEGORY_NOT_FOUND',
@@ -640,7 +669,7 @@ describe('rules routes', () => {
             descriptionContains: 'ifood',
             counterpartyContains: null,
             categoryId: world.delivery,
-            tagIds: [world.workTag],
+            tagIds: [world.deliveryTag],
             amountMinCents: 500,
           })
         ).json(),
@@ -650,25 +679,37 @@ describe('rules routes', () => {
         descriptionContains: 'IFOOD',
         counterpartyContains: null,
         categoryId: world.delivery,
-        tagIds: [world.workTag],
+        tagIds: [world.deliveryTag],
         amountMinCents: 500,
       });
       expect(dto.createdAt).toBe(NOW);
     });
 
-    it('takes the category away when there are tags left', async () => {
+    it('refuses to take the category away or to change it while the old tags stay (422)', async () => {
       const rule = await makeRule();
 
-      const dto = ruleDtoSchema.parse(await (await patch(rule.id, { categoryId: null })).json());
-
-      expect(dto).toMatchObject({ categoryId: null, tagIds: [world.tripTag] });
+      await expectError(
+        await patch(rule.id, { categoryId: null }),
+        422,
+        'RULE_TAG_CATEGORY_MISMATCH',
+      );
+      await expectError(
+        await patch(rule.id, { categoryId: world.delivery }),
+        422,
+        'RULE_TAG_CATEGORY_MISMATCH',
+      );
+      // Taking the tags along is fine.
+      const dto = ruleDtoSchema.parse(
+        await (await patch(rule.id, { categoryId: world.delivery, tagIds: [] })).json(),
+      );
+      expect(dto).toMatchObject({ categoryId: world.delivery, tagIds: [] });
     });
 
     it('does not touch the transactions', async () => {
       const rule = await makeRule();
       const tx = await world.addTransaction('Uber *Trip');
 
-      await patch(rule.id, { categoryId: world.delivery });
+      await patch(rule.id, { categoryId: world.delivery, tagIds: [] });
 
       expect((await world.categoryOf(tx)).category_id).toBeNull();
     });
@@ -713,6 +754,11 @@ describe('rules routes', () => {
         await patch(rule.id, { tagIds: [world.workTag] }),
         422,
         'RULE_TAG_ARCHIVED',
+      );
+      await expectError(
+        await patch(rule.id, { tagIds: [world.deliveryTag] }),
+        422,
+        'RULE_TAG_CATEGORY_MISMATCH',
       );
       await expectError(
         await patch(rule.id, { categoryId: generateId() }),
@@ -1048,17 +1094,21 @@ describe('rules routes', () => {
       return { handmade, free, byRule, tagged };
     };
 
-    it('a rule with only tags leaves category and tags of what was put by hand', async () => {
+    it('a rule with a category and its tags leaves category and tags of what was put by hand', async () => {
       const { handmade, free } = await seed();
-      const body = { descriptionContains: 'uber', tagIds: [world.tripTag] };
+      const body = {
+        descriptionContains: 'uber',
+        categoryId: world.transport,
+        tagIds: [world.tripTag],
+      };
 
       const announced = await preview(body);
       const { rule } = await createRule(body);
       const result = await apply(rule.id);
 
       expect(announced.matchCount).toBe(6);
-      expect(announced.willChangeCount).toBe(2);
-      expect(result.changedCount).toBe(2);
+      expect(announced.willChangeCount).toBe(3);
+      expect(result.changedCount).toBe(3);
       for (const id of handmade) expect(await world.tagsOf(id)).toEqual([]);
       expect(await world.tagsOf(free)).toEqual([world.tripTag]);
     });
@@ -1068,9 +1118,8 @@ describe('rules routes', () => {
       const definitions = [
         { categoryId: world.transport },
         { categoryId: world.transport, tagIds: [world.workTag] },
-        { categoryId: world.delivery, tagIds: [world.tripTag] },
-        { tagIds: [world.tripTag] },
-        { tagIds: [world.tripTag, world.workTag] },
+        { categoryId: world.delivery, tagIds: [world.deliveryTag] },
+        { categoryId: world.transport, tagIds: [world.tripTag, world.workTag] },
       ];
 
       for (const [index, definition] of definitions.entries()) {
@@ -1118,8 +1167,12 @@ describe('rules routes', () => {
     expect(await world.tagsOf(tx)).toEqual([world.tripTag]);
   });
 
-  it('does nothing when a rule with only tags has only archived tags', async () => {
-    const { rule } = await createRule({ descriptionContains: 'uber', tagIds: [world.workTag] });
+  it('still puts the category, with no tag, when all the tags of the rule were archived', async () => {
+    const { rule } = await createRule({
+      descriptionContains: 'uber',
+      categoryId: world.transport,
+      tagIds: [world.workTag],
+    });
     const tx = await world.addTransaction('Uber *Trip');
     await database.db
       .updateTable('tags')
@@ -1127,7 +1180,8 @@ describe('rules routes', () => {
       .where('id', '=', world.workTag)
       .execute();
 
-    expect(await apply(rule.id)).toEqual({ changedCount: 0, previous: [] });
+    expect((await apply(rule.id)).changedCount).toBe(1);
+    expect((await world.categoryOf(tx)).category_id).toBe(world.transport);
     expect(await world.tagsOf(tx)).toEqual([]);
   });
 

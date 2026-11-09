@@ -7,6 +7,8 @@ import { TransactionCategoryArchivedError } from '#/modules/transactions/domain/
 import { TransactionCategoryKindMismatchError } from '#/modules/transactions/domain/transaction/transaction-category-kind-mismatch.error.ts';
 import { TransactionCategoryNotAllowedError } from '#/modules/transactions/domain/transaction/transaction-category-not-allowed.error.ts';
 import { TransactionTagArchivedError } from '#/modules/transactions/domain/transaction/transaction-tag-archived.error.ts';
+import { TransactionTagCategoryMismatchError } from '#/modules/transactions/domain/transaction/transaction-tag-category-mismatch.error.ts';
+import { TransactionTagNeedsCategoryError } from '#/modules/transactions/domain/transaction/transaction-tag-needs-category.error.ts';
 import { Transaction } from '#/modules/transactions/domain/transaction/transaction.entity.ts';
 import type { BusinessDate } from '#/shared/date/business-date.value-object.ts';
 import type { Month } from '#/shared/date/month.value-object.ts';
@@ -68,6 +70,12 @@ export class InstallmentPlan {
       if (input.category.isArchived) throw new TransactionCategoryArchivedError();
       if (input.category.isTransfer === true) throw new TransactionCategoryNotAllowedError();
       if (input.category.kind !== 'expense') throw new TransactionCategoryKindMismatchError();
+    }
+    if (input.tags.length > 0 && input.category === null) {
+      throw new TransactionTagNeedsCategoryError();
+    }
+    if (input.tags.some((tag) => tag.categoryId !== input.category?.id)) {
+      throw new TransactionTagCategoryMismatchError();
     }
     if (input.tags.some((tag) => tag.isArchived)) throw new TransactionTagArchivedError();
 

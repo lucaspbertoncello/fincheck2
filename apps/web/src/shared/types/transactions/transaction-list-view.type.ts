@@ -7,6 +7,7 @@ import type {
   SelectionAction,
   SplitPart,
   SummaryBarSegment,
+  TagPickerProps,
   TransactionEditErrors,
   TransactionEditValues,
   TransactionMenuKey,
@@ -63,6 +64,8 @@ export type TransactionEditorView = {
   /** The categories that are a transfer, offered next to the other leg when the transaction has one. */
   transferCategories: CategoryOption[];
   counterparts: ChoiceOption[];
+  /** The tag picker of the category of the transaction. */
+  tagPicker: Omit<TagPickerProps, 'label' | 'className'>;
   errors: TransactionEditErrors;
   /** One line under the title: where the transaction is from. */
   description: string;

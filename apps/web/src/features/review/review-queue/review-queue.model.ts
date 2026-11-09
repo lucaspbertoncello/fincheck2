@@ -4,6 +4,7 @@ import { useAccounts } from '#/domain/accounts/account/hooks/use-accounts.hook.t
 import { useCategories } from '#/domain/categories/category/hooks/use-categories.hook.ts';
 import { useRuleSuggestions } from '#/domain/categories/rule-suggestion/hooks/use-rule-suggestions.hook.ts';
 import { usePreviewRule } from '#/domain/categories/rule/hooks/use-preview-rule.hook.ts';
+import { useCreateTag } from '#/domain/categories/tag/hooks/use-create-tag.hook.ts';
 import { useTags } from '#/domain/categories/tag/hooks/use-tags.hook.ts';
 import { useReviewQueue } from '#/domain/transactions/review-queue/hooks/use-review-queue.hook.ts';
 
@@ -13,6 +14,7 @@ export function useReviewQueueModel(month: string) {
     queue: useReviewQueue({ month }),
     categories: useCategories({ status: 'active' }),
     tags: useTags(),
+    createTag: useCreateTag(),
     accounts: useAccounts(),
   };
 }

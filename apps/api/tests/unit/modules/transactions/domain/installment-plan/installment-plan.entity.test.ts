@@ -56,8 +56,19 @@ describe('InstallmentPlan.createManual', () => {
     expect(() => plan({ category: { ...FOOD, isArchived: true } })).toThrow(
       expect.objectContaining({ code: 'TRANSACTION_CATEGORY_ARCHIVED' }),
     );
-    expect(() => plan({ tags: [{ id: 'old', isArchived: true }] })).toThrow(
-      expect.objectContaining({ code: 'TRANSACTION_TAG_ARCHIVED' }),
+    expect(() =>
+      plan({ category: FOOD, tags: [{ id: 'old', categoryId: 'food', isArchived: true }] }),
+    ).toThrow(expect.objectContaining({ code: 'TRANSACTION_TAG_ARCHIVED' }));
+  });
+
+  it('only takes tags of the category of the plan, and none with no category', () => {
+    const other = { id: 'm', categoryId: 'market', isArchived: false };
+
+    expect(() => plan({ category: FOOD, tags: [other] })).toThrow(
+      expect.objectContaining({ code: 'TRANSACTION_TAG_CATEGORY_MISMATCH' }),
+    );
+    expect(() => plan({ tags: [other] })).toThrow(
+      expect.objectContaining({ code: 'TRANSACTION_TAG_NEEDS_CATEGORY' }),
     );
   });
 
@@ -116,7 +127,7 @@ describe('InstallmentPlan.buildParcels', () => {
       firstInvoiceMonth: Month.of('2026-11'),
     });
     const built = base.buildParcels(
-      { category: FOOD, tags: [{ id: 'a', isArchived: false }] },
+      { category: FOOD, tags: [{ id: 'a', categoryId: 'food', isArchived: false }] },
       NOW,
     );
 
