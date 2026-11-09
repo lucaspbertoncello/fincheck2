@@ -16,6 +16,7 @@ import { SkipOccurrenceUseCase } from '#/modules/recurrences/application/occurre
 import { UnsettleOccurrenceUseCase } from '#/modules/recurrences/application/occurrence/unsettle-occurrence.usecase.ts';
 import { UnskipOccurrenceUseCase } from '#/modules/recurrences/application/occurrence/unskip-occurrence.usecase.ts';
 import { UpdateOccurrenceUseCase } from '#/modules/recurrences/application/occurrence/update-occurrence.usecase.ts';
+import type { LinkedElsewhereReader } from '#/modules/recurrences/application/occurrence-payment/linked-elsewhere-reader.interface.ts';
 import type { ApplyRecurrenceCategory } from '#/modules/recurrences/application/occurrence-payment/apply-recurrence-category.interface.ts';
 import { FindOccurrenceLinkedTransactionsQuery } from '#/modules/recurrences/application/occurrence-payment/find-occurrence-linked-transactions.query.ts';
 import { GetTransactionOccurrenceLinksQuery } from '#/modules/recurrences/application/occurrence-payment/get-transaction-occurrence-links.query.ts';
@@ -91,8 +92,10 @@ export function createRecurrencesModule(deps: {
     applyCategory: ApplyRecurrenceCategory;
     subscriptionCharges: SubscriptionChargeReader;
   };
+  // The bills hold transactions too: one tied to a bill is not offered to an occurrence.
+  linkedElsewhere?: LinkedElsewhereReader | undefined;
 }) {
-  const { db, unitOfWork, clock, accounts, categories, transactionPorts } = deps;
+  const { db, unitOfWork, clock, accounts, categories, transactionPorts, linkedElsewhere } = deps;
   const calendar = new BusinessCalendar();
 
   const recurrences = new KyselyRecurrenceRepository(db);
@@ -151,6 +154,7 @@ export function createRecurrencesModule(deps: {
         opener,
         unitOfWork,
         clock,
+        linkedElsewhere,
       ),
     ),
     getRecurrence: new GetRecurrenceController(
@@ -189,6 +193,7 @@ export function createRecurrencesModule(deps: {
         occurrences,
         transactionPorts.occurrenceTransactions,
         builder,
+        linkedElsewhere,
       ),
     ),
     updateOccurrence: new UpdateOccurrenceController(
@@ -220,6 +225,7 @@ export function createRecurrencesModule(deps: {
         linker,
         builder,
         unitOfWork,
+        linkedElsewhere,
       ),
     ),
     unlinkOccurrencePayment: new UnlinkOccurrencePaymentController(
@@ -270,7 +276,12 @@ export function createRecurrencesModule(deps: {
     // The readers `transactions` declares and `recurrences` fulfils.
     transactionReaders: {
       occurrenceLinks: new GetTransactionOccurrenceLinksQuery(db),
-      recurrenceCandidates: new ListRecurrenceCandidatesQuery(db, occurrences, builder),
+      recurrenceCandidates: new ListRecurrenceCandidatesQuery(
+        db,
+        occurrences,
+        builder,
+        linkedElsewhere,
+      ),
     },
     // The readers `invoices` declares and `recurrences` fulfils.
     invoiceReaders: {

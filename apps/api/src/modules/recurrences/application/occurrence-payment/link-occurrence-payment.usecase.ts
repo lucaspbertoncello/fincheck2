@@ -5,6 +5,7 @@ import type { Database } from '#/database/database.type.ts';
 import type { OccurrenceDtoBuilder } from '#/modules/recurrences/application/occurrence/occurrence-dto-builder.service.ts';
 import { requireOccurrence } from '#/modules/recurrences/application/occurrence/require-occurrence.util.ts';
 import type { OccurrencePaymentLinker } from '#/modules/recurrences/application/occurrence-payment/occurrence-payment-linker.service.ts';
+import type { LinkedElsewhereReader } from '#/modules/recurrences/application/occurrence-payment/linked-elsewhere-reader.interface.ts';
 import type { OccurrenceTransactionReader } from '#/modules/recurrences/application/occurrence-payment/occurrence-transaction-reader.interface.ts';
 import { requireRecurrence } from '#/modules/recurrences/application/recurrence/require-recurrence.util.ts';
 import type { OccurrenceRepository } from '#/modules/recurrences/domain/occurrence/occurrence-repository.interface.ts';
@@ -27,6 +28,7 @@ export class LinkOccurrencePaymentUseCase {
   private readonly linker: OccurrencePaymentLinker;
   private readonly builder: OccurrenceDtoBuilder;
   private readonly unitOfWork: UnitOfWork<Kysely<Database>>;
+  private readonly linkedElsewhere: LinkedElsewhereReader | undefined;
 
   constructor(
     occurrences: OccurrenceRepository<Kysely<Database>>,
@@ -35,7 +37,9 @@ export class LinkOccurrencePaymentUseCase {
     linker: OccurrencePaymentLinker,
     builder: OccurrenceDtoBuilder,
     unitOfWork: UnitOfWork<Kysely<Database>>,
+    linkedElsewhere?: LinkedElsewhereReader,
   ) {
+    this.linkedElsewhere = linkedElsewhere;
     this.occurrences = occurrences;
     this.recurrences = recurrences;
     this.transactions = transactions;
@@ -63,8 +67,13 @@ export class LinkOccurrencePaymentUseCase {
         nature: transaction.nature,
         counts: transaction.counts,
       });
-      const linked = await this.occurrences.findLinkedTransactionIds([transaction.id], executor);
-      if (linked.has(transaction.id)) throw new OccurrenceTransactionAlreadyLinkedError();
+      const [linked, linkedThere] = await Promise.all([
+        this.occurrences.findLinkedTransactionIds([transaction.id], executor),
+        this.linkedElsewhere?.findLinkedTransactionIds([transaction.id], executor),
+      ]);
+      if (linked.has(transaction.id) || linkedThere?.has(transaction.id)) {
+        throw new OccurrenceTransactionAlreadyLinkedError();
+      }
 
       await this.linker.link({ occurrence, recurrence, transaction, linkedBy: 'user' }, executor);
 

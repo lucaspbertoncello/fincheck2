@@ -4,6 +4,7 @@ import type { Kysely } from 'kysely';
 import type { Database } from '#/database/database.type.ts';
 import type { OccurrenceDtoBuilder } from '#/modules/recurrences/application/occurrence/occurrence-dto-builder.service.ts';
 import { requireOccurrence } from '#/modules/recurrences/application/occurrence/require-occurrence.util.ts';
+import type { LinkedElsewhereReader } from '#/modules/recurrences/application/occurrence-payment/linked-elsewhere-reader.interface.ts';
 import type { OccurrenceTransactionReader } from '#/modules/recurrences/application/occurrence-payment/occurrence-transaction-reader.interface.ts';
 import type { OccurrenceRepository } from '#/modules/recurrences/domain/occurrence/occurrence-repository.interface.ts';
 
@@ -18,12 +19,15 @@ export class ListOccurrenceCandidatesQuery {
   private readonly occurrences: OccurrenceRepository<Kysely<Database>>;
   private readonly transactions: OccurrenceTransactionReader;
   private readonly builder: OccurrenceDtoBuilder;
+  private readonly linkedElsewhere: LinkedElsewhereReader | undefined;
 
   constructor(
     occurrences: OccurrenceRepository<Kysely<Database>>,
     transactions: OccurrenceTransactionReader,
     builder: OccurrenceDtoBuilder,
+    linkedElsewhere?: LinkedElsewhereReader,
   ) {
+    this.linkedElsewhere = linkedElsewhere;
     this.occurrences = occurrences;
     this.transactions = transactions;
     this.builder = builder;
@@ -44,7 +48,12 @@ export class ListOccurrenceCandidatesQuery {
       from: occurrence.windowStartOn.addDays(-CANDIDATE_MARGIN_DAYS).value,
       to: occurrence.windowEndOn.addDays(CANDIDATE_MARGIN_DAYS).value,
     });
-    const linked = await this.occurrences.findLinkedTransactionIds(found.map((item) => item.id));
+    const ids = found.map((item) => item.id);
+    const [linkedHere, linkedThere] = await Promise.all([
+      this.occurrences.findLinkedTransactionIds(ids),
+      this.linkedElsewhere?.findLinkedTransactionIds(ids),
+    ]);
+    const linked = new Set([...linkedHere, ...(linkedThere ?? [])]);
 
     const items = found
       .filter((item) => !linked.has(item.id))

@@ -2,6 +2,7 @@ import type { ReviewQueue } from '@fincheck/shared/transactions/review-queue/rev
 import type { Kysely } from 'kysely';
 
 import type { Database } from '#/database/database.type.ts';
+import type { LinkedElsewhereReader } from '#/modules/recurrences/application/occurrence-payment/linked-elsewhere-reader.interface.ts';
 import type { OccurrenceDtoBuilder } from '#/modules/recurrences/application/occurrence/occurrence-dto-builder.service.ts';
 import { matchTransactionToOccurrences } from '#/modules/recurrences/domain/matching/match-transaction-to-occurrences.util.ts';
 import type { MatchCandidate } from '#/modules/recurrences/domain/matching/match-transaction-to-occurrences.util.ts';
@@ -29,12 +30,15 @@ export class ListRecurrenceCandidatesQuery {
   private readonly db: Kysely<Database>;
   private readonly occurrences: OccurrenceRepository<Kysely<Database>>;
   private readonly builder: OccurrenceDtoBuilder;
+  private readonly linkedElsewhere: LinkedElsewhereReader | undefined;
 
   constructor(
     db: Kysely<Database>,
     occurrences: OccurrenceRepository<Kysely<Database>>,
     builder: OccurrenceDtoBuilder,
+    linkedElsewhere?: LinkedElsewhereReader,
   ) {
+    this.linkedElsewhere = linkedElsewhere;
     this.db = db;
     this.occurrences = occurrences;
     this.builder = builder;
@@ -51,13 +55,13 @@ export class ListRecurrenceCandidatesQuery {
         .map((item) => item.occurredOn)
         .toSorted()
         .at(-1) ?? '';
-    const [open, linked] = await Promise.all([
+    const transactionIds = items.map((item) => item.transactionId);
+    const [open, linkedHere, linkedThere] = await Promise.all([
       this.occurrences.findOpenForMatching(latest, executor),
-      this.occurrences.findLinkedTransactionIds(
-        items.map((item) => item.transactionId),
-        executor,
-      ),
+      this.occurrences.findLinkedTransactionIds(transactionIds, executor),
+      this.linkedElsewhere?.findLinkedTransactionIds(transactionIds, executor),
     ]);
+    const linked = new Set([...linkedHere, ...(linkedThere ?? [])]);
     const views = (await this.builder.views(open, executor)).filter(
       (view) =>
         view.state.status === 'expected' ||

@@ -19,6 +19,7 @@ import { CreateInvoicePaymentUseCase } from '#/modules/invoices/application/invo
 import { DeleteInvoicePaymentUseCase } from '#/modules/invoices/application/invoice-payment/delete-invoice-payment.usecase.ts';
 import { DismissPaymentSuggestionUseCase } from '#/modules/invoices/application/invoice-payment/dismiss-payment-suggestion.usecase.ts';
 import { GetTransactionInvoiceLinksQuery } from '#/modules/invoices/application/invoice-payment/get-transaction-invoice-links.query.ts';
+import { FindInvoiceLinkedTransactionsQuery } from '#/modules/invoices/application/invoice-payment/find-invoice-linked-transactions.query.ts';
 import type { LinkedTransactionReader } from '#/modules/invoices/application/invoice-payment/linked-transaction-reader.interface.ts';
 import type { InvoicePaymentCandidateReader } from '#/modules/invoices/application/invoice-payment/invoice-payment-candidate-reader.interface.ts';
 import type { LinkInvoicePaymentTransaction } from '#/modules/invoices/application/invoice-payment/link-invoice-payment-transaction.interface.ts';
@@ -150,6 +151,10 @@ export function createInvoicesModule(deps: {
       invoiceMonths: new GetInvoiceMonthQuery(cards),
       openInvoiceMonths: new GetOpenInvoiceMonthsQuery(cards, clock),
       links: new GetTransactionInvoiceLinksQuery(db),
+    },
+    // The reader `bills` declares and `invoices` fulfils.
+    billReaders: {
+      linkedTransactions: new FindInvoiceLinkedTransactionsQuery(invoices),
     },
     // The ports `accounts` declares and `invoices` fulfils.
     accountPorts: {

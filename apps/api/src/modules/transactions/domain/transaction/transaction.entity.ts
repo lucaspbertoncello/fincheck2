@@ -12,6 +12,7 @@ import { TransactionCategoryKindMismatchError } from '#/modules/transactions/dom
 import { TransactionCategoryNotAllowedError } from '#/modules/transactions/domain/transaction/transaction-category-not-allowed.error.ts';
 import { TransactionIsInstallmentError } from '#/modules/transactions/domain/transaction/transaction-is-installment.error.ts';
 import { TransactionIsSplitError } from '#/modules/transactions/domain/transaction/transaction-is-split.error.ts';
+import { TransactionLinkedToBillError } from '#/modules/transactions/domain/transaction/transaction-linked-to-bill.error.ts';
 import { TransactionLinkedToOccurrenceError } from '#/modules/transactions/domain/transaction/transaction-linked-to-occurrence.error.ts';
 import { TransactionMethodAccountMismatchError } from '#/modules/transactions/domain/transaction/transaction-method-account-mismatch.error.ts';
 import { TransactionNatureLockedError } from '#/modules/transactions/domain/transaction/transaction-nature-locked.error.ts';
@@ -222,6 +223,7 @@ export class Transaction {
     options: {
       secondHasInvoiceLink: boolean;
       secondHasOccurrenceLink?: boolean;
+      secondHasBillLink?: boolean;
       secondIsCardAccount: boolean;
     },
     now: string,
@@ -245,6 +247,7 @@ export class Transaction {
         {
           hasActiveInvoiceLink: options.secondHasInvoiceLink,
           hasActiveOccurrenceLink: options.secondHasOccurrenceLink ?? false,
+          hasActiveBillLink: options.secondHasBillLink ?? false,
           isCardAccount: options.secondIsCardAccount,
         },
         now,
@@ -324,6 +327,9 @@ export class Transaction {
   edit(patch: Transaction.EditInput, now: string): void {
     if (patch.amount !== undefined) {
       if (this.isSplit()) throw new TransactionIsSplitError();
+      // The whole transaction `lent` is the origin of a debt: its value is the part of the friend,
+      // which the bill fixed when it was made (undo the debt to change it).
+      if (this.nature === 'lent') throw new TransactionLinkedToBillError();
       if (patch.amount.cents <= 0) throw new RangeError('The edited amount is positive');
     }
 
@@ -346,6 +352,8 @@ export class Transaction {
       hasActiveInvoiceLink: boolean;
       // It settles an occurrence of a recurrence: the nature is what makes it count there.
       hasActiveOccurrenceLink?: boolean;
+      // It pays a bill: the nature is what makes it count there.
+      hasActiveBillLink?: boolean;
       isCardAccount: boolean;
     },
     now: string,
@@ -363,6 +371,10 @@ export class Transaction {
     // into another nature would leave it settling money it no longer is. Undo the link first.
     if (options.hasActiveOccurrenceLink && nature !== this.nature) {
       throw new TransactionLinkedToOccurrenceError();
+    }
+    // The same for a transaction that pays a bill (the origin of a debt is already `lent`, locked).
+    if (options.hasActiveBillLink && nature !== this.nature) {
+      throw new TransactionLinkedToBillError();
     }
     // Credit on a card is a refund, an expense with a positive value: it is never income.
     if (nature === 'income' && nature !== this.nature && options.isCardAccount) {
@@ -461,11 +473,108 @@ export class Transaction {
   // already there, whoever put it, and never touches a split transaction, one outside expense and
   // income, one of the other kind, or an archived category. Answers whether it took it.
   applyRecurrenceCategory(category: Transaction.CategoryRef, now: string): boolean {
+    return this.applyDerivedCategory(category, 'recurrence', now);
+  }
+
+  // The transaction pays (or is paid by) a bill that has a category (BR-BIL-006): same rule as the
+  // recurrence, with the origin `bill`.
+  applyBillCategory(category: Transaction.CategoryRef, now: string): boolean {
+    return this.applyDerivedCategory(category, 'bill', now);
+  }
+
+  // The payment of the bill was undone: the category the bill had put goes away. One chosen by
+  // Lucas or by a rule stays. Answers whether it took it off.
+  clearBillCategory(now: string): boolean {
+    if (this.categorySource !== 'bill') return false;
+
+    this.clearCategory();
+    this.updatedAt = now;
+
+    return true;
+  }
+
+  private applyDerivedCategory(
+    category: Transaction.CategoryRef,
+    source: 'recurrence' | 'bill',
+    now: string,
+  ): boolean {
     if (this.categoryId !== null || this.isSplit() || !this.hasCountedNature()) return false;
     if (category.isArchived || category.kind !== this.nature) return false;
 
     this.categoryId = category.id;
-    this.categorySource = 'recurrence';
+    this.categorySource = source;
+    this.categoryRuleId = null;
+    this.updatedAt = now;
+
+    return true;
+  }
+
+  // The friend's part leaves the counted money (BR-BIL-005). `lent` ("você pagou": an expense whose
+  // part of a friend is not spending) or `reimbursed` (the money that came back from a friend is
+  // not income). The whole transaction changes nature, with no category, when `friendCents` is its
+  // whole value; otherwise it splits in two parts: the rest of Lucas keeps the nature and the
+  // category it had, the friend part has the new nature and none. Only a whole `expense` (for
+  // `lent`) or `income` (for `reimbursed`) with the right sign.
+  moveToFriend(kind: 'lent' | 'reimbursed', friendCents: number, now: string): void {
+    const base = kind === 'lent' ? 'expense' : 'income';
+    if (this.isSplit()) throw new TransactionIsSplitError();
+    if (this.nature !== base || this.amount.isNegative() !== (kind === 'lent')) {
+      throw new TransactionNatureLockedError();
+    }
+    const total = Math.abs(this.amount.cents);
+    if (friendCents <= 0 || friendCents > total) {
+      throw new RangeError('The part of a friend is positive and at most the whole transaction');
+    }
+
+    if (friendCents === total) {
+      this.nature = kind;
+      this.natureSetBy = 'user';
+      this.clearCategory();
+    } else {
+      const sign = this.amount.isNegative() ? -1 : 1;
+      const kept = this.categoryId;
+      this.splits = [
+        new TransactionSplit({
+          id: generateId(),
+          position: 1,
+          amount: Money.fromCents(sign * (total - friendCents)),
+          nature: base,
+          categoryId: kept,
+          description: null,
+        }),
+        new TransactionSplit({
+          id: generateId(),
+          position: 2,
+          amount: Money.fromCents(sign * friendCents),
+          nature: kind,
+          categoryId: null,
+          description: null,
+        }),
+      ];
+      this.clearCategory();
+    }
+    this.updatedAt = now;
+  }
+
+  // The undo of `moveToFriend`: the whole transaction goes back to `expense` or `income` (decided by
+  // the system again, with no category: the one it had was cleared), the split one is whole again
+  // with the category of the part of Lucas. Answers whether there was anything to give back.
+  returnFromFriend(kind: 'lent' | 'reimbursed', now: string): boolean {
+    const base = kind === 'lent' ? 'expense' : 'income';
+
+    if (this.nature === kind) {
+      this.nature = base;
+      this.natureSetBy = 'system';
+      this.updatedAt = now;
+
+      return true;
+    }
+    if (!this.splits.some((part) => part.nature === kind)) return false;
+
+    const kept = this.splits.find((part) => part.nature === base);
+    this.splits = [];
+    this.categoryId = kept?.categoryId ?? null;
+    this.categorySource = this.categoryId === null ? null : 'user';
     this.categoryRuleId = null;
     this.updatedAt = now;
 

@@ -7,6 +7,10 @@ import { KyselyUnitOfWork } from '#/database/unit-of-work/kysely-unit-of-work.se
 import { handleError } from '#/main/http/handle-error.util.ts';
 import { createLocalTokenMiddleware } from '#/main/http/middlewares/local-token.middleware.ts';
 import { createCategoriesModule } from '#/main/http/create-categories-module.util.ts';
+import { composeLinkedTransactionReaders } from '#/main/http/compose-linked-transaction-readers.util.ts';
+import { createBillsModule } from '#/main/http/create-bills-module.util.ts';
+import { createBillsReaders } from '#/main/http/create-bills-readers.util.ts';
+import { createTransactionsBillPorts } from '#/main/http/create-transactions-bill-ports.util.ts';
 import { composeTransactionLinksReaders } from '#/main/http/compose-transaction-links-readers.util.ts';
 import { createInvoicesModule } from '#/main/http/create-invoices-module.util.ts';
 import { createProfileModule } from '#/main/http/create-profile-module.util.ts';
@@ -81,11 +85,17 @@ export function createAppParts({
   // and the transactions that already settle one, and transactions asks it for the link of an
   // occurrence and the candidates of the review queue. The deletion of an account calls the owners
   // of what hangs on it: invoices, transactions and categories. The Pluggy connection belongs to
-  // sync and the bills to bills, which do not exist yet: their ports stay unwired (the connection
-  // shows as null), and transactions has no bill link: see createTransactionsModule for what that
-  // leaves out.
+  // sync, which does not exist yet: its port stays unwired (the connection shows as null). bills
+  // asks categories for the category, transactions for what each transaction that pays or originates
+  // a bill is worth, the ones to pick from and the effects on them (the friend part lent, the money
+  // back reimbursed, the category of the bill), and invoices and recurrences for the transactions
+  // that already settle one of theirs; those three ask bills back for the transactions it holds
+  // (they cannot also pay an invoice or an occurrence) and transactions asks it for the link of a
+  // bill.
   const accounts = new KyselyAccountRepository(db);
   const accountRefs = new GetAccountRefQuery(accounts);
+  const billPorts = createTransactionsBillPorts({ db, clock });
+  const billReaders = createBillsReaders({ db, transactions: billPorts.billTransactions });
   const categories = createCategoriesModule({
     db,
     unitOfWork,
@@ -100,6 +110,7 @@ export function createAppParts({
     accounts: accountRefs,
     categories: categories.transactionReaders.categories,
     transactionPorts: createTransactionsRecurrencePorts({ db, clock }),
+    linkedElsewhere: billReaders.linkedTransactions,
   });
   const invoices = createInvoicesModule({
     db,
@@ -108,7 +119,21 @@ export function createAppParts({
     cards: new GetCardRefsQuery(accounts),
     transactionPorts: createTransactionsInvoicePorts({ db, accounts: accountRefs, clock }),
     expectations: recurrences.invoiceReaders.expectations,
-    linkedElsewhere: recurrences.invoiceReaders.linkedTransactions,
+    linkedElsewhere: composeLinkedTransactionReaders(
+      recurrences.invoiceReaders.linkedTransactions,
+      billReaders.linkedTransactions,
+    ),
+  });
+  const bills = createBillsModule({
+    db,
+    unitOfWork,
+    clock,
+    categories: categories.transactionReaders.categories,
+    transactionPorts: billPorts,
+    linkedElsewhere: composeLinkedTransactionReaders(
+      invoices.billReaders.linkedTransactions,
+      recurrences.invoiceReaders.linkedTransactions,
+    ),
   });
   const transactions = createTransactionsModule({
     db,
@@ -118,10 +143,11 @@ export function createAppParts({
     readers: {
       ...categories.transactionReaders,
       ...invoices.transactionReaders,
-      // Each owner only knows its own link: the invoice and the occurrence (the bill, later).
+      // Each owner only knows its own link: the invoice, the occurrence and the bill.
       links: composeTransactionLinksReaders(
         invoices.transactionReaders.links,
         recurrences.transactionReaders.occurrenceLinks,
+        billReaders.links,
       ),
       recurrenceCandidates: recurrences.transactionReaders.recurrenceCandidates,
     },
@@ -232,7 +258,8 @@ export function createAppParts({
     .route('/', transactions.installmentPlanRoute)
     .route('/', invoices.routes)
     .route('/', recurrences.routes)
-    .route('/', profile.routes);
+    .route('/', profile.routes)
+    .route('/', bills.routes);
 
   return { app, ensureOccurrences: recurrences.ensureOccurrences };
 }

@@ -108,6 +108,7 @@ export class UpdateTransactionUseCase {
       {
         hasActiveInvoiceLink: await this.hasInvoiceLink(transaction.id, executor),
         hasActiveOccurrenceLink: await this.hasOccurrenceLink(transaction.id, executor),
+        hasActiveBillLink: await this.hasBillLink(transaction.id, executor),
         isCardAccount: account.isCard,
       },
       now,
@@ -131,6 +132,7 @@ export class UpdateTransactionUseCase {
         {
           secondHasInvoiceLink: await this.hasInvoiceLink(other.id, executor),
           secondHasOccurrenceLink: await this.hasOccurrenceLink(other.id, executor),
+          secondHasBillLink: await this.hasBillLink(other.id, executor),
           secondIsCardAccount: (await this.accounts.requireAccount(other.accountId, executor))
             .isCard,
         },
@@ -228,6 +230,14 @@ export class UpdateTransactionUseCase {
     const links = await this.links.linksOf([transactionId], executor);
 
     return Boolean(links.get(transactionId)?.occurrence);
+  }
+
+  // Only the payment of a bill counts: the origin is already `lent` (locked) or split.
+  private async hasBillLink(transactionId: string, executor: Kysely<Database>): Promise<boolean> {
+    if (!this.links) return false;
+    const links = await this.links.linksOf([transactionId], executor);
+
+    return links.get(transactionId)?.bill?.role === 'payment';
   }
 }
 

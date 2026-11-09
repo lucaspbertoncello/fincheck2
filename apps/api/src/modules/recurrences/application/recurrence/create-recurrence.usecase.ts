@@ -4,6 +4,7 @@ import type { Kysely } from 'kysely';
 import type { Database } from '#/database/database.type.ts';
 import type { OccurrenceOpener } from '#/modules/recurrences/application/occurrence/occurrence-opener.service.ts';
 import type { OccurrenceDtoBuilder } from '#/modules/recurrences/application/occurrence/occurrence-dto-builder.service.ts';
+import type { LinkedElsewhereReader } from '#/modules/recurrences/application/occurrence-payment/linked-elsewhere-reader.interface.ts';
 import type { OccurrenceTransactionReader } from '#/modules/recurrences/application/occurrence-payment/occurrence-transaction-reader.interface.ts';
 import type { RecurrenceActivator } from '#/modules/recurrences/application/recurrence/recurrence-activator.service.ts';
 import { toRecurrenceDto } from '#/modules/recurrences/application/recurrence/to-recurrence-dto.util.ts';
@@ -39,6 +40,7 @@ export class CreateRecurrenceUseCase {
   private readonly opener: OccurrenceOpener;
   private readonly unitOfWork: UnitOfWork<Kysely<Database>>;
   private readonly clock: Clock;
+  private readonly linkedElsewhere: LinkedElsewhereReader | undefined;
 
   constructor(
     accounts: RecurrenceAccountReader,
@@ -50,7 +52,9 @@ export class CreateRecurrenceUseCase {
     opener: OccurrenceOpener,
     unitOfWork: UnitOfWork<Kysely<Database>>,
     clock: Clock,
+    linkedElsewhere?: LinkedElsewhereReader,
   ) {
+    this.linkedElsewhere = linkedElsewhere;
     this.accounts = accounts;
     this.categories = categories;
     this.transactions = transactions;
@@ -122,8 +126,13 @@ export class CreateRecurrenceUseCase {
           nature: transaction.nature,
           counts: transaction.counts,
         });
-        const linked = await this.occurrences.findLinkedTransactionIds([transaction.id], executor);
-        if (linked.has(transaction.id)) throw new OccurrenceTransactionAlreadyLinkedError();
+        const [linked, linkedThere] = await Promise.all([
+          this.occurrences.findLinkedTransactionIds([transaction.id], executor),
+          this.linkedElsewhere?.findLinkedTransactionIds([transaction.id], executor),
+        ]);
+        if (linked.has(transaction.id) || linkedThere?.has(transaction.id)) {
+          throw new OccurrenceTransactionAlreadyLinkedError();
+        }
       }
 
       const { currentMonth, linked } = await this.activator.activate(

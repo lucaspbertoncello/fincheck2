@@ -1517,3 +1517,64 @@ describe('Transaction.changeNature of a transaction tied to an occurrence', () =
     ).toThrow(expect.objectContaining({ code: 'TRANSACTION_LINKED_TO_OCCURRENCE' }));
   });
 });
+
+describe('Transaction.changeNature of a transaction that pays a bill', () => {
+  const free = { hasActiveInvoiceLink: false, isCardAccount: false } as const;
+  const tied = { ...free, hasActiveBillLink: true } as const;
+
+  it('refuses any other nature while the link stands', () => {
+    const expense = buildTestTransaction();
+    const income = buildTestTransaction({ nature: 'income', amount: cents(5000) });
+
+    expect(() => expense.changeNature('transfer', tied, LATER)).toThrow(
+      expect.objectContaining({ code: 'TRANSACTION_LINKED_TO_BILL' }),
+    );
+    expect(() => income.changeNature('transfer', tied, LATER)).toThrow(
+      expect.objectContaining({ code: 'TRANSACTION_LINKED_TO_BILL' }),
+    );
+    expect(expense.nature).toBe('expense');
+    expect(income.nature).toBe('income');
+  });
+
+  it('accepts the nature it already has, and any change when there is no link', () => {
+    const expense = buildTestTransaction();
+
+    expect(() => expense.changeNature('expense', tied, LATER)).not.toThrow();
+    expect(() => expense.changeNature('transfer', free, LATER)).not.toThrow();
+    expect(expense.nature).toBe('transfer');
+  });
+
+  it('refuses a linked transaction as the second leg of a transfer', () => {
+    const first = buildTestTransaction({ accountId: 'a', nature: 'transfer' });
+    const second = buildTestTransaction({ accountId: 'b', amount: cents(1250), nature: 'income' });
+
+    expect(() =>
+      Transaction.linkTransfer(
+        first,
+        second,
+        { secondHasInvoiceLink: false, secondHasBillLink: true, secondIsCardAccount: false },
+        LATER,
+      ),
+    ).toThrow(expect.objectContaining({ code: 'TRANSACTION_LINKED_TO_BILL' }));
+  });
+});
+
+describe('Transaction.edit of the whole origin of a debt', () => {
+  it('refuses a new value while it is lent, and keeps the other edits', () => {
+    const lent = buildTestTransaction({ nature: 'lent', amount: cents(-5000) });
+
+    expect(() => lent.edit({ amount: cents(3000) }, LATER)).toThrow(
+      expect.objectContaining({ code: 'TRANSACTION_LINKED_TO_BILL' }),
+    );
+    expect(lent.amount.cents).toBe(-5000);
+    expect(() => lent.edit({ editNote: 'nota' }, LATER)).not.toThrow();
+  });
+
+  it('a plain expense takes the new value', () => {
+    const expense = buildTestTransaction();
+
+    expense.edit({ amount: cents(3000) }, LATER);
+
+    expect(Math.abs(expense.amount.cents)).toBe(3000);
+  });
+});
