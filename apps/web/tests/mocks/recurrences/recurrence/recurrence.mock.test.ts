@@ -152,6 +152,102 @@ describe('recurrences routes (changes)', () => {
     expect((await occurrences()).find((item) => item.id === mesada?.id)?.status).toBe('partial');
   });
 
+  describe('"Quantas vierem" (maxPayments null)', () => {
+    async function createIncome(maxPayments?: number | null) {
+      const created = createRecurrenceResponseSchema.parse(
+        (
+          await callApi('POST', '/recurrences', {
+            kind: 'income',
+            name: 'Mesada + VR',
+            expectedAmountCents: 60_000,
+            dateRule: { type: 'any_day' },
+            ...(maxPayments === undefined ? {} : { maxPayments }),
+          })
+        ).json,
+      );
+      expect(created.occurrence).not.toBeNull();
+
+      return created;
+    }
+
+    async function linkPix(occurrenceId: string, amountCents: number) {
+      const accounts = (await callApi('GET', '/accounts')).json as { items: { id: string }[] };
+      const transaction = (
+        await callApi('POST', '/transactions', {
+          type: 'income',
+          accountId: accounts.items[0]?.id,
+          method: 'pix',
+          description: 'PIX PAI',
+          amountCents,
+          occurredOn: '2000-01-01',
+        })
+      ).json as { id: string };
+      const linked = await callApi('POST', `/occurrences/${occurrenceId}/payments`, {
+        transactionId: transaction.id,
+      });
+      expect(linked.status).toBe(201);
+
+      return occurrenceDtoSchema.parse(linked.json);
+    }
+
+    it('creates it with null, keeps one payment when it is left out, and reads it back', async () => {
+      const any = await createIncome(null);
+      const left = await createIncome();
+
+      expect(any.recurrence.maxPayments).toBeNull();
+      expect(left.recurrence.maxPayments).toBe(1);
+      expect(
+        recurrenceDetailDtoSchema.parse(
+          (await callApi('GET', `/recurrences/${any.recurrence.id}`)).json,
+        ).maxPayments,
+      ).toBeNull();
+    });
+
+    it('edits to null and back to a number, and refuses 0 and 6', async () => {
+      const { recurrence } = await createIncome(2);
+
+      const toAny = await callApi('PATCH', `/recurrences/${recurrence.id}`, { maxPayments: null });
+      expect(recurrenceDtoSchema.parse(toAny.json).maxPayments).toBeNull();
+      const toThree = await callApi('PATCH', `/recurrences/${recurrence.id}`, { maxPayments: 3 });
+      expect(recurrenceDtoSchema.parse(toThree.json).maxPayments).toBe(3);
+      for (const maxPayments of [0, 6]) {
+        expect(
+          (await callApi('PATCH', `/recurrences/${recurrence.id}`, { maxPayments })).status,
+        ).toBe(400);
+      }
+    });
+
+    it('counts what passes the expected amount as received over, with no difference to answer', async () => {
+      const { occurrence } = await createIncome(null);
+
+      await linkPix(occurrence?.id ?? '', 30_000);
+      await linkPix(occurrence?.id ?? '', 30_000);
+      const dto = await linkPix(occurrence?.id ?? '', 30_000);
+
+      expect(dto).toMatchObject({
+        status: 'confirmed',
+        receivedCents: 90_000,
+        remainingCents: 0,
+        difference: null,
+        needsAttention: false,
+      });
+    });
+
+    it('keeps asking about the difference of a numbered recurrence that receives more', async () => {
+      const { occurrence } = await createIncome(3);
+
+      await linkPix(occurrence?.id ?? '', 30_000);
+      await linkPix(occurrence?.id ?? '', 30_000);
+      const dto = await linkPix(occurrence?.id ?? '', 30_000);
+
+      expect(dto).toMatchObject({
+        status: 'confirmed',
+        receivedCents: 90_000,
+        difference: { amountCents: 30_000, decision: null },
+      });
+    });
+  });
+
   it('marks as received, skips and undoes both', async () => {
     const freela = (await occurrences()).find(
       (item) => item.recurrenceName === 'Lume Design (freela)',

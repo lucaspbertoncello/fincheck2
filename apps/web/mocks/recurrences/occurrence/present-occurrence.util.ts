@@ -47,7 +47,11 @@ export function presentOccurrence(
   else if (received > 0) status = 'partial';
   else status = 'expected';
 
-  const hasDifference = status === 'confirmed' && !record.settledAt && received !== expected;
+  // "Quantas vierem" (`maxPayments` null) takes what passes the amount as received over: no
+  // difference to answer. The received is always the real total, never cut at the expected.
+  const isExcessAccepted = recurrence.maxPayments === null && received > expected;
+  const hasDifference =
+    status === 'confirmed' && !record.settledAt && received !== expected && !isExcessAccepted;
   const difference: Occurrence.Difference | null = hasDifference
     ? {
         amountCents: received - expected,

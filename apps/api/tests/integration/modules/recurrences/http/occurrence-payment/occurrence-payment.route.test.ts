@@ -107,6 +107,69 @@ describe('the payments of an occurrence', () => {
       });
     });
 
+    it('takes payments beyond maxPayments when the recurrence is "as many as come", and counts them all', async () => {
+      const { occurrence } = await world.create({
+        expectedAmountCents: 127002,
+        maxPayments: null,
+        kind: 'income',
+        dateRule: { type: 'any_day' },
+      });
+      const days = ['2026-10-02', '2026-10-09', '2026-10-16', '2026-10-21', '2026-10-22'];
+      let dto = await world.occurrenceOf(
+        await link(
+          occurrence?.id ?? '',
+          await insertTestIncome(world.database.db, world.checking, {
+            cents: 30000,
+            on: '2026-10-01',
+          }),
+        ),
+        201,
+      );
+      expect(dto).toMatchObject({ status: 'partial', receivedCents: 30000, remainingCents: 97002 });
+
+      for (const on of days) {
+        dto = await world.occurrenceOf(
+          await link(
+            occurrence?.id ?? '',
+            await insertTestIncome(world.database.db, world.checking, { cents: 30000, on }),
+          ),
+          201,
+        );
+      }
+
+      // Six payments of R$ 300,00: R$ 1.800,00 against R$ 1.270,02 expected.
+      expect(dto.payments).toHaveLength(6);
+      expect(dto).toMatchObject({
+        status: 'confirmed',
+        receivedCents: 180000,
+        remainingCents: 0,
+        difference: null,
+        needsAttention: false,
+      });
+    });
+
+    it('counts the real total of a numbered recurrence too: what passes the amount is a difference to answer', async () => {
+      const { occurrence } = await world.create({
+        expectedAmountCents: 85000,
+        maxPayments: 2,
+        kind: 'income',
+        dateRule: { type: 'any_day' },
+      });
+      for (const cents of [42500, 42500, 20000]) {
+        await link(
+          occurrence?.id ?? '',
+          await insertTestIncome(world.database.db, world.checking, { cents, on: '2026-10-05' }),
+        );
+      }
+
+      expect(await itemOf(occurrence?.id)).toMatchObject({
+        status: 'confirmed',
+        receivedCents: 105000,
+        remainingCents: 0,
+        difference: { amountCents: 20000, decision: null },
+      });
+    });
+
     it('puts the category of the recurrence on a transaction without one, with the origin recurrence', async () => {
       const categoryId = await insertTestCategory(world.database.db, { name: 'Saúde teste' });
       const { occurrence } = await world.create({ categoryId });

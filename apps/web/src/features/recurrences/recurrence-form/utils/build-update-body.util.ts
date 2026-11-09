@@ -56,8 +56,13 @@ export function buildUpdateBody(
     draft['employmentRegime'] = regime === '' ? null : regime;
   }
   if (RULE_FIELDS.some((field) => rule[field] !== saved.dateRule[field])) draft['dateRule'] = rule;
-  if (maxPayments !== String(saved.maxPayments)) {
-    draft['maxPayments'] = maxPayments === '' ? undefined : Number(maxPayments);
+  // `null` is "Quantas vierem": it only differs when the saved one is not null, and a number only
+  // when the saved one is another number (or null).
+  if (values.anyPayments) {
+    if (saved.maxPayments !== null) draft['maxPayments'] = null;
+  } else if (maxPayments !== String(saved.maxPayments)) {
+    // An emptied field is 0 here, which the schema refuses under the field (it is not "keep").
+    draft['maxPayments'] = Number(maxPayments);
   }
 
   const isSubscription = values.kind === 'expense' && values.isSubscription;

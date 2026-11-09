@@ -197,3 +197,83 @@ describe('the recurrence candidates of the review queue', () => {
     expect(item?.recurrenceCandidates.map((candidate) => candidate.month)).toEqual(['2026-10']);
   });
 });
+
+// "Quantas vierem" (`maxPayments` null): the occurrence stays a candidate however many payments it
+// already has, and a numbered one stops being offered when its payments are all there.
+describe('the recurrence candidates of "as many as come"', () => {
+  let world: Awaited<ReturnType<typeof createRecurrenceTestWorld>>;
+
+  beforeEach(async () => {
+    world = await createRecurrenceTestWorld();
+  });
+
+  afterEach(async () => {
+    await world.database.destroy();
+  });
+
+  const linkPixes = async (occurrenceId: string, count: number) => {
+    for (let index = 0; index < count; index += 1) {
+      const transactionId = await insertTestIncome(world.database.db, world.checking, {
+        cents: 10000,
+        on: `2026-10-0${String(index + 1)}`,
+        counterparty: 'PAI',
+      });
+      const response = await world.send('POST', `/occurrences/${occurrenceId}/payments`, {
+        transactionId,
+      });
+      expect(response.status).toBe(201);
+    }
+  };
+  const candidatesOf = async (transactionId: string) => {
+    const response = await world.send('GET', '/transactions/review-queue');
+    const item = reviewQueueDtoSchema
+      .parse(await response.json())
+      .items.find((candidate) => candidate.transaction.id === transactionId);
+
+    return item?.recurrenceCandidates;
+  };
+
+  it('keeps offering the occurrence after six payments, for exactly what is left', async () => {
+    const { recurrence, occurrence } = await world.create({
+      kind: 'income',
+      name: 'Mesada + VR',
+      expectedAmountCents: 127002,
+      maxPayments: null,
+      matchText: 'pai',
+      dateRule: { type: 'any_day' },
+    });
+    await linkPixes(occurrence?.id ?? '', 6);
+    const next = await insertTestIncome(world.database.db, world.checking, {
+      cents: 67002,
+      on: '2026-10-20',
+      counterparty: 'PAI',
+    });
+
+    expect(await candidatesOf(next)).toEqual([
+      expect.objectContaining({
+        recurrenceId: recurrence.id,
+        expectedAmountCents: 127002,
+        remainingCents: 67002,
+      }),
+    ]);
+  });
+
+  it('stops offering a numbered recurrence that has all its payments', async () => {
+    const { occurrence } = await world.create({
+      kind: 'income',
+      name: 'Mesada',
+      expectedAmountCents: 127002,
+      maxPayments: 2,
+      matchText: 'pai',
+      dateRule: { type: 'any_day' },
+    });
+    await linkPixes(occurrence?.id ?? '', 2);
+    const next = await insertTestIncome(world.database.db, world.checking, {
+      cents: 107002,
+      on: '2026-10-20',
+      counterparty: 'PAI',
+    });
+
+    expect(await candidatesOf(next)).toEqual([]);
+  });
+});

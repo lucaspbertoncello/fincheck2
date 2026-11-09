@@ -10,8 +10,12 @@ const GLUED = /^[º,]/;
  * "Todo dia 10, ou o dia útil seguinte",
  * "No 5º dia útil", "Perto do dia 25, até 2 dias antes ou depois", "Em qualquer dia do mês",
  * "Em qualquer dia do mês, geralmente no dia 5". With payments split in Pix: "..., em até 2 Pix".
+ * "Quantas vierem" (`maxPayments` null): "..., em quantos Pix vierem".
  */
-export function describeDateRule(rule: Recurrence.DateRule, maxPayments = 1): string {
+export function describeDateRule(
+  rule: Recurrence.DateRule,
+  maxPayments: number | null = 1,
+): string {
   const numbers = {
     day: rule.day,
     businessDayNumber: rule.businessDayNumber,
@@ -32,6 +36,8 @@ export function describeDateRule(rule: Recurrence.DateRule, maxPayments = 1): st
       '',
     );
   })();
+
+  if (maxPayments === null) return `${base}, em quantos Pix vierem`;
 
   return maxPayments > 1 ? `${base}, em até ${maxPayments} Pix` : base;
 }

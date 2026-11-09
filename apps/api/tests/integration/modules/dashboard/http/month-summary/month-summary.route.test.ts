@@ -114,6 +114,35 @@ describe('GET /dashboard/month-summary', () => {
     expect(dto.result.cents).toBe(31580);
   });
 
+  it('counts what an "as many as come" source received over its expected amount, never cut', async () => {
+    const account = await world.bankAccount('Conta', 0);
+    const created = await world.recurrence({
+      kind: 'income',
+      name: 'Mesada + VR',
+      expectedAmountCents: 85000,
+      dateRule: { type: 'any_day' },
+      accountId: account,
+      method: 'pix',
+      maxPayments: null,
+    });
+    for (const [index, on] of ['2026-10-02', '2026-10-09', '2026-10-16'].entries()) {
+      const tx = await world.income(account, 40000, on, { description: `Pix ${String(index)}` });
+      const linked = await world.send('POST', `/occurrences/${created.occurrence?.id}/payments`, {
+        transactionId: tx,
+      });
+      expect(linked.status).toBe(201);
+    }
+
+    const dto = await summary('2026-10');
+
+    // R$ 1.200,00 came against R$ 850,00 expected: the whole amount is received, and what was
+    // expected grows to match, so the card never shows more received than expected.
+    expect(dto.income).toMatchObject({ receivedCents: 120000, expectedCents: 120000 });
+    expect(dto.result.cents).toBe(120000);
+    const free = await world.get('/dashboard/free-balance', freeBalanceDtoSchema);
+    expect(free.receivable.totalCents).toBe(0);
+  });
+
   it('has "what is left" equal to the composition of the Livre in the current month, and null in another', async () => {
     await seedExampleOne(world);
 

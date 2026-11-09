@@ -48,6 +48,18 @@ describe('recurrence changes', () => {
       });
     });
 
+    it('changes maxPayments to "as many as come" with null alone, and back to a number', async () => {
+      const { recurrence } = await world.create({ maxPayments: 2 });
+
+      const toAny = await patch(recurrence.id, { maxPayments: null });
+      expect(await world.recurrenceOf(toAny)).toMatchObject({ maxPayments: null });
+      const stillAny = await patch(recurrence.id, { name: 'Outro nome' });
+      expect(await world.recurrenceOf(stillAny)).toMatchObject({ maxPayments: null });
+      const toThree = await patch(recurrence.id, { maxPayments: 3 });
+      expect(await world.recurrenceOf(toThree)).toMatchObject({ maxPayments: 3 });
+      expect((await patch(recurrence.id, { maxPayments: 6 })).status).toBe(400);
+    });
+
     it('clears the fields that may be empty with null', async () => {
       const categoryId = await insertTestCategory(world.database.db);
       const { recurrence } = await world.create({

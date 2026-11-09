@@ -108,6 +108,21 @@ describe('createRecurrenceRequestSchema', () => {
     ).toBe(false);
   });
 
+  it('takes maxPayments null as "as many as come", and keeps it optional', () => {
+    expect(createRecurrenceRequestSchema.safeParse({ ...valid, maxPayments: null }).success).toBe(
+      true,
+    );
+    expect(
+      createRecurrenceRequestSchema.safeParse({ ...valid, maxPayments: undefined }).success,
+    ).toBe(true);
+    expect(createRecurrenceRequestSchema.safeParse({ ...valid, maxPayments: 0 }).success).toBe(
+      false,
+    );
+    expect(createRecurrenceRequestSchema.safeParse({ ...valid, maxPayments: 6 }).success).toBe(
+      false,
+    );
+  });
+
   it('takes the employment regime of an income as CLT, PJ or other', () => {
     for (const employmentRegime of ['clt', 'pj', 'other']) {
       expect(createRecurrenceRequestSchema.safeParse({ ...valid, employmentRegime }).success).toBe(
@@ -210,6 +225,13 @@ describe('updateRecurrenceRequestSchema', () => {
     });
     expect(result.success).toBe(false);
     expect(result.error?.issues[0]?.path).toEqual(['serviceSlug']);
+  });
+
+  it('takes maxPayments from 1 to 5 or null, and counts null as a field to change', () => {
+    expect(updateRecurrenceRequestSchema.safeParse({ maxPayments: null }).success).toBe(true);
+    expect(updateRecurrenceRequestSchema.safeParse({ maxPayments: 5 }).success).toBe(true);
+    expect(updateRecurrenceRequestSchema.safeParse({ maxPayments: 0 }).success).toBe(false);
+    expect(updateRecurrenceRequestSchema.safeParse({ maxPayments: 6 }).success).toBe(false);
   });
 
   it('clears the employment regime with null', () => {

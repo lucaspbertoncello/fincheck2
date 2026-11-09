@@ -15,6 +15,7 @@ function stateOf(overrides: Partial<Input> = {}) {
     today: BusinessDate.of('2026-10-22'),
     differenceDecision: null,
     amountMode: 'fixed',
+    acceptsExcess: false,
     ...overrides,
   });
 }
@@ -36,6 +37,38 @@ describe('computeOccurrenceState', () => {
       receivedCents: 42500,
       remainingCents: 42500,
       needsAttention: false,
+    });
+  });
+
+  it('counts what came over the expected amount as received, never cut, with nothing left', () => {
+    expect(stateOf({ paymentCents: [42500, 42500, 20000] })).toMatchObject({
+      status: 'confirmed',
+      receivedCents: 105000,
+      remainingCents: 0,
+    });
+  });
+
+  it('asks about the difference when more than expected comes in a numbered recurrence', () => {
+    expect(stateOf({ paymentCents: [42500, 42500, 20000] }).difference).toEqual({
+      amountCents: 20000,
+      decision: null,
+    });
+  });
+
+  it('takes the excess of "as many as come" as received over: no difference to answer', () => {
+    expect(stateOf({ paymentCents: [42500, 42500, 20000], acceptsExcess: true })).toEqual({
+      status: 'confirmed',
+      receivedCents: 105000,
+      remainingCents: 0,
+      difference: null,
+      needsAttention: false,
+    });
+  });
+
+  it('still asks about a shortfall of "as many as come": a single payment of 90% confirms', () => {
+    expect(stateOf({ paymentCents: [76500], acceptsExcess: true }).difference).toEqual({
+      amountCents: -8500,
+      decision: null,
     });
   });
 

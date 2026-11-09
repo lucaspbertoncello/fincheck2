@@ -12,6 +12,10 @@ const SINGLE_PAYMENT_FLOOR_PERCENT = 85;
 // hand, or received at least the expected amount, or one payment of at least 85% of it), late
 // (today is after the window, even with a partial payment, decision R4), partial, expected.
 // Integer cents only: the 85% is `received x 100 >= expected x 85`, no float.
+//
+// Received is always the real total, never cut at the expected amount. A recurrence that takes "as
+// many as come" (`acceptsExcess`) has no difference to answer when more than expected arrives: the
+// excess is just received over (`receivedCents` above the expected, nothing left, confirmed).
 export function computeOccurrenceState(input: {
   expectedCents: number;
   // What each payment that counts is worth now. Payments of a transaction that does not count are
@@ -23,6 +27,8 @@ export function computeOccurrenceState(input: {
   today: BusinessDate;
   differenceDecision: Occurrence.Decision | null;
   amountMode: Recurrence.AmountMode;
+  // The recurrence has no limit of payments in the month (`maxPayments` null).
+  acceptsExcess: boolean;
 }): OccurrenceState {
   const expected = input.expectedCents;
   const received = input.paymentCents.reduce((sum, cents) => sum + cents, 0);
@@ -40,7 +46,9 @@ export function computeOccurrenceState(input: {
   else status = 'expected';
 
   // A manual mark is no money received, so there is nothing to compare: no difference.
-  const hasDifference = status === 'confirmed' && !input.settled && received !== expected;
+  const isExcessAccepted = input.acceptsExcess === true && received > expected;
+  const hasDifference =
+    status === 'confirmed' && !input.settled && received !== expected && !isExcessAccepted;
   const difference: Occurrence.Difference | null = hasDifference
     ? {
         amountCents: received - expected,

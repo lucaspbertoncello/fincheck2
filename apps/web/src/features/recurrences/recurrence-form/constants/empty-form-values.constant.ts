@@ -17,6 +17,7 @@ export const EMPTY_FORM_VALUES: RecurrenceFormValues = {
   businessDayNumber: '',
   toleranceDays: '',
   nonBusinessDayShift: 'none',
+  anyPayments: false,
   maxPayments: '1',
   applyFrom: 'next_month',
   isSubscription: false,

@@ -234,7 +234,8 @@ export const recurrenceMock = [
           isSubscription: body.isSubscription,
           serviceSlug: body.isSubscription ? (body.serviceSlug ?? null) : null,
           dateRule,
-          maxPayments: body.maxPayments ?? 1,
+          // Left out is one payment; `null` is "Quantas vierem".
+          maxPayments: body.maxPayments === undefined ? 1 : body.maxPayments,
           startsMonth: body.startsMonth ?? linkedMonth ?? defaultStart,
           pausedAt: null,
           archivedAt: null,

@@ -29,6 +29,12 @@ function build(overrides: Partial<Recurrence.CreateInput> = {}): Recurrence {
 }
 
 describe('Recurrence.create', () => {
+  it('takes null as "as many as come" and only a missing value as one payment', () => {
+    expect(build({ maxPayments: null }).maxPayments).toBeNull();
+    expect(build({ maxPayments: 4 }).maxPayments).toBe(4);
+    expect(build({ maxPayments: undefined }).maxPayments).toBe(1);
+  });
+
   it('starts active with the defaults: fixed amount, one payment, nothing set', () => {
     const recurrence = build();
 
@@ -94,6 +100,19 @@ describe('Recurrence.edit', () => {
       counterparty: 'Smart Fit',
       updatedAt: LATER,
     });
+  });
+
+  it('turns "as many as come" on with null and back to a number, and leaves it when not sent', () => {
+    const recurrence = build({ maxPayments: 2 });
+
+    recurrence.edit({ maxPayments: null }, LATER);
+    expect(recurrence.maxPayments).toBeNull();
+
+    recurrence.edit({ name: 'Outro nome' }, LATER);
+    expect(recurrence.maxPayments).toBeNull();
+
+    recurrence.edit({ maxPayments: 3 }, LATER);
+    expect(recurrence.maxPayments).toBe(3);
   });
 
   it('clears a field that may be empty when it is null', () => {

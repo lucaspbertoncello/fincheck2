@@ -18,6 +18,10 @@ import type { AccountChipOption } from '#/shared/types/account/account-chip-opti
 import { CategoryChips } from '#/features/recurrences/recurrence-form/components/category-chips.component.tsx';
 import { DateRuleEditor } from '#/features/recurrences/recurrence-form/components/date-rule-editor.component.tsx';
 import { AccountChips } from '#/shared/components/accounts/account-chips.component.tsx';
+import {
+  PAYMENTS_DESCRIPTIONS,
+  PAYMENTS_OPTIONS,
+} from '#/features/recurrences/recurrence-form/constants/payments-options.constant.ts';
 import type {
   PreviewDate,
   PreviewStatus,
@@ -85,7 +89,10 @@ function summarize(
     editing && values.applyFrom === 'current_month' ? 'vale neste mês' : null,
     values.counterparty.trim() ? (values.kind === 'income' ? 'origem' : 'destino') : null,
     values.matchText.trim() ? 'extrato' : null,
-    Number(values.maxPayments) > 1 ? `${values.maxPayments} pagamentos` : null,
+    values.anyPayments ? 'quantas vierem' : null,
+    !values.anyPayments && Number(values.maxPayments) > 1
+      ? `${values.maxPayments} pagamentos`
+      : null,
     values.kind === 'income' && values.employmentRegime
       ? (REGIME_LABELS[values.employmentRegime] ?? null)
       : null,
@@ -295,16 +302,27 @@ export function RecurrenceFormView({
                 maxLength={80}
                 autoComplete="off"
               />
-              <TextField
-                label="Pagamentos por mês"
-                name="maxPayments"
-                value={values.maxPayments}
-                onChange={(text) => onChange({ maxPayments: digitsOnly(text) })}
-                error={errors.maxPayments}
-                inputMode="numeric"
-                description="Mais de 1 para valor dividido em Pix. De 1 a 5."
-                autoComplete="off"
-              />
+              <div className="flex flex-col">
+                <ChoiceField
+                  label="Pagamentos por mês"
+                  variant="segmented"
+                  options={PAYMENTS_OPTIONS}
+                  value={values.anyPayments ? 'any' : 'number'}
+                  onChange={(key) => onChange({ anyPayments: key === 'any' })}
+                  description={PAYMENTS_DESCRIPTIONS[values.anyPayments ? 'any' : 'number']}
+                />
+                <Collapse isOpen={!values.anyPayments} contentClassName="pt-s12">
+                  <TextField
+                    label="Máximo de pagamentos"
+                    name="maxPayments"
+                    value={values.maxPayments}
+                    onChange={(text) => onChange({ maxPayments: digitsOnly(text) })}
+                    error={errors.maxPayments}
+                    inputMode="numeric"
+                    autoComplete="off"
+                  />
+                </Collapse>
+              </div>
               {income ? (
                 <ChoiceField
                   label="Regime"

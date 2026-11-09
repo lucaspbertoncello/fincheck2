@@ -103,6 +103,85 @@ describe('matchTransactionToOccurrences, the example of the contract (mesada x V
   });
 });
 
+describe('matchTransactionToOccurrences, as many payments as come (maxPayments null)', () => {
+  const ANY: MatchCandidate = { ...MESADA, maxPayments: null };
+
+  it('keeps the occurrence open however many payments it already has', () => {
+    const many = { ...ANY, status: 'partial' as const, paymentCount: 7, remainingCents: 42500 };
+
+    expect(match({ on: '2026-10-20', cents: 42500, text: 'PAI PIX' }, [many, VR])).toEqual({
+      type: 'link',
+      occurrenceId: 'mesada',
+    });
+  });
+
+  it('closes a numbered occurrence that already has all its payments', () => {
+    const full = { ...MESADA, status: 'partial' as const, paymentCount: 2, remainingCents: 5000 };
+
+    expect(match({ on: '2026-10-20', cents: 5000, text: 'PAI PIX' }, [full])).toEqual({
+      type: 'none',
+    });
+  });
+
+  it('takes any value from the sender: a Pix of 30% links, there is no "one part" to fit', () => {
+    expect(match({ on: '2026-10-03', cents: 25500, text: 'PAI PIX' }, [ANY])).toEqual({
+      type: 'link',
+      occurrenceId: 'mesada',
+    });
+    expect(match({ on: '2026-10-03', cents: 120000, text: 'PAI PIX' }, [ANY])).toEqual({
+      type: 'link',
+      occurrenceId: 'mesada',
+    });
+  });
+
+  it('still needs the sender: another text goes nowhere, whatever the value', () => {
+    expect(match({ on: '2026-10-03', cents: 25500, text: 'LOJA X' }, [ANY])).toEqual({
+      type: 'none',
+    });
+  });
+
+  it('with no sender at all, only the exact value links', () => {
+    const noSender = { ...ANY, matchText: null };
+
+    expect(match({ on: '2026-10-03', cents: 25500, text: 'PAI PIX' }, [noSender])).toEqual({
+      type: 'none',
+    });
+    expect(match({ on: '2026-10-03', cents: 85000, text: 'PAI PIX' }, [noSender])).toEqual({
+      type: 'link',
+      occurrenceId: 'mesada',
+    });
+  });
+
+  it('lets a numbered recurrence of the same sender win when its value is exact', () => {
+    // 77700 is exactly the voucher; "Quantas vierem" takes anything, but only the voucher is exact.
+    expect(match({ on: '2026-10-02', cents: 77700, text: 'PAI PIX' }, [ANY, VR])).toEqual({
+      type: 'link',
+      occurrenceId: 'vr',
+    });
+  });
+
+  it('keeps one candidate per recurrence: the oldest month', () => {
+    const september = { ...ANY, occurrenceId: 'sep', month: '2026-09', status: 'late' as const };
+
+    expect(match({ on: '2026-10-03', cents: 25500, text: 'PAI PIX' }, [ANY, september])).toEqual({
+      type: 'link',
+      occurrenceId: 'sep',
+    });
+  });
+
+  it('still ties the value that is exactly what is expected, or exactly what is left', () => {
+    expect(match({ on: '2026-10-03', cents: 85000, text: 'PAI PIX' }, [ANY])).toEqual({
+      type: 'link',
+      occurrenceId: 'mesada',
+    });
+    const left = { ...ANY, status: 'partial' as const, paymentCount: 3, remainingCents: 30000 };
+    expect(match({ on: '2026-10-20', cents: 30000, text: 'PAI PIX' }, [left])).toEqual({
+      type: 'link',
+      occurrenceId: 'mesada',
+    });
+  });
+});
+
 describe('matchTransactionToOccurrences, window and late', () => {
   it('ties the freelance Pix on the last day of the window (27/10) and not on the day after', () => {
     expect(match({ on: '2026-10-27', cents: 420000, text: 'G PRADO' }, [MAXXY])).toEqual({

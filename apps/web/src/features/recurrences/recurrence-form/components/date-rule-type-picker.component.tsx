@@ -43,7 +43,7 @@ export function DateRuleTypePicker({ value, onChange }: DateRuleTypePickerProps)
                       layoutId={indicatorId}
                       aria-hidden="true"
                       className="absolute inset-0 rounded-capsule bg-(--color-surface-segment-indicator) shadow-(--shadow-indicator)"
-                      transition={{ duration: 0.22, ease: [0.2, 0.8, 0.2, 1] }}
+                      transition={{ duration: 0.24, ease: [0.2, 0.8, 0.2, 1] }}
                     />
                   ) : null}
                   <span className="relative">{option.label}</span>

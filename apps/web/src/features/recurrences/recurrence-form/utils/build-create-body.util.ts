@@ -34,7 +34,7 @@ export function buildCreateBody(
     accountId: values.accountId ?? undefined,
     method,
     dateRule: buildDateRule(values),
-    maxPayments: maxPayments === '' ? undefined : Number(maxPayments),
+    maxPayments: values.anyPayments ? null : maxPayments === '' ? undefined : Number(maxPayments),
     isSubscription,
     serviceSlug: isSubscription ? resolveServiceSlugBody(values.serviceSlug) : undefined,
   });

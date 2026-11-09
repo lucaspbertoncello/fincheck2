@@ -6,12 +6,17 @@ import { computeAmountMatch } from '#/modules/recurrences/domain/matching/comput
 // the occurrences still open, and answers one of three things.
 //
 // 1. Candidates: same kind, still `expected`, `partial` or `late`, with fewer payments than
-//    `maxPayments`, and the day of the transaction in the window (`windowStartOn` to `windowEndOn`;
-//    a late occurrence has no end, it takes any day from `windowStartOn`, until it is paid or
-//    skipped). The same recurrence with two candidates keeps the oldest month.
+//    `maxPayments` (`null` is "Quantas vierem": no limit), and the day of the transaction in the
+//    window (`windowStartOn` to `windowEndOn`; a late occurrence has no end, it takes any day from
+//    `windowStartOn`, until it is paid or skipped). The same recurrence with two candidates keeps
+//    the oldest month. Once the month is confirmed (the sum reached the expected amount, or one
+//    Pix of 85% or more), it is no longer a candidate: a new Pix does not link by itself, only by
+//    hand ("Vincular transação").
 // 2. Sender: with a `matchText`, it must be inside the text of the transaction; without it, the
 //    value has to be exact.
-// 3. Value: within 15% of the expected amount, of what is left or of a part, and exact within R$ 1,00.
+// 3. Value: within 15% of the expected amount, of what is left or of a part (the expected amount
+//    divided by `maxPayments`), and exact within R$ 1,00. "Quantas vierem" with a sender that
+//    fits takes any positive value (the Pix come in 2 or 4 of different sizes), and has no part.
 // 4. Decision: one match links; several matches link only when one is exact; otherwise the
 //    transaction goes to review with the candidates. No match by value, but a sender that fits:
 //    review with those. Nothing: an ordinary transaction.
@@ -31,7 +36,7 @@ export function matchTransactionToOccurrences(input: {
   const inWindow = input.candidates.filter(
     (candidate) =>
       candidate.kind === transaction.kind &&
-      candidate.paymentCount < candidate.maxPayments &&
+      (candidate.maxPayments === null || candidate.paymentCount < candidate.maxPayments) &&
       candidate.windowStartOn <= transaction.occurredOn &&
       (candidate.status === 'late' || transaction.occurredOn <= candidate.windowEndOn),
   );
@@ -49,13 +54,20 @@ export function matchTransactionToOccurrences(input: {
   );
 
   const scored = fromSender.map((candidate) => {
-    const { matches, exact } = computeAmountMatch(transaction.amountCents, [
-      candidate.expectedCents,
-      candidate.remainingCents,
-      Math.ceil(candidate.expectedCents / candidate.maxPayments),
-    ]);
-    // Without a sender to filter by, only the exact value counts.
-    return { candidate, matches: candidate.matchText === null ? exact : matches, exact };
+    const wanted = [candidate.expectedCents, candidate.remainingCents];
+    if (candidate.maxPayments !== null) {
+      wanted.push(Math.ceil(candidate.expectedCents / candidate.maxPayments));
+    }
+    const { matches, exact } = computeAmountMatch(transaction.amountCents, wanted);
+    // Without a sender to filter by, only the exact value counts; "Quantas vierem" with one takes
+    // any value (a Pix of the right size is still `exact`, so it wins a tie).
+    const anyValue = candidate.maxPayments === null && candidate.matchText !== null;
+
+    return {
+      candidate,
+      matches: anyValue || (candidate.matchText === null ? exact : matches),
+      exact,
+    };
   });
 
   const matched = scored.filter((item) => item.matches);
@@ -94,7 +106,8 @@ export type MatchCandidate = {
   paymentCount: number;
   expectedCents: number;
   remainingCents: number;
-  maxPayments: number;
+  // `null`: as many as come.
+  maxPayments: number | null;
   // Normalized, or null.
   matchText: string | null;
 };

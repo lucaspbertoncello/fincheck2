@@ -22,7 +22,9 @@ export function buildFormValues(recurrence: Recurrence.Dto): RecurrenceFormValue
       dateRule.businessDayNumber === null ? '' : String(dateRule.businessDayNumber),
     toleranceDays: dateRule.toleranceDays === null ? '' : String(dateRule.toleranceDays),
     nonBusinessDayShift: dateRule.nonBusinessDayShift ?? 'none',
-    maxPayments: String(recurrence.maxPayments),
+    anyPayments: recurrence.maxPayments === null,
+    // "Quantas vierem" has no number: switching it off starts again from one payment.
+    maxPayments: recurrence.maxPayments === null ? '1' : String(recurrence.maxPayments),
     applyFrom: 'next_month',
     isSubscription: recurrence.isSubscription,
     serviceSlug: recurrence.serviceSlug ?? OTHER_SERVICE,

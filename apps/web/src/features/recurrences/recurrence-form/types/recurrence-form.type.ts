@@ -20,6 +20,9 @@ export type RecurrenceFormValues = {
   toleranceDays: string;
   /** Only "Dia fixo" uses it: what happens when the day falls on a weekend or a holiday. */
   nonBusinessDayShift: Recurrence.NonBusinessDayShift;
+  /** "Quantas vierem": no limit of payments in the month (saved as `maxPayments: null`). */
+  anyPayments: boolean;
+  /** From 1 to 5, kept as text. Only read while `anyPayments` is off. */
   maxPayments: string;
   applyFrom: Recurrence.ApplyFrom;
   /** "É assinatura" (BR-REC-017). Only an expense can be one. */

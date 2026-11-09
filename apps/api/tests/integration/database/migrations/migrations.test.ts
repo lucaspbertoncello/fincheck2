@@ -136,7 +136,7 @@ describe('database migrations', () => {
       undone++;
     }
 
-    expect(undone).toBe(10);
+    expect(undone).toBe(11);
     expect(await listTables()).toEqual([]);
   }, 30_000);
 

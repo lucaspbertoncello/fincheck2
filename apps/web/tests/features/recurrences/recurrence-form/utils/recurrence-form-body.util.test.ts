@@ -46,6 +46,26 @@ describe('buildCreateBody', () => {
     expect(around.status === 'ok' && around.body.dateRule.nonBusinessDayShift).toBeNull();
   });
 
+  it('sends maxPayments null for "Quantas vierem", whatever number is left in the field', () => {
+    const result = buildCreateBody({ ...filled, anyPayments: true, maxPayments: '3' });
+
+    expect(result.status === 'ok' && result.body.maxPayments).toBeNull();
+  });
+
+  it('sends the number when "Quantas vierem" is off, and refuses 0 and 6 under the number field', () => {
+    const three = buildCreateBody({ ...filled, maxPayments: '3' });
+    const six = buildCreateBody({ ...filled, maxPayments: '6' });
+    const hidden = buildCreateBody({ ...filled, anyPayments: true, maxPayments: '6' });
+
+    expect(three.status === 'ok' && three.body.maxPayments).toBe(3);
+    expect(six).toEqual({
+      status: 'invalid',
+      errors: { maxPayments: 'Informe de 1 a 5 pagamentos.' },
+    });
+    // The number is not read while "Quantas vierem" is on.
+    expect(hidden.status).toBe('ok');
+  });
+
   it('sends the extract name when it was typed', () => {
     const result = buildCreateBody({ ...filled, matchText: ' G PRADO ' });
 
@@ -134,6 +154,57 @@ describe('buildUpdateBody', () => {
       matchText: null,
       dateRule: { type: 'business_day', day: null, businessDayNumber: 5, toleranceDays: null },
     });
+  });
+});
+
+describe('"Quantas vierem" when editing', () => {
+  const numbered = createTestRecurrence({ maxPayments: 2 });
+  const any = createTestRecurrence({ maxPayments: null });
+
+  it('opens marked for a saved null, and with the number for a saved number', () => {
+    expect(buildFormValues(any)).toMatchObject({ anyPayments: true, maxPayments: '1' });
+    expect(buildFormValues(numbered)).toMatchObject({ anyPayments: false, maxPayments: '2' });
+  });
+
+  it('says "unchanged" for each one when nothing moved', () => {
+    expect(buildUpdateBody(buildFormValues(any), any)).toEqual({ status: 'unchanged' });
+    expect(buildUpdateBody(buildFormValues(numbered), numbered)).toEqual({ status: 'unchanged' });
+  });
+
+  it('sends null when a number becomes "Quantas vierem"', () => {
+    const result = buildUpdateBody({ ...buildFormValues(numbered), anyPayments: true }, numbered);
+
+    expect(result).toEqual({
+      status: 'ok',
+      body: { maxPayments: null, applyFrom: 'next_month' },
+    });
+  });
+
+  it('sends the number when "Quantas vierem" becomes a number, even the one it had before', () => {
+    const result = buildUpdateBody(
+      { ...buildFormValues(any), anyPayments: false, maxPayments: '1' },
+      any,
+    );
+
+    expect(result).toEqual({
+      status: 'ok',
+      body: { maxPayments: 1, applyFrom: 'next_month' },
+    });
+  });
+
+  it('points at the number field when it is emptied or out of 1 to 5, instead of failing mute', () => {
+    for (const maxPayments of ['', '0', '6']) {
+      expect(buildUpdateBody({ ...buildFormValues(numbered), maxPayments }, numbered)).toEqual({
+        status: 'invalid',
+        errors: { maxPayments: 'Informe de 1 a 5 pagamentos.' },
+      });
+    }
+  });
+
+  it('sends nothing about it when "Quantas vierem" stays on, though the hidden number changed', () => {
+    const result = buildUpdateBody({ ...buildFormValues(any), maxPayments: '4' }, any);
+
+    expect(result).toEqual({ status: 'unchanged' });
   });
 });
 

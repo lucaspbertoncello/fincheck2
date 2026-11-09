@@ -195,4 +195,47 @@ describe('review queue: recurrence candidates (mock vs api 65)', () => {
     recurrence.pausedAt = '2026-01-01T00:00:00.000Z';
     expect((await itemOf(record)).recurrenceCandidates).toEqual([]);
   });
+
+  it('keeps offering "Quantas vierem" after as many payments as a numbered one would take', async () => {
+    const { recurrence, record: occurrence, dto } = await openOccurrence();
+    const income = recurrence.kind === 'income';
+    const amount = income ? dto.expectedAmountCents : -dto.expectedAmountCents;
+    for (const [index, maxPayments] of [1, null].entries()) {
+      recurrence.maxPayments = maxPayments;
+      occurrence.payments = [];
+      const paid = addToReview(`${recurrence.matchText} PARCELA`, income ? 100 : -100, {
+        occurredOn: dto.windowStartOn,
+      });
+      occurrence.payments.push({
+        id: crypto.randomUUID(),
+        transactionId: paid.id,
+        amountCents: 100,
+        occurredOn: dto.windowStartOn,
+        linkedBy: 'user',
+      });
+      const record = addToReview(`${recurrence.matchText} PAGAMENTO ${String(index)}`, amount, {
+        occurredOn: dto.windowStartOn,
+      });
+
+      const offered = (await itemOf(record)).recurrenceCandidates.map((item) => item.occurrenceId);
+
+      // One payment is all a limit of 1 takes; "Quantas vierem" has no limit.
+      expect(offered.includes(dto.id)).toBe(maxPayments === null);
+    }
+  });
+
+  it('offers "Quantas vierem" for any value from the sender, even a tenth of the amount', async () => {
+    const { recurrence, dto } = await openOccurrence();
+    const income = recurrence.kind === 'income';
+    // Near neither the expected amount, nor what is left, nor a part of it.
+    const small = Math.max(1, Math.round(dto.expectedAmountCents / 10));
+    recurrence.maxPayments = null;
+    const record = addToReview(`${recurrence.matchText} PIX`, income ? small : -small, {
+      occurredOn: dto.windowStartOn,
+    });
+
+    expect((await itemOf(record)).recurrenceCandidates.map((item) => item.occurrenceId)).toEqual([
+      dto.id,
+    ]);
+  });
 });

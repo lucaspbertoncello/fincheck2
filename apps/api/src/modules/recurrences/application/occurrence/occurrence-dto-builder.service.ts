@@ -77,6 +77,7 @@ export class OccurrenceDtoBuilder {
         today,
         differenceDecision: occurrence.differenceDecision,
         amountMode: recurrence.amountMode,
+        acceptsExcess: recurrence.maxPayments === null,
       });
 
       return { occurrence, recurrence, counted, state };

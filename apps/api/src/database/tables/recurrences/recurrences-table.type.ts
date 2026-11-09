@@ -17,7 +17,7 @@ export interface RecurrencesTable {
   employment_regime: 'clt' | 'pj' | 'other' | null;
   is_subscription: number;
   service_slug: string | null;
-  max_payments: number;
+  max_payments: number | null;
   starts_month: string;
   paused_at: string | null;
   archived_at: string | null;

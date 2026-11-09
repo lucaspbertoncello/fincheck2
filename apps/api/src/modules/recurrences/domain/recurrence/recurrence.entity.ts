@@ -38,7 +38,9 @@ export class Recurrence {
   isSubscription: boolean;
   serviceSlug: SubscriptionService.Slug | null;
   dateRule: DateRule;
-  maxPayments: number;
+  // 1 to 5 payments in the month, or `null` for "as many as come": no limit, the month adds up what
+  // arrives until the expected amount is reached and the rest shows as received over.
+  maxPayments: number | null;
   startsMonth: Month;
   pausedAt: string | null;
   archivedAt: string | null;
@@ -93,7 +95,8 @@ export class Recurrence {
       isSubscription,
       serviceSlug: input.serviceSlug ?? null,
       dateRule: input.dateRule,
-      maxPayments: input.maxPayments ?? 1,
+      // Left out is one payment; `null` is "as many as come".
+      maxPayments: input.maxPayments === undefined ? 1 : input.maxPayments,
       startsMonth: input.startsMonth,
       pausedAt: null,
       archivedAt: null,
@@ -246,7 +249,7 @@ export namespace Recurrence {
     isSubscription: boolean;
     serviceSlug: SubscriptionService.Slug | null;
     dateRule: DateRule;
-    maxPayments: number;
+    maxPayments: number | null;
     startsMonth: Month;
     pausedAt: string | null;
     archivedAt: string | null;
@@ -268,7 +271,7 @@ export namespace Recurrence {
     isSubscription?: boolean | undefined;
     serviceSlug?: SubscriptionService.Slug | null | undefined;
     dateRule: DateRule;
-    maxPayments?: number | undefined;
+    maxPayments?: number | null | undefined;
     startsMonth: Month;
   };
 
@@ -286,7 +289,7 @@ export namespace Recurrence {
     isSubscription?: boolean | undefined;
     serviceSlug?: SubscriptionService.Slug | null | undefined;
     dateRule?: DateRule | undefined;
-    maxPayments?: number | undefined;
+    maxPayments?: number | null | undefined;
     startsMonth?: Month | undefined;
   };
 

@@ -124,6 +124,25 @@ describe('POST /recurrences', () => {
     expect(await occurrencesOf('2026-11')).toHaveLength(1);
   });
 
+  it('takes maxPayments null as "as many as come", answers it null and reads it back null', async () => {
+    const { recurrence } = await world.create({
+      kind: 'income',
+      name: 'Mesada + VR',
+      dateRule: { type: 'any_day' },
+      maxPayments: null,
+    });
+
+    expect(recurrence.maxPayments).toBeNull();
+    const response = await world.send('GET', `/recurrences/${recurrence.id}`);
+    expect(await response.json()).toMatchObject({ id: recurrence.id, maxPayments: null });
+    const row = await world.database.db
+      .selectFrom('recurrences')
+      .select('max_payments')
+      .where('id', '=', recurrence.id)
+      .executeTakeFirstOrThrow();
+    expect(row.max_payments).toBeNull();
+  });
+
   it('answers a null occurrence when the first month is after the current one', async () => {
     const { occurrence } = await world.create({ startsMonth: '2026-12' });
 

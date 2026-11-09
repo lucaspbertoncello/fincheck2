@@ -24,7 +24,13 @@ export const employmentRegimeSchema = z.enum(EMPLOYMENT_REGIMES);
 export const nonBusinessDayShiftSchema = z.enum(NON_BUSINESS_DAY_SHIFTS);
 export const applyFromSchema = z.enum(['next_month', 'current_month']);
 
-const maxPaymentsSchema = z.int().min(MAX_PAYMENTS_LIMITS.min).max(MAX_PAYMENTS_LIMITS.max);
+// A number from 1 to 5, or `null` for "as many as come": the month adds up what arrives until the
+// expected amount is reached, and whatever passes it shows as received over.
+const maxPaymentsSchema = z
+  .int()
+  .min(MAX_PAYMENTS_LIMITS.min)
+  .max(MAX_PAYMENTS_LIMITS.max)
+  .nullable();
 
 // The five fields are always in the answer, `null` in the ones the rule does not use. In the body a
 // missing `nonBusinessDayShift` is `null`, which `fixed_day` reads as `none` (the answer says `none`).

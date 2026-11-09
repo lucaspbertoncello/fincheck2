@@ -528,6 +528,67 @@ describe('what the round does to the nature, the category and the recurrences of
       expect(linked[0]?.transaction_id).toBe((await rowNamed(CHECKING, 'Mensalidade')).id);
     });
 
+    describe('"Quantas vierem" (maxPayments null)', () => {
+      const pix = (id: string, cents: number, on: string, counterparty = 'Pai') =>
+        buildTestBankTransaction({
+          id,
+          description: 'Pix recebido',
+          amountCents: cents,
+          occurredOn: on,
+          method: 'pix',
+          counterparty,
+        });
+
+      it('ties every Pix of the sender in the same round, whatever its size, until the month is confirmed', async () => {
+        await createRecurrence({
+          kind: 'income',
+          name: 'Mesada + VR',
+          expectedAmountCents: 127002,
+          maxPayments: null,
+          matchText: 'PAI',
+          dateRule: { type: 'any_day' },
+        });
+        world.provider.transactions.set(CHECKING, [
+          pix('p1', 25000, '2026-11-02'),
+          pix('p2', 10000, '2026-11-03'),
+          pix('p3', 40000, '2026-11-04'),
+          pix('p4', 30000, '2026-11-05'),
+          pix('p5', 17000, '2026-11-06'),
+          // 122.000 so far: this one still links and takes the month past the expected amount.
+          pix('p6', 20000, '2026-11-07'),
+          // The month is confirmed now: a new Pix does not link by itself, only by hand.
+          pix('p7', 5000, '2026-11-08'),
+          pix('other', 25000, '2026-11-03', 'Loja X'),
+        ]);
+
+        await world.connect();
+
+        const linked = await payments();
+        expect(linked.map((payment) => payment.amount_cents).toSorted((a, b) => a - b)).toEqual([
+          10000, 17000, 20000, 25000, 30000, 40000,
+        ]);
+        expect(linked.every((payment) => payment.linked_by === 'auto')).toBe(true);
+      });
+
+      it('without a sender only the exact value is tied', async () => {
+        await createRecurrence({
+          kind: 'income',
+          name: 'Mesada + VR',
+          expectedAmountCents: 127002,
+          maxPayments: null,
+          dateRule: { type: 'any_day' },
+        });
+        world.provider.transactions.set(CHECKING, [
+          pix('p1', 25000, '2026-11-02'),
+          pix('p2', 127002, '2026-11-03'),
+        ]);
+
+        await world.connect();
+
+        expect((await payments()).map((payment) => payment.amount_cents)).toEqual([127002]);
+      });
+    });
+
     it('with no recurrence nothing is tied', async () => {
       world.provider.transactions.set(CHECKING, [
         buildTestBankTransaction({ id: 'g1', amountCents: -10990 }),

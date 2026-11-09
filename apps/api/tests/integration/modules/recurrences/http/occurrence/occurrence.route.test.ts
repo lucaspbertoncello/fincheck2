@@ -769,6 +769,85 @@ describe('occurrence routes', () => {
       }
     });
 
+    describe('"Quantas vierem" (maxPayments null)', () => {
+      const incomeWithExcess = async (maxPayments: number | null) => {
+        const created = await world.create({
+          kind: 'income',
+          name: 'Mesada + VR',
+          expectedAmountCents: 85000,
+          maxPayments,
+          dateRule: { type: 'any_day' },
+        });
+        for (const [cents, on] of [
+          [42500, '2026-10-03'],
+          [42500, '2026-10-10'],
+          [20000, '2026-10-15'],
+        ] as const) {
+          const transactionId = await insertTestIncome(world.database.db, world.checking, {
+            cents,
+            on,
+          });
+          expect((await link(created.occurrence?.id ?? '', transactionId)).status).toBe(201);
+        }
+
+        return created;
+      };
+      const readOccurrence = async (id: string | undefined) =>
+        (await listOf('2026-10')).find((item) => item.id === id);
+
+      it('422 OCCURRENCE_NO_DIFFERENCE for the excess: it is received over, there is nothing to answer', async () => {
+        const { occurrence } = await incomeWithExcess(null);
+
+        await world.expectError(
+          await post(`/occurrences/${occurrence?.id}/difference`, { decision: 'keep' }),
+          422,
+          'OCCURRENCE_NO_DIFFERENCE',
+        );
+        expect(await readOccurrence(occurrence?.id)).toMatchObject({
+          status: 'confirmed',
+          receivedCents: 105000,
+          remainingCents: 0,
+          difference: null,
+          needsAttention: false,
+        });
+      });
+
+      it('changing the mode reads the same occurrence again: the question goes away and comes back, because the state is derived from the recurrence as it is now', async () => {
+        const { recurrence, occurrence } = await incomeWithExcess(3);
+        expect(await readOccurrence(occurrence?.id)).toMatchObject({
+          difference: { amountCents: 20000, decision: null },
+          needsAttention: true,
+        });
+
+        await world.send('PATCH', `/recurrences/${recurrence.id}`, { maxPayments: null });
+        expect(await readOccurrence(occurrence?.id)).toMatchObject({
+          receivedCents: 105000,
+          difference: null,
+          needsAttention: false,
+        });
+
+        await world.send('PATCH', `/recurrences/${recurrence.id}`, { maxPayments: 3 });
+        expect(await readOccurrence(occurrence?.id)).toMatchObject({
+          difference: { amountCents: 20000, decision: null },
+          needsAttention: true,
+        });
+      });
+
+      it('an answer given while the recurrence was numbered is kept for when it comes back to a number', async () => {
+        const { recurrence, occurrence } = await incomeWithExcess(3);
+        await post(`/occurrences/${occurrence?.id}/difference`, { decision: 'keep' });
+
+        await world.send('PATCH', `/recurrences/${recurrence.id}`, { maxPayments: null });
+        expect((await readOccurrence(occurrence?.id))?.difference).toBeNull();
+
+        await world.send('PATCH', `/recurrences/${recurrence.id}`, { maxPayments: 2 });
+        expect(await readOccurrence(occurrence?.id)).toMatchObject({
+          difference: { amountCents: 20000, decision: 'kept' },
+          needsAttention: false,
+        });
+      });
+    });
+
     it('an update of a deleted recurrence records the answer and leaves the recurrence alone', async () => {
       const { occurrence, recurrence } = await withDifference();
       await world.send('DELETE', `/recurrences/${recurrence.id}`);

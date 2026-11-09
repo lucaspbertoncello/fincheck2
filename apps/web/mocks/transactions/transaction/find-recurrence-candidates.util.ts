@@ -45,7 +45,11 @@ export function findRecurrenceCandidates(
     if (!recurrence || recurrence.pausedAt || recurrence.archivedAt) continue;
     const occurrence = presentOccurrence(database, record);
     if (!['expected', 'partial', 'late'].includes(occurrence.status)) continue;
-    if (occurrence.kind !== kind || occurrence.payments.length >= recurrence.maxPayments) continue;
+    if (occurrence.kind !== kind) continue;
+    // `maxPayments` null is "Quantas vierem": no limit of payments.
+    if (recurrence.maxPayments !== null && occurrence.payments.length >= recurrence.maxPayments) {
+      continue;
+    }
     if (occurrence.windowStartOn > tx.occurredOn) continue;
     if (occurrence.status !== 'late' && tx.occurredOn > occurrence.windowEndOn) continue;
     const kept = oldestByRecurrence.get(occurrence.recurrenceId);
@@ -57,17 +61,21 @@ export function findRecurrenceCandidates(
     const recurrence = database.recurrences.find((item) => item.id === occurrence.recurrenceId);
     if (!recurrence) return [];
     if (recurrence.matchText !== null && !text.includes(recurrence.matchText)) return [];
-    const { matches, exact } = amountMatch(amount, [
-      occurrence.expectedAmountCents,
-      occurrence.remainingCents,
-      Math.ceil(occurrence.expectedAmountCents / recurrence.maxPayments),
-    ]);
+    // "Quantas vierem" has no "one part" value: only what is expected and what is left.
+    const targets = [occurrence.expectedAmountCents, occurrence.remainingCents];
+    if (recurrence.maxPayments !== null) {
+      targets.push(Math.ceil(occurrence.expectedAmountCents / recurrence.maxPayments));
+    }
+    const { matches, exact } = amountMatch(amount, targets);
+
+    // Without a sender only the exact value counts; "Quantas vierem" with one takes any value.
+    const anyValue = recurrence.maxPayments === null && recurrence.matchText !== null;
 
     return [
       {
         occurrence,
         hasSender: recurrence.matchText !== null,
-        matches: recurrence.matchText === null ? exact : matches,
+        matches: anyValue || (recurrence.matchText === null ? exact : matches),
         exact,
       },
     ];
