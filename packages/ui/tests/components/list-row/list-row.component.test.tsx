@@ -94,6 +94,59 @@ describe('ListRow', () => {
     expect(html).toContain('aria-label="Editar Internet Fibra"');
   });
 
+  it('never underlines the name on hover; only the keyboard focus does', () => {
+    const html = render({ onOpen: () => undefined, openLabel: 'Abrir Internet Fibra' });
+    const button = /<button[^>]*class="([^"]*)"/.exec(html);
+
+    expect(button?.[1]).not.toMatch(/hover[^ ]*underline|(^| )underline( |$)/);
+    expect(html).not.toContain('group-hover/row:underline');
+    expect(button?.[1]).toContain('focus-visible:underline');
+  });
+
+  it('draws the hover background on a layer that bleeds 8 px past the row, behind the content', () => {
+    const html = render({ onOpen: () => undefined, openLabel: 'Abrir Internet Fibra' });
+    const row = /<li class="([^"]*)"/.exec(html)?.[1] ?? '';
+
+    expect(row).toContain('before:-inset-x-s8');
+    expect(row).toContain('before:inset-y-0');
+    expect(row).toContain('before:-z-10');
+    expect(row).toContain('before:rounded-input');
+    expect(row).toContain('isolate');
+    expect(row).toContain('hover:before:bg-subtle');
+    // the row itself carries no background and no horizontal padding: the content keeps its alignment
+    expect(row).not.toMatch(/(^| )(bg-subtle|px-s\d+|-mx-s\d+)( |$)/);
+    // the focus ring draws inside the layer, so a clipping parent never cuts it
+    expect(row).toContain('has-[:focus-visible]:before:-outline-offset-2');
+    // the name button stretches over the layer too, so a click on the inset also opens the row
+    expect(html).toContain('after:-inset-x-s8');
+  });
+
+  it('keeps the "…" button and the mark inside the background: no negative margin on the menu', () => {
+    const html = render({ menu: <button type="button">MENU</button> });
+    const menu = /<div class="([^"]*)"><button type="button">MENU/.exec(html)?.[1] ?? '';
+
+    expect(menu).toContain('col-start-4');
+    expect(menu).not.toMatch(/-mr-s\d+/);
+    expect(menu).not.toMatch(/-ml-s\d+/);
+  });
+
+  it('a selected row paints brand-weak on the same bleeding layer, with no hover background over it', () => {
+    const html = render({ selected: true });
+    const row = /<li class="([^"]*)"/.exec(html)?.[1] ?? '';
+
+    expect(row).toContain('before:-inset-x-s8');
+    expect(row).toContain('before:bg-brand-weak');
+    expect(row).not.toContain('hover:before:bg-subtle');
+    expect(row).not.toMatch(/(^| )bg-brand-weak( |$)/);
+  });
+
+  it('has no background layer when the row neither opens nor is selected', () => {
+    const row = /<li class="([^"]*)"/.exec(render())?.[1] ?? '';
+
+    expect(row).not.toContain('before:');
+    expect(row).not.toContain('isolate');
+  });
+
   it('keeps the same layout on the phone: no breakpoint changes the columns', () => {
     const html = render({ actions: <button type="button">Ok</button> });
 

@@ -73,11 +73,11 @@ export function TransactionRow({
     >
       <span
         aria-hidden="true"
-        className="ml-12 block h-px bg-line group-first/row:hidden group-data-[selected]/row:hidden group-data-[selection]/row:ml-22 lg:ml-13 lg:group-data-[selection]/row:ml-23"
+        className="ml-12 block h-px bg-line group-first/row:hidden group-data-[selected]/row:hidden group-data-[selection]/row:ml-21 lg:ml-13 lg:group-data-[selection]/row:ml-22"
       />
       <ul className="m-0 flex list-none flex-col p-0">
         <ListRow
-          className={cx(selected && 'rounded-input bg-brand-weak')}
+          selected={selected}
           mark={
             <span className="flex items-center gap-s12">
               {selectionMode ? (
@@ -85,7 +85,7 @@ export function TransactionRow({
                   isSelected={selected}
                   onChange={(next) => onSelectedChange?.(id, next)}
                   ariaLabel={`Selecionar ${name}`}
-                  className="-my-s8 -mr-s8 -ml-s8"
+                  className="-my-s8 -mr-s8 -ml-s12"
                 />
               ) : null}
               <CategoryIcon

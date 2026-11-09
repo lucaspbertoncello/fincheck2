@@ -162,6 +162,46 @@ export const RECURRENCES_SECTIONS: GallerySectionDef[] = [
           </ul>
         </GalleryVariant>
         <GalleryVariant
+          caption="o nome abre (passe o mouse: fundo com 8 de respiro, sem sublinhado) e uma linha selecionada: ícone e menu a 8 da borda do fundo"
+          width={820}
+        >
+          <ul className="m-0 list-none divide-y divide-line p-0">
+            <ListRow
+              mark={<CategoryIcon icon="wifi" type="expense" />}
+              name="Internet Fibra Norte"
+              onOpen={noop}
+              openLabel="Abrir Internet Fibra Norte"
+              detail="Todo dia 20 · Banco Aurora, crédito"
+              value={
+                <Money
+                  cents={11990}
+                  sign="minus"
+                  signColumn
+                  weight="plain"
+                  className="text-money-row"
+                />
+              }
+              menu={MENU}
+            />
+            <ListRow
+              mark={<CategoryIcon icon="house" type="expense" />}
+              name="Aluguel"
+              selected
+              detail="Todo dia 5 · Banco Aurora, débito"
+              value={
+                <Money
+                  cents={250000}
+                  sign="minus"
+                  signColumn
+                  weight="plain"
+                  className="text-money-row"
+                />
+              }
+              menu={MENU}
+            />
+          </ul>
+        </GalleryVariant>
+        <GalleryVariant
           caption="375: a mesma linha, nome longo truncado com title, dois selos"
           width={375}
         >

@@ -14,7 +14,7 @@ type CollapseProps = {
    * it takes no room at all.
    */
   trackClassName?: string;
-  /** The clipping box. Anything that must not be cut (a focus ring) bleeds through the 4 px gutter. */
+  /** The clipping box. Anything that must not be cut (a focus ring, the 8 px background of a `ListRow`) bleeds through the 8 px gutter. */
   className?: string;
   /** The content box: put the space between the trigger and the content here (`pt-*`), never outside. */
   contentClassName?: string;
@@ -82,14 +82,14 @@ export function Collapse({
         trackClassName,
       )}
     >
-      <div className={cx('-mx-s4 min-h-0 overflow-hidden', className)}>
+      <div className={cx('-mx-s8 min-h-0 overflow-hidden', className)}>
         <div
           ref={contentRef}
           id={id}
           inert={!isOpen}
           aria-hidden={isOpen ? undefined : true}
           className={cx(
-            'px-s4 transition-opacity duration-(--duration-slide) ease-(--ease-standard)',
+            'px-s8 transition-opacity duration-(--duration-slide) ease-(--ease-standard)',
             isOpen ? 'opacity-100' : 'opacity-0',
             contentClassName,
           )}

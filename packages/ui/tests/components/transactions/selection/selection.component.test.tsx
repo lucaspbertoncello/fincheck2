@@ -35,6 +35,34 @@ describe('SelectionBar', () => {
     expect(html).toContain('aria-label="Sair da seleção"');
   });
 
+  it('sits above the bottom navigation on the phone and keeps the desktop offset', () => {
+    const html = renderToStaticMarkup(<SelectionBar count={2} onAction={noop} onClose={noop} />);
+
+    expect(html).toContain(
+      'bottom-[calc(var(--spacing-bottom-nav)+env(safe-area-inset-bottom)+var(--space-16))]',
+    );
+    expect(html).toContain('lg:bottom-s24');
+    expect(html).not.toContain(' bottom-s16');
+  });
+
+  it('never wraps the counter and leaves room for "999 selecionadas" in 343 px on the phone', () => {
+    const html = renderToStaticMarkup(<SelectionBar count={999} onAction={noop} onClose={noop} />);
+    const counter = /<p[^>]*class="([^"]*)"/.exec(html)?.[1] ?? '';
+    const bar = /<div[^>]*role="toolbar"[^>]*class="([^"]*)"/.exec(html)?.[1] ?? '';
+
+    expect(counter).toContain('whitespace-nowrap');
+    expect(counter).toContain('shrink-0');
+    // phone budget: 343 - 2 (border) - 16 (bar padding) = 325 for counter, 3 x 44 icons, close 44 and gaps
+    expect(bar).toContain('gap-s4');
+    expect(bar).toContain('lg:gap-s12');
+    expect(counter).toContain('px-s4');
+    expect(counter).toContain('lg:px-s8');
+    // icon buttons stay 44 wide on the phone with less side padding; the desktop keeps its 12
+    expect(html).toContain('min-w-ctl-touch');
+    expect(html).toContain('px-s8');
+    expect(html).toContain('lg:px-s12');
+  });
+
   it('uses the singular for one row', () => {
     const html = renderToStaticMarkup(<SelectionBar count={1} onAction={noop} onClose={noop} />);
 

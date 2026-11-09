@@ -16,7 +16,7 @@
   --color-surface-field: oklch(0.99 0.002 170);   /* #fafcfb */
   --color-surface-nav-mobile: oklch(1 0 0 / 0.8);   /* #ffffffcc */
   --color-surface-segment-indicator: oklch(1 0 0 / 0.72);   /* #ffffffb8 */
-  --color-surface-selection-bar: oklch(1 0 0 / 0.72);   /* #ffffffb8 */
+  --color-surface-selection-bar: oklch(1 0 0 / 0.97);   /* #fffffff7 */
   --color-overlay-scrim: oklch(0.2 0.02 190 / 0.35);   /* #0b191859 */
   --color-border-default: oklch(0.25 0.03 180 / 0.1);   /* #1026221a */
   --color-text-primary: oklch(0.22 0.02 190);   /* #0f1e1d */
@@ -199,7 +199,7 @@
   --color-surface-field: oklch(0.19 0.01 195);   /* #0f1515 */
   --color-surface-nav-mobile: oklch(0.2 0.012 190 / 0.85);   /* #101817d9 */
   --color-surface-segment-indicator: oklch(1 0 0 / 0.12);   /* #ffffff1f */
-  --color-surface-selection-bar: oklch(0.25 0.015 185 / 0.55);   /* #1a24228c */
+  --color-surface-selection-bar: oklch(0.25 0.015 185 / 0.97);   /* #1a2422f7 */
   --color-overlay-scrim: oklch(0.2 0.02 190 / 0.35);   /* #0b191859 */
   --color-border-default: oklch(1 0 0 / 0.09);   /* #ffffff17 */
   --color-text-primary: oklch(0.95 0.005 190);   /* #ebf0ef */

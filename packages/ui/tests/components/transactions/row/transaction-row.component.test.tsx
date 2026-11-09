@@ -198,8 +198,23 @@ describe('TransactionRow', () => {
 
     expect(html).toContain('type="checkbox"');
     expect(html).toContain('aria-label="Selecionar Padaria Estrela"');
-    expect(html).toContain('bg-brand-weak');
+    expect(html).toContain('before:bg-brand-weak');
+    expect(html).toContain('before:-inset-x-s8');
     expect(html).toContain('data-selected="true"');
+  });
+
+  it('keeps the checkbox and the "…" inside the selected background and the divider on the text', () => {
+    const html = row({}, { selectionMode: true, selected: true });
+    const checkbox = /<label[^>]*class="([^"]*)"/.exec(html)?.[1] ?? '';
+
+    // the checkbox box sits at the same inset as the category icon (no extra negative margin)
+    expect(checkbox).toContain('-ml-s12');
+    expect(checkbox).not.toContain('-ml-s8');
+    // the "…" has no negative margin: its hover circle stays inside the row
+    expect(html).not.toMatch(/col-start-4[^"]*-mr-s8/);
+    // the divider of the row starts where the text starts: icon + checkbox + gaps
+    expect(html).toContain('group-data-[selection]/row:ml-21');
+    expect(html).toContain('lg:group-data-[selection]/row:ml-22');
   });
 
   it('has no checkbox outside selection mode', () => {

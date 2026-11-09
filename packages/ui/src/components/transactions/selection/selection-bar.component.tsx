@@ -23,7 +23,7 @@ type SelectionBarProps = {
 
 /**
  * Floating action bar of the selection mode (components.md 7): glass, radius 16, sticky at the foot
- * of the visible area, never a page footer. On the phone only the 22 px icons show; the labels stay
+ * of the visible area (above the bottom navigation on the phone), never a page footer. On the phone only the 22 px icons show; the labels stay
  * for screen readers. While it is open the shell hides the floating "+" (it matches
  * `[data-selection-bar]`), because the bar and the "+" share the bottom edge and the selection
  * actions replace creating something new.
@@ -35,12 +35,15 @@ export function SelectionBar({ count, onAction, onClose, className }: SelectionB
       data-selection-bar
       aria-label="Ações para as transações selecionadas"
       className={cx(
-        'sticky bottom-s16 z-(--z-raised) mx-s16 flex items-center justify-between gap-s8 rounded-panel border border-line bg-selection-bar px-s8 py-s4 shadow-(--shadow-bulk-bar) backdrop-blur-(--blur-selection-bar) backdrop-saturate-150',
+        'sticky bottom-[calc(var(--spacing-bottom-nav)+env(safe-area-inset-bottom)+var(--space-16))] z-(--z-raised) mx-s16 flex items-center justify-between gap-s4 rounded-panel border border-line bg-selection-bar px-s8 py-s4 shadow-(--shadow-bulk-bar) backdrop-blur-(--blur-selection-bar) backdrop-saturate-150',
         'lg:bottom-s24 lg:mx-auto lg:w-fit lg:justify-start lg:gap-s12',
         className,
       )}
     >
-      <p aria-live="polite" className="px-s8 text-list text-fg-primary">
+      <p
+        aria-live="polite"
+        className="shrink-0 px-s4 text-list whitespace-nowrap text-fg-primary lg:px-s8"
+      >
         <span className="font-emphasis tabular-nums">{count}</span>{' '}
         {count === 1 ? 'selecionada' : 'selecionadas'}
       </p>
@@ -51,7 +54,7 @@ export function SelectionBar({ count, onAction, onClose, className }: SelectionB
             key={action.key}
             aria-label={action.label}
             onPress={() => onAction(action.key)}
-            className="focus-ring flex min-h-ctl-touch min-w-ctl-touch cursor-pointer items-center justify-center gap-s8 rounded-input px-s12 text-label font-emphasis text-fg-primary transition-colors duration-(--duration-fast) data-[hovered]:bg-subtle data-[pressed]:bg-subtle"
+            className="focus-ring flex min-h-ctl-touch min-w-ctl-touch cursor-pointer items-center justify-center gap-s8 rounded-input px-s8 text-label font-emphasis lg:px-s12 text-fg-primary transition-colors duration-(--duration-fast) data-[hovered]:bg-subtle data-[pressed]:bg-subtle"
           >
             <Icon name={action.icon} size="lg" className="text-brand lg:size-4.5" />
             <span className="sr-only lg:not-sr-only">{action.label}</span>

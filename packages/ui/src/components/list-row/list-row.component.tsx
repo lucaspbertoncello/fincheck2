@@ -33,6 +33,8 @@ type ListRowProps = {
   valueExtra?: ReactNode;
   /** Overflow "…" menu, after the value. Give it to every row of a list or to none. */
   menu?: ReactNode;
+  /** Selected in a selection mode: the row background turns brand-weak (same inset as the hover). */
+  selected?: boolean;
   /** The action strip: its own line under the text, left-aligned with it. */
   actions?: ReactNode;
   /**
@@ -55,6 +57,11 @@ type ListRowProps = {
  * strip of their own under the text. Two badges at most; a long name or detail truncates with a
  * `title`; money, badges and buttons never wrap. The strip sits on the 16 px scale step above the
  * divider. The same layout from 375 px up.
+ *
+ * The hover and selected background is a layer that bleeds 8 px past the row on both
+ * sides (`s8`), behind the content: the mark and the "…" button sit 8 px inside it, the content keeps its
+ * alignment with the page and the dividers (which belong to the row, not to the layer) keep the
+ * column width. The caller's clipping box must leave those 8 px (`Collapse` does).
  */
 export function ListRow({
   mark,
@@ -69,6 +76,7 @@ export function ListRow({
   valueNote,
   valueExtra,
   menu,
+  selected = false,
   actions,
   actionsOpen,
   as: Element = 'li',
@@ -88,9 +96,14 @@ export function ListRow({
       className={cx(
         'grid grid-cols-[auto_minmax(0,1fr)_auto_auto] gap-y-s4 py-s12',
         actions && !foldingStrip ? 'pb-s16' : undefined,
-        // The name button stretches over the whole row: hover and the focus ring draw on the row.
+        // The background layer (`before`) bleeds past the row and sits behind the content; the name
+        // button stretches over it, so hover and the focus ring draw on the layer.
+        (onOpen || selected) &&
+          'relative isolate before:absolute before:-inset-x-s8 before:inset-y-0 before:-z-10 before:rounded-input before:transition-colors before:duration-(--duration-fast) before:content-[""]',
+        onOpen && 'group/row',
+        selected ? 'before:bg-brand-weak' : onOpen && 'hover:before:bg-subtle',
         onOpen &&
-          'group/row relative rounded-input transition-colors duration-(--duration-fast) hover:bg-subtle has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-(--color-focus-ring)',
+          'has-[:focus-visible]:before:outline-2 has-[:focus-visible]:before:-outline-offset-2 has-[:focus-visible]:before:outline-(--color-focus-ring)',
         className,
       )}
     >
@@ -111,7 +124,7 @@ export function ListRow({
             title={name}
             className={cx(
               nameClass,
-              '-mx-s4 cursor-pointer rounded-input px-s4 text-left outline-none group-hover/row:underline after:absolute after:inset-0 after:content-[""]',
+              '-mx-s4 cursor-pointer rounded-input px-s4 text-left outline-none focus-visible:underline after:absolute after:-inset-x-s8 after:inset-y-0 after:content-[""]',
             )}
           >
             {name}
@@ -150,9 +163,7 @@ export function ListRow({
         </div>
       ) : null}
       {menu ? (
-        <div className="relative col-start-4 row-start-1 ml-s12 -mr-s8 -mt-s8 self-start">
-          {menu}
-        </div>
+        <div className="relative col-start-4 row-start-1 ml-s12 -mt-s8 self-start">{menu}</div>
       ) : null}
       {foldingStrip ? (
         <Collapse
