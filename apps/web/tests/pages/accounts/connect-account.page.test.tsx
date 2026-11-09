@@ -1,5 +1,5 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { HttpResponse, http } from 'msw';
+import { HttpResponse, delay, http } from 'msw';
 import { describe, expect, it } from 'vitest';
 
 import { server } from '#mocks/setup/server.util.ts';
@@ -207,5 +207,25 @@ describe('Conectar conta (?new=account)', () => {
     const created = db.accounts.find((item) => item.name === 'Conta do Inter');
     expect(created?.institutionCode).toBe('inter');
     expect(await screen.findByRole('article', { name: 'Conta do Inter' })).toBeInTheDocument();
+  });
+});
+
+describe('Editar conta (?edit=<id>)', () => {
+  it('opens with the account the list already has, without waiting for the account request', async () => {
+    renderApp('/accounts');
+    await screen.findByRole('article', { name: 'Nubank' });
+    const nubank = db.accounts.find((item) => item.name === 'Nubank');
+    expect(nubank).toBeDefined();
+    // The detail request never answers: the form must not depend on it.
+    server.use(http.get('/api/accounts/:id', () => delay('infinite')));
+
+    window.history.pushState({}, '', `/accounts?edit=${nubank?.id}`);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Editar conta' });
+    expect(await within(dialog).findByRole('textbox', { name: 'Nome da conta' })).toHaveValue(
+      'Nubank',
+    );
+    expect(within(dialog).getByRole('button', { name: 'Salvar' })).toBeEnabled();
   });
 });
