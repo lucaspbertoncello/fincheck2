@@ -2,6 +2,7 @@ import { dirname } from 'node:path';
 
 import { serve } from '@hono/node-server';
 
+import { recoverInterruptedSwap } from '#/database/recover-interrupted-swap.util.ts';
 import { createSqliteClient } from '#/database/sqlite.client.ts';
 import { migrateToLatest } from '#/database/migrate-to-latest.util.ts';
 import { buildApi } from '#/main/build-api.util.ts';
@@ -9,6 +10,8 @@ import { API_HOSTNAME } from '#/shared/config/api-hostname.constant.ts';
 import { env } from '#/shared/config/env.config.ts';
 import { resolveLocalToken } from '#/shared/local-token/resolve-local-token.util.ts';
 
+// A restore that died between its two file moves leaves no database: put the old one back first.
+recoverInterruptedSwap(env.DATABASE_FILE);
 const db = createSqliteClient(env.DATABASE_FILE);
 await migrateToLatest(db);
 

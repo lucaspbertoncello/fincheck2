@@ -3,11 +3,13 @@ import { z } from 'zod';
 import { instantSchema } from '../../common/date/date.schema.ts';
 import { backupFileNameSchema } from '../backup-file/backup-file.schema.ts';
 
-// These codes only appear inside `lastError`; they are not HTTP answers.
+// These codes only appear inside `lastError`; they are not HTTP answers. `RESTORE_FAILED`: a restore
+// answered 202 and the swap of the file failed afterwards (the old database is back).
 export const backupErrorCodeSchema = z.enum([
   'BACKUP_FOLDER_INVALID',
   'BACKUP_DISK_FULL',
   'BACKUP_FAILED',
+  'RESTORE_FAILED',
 ]);
 
 export const backupLastBackupDtoSchema = z.object({

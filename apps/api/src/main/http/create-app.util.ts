@@ -1,6 +1,4 @@
-import type { Kysely } from 'kysely';
-
-import type { Database } from '#/database/database.type.ts';
+import type { ReplaceableDatabase } from '#/database/replaceable/replaceable-database.client.ts';
 import { createAppParts } from '#/main/http/create-app-parts.util.ts';
 import type { Clock } from '#/shared/clock/clock.interface.ts';
 import { SystemClock } from '#/shared/clock/system-clock.service.ts';
@@ -12,7 +10,7 @@ export function createApp({
   localToken,
   clock = new SystemClock(),
 }: {
-  db: Kysely<Database>;
+  db: ReplaceableDatabase;
   localToken: string;
   clock?: Clock;
 }) {

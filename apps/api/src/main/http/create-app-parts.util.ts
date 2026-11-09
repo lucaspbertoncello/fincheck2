@@ -1,11 +1,11 @@
 import type { ApiError } from '@fincheck/shared/common/api-error/api-error.type.ts';
 import { Hono } from 'hono';
-import type { Kysely } from 'kysely';
 
-import type { Database } from '#/database/database.type.ts';
+import type { ReplaceableDatabase } from '#/database/replaceable/replaceable-database.client.ts';
 import { KyselyUnitOfWork } from '#/database/unit-of-work/kysely-unit-of-work.service.ts';
 import { handleError } from '#/main/http/handle-error.util.ts';
 import { createLocalTokenMiddleware } from '#/main/http/middlewares/local-token.middleware.ts';
+import { createBackupModule } from '#/main/http/create-backup-module.util.ts';
 import { createCategoriesModule } from '#/main/http/create-categories-module.util.ts';
 import { composeLinkedTransactionReaders } from '#/main/http/compose-linked-transaction-readers.util.ts';
 import { createBillsModule } from '#/main/http/create-bills-module.util.ts';
@@ -47,11 +47,14 @@ import { ListAccountsController } from '#/modules/accounts/http/account/list-acc
 import { UnarchiveAccountController } from '#/modules/accounts/http/account/unarchive-account.controller.ts';
 import { UpdateAccountController } from '#/modules/accounts/http/account/update-account.controller.ts';
 import { KyselyAccountRepository } from '#/modules/accounts/infra/account/account.repository.ts';
+import { GetTransactionOverviewQuery } from '#/modules/transactions/application/transaction-overview/get-transaction-overview.query.ts';
+import { CountActiveAccountsQuery } from '#/modules/accounts/application/account/count-active-accounts.query.ts';
 import { CheckDatabaseQuery } from '#/modules/health/application/health/check-database.query.ts';
 import { GetHealthController } from '#/modules/health/http/health/get-health.controller.ts';
 import { createHealthRoute } from '#/modules/health/http/health/health.route.ts';
 import type { Clock } from '#/shared/clock/clock.interface.ts';
 import { SystemClock } from '#/shared/clock/system-clock.service.ts';
+import { MaintenanceGate } from '#/shared/maintenance/maintenance-gate.service.ts';
 
 // The composition root of the HTTP side: builds each module's controllers by hand (no container)
 // and mounts their routes. `clock` is the real one; a test passes a fixed one. Besides the app it
@@ -62,13 +65,15 @@ export function createAppParts({
   localToken,
   clock = new SystemClock(),
 }: {
-  db: Kysely<Database>;
+  db: ReplaceableDatabase;
   localToken: string;
   clock?: Clock;
 }) {
   const unitOfWork = new KyselyUnitOfWork(db);
+  // On while the restore of a backup swaps the database file: health is not ok and the tasks wait.
+  const gate = new MaintenanceGate();
 
-  const getHealth = new GetHealthController(new CheckDatabaseQuery(db));
+  const getHealth = new GetHealthController(new CheckDatabaseQuery(db, gate));
 
   // The contexts know each other only through ports. accounts asks transactions for the balance,
   // the movement and the adjustment, and transactions asks accounts which account a transaction is
@@ -231,6 +236,14 @@ export function createAppParts({
     ),
   });
 
+  const backup = createBackupModule({
+    db,
+    clock,
+    gate,
+    transactionOverview: new GetTransactionOverviewQuery(db),
+    activeAccounts: new CountActiveAccountsQuery(db),
+  });
+
   const app = new Hono()
     .notFound((c) =>
       c.json<ApiError.Dto>({ code: 'ROUTE_NOT_FOUND', message: 'Rota não encontrada.' }, 404),
@@ -259,7 +272,13 @@ export function createAppParts({
     .route('/', invoices.routes)
     .route('/', recurrences.routes)
     .route('/', profile.routes)
-    .route('/', bills.routes);
+    .route('/', bills.routes)
+    .route('/', backup.routes);
 
-  return { app, ensureOccurrences: recurrences.ensureOccurrences };
+  return {
+    app,
+    gate,
+    ensureOccurrences: recurrences.ensureOccurrences,
+    runDailyBackup: backup.runDailyBackup,
+  };
 }

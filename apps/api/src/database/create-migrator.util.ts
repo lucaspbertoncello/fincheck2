@@ -1,13 +1,12 @@
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { pathToFileURL } from 'node:url';
 
 import type { Kysely } from 'kysely';
 import { Migrator, type Migration } from 'kysely/migration';
 
 import type { Database } from '#/database/database.type.ts';
-
-const MIGRATIONS_FOLDER = fileURLToPath(new URL('./migrations/', import.meta.url));
+import { MIGRATIONS_FOLDER } from '#/database/migrations-folder.constant.ts';
 
 // Kysely's FileMigrationProvider imports plain absolute paths, which Node rejects on Windows;
 // this provider imports file URLs instead.

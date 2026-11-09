@@ -1,7 +1,5 @@
 import { BusinessDate } from '#/shared/date/business-date.value-object.ts';
-
-// The one place that names the time zone of the business (the app lives in Brazil).
-const BUSINESS_TIME_ZONE = 'America/Sao_Paulo';
+import { BUSINESS_TIME_ZONE } from '#/shared/date/business-time-zone.constant.ts';
 
 // `en-CA` prints the date as `YYYY-MM-DD`.
 const businessDayFormat = new Intl.DateTimeFormat('en-CA', {

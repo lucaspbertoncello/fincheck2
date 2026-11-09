@@ -1,7 +1,8 @@
 import BetterSqlite3 from 'better-sqlite3';
-import { sql } from 'kysely';
+import { sql, type Kysely } from 'kysely';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import type { Database } from '#/database/database.type.ts';
 import { KyselyUnitOfWork } from '#/database/unit-of-work/kysely-unit-of-work.service.ts';
 import { generateId } from '#/shared/id/generate-id.util.ts';
 import { createTestDatabase } from '#tests/support/database/create-test-database.util.ts';
@@ -19,7 +20,7 @@ describe('KyselyUnitOfWork', () => {
     await database.destroy();
   });
 
-  const insertTag = (executor: typeof database.db, name: string) =>
+  const insertTag = (executor: Kysely<Database>, name: string) =>
     executor
       .insertInto('tags')
       .values({

@@ -18,6 +18,8 @@ export async function startRecurrencesSchedule(deps: {
   clock?: Clock;
   checkEveryMs?: number;
   log?: (message: string) => void;
+  // True while the API holds the tasks back (the restore of a backup is swapping the database).
+  isPaused?: () => boolean;
 }): Promise<{ stop: () => void }> {
   const clock = deps.clock ?? new SystemClock();
   const log = deps.log ?? ((message: string) => console.error(message));
@@ -25,6 +27,7 @@ export async function startRecurrencesSchedule(deps: {
   let doneOn = '';
   let loggedOn = '';
   const run = async () => {
+    if (deps.isPaused?.()) return;
     const today = clock.today().value;
     if (today === doneOn) return;
     try {
