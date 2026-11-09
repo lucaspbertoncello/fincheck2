@@ -15,7 +15,7 @@ export const PLUS_ACTION_PATHS: Record<string, string> = {
   'connect-account': '/accounts?new=account',
   'new-category': '/categories?new=category',
   'new-rule': '/categories/rules?new=rule',
-  'new-income-source': '/recurrences?new=recurrence',
+  'new-income-source': '/recurrences?new=recurrence&flow=income',
 };
 
 /** Menu of the general "+" (screens.md, "Botão +"). */

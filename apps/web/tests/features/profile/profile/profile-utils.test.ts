@@ -93,8 +93,8 @@ describe('profile links and dates', () => {
   });
 
   it('creates or edits an income source through the recurrence modal', () => {
-    expect(buildRecurrenceHref()).toBe('/recurrences?new=recurrence');
-    expect(buildRecurrenceHref('abc')).toBe('/recurrences?edit=abc');
+    expect(buildRecurrenceHref()).toBe('/recurrences?new=recurrence&flow=income');
+    expect(buildRecurrenceHref('abc')).toBe('/recurrences?edit=abc&flow=income');
   });
 
   it('writes dates in Portuguese', () => {

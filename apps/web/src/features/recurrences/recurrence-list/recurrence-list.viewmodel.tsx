@@ -143,9 +143,11 @@ export function RecurrenceListViewModel() {
         ? 'empty'
         : 'ready';
 
-  const recurrenceItems = model.recurrences.data?.items ?? [];
+  const { flow } = search;
+  const allRecurrenceItems = model.recurrences.data?.items ?? [];
+  const recurrenceItems = allRecurrenceItems.filter((item) => item.kind === flow);
   const context: RowContext = {
-    recurrences: new Map(recurrenceItems.map((item) => [item.id, item])),
+    recurrences: new Map(allRecurrenceItems.map((item) => [item.id, item])),
     categoryIcons: new Map(
       (model.categories.data?.items ?? []).map((category) => [category.id, category.icon]),
     ),
@@ -159,9 +161,9 @@ export function RecurrenceListViewModel() {
 
   const attentionOccurrences = model.attention.data?.items ?? [];
   const attentionIds = new Set(attentionOccurrences.map((occurrence) => occurrence.id));
-  const attentionRows = attentionOccurrences.map((occurrence) =>
-    presentOccurrenceRow(occurrence, context),
-  );
+  const attentionRows = attentionOccurrences
+    .filter((occurrence) => occurrence.kind === flow)
+    .map((occurrence) => presentOccurrenceRow(occurrence, context));
 
   const monthRows = recurrenceItems.flatMap((item) =>
     item.occurrence && !attentionIds.has(item.occurrence.id)
@@ -172,10 +174,12 @@ export function RecurrenceListViewModel() {
     .filter((item) => item.occurrence === null)
     .map((item) => presentIdleRecurrence(item, context));
 
-  const allOccurrences = model.occurrences.data?.items ?? [];
+  const flowOccurrences = (model.occurrences.data?.items ?? []).filter(
+    (occurrence) => occurrence.kind === flow,
+  );
   const days = buildOccurrenceDays(
     month,
-    allOccurrences.map((occurrence) => ({
+    flowOccurrences.map((occurrence) => ({
       occurrence,
       row: presentOccurrenceRow(occurrence, context),
     })),
@@ -189,6 +193,18 @@ export function RecurrenceListViewModel() {
 
   const summary = model.summary.data;
   const monthName = monthLabel.toLowerCase();
+  const card =
+    flow === 'income'
+      ? {
+          label: `Receitas esperadas em ${monthName}`,
+          totalCents: summary?.incomes.expectedCents ?? 0,
+          caption: summary ? buildIncomeCaption(summary, isHidden) : undefined,
+        }
+      : {
+          label: 'Despesas fixas',
+          totalCents: summary?.expenses.expectedCents ?? 0,
+          caption: summary ? buildExpenseCaption(summary) : undefined,
+        };
 
   return (
     <RecurrenceListView
@@ -197,25 +213,17 @@ export function RecurrenceListViewModel() {
       onCreate={search.openNew}
       actionError={actionError}
       attentionRows={attentionRows}
-      incomeCard={{
-        label: `Receitas esperadas em ${monthName}`,
-        totalCents: summary?.incomes.expectedCents ?? 0,
-        caption: summary ? buildIncomeCaption(summary, isHidden) : undefined,
-      }}
-      expenseCard={{
-        label: 'Despesas fixas',
-        totalCents: summary?.expenses.expectedCents ?? 0,
-        caption: summary ? buildExpenseCaption(summary) : undefined,
-      }}
+      flow={flow}
+      onFlowChange={search.selectFlow}
+      card={card}
       strip={{
         title: `${monthLabel}, dia a dia`,
         days,
         today,
         selectedDate,
-        chips: buildOccurrenceChips(month, allOccurrences),
+        chips: buildOccurrenceChips(month, flowOccurrences),
       }}
-      incomeRows={monthRows.filter((row) => row.flow === 'income')}
-      expenseRows={monthRows.filter((row) => row.flow === 'expense')}
+      rows={monthRows}
       idleRecurrences={idleRecurrences}
       onSelectDay={search.selectDay}
       onRowAction={handleRowAction}

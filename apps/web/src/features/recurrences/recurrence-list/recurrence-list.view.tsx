@@ -7,10 +7,13 @@ import {
   NeedsAttentionStrip,
   RecurrenceList,
   Section,
+  SegmentedControl,
   TotalCard,
   type RecurrenceAction,
+  type RecurrenceFlow,
 } from '@fincheck/ui';
 
+import { FLOW_OPTIONS } from '#/features/recurrences/recurrence-list/constants/flow-options.constant.ts';
 import { DayOccurrenceList } from '#/features/recurrences/recurrence-list/components/day-occurrence-list.component.tsx';
 import { IdleRecurrenceRow } from '#/features/recurrences/recurrence-list/components/idle-recurrence-row.component.tsx';
 import { OccurrenceRowItem } from '#/features/recurrences/recurrence-list/components/occurrence-row-item.component.tsx';
@@ -35,9 +38,10 @@ type RecurrenceListViewProps = {
   onRetry: () => void;
   onCreate: () => void;
   actionError: ActionErrorData | null;
+  flow: RecurrenceFlow;
+  onFlowChange: (flow: RecurrenceFlow) => void;
   attentionRows: OccurrenceRowData[];
-  incomeCard: TotalCardData;
-  expenseCard: TotalCardData;
+  card: TotalCardData;
   strip: {
     title: string;
     days: OccurrenceDayData[];
@@ -45,8 +49,7 @@ type RecurrenceListViewProps = {
     selectedDate: string;
     chips: OccurrenceChipData[];
   };
-  incomeRows: OccurrenceRowData[];
-  expenseRows: OccurrenceRowData[];
+  rows: OccurrenceRowData[];
   idleRecurrences: IdleRecurrenceData[];
   onSelectDay: (date: string) => void;
   onRowAction: (row: OccurrenceRowData, action: RecurrenceAction) => void;
@@ -63,7 +66,7 @@ function countLabel(count: number): string {
   return `${count} ${count === 1 ? 'recorrência' : 'recorrências'}`;
 }
 
-/** Recorrentes › Recorrências: what needs you, the month cards, the day strip and the two lists. */
+/** Recorrentes › Recorrências: the side selector, what needs you, the card, the strip, the list. */
 export function RecurrenceListView(props: RecurrenceListViewProps) {
   const { state, onRetry, onCreate } = props;
 
@@ -93,12 +96,12 @@ export function RecurrenceListView(props: RecurrenceListViewProps) {
 
 function ReadyContent({
   actionError,
+  flow,
+  onFlowChange,
   attentionRows,
-  incomeCard,
-  expenseCard,
+  card,
   strip,
-  incomeRows,
-  expenseRows,
+  rows,
   idleRecurrences,
   onSelectDay,
   onRowAction,
@@ -108,6 +111,15 @@ function ReadyContent({
 }: RecurrenceListViewProps) {
   return (
     <div className="flex flex-col gap-s24">
+      <SegmentedControl
+        direction
+        label="Tipo de recorrência"
+        options={FLOW_OPTIONS}
+        value={flow}
+        onChange={(key) => onFlowChange(key as RecurrenceFlow)}
+        className="lg:w-[28rem]"
+      />
+
       <BannerSlot isOpen={Boolean(actionError)}>
         {actionError ? (
           <Banner
@@ -133,10 +145,7 @@ function ReadyContent({
         </NeedsAttentionStrip>
       ) : null}
 
-      <div className="grid gap-s16 lg:grid-cols-2 lg:gap-s24">
-        <TotalCard {...incomeCard} tone="income" />
-        <TotalCard {...expenseCard} tone="expense" />
-      </div>
+      <TotalCard {...card} tone={flow} />
 
       <DayStripSection
         title={strip.title}
@@ -162,27 +171,19 @@ function ReadyContent({
         }
       />
 
-      <Section title="Receitas">
-        {incomeRows.length > 0 ? (
+      <Section title={flow === 'income' ? 'Receitas' : 'Despesas fixas'}>
+        {rows.length > 0 ? (
           <RecurrenceList>
-            {incomeRows.map((row) => (
+            {rows.map((row) => (
               <OccurrenceRowItem key={row.occurrenceId} row={row} onAction={onRowAction} />
             ))}
           </RecurrenceList>
         ) : (
-          <p className="text-body text-fg-secondary">Nenhuma receita fixa neste mês.</p>
-        )}
-      </Section>
-
-      <Section title="Despesas fixas">
-        {expenseRows.length > 0 ? (
-          <RecurrenceList>
-            {expenseRows.map((row) => (
-              <OccurrenceRowItem key={row.occurrenceId} row={row} onAction={onRowAction} />
-            ))}
-          </RecurrenceList>
-        ) : (
-          <p className="text-body text-fg-secondary">Nenhuma despesa fixa neste mês.</p>
+          <p className="text-body text-fg-secondary">
+            {flow === 'income'
+              ? 'Nenhuma receita fixa neste mês.'
+              : 'Nenhuma despesa fixa neste mês.'}
+          </p>
         )}
       </Section>
 

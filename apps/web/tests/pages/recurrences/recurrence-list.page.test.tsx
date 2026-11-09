@@ -1,14 +1,22 @@
 import { configure, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
+import type { Occurrence } from '@fincheck/shared/recurrences/occurrence/occurrence.type.ts';
+import type { Recurrence } from '@fincheck/shared/recurrences/recurrence/recurrence.type.ts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTestOccurrence } from '#tests/support/recurrences/occurrence/create-test-occurrence.util.ts';
 import { server } from '#mocks/setup/server.util.ts';
+import { db } from '#mocks/state/mock-database.store.ts';
 import { CURRENT_MONTH } from '#mocks/support/dates/mock-clock.store.ts';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
 import { makeOccurrenceLate } from '#tests/support/recurrences/occurrence/make-occurrence-late.util.ts';
 import { renderApp } from '#tests/support/app/render-app.util.tsx';
+import { buildExpenseCaption } from '#/features/recurrences/recurrence-list/utils/build-expense-caption.util.ts';
+import { buildIncomeCaption } from '#/features/recurrences/recurrence-list/utils/build-income-caption.util.ts';
+import { buildOccurrenceChips } from '#/features/recurrences/recurrence-list/utils/build-occurrence-chips.util.ts';
+import { getOccurrencePlacement } from '#/features/recurrences/recurrence-list/utils/get-occurrence-placement.util.ts';
+import { formatMoneyNote } from '#/features/recurrences/utils/format-money-note.util.ts';
 import { callApi } from '#tests/support/mocks/call-api.util.ts';
 
 resetDatabaseBeforeEach();
@@ -25,8 +33,14 @@ async function findAttentionStrip() {
   return within(await screen.findByRole('region', { name: 'Precisa de você' }));
 }
 
+const INCOME_URL = `${URL}&flow=income`;
+
+async function findFlowSelector() {
+  return within(await screen.findByRole('radiogroup', { name: 'Tipo de recorrência' }));
+}
+
 describe('RecurrenceListPage', () => {
-  it('shows the month: what needs you, the cards, the strip and both lists', async () => {
+  it('opens on the expenses: what needs you, the card, the strip and the list of that side only', async () => {
     renderApp(URL);
 
     const attention = await findAttentionStrip();
@@ -36,18 +50,250 @@ describe('RecurrenceListPage', () => {
     // Internet and Spotify (a subscription whose price went up) both wait for an answer.
     expect(attention.getAllByText('Valor diferente')).toHaveLength(2);
 
-    expect(screen.getByText(/^Receitas esperadas em /)).toBeInTheDocument();
+    const selector = await findFlowSelector();
+    expect(selector.getByRole('radio', { name: 'Despesas' })).toBeChecked();
+    expect(selector.getByRole('radio', { name: 'Receitas' })).not.toBeChecked();
+
+    expect(screen.getByText('Despesas fixas', { selector: 'span' })).toBeInTheDocument();
+    expect(screen.queryByText(/^Receitas esperadas em /)).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /, dia a dia$/ })).toBeInTheDocument();
+
+    const expenses = within(screen.getByRole('region', { name: 'Despesas fixas' }));
+    expect(expenses.getByText('Academia')).toBeInTheDocument();
+    expect(expenses.getByText('Plano celular')).toBeInTheDocument();
+    expect(expenses.queryByText('Diarista')).not.toBeInTheDocument();
+
+    expect(screen.queryByRole('region', { name: 'Receitas' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Mesada')).not.toBeInTheDocument();
+    expect(window.location.search).not.toContain('flow=');
+  });
+
+  it('opens on the incomes with ?flow=income, with no expense anywhere', async () => {
+    makeOccurrenceLate('Lume Design (freela)');
+    renderApp(INCOME_URL);
+
+    const attention = await findAttentionStrip();
+    expect(attention.getByText('Lume Design (freela)')).toBeInTheDocument();
+    expect(attention.queryByText('Diarista')).not.toBeInTheDocument();
+    expect(attention.queryByText('Internet')).not.toBeInTheDocument();
+    expect(attention.queryByText('Valor diferente')).not.toBeInTheDocument();
+
+    const selector = await findFlowSelector();
+    expect(selector.getByRole('radio', { name: 'Receitas' })).toBeChecked();
+
+    expect(screen.getByText(/^Receitas esperadas em /)).toBeInTheDocument();
+    expect(screen.queryByText('Despesas fixas', { selector: 'span' })).not.toBeInTheDocument();
 
     const incomes = within(screen.getByRole('region', { name: 'Receitas' }));
     expect(incomes.getByText('Mesada')).toBeInTheDocument();
     expect(incomes.getByText('Parcial')).toBeInTheDocument();
     expect(incomes.getByText('Salário Alvorada, dia 15')).toBeInTheDocument();
 
-    const expenses = within(screen.getByRole('region', { name: 'Despesas fixas' }));
-    expect(expenses.getByText('Academia')).toBeInTheDocument();
-    expect(expenses.getByText('Plano celular')).toBeInTheDocument();
-    expect(expenses.queryByText('Diarista')).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Despesas fixas' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Academia')).not.toBeInTheDocument();
+    expect(screen.queryByText('Plano celular')).not.toBeInTheDocument();
+  });
+
+  it('falls back to the expenses when ?flow is not a side', async () => {
+    renderApp(`${URL}&flow=tudo`);
+
+    const selector = await findFlowSelector();
+    expect(selector.getByRole('radio', { name: 'Despesas' })).toBeChecked();
+    expect(await screen.findByRole('region', { name: 'Despesas fixas' })).toBeInTheDocument();
+  });
+
+  it('switches the side from the selector, keeps the month and writes ?flow= in the URL', async () => {
+    renderApp(`${URL}&day=${CURRENT_MONTH}-15`);
+    const selector = await findFlowSelector();
+    await screen.findByRole('region', { name: 'Despesas fixas' });
+
+    await userEvent.click(selector.getByRole('radio', { name: 'Receitas' }));
+
+    expect(await screen.findByRole('region', { name: 'Receitas' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Despesas fixas' })).not.toBeInTheDocument();
+    expect(window.location.search).toContain('flow=income');
+    expect(window.location.search).toContain(`month=${CURRENT_MONTH}`);
+    expect(window.location.search).toContain(`day=${CURRENT_MONTH}-15`);
+
+    await userEvent.click(selector.getByRole('radio', { name: 'Despesas' }));
+
+    expect(await screen.findByRole('region', { name: 'Despesas fixas' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Receitas' })).not.toBeInTheDocument();
+    expect(window.location.search).toContain('flow=expense');
+  });
+
+  it('lists in the strip only the occurrences of the side that is chosen', async () => {
+    renderApp(URL);
+    await screen.findByRole('region', { name: 'Despesas fixas' });
+    // The label of each day names the markers on it ("Despesa esperada", "Receita atrasada").
+    const dayLabels = () =>
+      within(screen.getByRole('region', { name: /, dia a dia$/ }))
+        .getAllByRole('option')
+        .map((option) => option.getAttribute('aria-label') ?? '')
+        .join('|');
+
+    expect(dayLabels()).toMatch(/Despesa /);
+    expect(dayLabels()).not.toMatch(/Receita /);
+
+    await userEvent.click((await findFlowSelector()).getByRole('radio', { name: 'Receitas' }));
+    await screen.findByRole('region', { name: 'Receitas' });
+
+    expect(dayLabels()).toMatch(/Receita /);
+    expect(dayLabels()).not.toMatch(/Despesa /);
+  });
+
+  it('keeps "Fora deste mês" of each side apart', async () => {
+    // Paused with nothing left in the month: the recurrence has no occurrence to list.
+    for (const name of ['Mesada', 'Plano celular']) {
+      const recurrence = db.recurrences.find((item) => item.name === name);
+      if (!recurrence) throw new Error(`No recurrence ${name}`);
+      recurrence.pausedAt = `${CURRENT_MONTH}-01T12:00:00.000Z`;
+      db.occurrences = db.occurrences.filter((item) => item.recurrenceId !== recurrence.id);
+    }
+
+    renderApp(URL);
+    const expenses = await screen.findByRole('region', { name: 'Fora deste mês' });
+    expect(within(expenses).getByText('Plano celular')).toBeInTheDocument();
+    expect(within(expenses).queryByText('Mesada')).not.toBeInTheDocument();
+
+    await userEvent.click((await findFlowSelector()).getByRole('radio', { name: 'Receitas' }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole('region', { name: 'Despesas fixas' })).not.toBeInTheDocument(),
+    );
+    const incomes = screen.getByRole('region', { name: 'Fora deste mês' });
+    expect(within(incomes).getByText('Mesada')).toBeInTheDocument();
+    expect(within(incomes).queryByText('Plano celular')).not.toBeInTheDocument();
+  });
+
+  it('says there is no income when only the other side has recurrences', async () => {
+    db.recurrences = db.recurrences.filter((item) => item.kind === 'expense');
+    const expenseIds = new Set(db.recurrences.map((item) => item.id));
+    db.occurrences = db.occurrences.filter((item) => expenseIds.has(item.recurrenceId));
+
+    renderApp(INCOME_URL);
+
+    const incomes = within(await screen.findByRole('region', { name: 'Receitas' }));
+    expect(incomes.getByText('Nenhuma receita fixa neste mês.')).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Despesas fixas' })).not.toBeInTheDocument();
+  });
+
+  it('shows in the card the total and the caption of the side that is chosen', async () => {
+    const summary = (await callApi('GET', `/recurrences/summary?month=${CURRENT_MONTH}`))
+      .json as Recurrence.Summary;
+    const cardOf = (label: string | RegExp) => {
+      const card = screen.getByText(label, { selector: 'span' }).closest('div');
+      if (!card) throw new Error(`No card ${label}`);
+      return card;
+    };
+    // The card writes "−R$816,29": compare without spaces.
+    const plain = (text: string) => text.replace(/\s/g, '');
+    const textOf = (card: HTMLElement) => plain(card.textContent ?? '');
+
+    renderApp(URL);
+    await screen.findByRole('region', { name: 'Despesas fixas' });
+    const expenseCard = textOf(cardOf('Despesas fixas'));
+    expect(expenseCard).toContain(plain(formatMoneyNote(summary.expenses.expectedCents, false)));
+    expect(expenseCard).toContain(plain(buildExpenseCaption(summary)));
+
+    await userEvent.click((await findFlowSelector()).getByRole('radio', { name: 'Receitas' }));
+    await screen.findByRole('region', { name: 'Receitas' });
+    const incomeCard = textOf(cardOf(/^Receitas esperadas em /));
+    expect(incomeCard).toContain(plain(formatMoneyNote(summary.incomes.expectedCents, false)));
+    expect(incomeCard).toContain(plain(buildIncomeCaption(summary, false)));
+  });
+
+  it('counts "Precisa de você" by side and hides it on the side with nothing pending', async () => {
+    renderApp(URL);
+    const expenseAttention = await findAttentionStrip();
+    // Diarista, Internet, Spotify and one more late expense.
+    expect(expenseAttention.getByText('4 recorrências')).toBeInTheDocument();
+
+    await userEvent.click((await findFlowSelector()).getByRole('radio', { name: 'Receitas' }));
+    await screen.findByRole('region', { name: 'Receitas' });
+    expect(screen.queryByRole('region', { name: 'Precisa de você' })).not.toBeInTheDocument();
+  });
+
+  it('counts one pending income on Receitas while Despesas keeps its own count', async () => {
+    makeOccurrenceLate('Lume Design (freela)');
+    renderApp(INCOME_URL);
+
+    expect((await findAttentionStrip()).getByText('1 recorrência')).toBeInTheDocument();
+
+    await userEvent.click((await findFlowSelector()).getByRole('radio', { name: 'Despesas' }));
+    expect((await findAttentionStrip()).getByText('4 recorrências')).toBeInTheDocument();
+  });
+
+  describe('the strip of one side', () => {
+    async function listOccurrences() {
+      const { json } = await callApi('GET', `/occurrences?month=${CURRENT_MONTH}`);
+      return (json as { items: Occurrence.Dto[] }).items;
+    }
+    const strip = () => within(screen.getByRole('region', { name: /, dia a dia$/ }));
+
+    it('lists the chosen day with the incomes only on Receitas', async () => {
+      const income = (await listOccurrences()).find(
+        (item) => item.kind === 'income' && getOccurrencePlacement(item)?.date != null,
+      );
+      const date = income ? getOccurrencePlacement(income)?.date : null;
+      if (!income || !date) throw new Error('No income on a day');
+
+      renderApp(`${URL}&day=${date}`);
+      await screen.findByRole('region', { name: 'Despesas fixas' });
+      expect(strip().queryByText(income.recurrenceName)).not.toBeInTheDocument();
+
+      await userEvent.click((await findFlowSelector()).getByRole('radio', { name: 'Receitas' }));
+      expect(await strip().findByText(income.recurrenceName)).toBeInTheDocument();
+    });
+
+    it('lists the chosen day with the expenses only on Despesas', async () => {
+      const expense = (await listOccurrences()).find(
+        (item) => item.kind === 'expense' && getOccurrencePlacement(item)?.date != null,
+      );
+      const date = expense ? getOccurrencePlacement(expense)?.date : null;
+      if (!expense || !date) throw new Error('No expense on a day');
+
+      renderApp(`${URL}&day=${date}`);
+      await screen.findByRole('region', { name: 'Despesas fixas' });
+      expect(await strip().findByText(expense.recurrenceName)).toBeInTheDocument();
+
+      await userEvent.click((await findFlowSelector()).getByRole('radio', { name: 'Receitas' }));
+      await screen.findByRole('region', { name: 'Receitas' });
+      expect(strip().queryByText(expense.recurrenceName)).not.toBeInTheDocument();
+    });
+
+    it('puts in "Sem dia certo" the chips of the side that is chosen', async () => {
+      const items = await listOccurrences();
+      const labelsOf = (kind: string) =>
+        buildOccurrenceChips(
+          CURRENT_MONTH,
+          items.filter((item) => item.kind === kind),
+        ).map((chip) => chip.label);
+      const expenseLabels = labelsOf('expense');
+      const incomeLabels = labelsOf('income');
+      expect(expenseLabels.length + incomeLabels.length).toBeGreaterThan(0);
+
+      renderApp(URL);
+      await screen.findByRole('region', { name: 'Despesas fixas' });
+      for (const label of expenseLabels) expect(screen.getByText(label)).toBeInTheDocument();
+      for (const label of incomeLabels) expect(screen.queryByText(label)).not.toBeInTheDocument();
+
+      await userEvent.click((await findFlowSelector()).getByRole('radio', { name: 'Receitas' }));
+      await screen.findByRole('region', { name: 'Receitas' });
+      for (const label of incomeLabels) expect(screen.getByText(label)).toBeInTheDocument();
+      for (const label of expenseLabels) expect(screen.queryByText(label)).not.toBeInTheDocument();
+    });
+  });
+
+  it('keeps the side in the URL when the modal that was open over it closes', async () => {
+    renderApp(`${INCOME_URL}&new=recurrence`);
+    expect(await screen.findByRole('dialog', { name: 'Nova recorrência' })).toBeInTheDocument();
+
+    await userEvent.keyboard('{Escape}');
+
+    await waitFor(() => expect(window.location.search).not.toContain('new='));
+    expect(window.location.search).toContain('flow=income');
+    expect(window.location.search).toContain(`month=${CURRENT_MONTH}`);
   });
 
   it('marks the late occurrence as paid, moves it to the list and offers to undo', async () => {
@@ -151,7 +397,7 @@ describe('RecurrenceListPage', () => {
         ),
       ),
     );
-    renderApp(URL);
+    renderApp(INCOME_URL);
     const attention = await findAttentionStrip();
 
     fireEvent.click(
@@ -194,7 +440,7 @@ describe('RecurrenceListPage', () => {
         return HttpResponse.json({ message: 'stop' }, { status: 500 });
       }),
     );
-    renderApp(URL);
+    renderApp(INCOME_URL);
     const attention = await findAttentionStrip();
 
     fireEvent.click(
@@ -215,7 +461,7 @@ describe('RecurrenceListPage', () => {
   it('says so when no transaction is near the occurrence', async () => {
     makeOccurrenceLate('Lume Design (freela)');
     server.use(http.get('/api/occurrences/:id/candidates', () => HttpResponse.json({ items: [] })));
-    renderApp(URL);
+    renderApp(INCOME_URL);
     const attention = await findAttentionStrip();
 
     fireEvent.click(
@@ -304,6 +550,29 @@ describe('RecurrenceListPage', () => {
         await within(dialog).findByRole('textbox', { name: 'Número do dia útil' }),
       ).toBeInTheDocument();
       expect(within(dialog).queryByRole('textbox', { name: 'Dia do mês' })).not.toBeInTheDocument();
+    });
+  });
+
+  describe('"Nova recorrência" side', () => {
+    it('opens as Receita with ?flow=income', async () => {
+      renderApp(`${INCOME_URL}&new=recurrence`);
+      const dialog = await screen.findByRole('dialog', { name: 'Nova recorrência' });
+
+      expect(within(dialog).getByRole('radio', { name: 'Receita' })).toHaveAttribute(
+        'aria-checked',
+        'true',
+      );
+      expect(within(dialog).getByText('Vem de quem')).toBeInTheDocument();
+    });
+
+    it('opens as Despesa without ?flow and with ?flow=expense', async () => {
+      renderApp(`${URL}&new=recurrence`);
+      const dialog = await screen.findByRole('dialog', { name: 'Nova recorrência' });
+      expect(within(dialog).getByRole('radio', { name: 'Despesa' })).toHaveAttribute(
+        'aria-checked',
+        'true',
+      );
+      expect(within(dialog).getByText('Para quem')).toBeInTheDocument();
     });
   });
 
@@ -567,12 +836,12 @@ describe('RecurrenceListPage', () => {
       server.resetHandlers();
       fireEvent.click(screen.getByRole('button', { name: 'Tentar de novo' }));
 
-      expect(await screen.findByRole('region', { name: 'Receitas' })).toBeInTheDocument();
+      expect(await screen.findByRole('region', { name: 'Despesas fixas' })).toBeInTheDocument();
     });
 
     it('keeps the chosen day in the URL', async () => {
       renderApp(URL);
-      await screen.findByRole('region', { name: 'Receitas' });
+      await screen.findByRole('region', { name: 'Despesas fixas' });
 
       const selected = screen
         .getAllByRole('option')

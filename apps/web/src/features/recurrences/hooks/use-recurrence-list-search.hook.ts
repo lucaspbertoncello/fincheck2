@@ -5,9 +5,11 @@ import {
   type RecurrenceListSearch,
 } from '#/features/recurrences/schemas/recurrence-list-search.schema.ts';
 
+type Flow = NonNullable<RecurrenceListSearch['flow']>;
+
 /**
- * The screen state that lives in the URL: chosen day and open modal. Each setter keeps `month`
- * and the other params; the modals are opened with `push` so "Voltar" closes them.
+ * The screen state that lives in the URL: side, chosen day and open modal. Each setter keeps
+ * `month` and the other params; the modals are opened with `push` so "Voltar" closes them.
  */
 export function useRecurrenceListSearch() {
   const rawSearch: Record<string, unknown> = useSearch({ strict: false });
@@ -27,6 +29,9 @@ export function useRecurrenceListSearch() {
 
   return {
     ...search,
+    /** The chosen side; without `?flow` the screen shows the expenses. */
+    flow: (search.flow ?? 'expense') satisfies Flow,
+    selectFlow: (flow: Flow) => update({ flow }, true),
     selectDay: (day: string) => update({ day }, true),
     openNew: () => update({ new: 'recurrence' }),
     openNewSubscription: () => update({ new: 'subscription' }),

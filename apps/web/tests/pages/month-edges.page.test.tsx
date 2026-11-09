@@ -1,4 +1,5 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { renderApp } from '#tests/support/app/render-app.util.tsx';
@@ -11,9 +12,9 @@ const LAST_DAY = new Date('2026-10-31T15:00:00.000Z');
 const FIRST_DAY = new Date('2026-11-01T15:00:00.000Z');
 
 describe.each([
-  ['last day (31/10)', LAST_DAY, 'Sábado, 31 de outubro'],
-  ['first day (01/11)', FIRST_DAY, 'Domingo, 1 de novembro'],
-])('the other screens on the %s', (_name, now, heading) => {
+  ['last day (31/10)', LAST_DAY, 'Sábado, 31 de outubro', '2026-09'],
+  ['first day (01/11)', FIRST_DAY, 'Domingo, 1 de novembro', '2026-10'],
+])('the other screens on the %s', (_name, now, heading, previousMonth) => {
   it('opens the review queue with a card and the rest in "Na fila"', async () => {
     setTestClock(now);
     renderApp('/transactions/review');
@@ -30,9 +31,22 @@ describe.each([
     renderApp('/recurrences');
 
     expect(await screen.findByRole('heading', { name: /, dia a dia$/ })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'Receitas' })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'Despesas fixas' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Receitas' })).not.toBeInTheDocument();
     expect(screen.getAllByText(/hoje/i).length).toBeGreaterThan(0);
+  });
+
+  it('keeps the incomes side and today on the strip when the month changes', async () => {
+    setTestClock(now);
+    renderApp('/recurrences?flow=income');
+    expect(await screen.findByRole('region', { name: 'Receitas' })).toBeInTheDocument();
+    expect(screen.getAllByText(/hoje/i).length).toBeGreaterThan(0);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Mês anterior' }));
+
+    await waitFor(() => expect(window.location.search).toContain(`month=${previousMonth}`));
+    expect(window.location.search).toContain('flow=income');
+    expect(await screen.findByRole('region', { name: 'Receitas' })).toBeInTheDocument();
   });
 
   it('draws the spend heatmap in the profile, with the highest day and the average', async () => {

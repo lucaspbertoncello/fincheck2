@@ -44,8 +44,9 @@ type SessionProps = {
   preset?: 'subscription';
 };
 
+/** A new recurrence starts as the side chosen in the URL (`?flow`): income, or expense by default. */
 function RecurrenceFormSession({ saved, preset }: SessionProps) {
-  const { closeModals } = useRecurrenceListSearch();
+  const { closeModals, flow } = useRecurrenceListSearch();
   const { isHidden } = useHideValues();
   const { showUndoToast } = useToast();
   const actions = useRecurrenceFormActions();
@@ -54,7 +55,7 @@ function RecurrenceFormSession({ saved, preset }: SessionProps) {
     if (saved) return buildFormValues(saved);
     return preset === 'subscription'
       ? { ...EMPTY_FORM_VALUES, isSubscription: true }
-      : EMPTY_FORM_VALUES;
+      : { ...EMPTY_FORM_VALUES, kind: flow };
   });
   // What was touched by hand stops being filled from the name: a saved recurrence keeps what it
   // has, and the "+" of Assinaturas starts with the switch on (the service still follows the name).
