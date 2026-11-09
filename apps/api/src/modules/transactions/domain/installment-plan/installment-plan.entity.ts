@@ -82,6 +82,34 @@ export class InstallmentPlan {
     });
   }
 
+  // A plan the bank told of (the sync): a card purchase in installments. No category and no tags
+  // (the rules of the round put them on the parcels the bank sends). The count is the bank's, inside
+  // the limits of the product; the total needs at least one cent per parcel.
+  static createFromBank(input: InstallmentPlan.CreateFromBankInput, now: string): InstallmentPlan {
+    if (
+      !Number.isInteger(input.installmentCount) ||
+      input.installmentCount < INSTALLMENT_LIMITS.min ||
+      input.installmentCount > INSTALLMENT_LIMITS.max
+    ) {
+      throw new RangeError('The installments of the bank are outside what Fincheck keeps');
+    }
+    if (input.total.cents < input.installmentCount) {
+      throw new RangeError('The total of a plan has one cent per parcel at least');
+    }
+
+    return new InstallmentPlan({
+      accountId: input.accountId,
+      origin: 'bank',
+      description: input.description,
+      purchaseOn: input.purchaseOn,
+      total: input.total,
+      installmentCount: input.installmentCount,
+      firstInvoiceMonth: input.firstInvoiceMonth,
+      categoryId: null,
+      createdAt: now,
+    });
+  }
+
   // The value of each parcel, in order: they add up to the total.
   amounts(): Money[] {
     return this.total.allocate(this.installmentCount);
@@ -146,6 +174,15 @@ export namespace InstallmentPlan {
     purchaseOn: BusinessDate;
     category: Transaction.CategoryRef | null;
     tags: Transaction.TagRef[];
+  };
+
+  export type CreateFromBankInput = {
+    accountId: string;
+    description: string;
+    purchaseOn: BusinessDate;
+    total: Money;
+    installmentCount: number;
+    firstInvoiceMonth: Month;
   };
 
   export type BuildParcelsInput = {

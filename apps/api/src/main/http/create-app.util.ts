@@ -9,10 +9,12 @@ export function createApp({
   db,
   localToken,
   clock = new SystemClock(),
+  sync,
 }: {
   db: ReplaceableDatabase;
   localToken: string;
   clock?: Clock;
+  sync?: Parameters<typeof createAppParts>[0]['sync'];
 }) {
-  return createAppParts({ db, localToken, clock }).app;
+  return createAppParts({ db, localToken, clock, ...(sync ? { sync } : {}) }).app;
 }

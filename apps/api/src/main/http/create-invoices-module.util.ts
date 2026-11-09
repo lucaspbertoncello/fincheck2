@@ -2,6 +2,8 @@ import { Hono } from 'hono';
 import type { Kysely } from 'kysely';
 
 import type { Database } from '#/database/database.type.ts';
+import { ListPayableInvoicesQuery } from '#/modules/invoices/application/bank-invoice/list-payable-invoices.query.ts';
+import { RecordBankInvoiceTotalsUseCase } from '#/modules/invoices/application/bank-invoice/record-bank-invoice-totals.usecase.ts';
 import { CountAccountInvoicesQuery } from '#/modules/invoices/application/account-deletion/count-account-invoices.query.ts';
 import { DeleteAccountInvoicesUseCase } from '#/modules/invoices/application/account-deletion/delete-account-invoices.usecase.ts';
 import type { CardReader } from '#/modules/invoices/application/card/card-reader.interface.ts';
@@ -155,6 +157,23 @@ export function createInvoicesModule(deps: {
     // The reader `bills` declares and `invoices` fulfils.
     billReaders: {
       linkedTransactions: new FindInvoiceLinkedTransactionsQuery(invoices),
+    },
+    // What `sync` asks of `invoices`: the total the bank gave for the invoices it closed and the
+    // invoices still to pay a debit may be the payment of.
+    syncPorts: {
+      recordBankTotals: new RecordBankInvoiceTotalsUseCase(
+        cards,
+        invoices,
+        opener,
+        calendar,
+        clock,
+      ),
+      payableInvoices: new ListPayableInvoicesQuery(
+        cards,
+        invoices,
+        transactionPorts.cardTransactions,
+        builder,
+      ),
     },
     // The ports `accounts` declares and `invoices` fulfils.
     accountPorts: {

@@ -2,10 +2,10 @@ import type { ReviewQueue } from '@fincheck/shared/transactions/review-queue/rev
 import type { Kysely } from 'kysely';
 
 import type { Database } from '#/database/database.type.ts';
+import { buildMatchCandidates } from '#/modules/recurrences/application/matching/build-match-candidates.util.ts';
 import type { LinkedElsewhereReader } from '#/modules/recurrences/application/occurrence-payment/linked-elsewhere-reader.interface.ts';
 import type { OccurrenceDtoBuilder } from '#/modules/recurrences/application/occurrence/occurrence-dto-builder.service.ts';
 import { matchTransactionToOccurrences } from '#/modules/recurrences/domain/matching/match-transaction-to-occurrences.util.ts';
-import type { MatchCandidate } from '#/modules/recurrences/domain/matching/match-transaction-to-occurrences.util.ts';
 import type { OccurrenceRepository } from '#/modules/recurrences/domain/occurrence/occurrence-repository.interface.ts';
 
 type Item = {
@@ -68,28 +68,7 @@ export class ListRecurrenceCandidatesQuery {
         view.state.status === 'partial' ||
         view.state.status === 'late',
     );
-    const candidates: MatchCandidate[] = views.flatMap((view) =>
-      view.state.status === 'expected' ||
-      view.state.status === 'partial' ||
-      view.state.status === 'late'
-        ? [
-            {
-              occurrenceId: view.occurrence.id,
-              recurrenceId: view.recurrence.id,
-              kind: view.recurrence.kind,
-              month: view.occurrence.month.value,
-              windowStartOn: view.occurrence.windowStartOn.value,
-              windowEndOn: view.occurrence.windowEndOn.value,
-              status: view.state.status,
-              paymentCount: view.counted.length,
-              expectedCents: view.occurrence.expectedAmount.cents,
-              remainingCents: view.state.remainingCents,
-              maxPayments: view.recurrence.maxPayments,
-              matchText: view.recurrence.matchText,
-            },
-          ]
-        : [],
-    );
+    const candidates = buildMatchCandidates(views);
     const viewById = new Map(views.map((view) => [view.occurrence.id, view]));
 
     const result = new Map<string, ReviewQueue.ItemDto['recurrenceCandidates']>();

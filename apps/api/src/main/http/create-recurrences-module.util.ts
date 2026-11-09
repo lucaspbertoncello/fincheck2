@@ -4,6 +4,7 @@ import type { Kysely } from 'kysely';
 import type { Database } from '#/database/database.type.ts';
 import { ListRecurrenceCandidatesQuery } from '#/modules/recurrences/application/matching/list-recurrence-candidates.query.ts';
 import { DecideOccurrenceDifferenceUseCase } from '#/modules/recurrences/application/occurrence/decide-occurrence-difference.usecase.ts';
+import { AutoMatchOccurrencesUseCase } from '#/modules/recurrences/application/matching/auto-match-occurrences.usecase.ts';
 import { EnsureOccurrencesUseCase } from '#/modules/recurrences/application/occurrence/ensure-occurrences.usecase.ts';
 import { GetOccurrenceExpectationsQuery } from '#/modules/recurrences/application/occurrence/get-occurrence-expectations.query.ts';
 import { ListOccurrenceCandidatesQuery } from '#/modules/recurrences/application/occurrence/list-occurrence-candidates.query.ts';
@@ -287,6 +288,18 @@ export function createRecurrencesModule(deps: {
     invoiceReaders: {
       expectations: new GetOccurrenceExpectationsQuery(db, occurrences, builder),
       linkedTransactions: new FindOccurrenceLinkedTransactionsQuery(occurrences),
+    },
+    // What `sync` asks of `recurrences`: the automatic match of the new transactions of a round with
+    // the occurrences they settle (`linkedBy = auto`), after making the occurrences ready.
+    syncPorts: {
+      autoMatch: new AutoMatchOccurrencesUseCase(
+        ensure,
+        occurrences,
+        recurrences,
+        transactionPorts.occurrenceTransactions,
+        builder,
+        linker,
+      ),
     },
     // The reader `profile` declares and `recurrences` fulfils.
     profileReaders: {

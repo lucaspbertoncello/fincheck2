@@ -215,6 +215,43 @@ export class Transaction {
     });
   }
 
+  // What the bank sent, born as a transaction of the sync (BR-TRX-004): the version in use is the
+  // bank's own, so it is not "edited". The nature comes from the sign and is the system's to change
+  // (`natureSetBy = system`): on a card every entry is an expense (a refund is a positive expense,
+  // never income); elsewhere negative is an expense and positive is an income. The detectors and
+  // the rules of the round decide the rest. `amount` has the sign of Lucas and is never zero.
+  static createFromBank(input: Transaction.CreateFromBankInput, now: string): Transaction {
+    if (input.bank.amount.isZero()) throw new RangeError('A bank transaction is never zero');
+    if (input.account.isCard !== (input.invoiceMonth !== null)) {
+      throw new RangeError('Only a card purchase has an invoice month');
+    }
+
+    return new Transaction({
+      accountId: input.account.id,
+      origin: 'bank',
+      nature: input.account.isCard || input.bank.amount.isNegative() ? 'expense' : 'income',
+      natureSetBy: 'system',
+      method: input.method,
+      description: input.bank.description,
+      amount: input.bank.amount,
+      occurredOn: input.bank.occurredOn,
+      invoiceMonth: input.invoiceMonth,
+      bank: input.bank,
+      bankChange: null,
+      removedByBankAt: null,
+      ignoredAt: null,
+      categoryId: null,
+      categorySource: null,
+      categoryRuleId: null,
+      editNote: null,
+      installment: input.installment,
+      transferCounterpartId: null,
+      splits: [],
+      tagIds: [],
+      createdAt: now,
+    });
+  }
+
   // Both legs of a transfer between own accounts: the same money, opposite values, two accounts.
   // The nature of `first` was already changed by `changeNature`; here the other leg follows it.
   static linkTransfer(
@@ -422,6 +459,39 @@ export class Transaction {
     this.updatedAt = now;
   }
 
+  // A detector of the import found what this transaction is (BR-TRX-006): a payment of an invoice
+  // or one leg of a transfer. Only what the system itself decided may change (`natureSetBy =
+  // system`): never a nature Lucas chose, one that owns a flow (debt, adjustment) or a split
+  // transaction. The category goes away (a payment or transfer is no spending). Answers whether
+  // anything changed.
+  applyDetectedNature(nature: 'invoice_payment' | 'transfer', now: string): boolean {
+    if (!this.canTakeDetectedNature()) return false;
+
+    this.nature = nature;
+    this.clearCategory();
+    this.updatedAt = now;
+
+    return true;
+  }
+
+  // The system still owns the nature (`natureSetBy = system`), it is a plain expense or income and
+  // the transaction is whole: the only case in which a detector may change it.
+  canTakeDetectedNature(): boolean {
+    return (
+      this.natureSetBy === 'system' &&
+      !this.isSplit() &&
+      (this.nature === 'expense' || this.nature === 'income')
+    );
+  }
+
+  // The other leg of a transfer the detector found: both point at each other.
+  static linkDetectedTransfer(first: Transaction, second: Transaction, now: string): void {
+    first.transferCounterpartId = second.id;
+    first.updatedAt = now;
+    second.transferCounterpartId = first.id;
+    second.updatedAt = now;
+  }
+
   // The transaction pays an invoice (the link of `invoices`): its nature becomes `invoice_payment`,
   // set by Lucas, and the category goes away (a payment is no spending). One the import detector
   // already marked keeps its mark and its origin: linking only confirms it, so the undo can tell
@@ -607,6 +677,26 @@ export class Transaction {
     }
 
     this.tagIds = unique.map((tag) => tag.id);
+    this.updatedAt = now;
+  }
+
+  // The parcel of the bank takes the place of one that was not the bank's (a generated one, or the
+  // one Lucas entered by hand): what he chose on it (category and tags) goes to the new one.
+  inheritChoices(
+    choices: {
+      categoryId: string | null;
+      categorySource: TransactionContract.CategorySource | null;
+      categoryRuleId: string | null;
+      tagIds: string[];
+    },
+    now: string,
+  ): void {
+    if (choices.categoryId !== null && this.hasCountedNature() && !this.isSplit()) {
+      this.categoryId = choices.categoryId;
+      this.categorySource = choices.categorySource;
+      this.categoryRuleId = choices.categoryRuleId;
+    }
+    this.tagIds = [...new Set(choices.tagIds)];
     this.updatedAt = now;
   }
 
@@ -970,6 +1060,14 @@ export namespace Transaction {
     invoiceMonth: Month | null;
     category: CategoryRef | null;
     tags: TagRef[];
+  };
+
+  export type CreateFromBankInput = {
+    account: AccountRef;
+    method: TransactionContract.Method;
+    bank: BankVersion;
+    invoiceMonth: Month | null;
+    installment: Installment | null;
   };
 
   export type CreateParcelInput = {

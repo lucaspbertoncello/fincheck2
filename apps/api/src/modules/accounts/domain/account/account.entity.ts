@@ -1,4 +1,5 @@
 import type { Account as AccountContract } from '@fincheck/shared/accounts/account/account.type.ts';
+import type { CreditCard as CreditCardContract } from '@fincheck/shared/accounts/credit-card/credit-card.type.ts';
 import type { Institution } from '@fincheck/shared/accounts/institution/institution.type.ts';
 
 import { AccountAlreadyArchivedError } from '#/modules/accounts/domain/account/account-already-archived.error.ts';
@@ -20,7 +21,8 @@ import type { Money } from '#/shared/money/money.value-object.ts';
 export class Account {
   readonly id: string;
   readonly type: AccountContract.Type;
-  readonly source: AccountContract.Source;
+  // Only the sync changes it: a bank account becomes manual when disconnected and back when it returns.
+  source: AccountContract.Source;
   name: string;
   institutionCode: Institution.Code;
   institutionName: string | null;
@@ -69,6 +71,27 @@ export class Account {
       bankBalance: null,
       bankBalanceAt: null,
       creditCard: request.creditCard ? CreditCard.fromRequest(request.creditCard) : null,
+      archivedAt: null,
+      createdAt: now,
+    });
+  }
+
+  // An account made from what the bank sent (the sync, `source = pluggy`): the name is the one of the
+  // bank, cut to the limit of the contract, and the card has the data the bank gave.
+  static createFromBank(input: Account.BankInput, now: string): Account {
+    if ((input.type === 'credit_card') !== (input.card !== null)) {
+      throw new RangeError('Card data goes with a credit card, and only with it');
+    }
+
+    return new Account({
+      type: input.type,
+      source: 'pluggy',
+      name: input.name.trim().slice(0, 60) || 'Conta',
+      institutionCode: input.institutionCode,
+      institutionName: input.institutionCode === 'other' ? input.institutionName : null,
+      bankBalance: input.balance,
+      bankBalanceAt: input.balance === null ? null : now,
+      creditCard: input.card ? new CreditCard({ ...input.card, themeId: null }) : null,
       archivedAt: null,
       createdAt: now,
     });
@@ -139,6 +162,50 @@ export class Account {
     this.updatedAt = now;
   }
 
+  // What the bank informed in the last round (on a card, the amount used, positive). Null when the
+  // bank did not send a balance: the last one stays.
+  recordBankBalance(balance: Money | null, now: string): void {
+    if (!this.isPluggy()) throw new RangeError('Only a bank account records a bank balance');
+    if (balance === null) return;
+
+    this.bankBalance = balance;
+    this.bankBalanceAt = now;
+    this.updatedAt = now;
+  }
+
+  // The account comes back to the bank (reconnected). The wallet never has one.
+  switchToBank(now: string): void {
+    if (this.type === 'wallet') throw new RangeError('A wallet is always manual');
+    if (this.isPluggy()) return;
+
+    this.source = 'pluggy';
+    this.updatedAt = now;
+  }
+
+  // The connection was removed: the account stays and from now on is kept by hand (Q8). The bank
+  // balance leaves with the origin (the database accepts it only on a bank account).
+  switchToManual(now: string): void {
+    if (!this.isPluggy()) return;
+
+    this.source = 'manual';
+    this.bankBalance = null;
+    this.bankBalanceAt = null;
+    this.updatedAt = now;
+  }
+
+  // The bank only fills what the card has not: the last 4 digits and the limit. What Lucas set is
+  // never overwritten (accounts.md, hypotheses).
+  fillCardFromBank(data: { last4: string | null; limit: Money | null }, now: string): void {
+    const card = this.creditCard;
+    if (!card) return;
+    const last4 = card.last4 ?? data.last4;
+    const limit = card.limit ?? data.limit;
+    if (last4 === card.last4 && limit === card.limit) return;
+
+    this.creditCard = card.change({ last4, limitCents: limit?.cents ?? null });
+    this.updatedAt = now;
+  }
+
   archive(now: string): void {
     if (this.isArchived()) throw new AccountAlreadyArchivedError();
     this.archivedAt = now;
@@ -167,6 +234,21 @@ export class Account {
 }
 
 export namespace Account {
+  export type BankInput = {
+    type: 'checking' | 'savings' | 'credit_card';
+    name: string;
+    institutionCode: Institution.Code;
+    institutionName: string | null;
+    balance: Money | null;
+    card: {
+      brand: CreditCardContract.Brand;
+      last4: string | null;
+      closingDay: number;
+      dueDay: number;
+      limit: Money | null;
+    } | null;
+  };
+
   export type Attributes = {
     id?: string;
     type: AccountContract.Type;

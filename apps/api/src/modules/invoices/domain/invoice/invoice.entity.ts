@@ -65,6 +65,18 @@ export class Invoice {
     });
   }
 
+  // What the bank says the invoice is worth (the sync, only for closed invoices: the bank does not
+  // send an open one). It is a fact about the bank, never a correction of Lucas: it does not touch
+  // `totalOverride`. Answers whether it changed.
+  registerBankTotal(total: Money, now: string): boolean {
+    if (this.bankTotal?.equals(total)) return false;
+
+    this.bankTotal = total;
+    this.updatedAt = now;
+
+    return true;
+  }
+
   // "Corrigir valor" (BR-INV-004). `totalOverride: null` clears the correction and its note (the
   // total goes back to the bank's or to the calculated one); `0` is a valid correction. Without a
   // total in the change, a note alone only replaces the note of a correction that exists.

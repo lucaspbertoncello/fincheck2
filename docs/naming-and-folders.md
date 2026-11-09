@@ -217,15 +217,15 @@ packages/ui/
 
 | Contexto       | Assuntos                                                                                                      |
 | -------------- | ------------------------------------------------------------------------------------------------------------- |
-| `accounts`     | `account` · `credit-card` · `wallet` (carteira manual) · `institution` (bancos pré-cadastrados)              |
-| `transactions` | `transaction` · `installment-plan` (compra parcelada) · `account-balance` e `account-deletion` (o que `accounts` pede) · `card-invoice` e `invoice-payment` (o que `invoices` pede) · `occurrence-payment` e `subscription-charge` (o que `recurrences` pede) · `bill-payment` (o que `bills` pede: o valor das transações e os efeitos da conta sobre elas, `lent` e `reimbursed`) · `category-rule-history` e `category-usage` (o que `categories` pede) · `highlight` (o que `profile` pede: linhas de gasto e maior Pix). Ainda sem arquivo: `transfer`, `provenance` |
-| `invoices`     | `invoice` (competência e caixa, fechamento) · `invoice-payment`                                               |
+| `accounts`     | `account` · `credit-card` · `wallet` (carteira manual) · `institution` (bancos pré-cadastrados) · `bank-account` (o que `sync` pede: criar, atualizar e devolver a manual as contas do banco) |
+| `transactions` | `transaction` · `installment-plan` (compra parcelada) · `account-balance` e `account-deletion` (o que `accounts` pede) · `card-invoice` e `invoice-payment` (o que `invoices` pede) · `occurrence-payment` e `subscription-charge` (o que `recurrences` pede) · `bill-payment` (o que `bills` pede: o valor das transações e os efeitos da conta sobre elas, `lent` e `reimbursed`) · `category-rule-history` e `category-usage` (o que `categories` pede) · `highlight` (o que `profile` pede: linhas de gasto e maior Pix) · `bank-import` (o que `sync` pede: criar as novas, aplicar a versão do banco, marcar removidas, natureza dos detectores, regras e leituras). Ainda sem arquivo: `transfer`, `provenance` |
+| `invoices`     | `invoice` (competência e caixa, fechamento) · `invoice-payment` · `bank-invoice` (o que `sync` pede: o total do banco e as faturas a pagar) |
 | `recurrences`  | `recurrence` (inclui `list-income-sources`, o que `profile` pede) · `occurrence` · `occurrence-payment` · `matching` · `subscription` (o dia útil e o feriado moram em `shared/calendar`) |
 | `profile`      | `profile` (nome, iniciais, avatar; a renda vem de `recurrences`) · `highlight` (as seis curiosidades) |
 | `bills`        | `bill` (conta a pagar ou a receber e dívida com amigo) · `bill-payment` (pagamento e recebimento, o que `transactions`, `invoices` e `recurrences` pedem) |
 | `categories`   | `category` · `tag` · `rule` (regra de categorização) · `suggestion`                                           |
 | `dashboard`    | `summary` · `projection` (projeção do mês) · `month-comparison` · `free-balance` (o quanto ainda pode gastar) |
-| `sync`         | `pluggy` (adaptador e camada anticorrupção) · `connection` · `run`                                            |
+| `sync`         | `pluggy` (adaptador e camada anticorrupção, em `infra/`) · `settings` (as chaves) · `connect-token` · `connection` (conexão e ligações às contas) · `run` (a rodada) · `import` (o que a rodada grava, pelas portas dos donos) · `detection` (detectores de pagamento de fatura e de transferência, puros) · `provider` (a porta do Pluggy) |
 | `backup`       | `backup` (cópia diária do arquivo) · `restore`                                                                |
 | `health`       | `health` (`GET /health`, estado da API e do banco). Técnico, sem regra de negócio                             |
 

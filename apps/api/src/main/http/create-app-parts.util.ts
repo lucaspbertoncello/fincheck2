@@ -10,6 +10,10 @@ import { createCategoriesModule } from '#/main/http/create-categories-module.uti
 import { composeLinkedTransactionReaders } from '#/main/http/compose-linked-transaction-readers.util.ts';
 import { createBillsModule } from '#/main/http/create-bills-module.util.ts';
 import { createBillsReaders } from '#/main/http/create-bills-readers.util.ts';
+import { createAccountsSyncPorts } from '#/main/http/create-accounts-sync-ports.util.ts';
+import { createSyncModule } from '#/main/http/create-sync-module.util.ts';
+import { createSyncReaders } from '#/main/http/create-sync-readers.util.ts';
+import { createTransactionsSyncPorts } from '#/main/http/create-transactions-sync-ports.util.ts';
 import { createTransactionsBillPorts } from '#/main/http/create-transactions-bill-ports.util.ts';
 import { composeTransactionLinksReaders } from '#/main/http/compose-transaction-links-readers.util.ts';
 import { createInvoicesModule } from '#/main/http/create-invoices-module.util.ts';
@@ -49,6 +53,14 @@ import { UpdateAccountController } from '#/modules/accounts/http/account/update-
 import { KyselyAccountRepository } from '#/modules/accounts/infra/account/account.repository.ts';
 import { GetTransactionOverviewQuery } from '#/modules/transactions/application/transaction-overview/get-transaction-overview.query.ts';
 import { CountActiveAccountsQuery } from '#/modules/accounts/application/account/count-active-accounts.query.ts';
+import type { BankDataProvider } from '#/modules/sync/application/provider/bank-data-provider.interface.ts';
+import type { BackgroundRunner } from '#/modules/sync/application/run/background-runner.interface.ts';
+import type { ExecuteRunUseCase } from '#/modules/sync/application/run/execute-run.usecase.ts';
+import type { SyncPauseGate } from '#/modules/sync/application/run/sync-pause-gate.interface.ts';
+import type { SecretCipher } from '#/modules/sync/application/settings/secret-cipher.interface.ts';
+import { PluggyGateway } from '#/modules/sync/infra/pluggy/pluggy.gateway.ts';
+import { InProcessBackgroundRunner } from '#/modules/sync/infra/run/in-process-background-runner.service.ts';
+import { DpapiSecretCipher } from '#/modules/sync/infra/secret/dpapi-secret-cipher.service.ts';
 import { CheckDatabaseQuery } from '#/modules/health/application/health/check-database.query.ts';
 import { GetHealthController } from '#/modules/health/http/health/get-health.controller.ts';
 import { createHealthRoute } from '#/modules/health/http/health/health.route.ts';
@@ -64,10 +76,21 @@ export function createAppParts({
   db,
   localToken,
   clock = new SystemClock(),
+  sync = {},
 }: {
   db: ReplaceableDatabase;
   localToken: string;
   clock?: Clock;
+  // What `sync` talks to the outside with; each one is the real thing unless a test passes a double:
+  // the Pluggy (the network), the cipher of the secret (PowerShell), the gate of the backup, the
+  // runner of the background rounds and how long a round waits for a bank the Pluggy is still reading.
+  sync?: {
+    provider?: BankDataProvider;
+    cipher?: SecretCipher;
+    pauseGate?: SyncPauseGate;
+    background?: BackgroundRunner;
+    wait?: ExecuteRunUseCase.Wait;
+  };
 }) {
   const unitOfWork = new KyselyUnitOfWork(db);
   // On while the restore of a backup swaps the database file: health is not ok and the tasks wait.
@@ -89,8 +112,11 @@ export function createAppParts({
   // charges of the subscriptions; invoices asks recurrences for the expected occurrences of a card
   // and the transactions that already settle one, and transactions asks it for the link of an
   // occurrence and the candidates of the review queue. The deletion of an account calls the owners
-  // of what hangs on it: invoices, transactions and categories. The Pluggy connection belongs to
-  // sync, which does not exist yet: its port stays unwired (the connection shows as null). bills
+  // of what hangs on it: invoices, transactions and categories. The Pluggy connection of an account
+  // belongs to sync, which `accounts` asks (it reads its own tables, so it is built first). sync asks
+  // every owner at the end of the composition: accounts (create, refresh, hand back to manual),
+  // transactions (create, update, remove, natures, categories), invoices (the total of the bank, the
+  // invoices to pay), categories (the rules) and recurrences (the automatic match). bills
   // asks categories for the category, transactions for what each transaction that pays or originates
   // a bill is worth, the ones to pick from and the effects on them (the friend part lent, the money
   // back reimbursed, the category of the bill), and invoices and recurrences for the transactions
@@ -99,6 +125,9 @@ export function createAppParts({
   // bill.
   const accounts = new KyselyAccountRepository(db);
   const accountRefs = new GetAccountRefQuery(accounts);
+  // sync asks every owner, so it is built at the end; the connection of an account only reads its
+  // own tables, so `accounts` gets it from the start.
+  const syncReaders = createSyncReaders({ db });
   const billPorts = createTransactionsBillPorts({ db, clock });
   const billReaders = createBillsReaders({ db, transactions: billPorts.billTransactions });
   const categories = createCategoriesModule({
@@ -140,6 +169,12 @@ export function createAppParts({
       recurrences.invoiceReaders.linkedTransactions,
     ),
   });
+  // Each owner only knows its own link: the invoice, the occurrence and the bill.
+  const transactionLinks = composeTransactionLinksReaders(
+    invoices.transactionReaders.links,
+    recurrences.transactionReaders.occurrenceLinks,
+    billReaders.links,
+  );
   const transactions = createTransactionsModule({
     db,
     unitOfWork,
@@ -148,12 +183,7 @@ export function createAppParts({
     readers: {
       ...categories.transactionReaders,
       ...invoices.transactionReaders,
-      // Each owner only knows its own link: the invoice, the occurrence and the bill.
-      links: composeTransactionLinksReaders(
-        invoices.transactionReaders.links,
-        recurrences.transactionReaders.occurrenceLinks,
-        billReaders.links,
-      ),
+      links: transactionLinks,
       recurrenceCandidates: recurrences.transactionReaders.recurrenceCandidates,
     },
   });
@@ -175,7 +205,7 @@ export function createAppParts({
   }
   const accountPresenter = new AccountPresenter(
     transactions.accountPorts.manualBalances,
-    undefined,
+    syncReaders.accountConnections,
   );
   const listAccounts = new ListAccountsController(
     new ListAccountsUseCase(accounts, accountPresenter),
@@ -222,7 +252,7 @@ export function createAppParts({
         transactions.accountPorts.transactionCounts,
         invoices.accountPorts.invoiceCounts,
         categories.accountPorts.ruleCounts,
-        undefined,
+        syncReaders.accountConnections,
       ),
     ),
     deleteAccount: new DeleteAccountController(
@@ -242,6 +272,42 @@ export function createAppParts({
     gate,
     transactionOverview: new GetTransactionOverviewQuery(db),
     activeAccounts: new CountActiveAccountsQuery(db),
+  });
+
+  // sync: the Pluggy and everything the round writes, through the ports of each owner.
+  const syncPauseGate = sync.pauseGate ?? { isPaused: () => gate.isActive() };
+  const syncModule = createSyncModule({
+    db,
+    unitOfWork,
+    clock,
+    provider: sync.provider ?? new PluggyGateway(undefined, clock),
+    cipher: sync.cipher ?? new DpapiSecretCipher(),
+    pauseGate: syncPauseGate,
+    background: sync.background ?? new InProcessBackgroundRunner(),
+    ...(sync.wait ? { wait: sync.wait } : {}),
+    accounts: createAccountsSyncPorts({ db, accounts, clock }),
+    transactions: createTransactionsSyncPorts({
+      db,
+      clock,
+      accounts: accountRefs,
+      invoiceMonths: invoices.transactionReaders.invoiceMonths,
+      links: transactionLinks,
+    }),
+    invoices: {
+      recordBankTotals: (input, executor) =>
+        invoices.syncPorts.recordBankTotals.execute(input, executor),
+      listPayable: (executor) => invoices.syncPorts.payableInvoices.execute(executor),
+    },
+    rules: { load: (executor) => categories.syncPorts.loadRuleSet.execute(executor) },
+    recurrences: {
+      autoMatch: (input, executor) => recurrences.syncPorts.autoMatch.execute(input, executor),
+    },
+    balance: {
+      balancesOf: (accountIds, executor) =>
+        transactions.accountPorts.manualBalances.balancesOf(accountIds, executor),
+      adjust: (input, executor) =>
+        transactions.accountPorts.balanceAdjustments.execute(input, executor),
+    },
   });
 
   const app = new Hono()
@@ -273,12 +339,15 @@ export function createAppParts({
     .route('/', recurrences.routes)
     .route('/', profile.routes)
     .route('/', bills.routes)
-    .route('/', backup.routes);
+    .route('/', backup.routes)
+    .route('/', syncModule.routes);
 
   return {
     app,
     gate,
     ensureOccurrences: recurrences.ensureOccurrences,
     runDailyBackup: backup.runDailyBackup,
+    runDueConnections: syncModule.runDueConnections,
+    recoverInterruptedRuns: syncModule.recoverInterruptedRuns,
   };
 }

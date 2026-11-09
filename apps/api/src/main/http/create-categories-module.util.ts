@@ -17,6 +17,7 @@ import { CreateRuleUseCase } from '#/modules/categories/application/rule/create-
 import { DeleteRuleUseCase } from '#/modules/categories/application/rule/delete-rule.usecase.ts';
 import { GetExistingRuleIdsQuery } from '#/modules/categories/application/rule/get-existing-rule-ids.query.ts';
 import { ListRulesQuery } from '#/modules/categories/application/rule/list-rules.query.ts';
+import { LoadCategoryRuleSetQuery } from '#/modules/categories/application/rule/load-category-rule-set.query.ts';
 import { PreviewRuleQuery } from '#/modules/categories/application/rule/preview-rule.query.ts';
 import type { RuleAccountReader } from '#/modules/categories/application/rule/rule-account-reader.interface.ts';
 import { RuleCreator } from '#/modules/categories/application/rule/rule-creator.service.ts';
@@ -188,6 +189,10 @@ export function createCategoriesModule(deps: {
     accountPorts: {
       ruleCounts: new CountAccountRulesQuery(db),
       deleteRules: new DeleteAccountRulesUseCase(rules),
+    },
+    // The ports `sync` declares and `categories` fulfils.
+    syncPorts: {
+      loadRuleSet: new LoadCategoryRuleSetQuery(db, rules, categoryRefs, tagRefs),
     },
   };
 }

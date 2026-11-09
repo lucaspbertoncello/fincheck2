@@ -34,13 +34,15 @@ export class KyselyAccountRepository implements AccountRepository<Kysely<Databas
   async save(account: Account, executor: Kysely<Database> = this.db): Promise<void> {
     const { account: accountRow, creditCard } = AccountItem.fromEntity(account);
 
-    // `type`, `source` and `created_at` never change, so they are not part of the update.
+    // `type` and `created_at` never change, so they are not part of the update. `source` changes
+    // only through the sync (disconnected, reconnected).
     await executor
       .insertInto('accounts')
       .values(accountRow)
       .onConflict((conflict) =>
         conflict.column('id').doUpdateSet({
           name: accountRow.name,
+          source: accountRow.source,
           institution_code: accountRow.institution_code,
           institution_name: accountRow.institution_name,
           bank_balance_cents: accountRow.bank_balance_cents ?? null,
