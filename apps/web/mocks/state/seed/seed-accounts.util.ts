@@ -74,7 +74,8 @@ export function seedAccounts(database: MockState.Database, ids: SeedIds): void {
       name: 'Roxinho',
       institutionCode: 'nubank',
       institutionName: null,
-      bankBalanceCents: 0,
+      // Used on the card, positive, as Pluggy sends it (contract).
+      bankBalanceCents: 284_390,
       balanceAt: hoursAgo(0.7),
       connectionId: ids.conn.nu,
       creditCard: {
@@ -95,7 +96,7 @@ export function seedAccounts(database: MockState.Database, ids: SeedIds): void {
       name: 'Bradesco Black',
       institutionCode: 'bradesco',
       institutionName: null,
-      bankBalanceCents: 0,
+      bankBalanceCents: 131_270,
       balanceAt: hoursAgo(41),
       connectionId: ids.conn.br,
       creditCard: {

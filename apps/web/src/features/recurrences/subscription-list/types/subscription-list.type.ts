@@ -1,4 +1,5 @@
 import type { Subscription } from '@fincheck/shared/recurrences/subscription/subscription.type.ts';
+import type { SubscriptionService } from '@fincheck/shared/recurrences/subscription-service/subscription-service.type.ts';
 import type { IconName, ServiceLogoData } from '@fincheck/ui';
 
 /** The warning of a row: what happened and, when there is one, the button that answers it. */
@@ -40,6 +41,8 @@ export type SubscriptionSuggestionData = {
   name: string;
   /** The service the description points to; null keeps the suggestion icon. */
   service: ServiceLogoData | null;
+  /** The slug of that service, sent on "Acompanhar"; null is "Outro". */
+  serviceSlug: SubscriptionService.Slug | null;
 };
 
 export type ActionErrorData = { message: string; onRetry: () => void };

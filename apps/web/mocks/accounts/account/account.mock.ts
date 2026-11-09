@@ -117,7 +117,13 @@ export const accountMock = [
         transactionCount: db.transactions.filter((tx) => tx.accountId === account.id).length,
         installmentPlanCount: db.installmentPlans.filter((plan) => plan.accountId === account.id)
           .length,
-        invoiceCount: db.invoices.filter((invoice) => invoice.accountId === account.id).length,
+        // Every month the card has an invoice row or a transaction in.
+        invoiceCount: new Set([
+          ...db.invoices.filter((invoice) => invoice.accountId === account.id).map((i) => i.month),
+          ...db.transactions
+            .filter((tx) => tx.accountId === account.id && tx.invoiceMonth !== null)
+            .map((tx) => tx.invoiceMonth),
+        ]).size,
         ruleCount: db.rules.filter((rule) => rule.accountId === account.id).length,
         isPluggy: account.source === 'pluggy',
         returnsOnNextSync: account.source === 'pluggy' && connection?.status === 'active',
@@ -162,7 +168,7 @@ export const accountMock = [
         };
         db.accounts.push(record);
         if (body.initialBalanceCents)
-          addAdjustment(record, body.initialBalanceCents, TODAY, 'saldo inicial');
+          addAdjustment(record, body.initialBalanceCents, TODAY, 'Saldo inicial');
 
         return presentAccount(db, record);
       },
@@ -183,11 +189,25 @@ export const accountMock = [
         }
         if (body.institutionCode !== undefined && account.type === 'wallet')
           fail(400, 'VALIDATION_FAILED', 'Carteira não muda de banco');
+        if (body.institutionCode === 'wallet')
+          fail(400, 'VALIDATION_FAILED', 'Só a carteira usa o banco "wallet"');
         if (body.creditCard && !account.creditCard)
           fail(422, 'ACCOUNT_NOT_A_CARD', 'A conta não é cartão');
+
+        // The name of the bank only exists for `other`: any other bank clears it (accounts.md).
+        const institutionCode = body.institutionCode ?? account.institutionCode;
+        let institutionName: string | null = null;
+        if (institutionCode === 'other') {
+          institutionName =
+            body.institutionName === undefined ? account.institutionName : body.institutionName;
+          if (institutionName === null) fail(400, 'VALIDATION_FAILED', 'Informe o nome do banco');
+        } else if (typeof body.institutionName === 'string') {
+          fail(400, 'VALIDATION_FAILED', 'Só o banco "other" tem nome');
+        }
+
         if (body.name !== undefined) account.name = body.name;
-        if (body.institutionCode !== undefined) account.institutionCode = body.institutionCode;
-        if (body.institutionName !== undefined) account.institutionName = body.institutionName;
+        account.institutionCode = institutionCode;
+        account.institutionName = institutionName;
         if (body.creditCard && account.creditCard) {
           const patch = body.creditCard;
           account.creditCard = {

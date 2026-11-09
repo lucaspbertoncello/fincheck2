@@ -11,17 +11,28 @@ interface Period {
   // Today in the current month, the last day in a past month, the first day in a future one.
   asOfOn: string;
   previousFromOn: string;
-  // The same day in the previous month (held at its last day when it is shorter).
+  // The same day in the previous month (held at its last day when it is shorter); in a past month,
+  // its last day.
   previousUntilOn: string;
 }
 
-// The two windows a month is compared on: day 1 to `asOfOn` against day 1 to the same day before.
+// The two windows a month is compared on: day 1 to `asOfOn` against day 1 to the same point of the
+// month before (the same day number in the current month; the whole month in a past one).
 export function computePeriod(month: string): Period {
   const previousMonth = addMonths(month, -1);
   let asOfOn: string;
-  if (month === CURRENT_MONTH) asOfOn = TODAY;
-  else if (month < CURRENT_MONTH) asOfOn = dateInMonth(month, daysInMonth(month));
-  else asOfOn = `${month}-01`;
+  let previousUntilOn: string;
+  if (month === CURRENT_MONTH) {
+    asOfOn = TODAY;
+    previousUntilOn = dateInMonth(previousMonth, dayOf(TODAY));
+  } else if (month < CURRENT_MONTH) {
+    // A past month is compared as a whole against the whole month before.
+    asOfOn = dateInMonth(month, daysInMonth(month));
+    previousUntilOn = dateInMonth(previousMonth, daysInMonth(previousMonth));
+  } else {
+    asOfOn = `${month}-01`;
+    previousUntilOn = `${previousMonth}-01`;
+  }
 
   return {
     month,
@@ -29,6 +40,6 @@ export function computePeriod(month: string): Period {
     fromOn: `${month}-01`,
     asOfOn,
     previousFromOn: `${previousMonth}-01`,
-    previousUntilOn: dateInMonth(previousMonth, dayOf(asOfOn)),
+    previousUntilOn,
   };
 }

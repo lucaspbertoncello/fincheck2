@@ -22,7 +22,6 @@ export function listSpendWindow(database: MockState.Database): SpendWindow {
   const spentByDay = new Map<string, number>();
   for (const line of lines)
     spentByDay.set(line.competenceOn, (spentByDay.get(line.competenceOn) ?? 0) + line.spentCents);
-  for (const [date, total] of spentByDay) spentByDay.set(date, Math.max(0, total));
 
   const dates = Array.from({ length: daysBetween(fromOn, TODAY) + 1 }, (_, index) =>
     addDays(fromOn, index),

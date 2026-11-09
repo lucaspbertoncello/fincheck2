@@ -12,22 +12,30 @@ import type { BackupStatus } from '@fincheck/shared/backup/backup-status/backup-
 import { listResponseSchema } from '@fincheck/shared/common/list/list.schema.ts';
 import { http } from 'msw';
 
+import { findBackupFileFault } from '#mocks/backup/backup/backup-file-fault.store.ts';
 import { buildBackupFile } from '#mocks/backup/backup/build-backup-file.util.ts';
+import { computeNextBackupAt } from '#mocks/backup/backup/compute-next-backup-at.util.ts';
+import { inspectFolder } from '#mocks/backup/backup/inspect-folder.util.ts';
+import { normalizeFolderPath } from '#mocks/backup/backup/normalize-folder-path.util.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
-import { NOW, NOW_ISO } from '#mocks/support/dates/mock-clock.store.ts';
+import { NOW, NOW_ISO, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { fail } from '#mocks/support/http/fail.util.ts';
 import { handleRoute } from '#mocks/support/http/handle-route.util.ts';
 
+const FOLDER_MESSAGE = {
+  not_found: 'A pasta de backup não existe ou não abre.',
+  not_a_folder: 'O caminho informado não é uma pasta.',
+  not_writable: 'Não consegui gravar na pasta de backup.',
+} as const;
+
+const FILE_MESSAGE = {
+  corrupt: 'O arquivo de backup está danificado.',
+  not_fincheck: 'Esse arquivo não é um banco do Fincheck.',
+  newer_version: 'Esse backup vem de uma versão mais nova do Fincheck.',
+} as const;
+
 const newestFirst = () =>
   [...db.backup.files].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-
-// The next 03:00 in São Paulo (06:00 UTC), or now when today's is already past and not done.
-function nextScheduledAt(): string {
-  const today = new Date(Date.UTC(NOW.getUTCFullYear(), NOW.getUTCMonth(), NOW.getUTCDate(), 6));
-  const next = today.getTime() > NOW.getTime() ? today : new Date(today.getTime() + 86_400_000);
-
-  return next.toISOString();
-}
 
 function buildStatus(): BackupStatus.Dto {
   const last = newestFirst()[0];
@@ -40,16 +48,25 @@ function buildStatus(): BackupStatus.Dto {
         ? { fileName: last.fileName, createdAt: last.createdAt, sizeBytes: last.sizeBytes }
         : null,
     keepCount: BACKUP_KEEP_COUNT,
-    nextScheduledAt: folder ? nextScheduledAt() : null,
+    nextScheduledAt: folder
+      ? computeNextBackupAt({
+          now: NOW_ISO,
+          today: TODAY,
+          // The day is the one in the name of the file (São Paulo's clock).
+          hasBackupToday: db.backup.files.some((file) => file.fileName.slice(9, 19) === TODAY),
+          lastErrorAt: db.backup.lastError?.at ?? null,
+        })
+      : null,
     running: db.backup.running,
     lastError: db.backup.lastError,
   };
 }
 
-function storeFile(file: ReturnType<typeof buildBackupFile>) {
-  db.backup.files = [...db.backup.files, file]
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, BACKUP_KEEP_COUNT);
+// A backup of the clock keeps the 30 newest; the safety copy of a restore comes in without cutting
+// anything (there can be 31 until the next backup).
+function storeFile(file: ReturnType<typeof buildBackupFile>, options: { rotate: boolean }) {
+  const sorted = [...db.backup.files, file].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  db.backup.files = options.rotate ? sorted.slice(0, BACKUP_KEEP_COUNT) : sorted;
 }
 
 export const backupMock = [
@@ -61,7 +78,7 @@ export const backupMock = [
       if (db.backup.running) {
         db.backup.running = false;
         db.backup.lastError = null;
-        storeFile(buildBackupFile(NOW, db.backup.dbSizeBytes));
+        storeFile(buildBackupFile(NOW, db.backup.dbSizeBytes), { rotate: true });
       }
 
       return status;
@@ -73,11 +90,12 @@ export const backupMock = [
     handleRoute(
       { body: updateBackupSettingsRequestSchema, response: backupStatusDtoSchema },
       ({ body }) => {
-        // The mock has no disk: a path that says it does not exist behaves like one.
-        if (/inexistente|naoexiste/i.test(body.folderPath)) {
-          fail(422, 'BACKUP_FOLDER_INVALID', 'A pasta não existe', { reason: 'not_found' });
-        }
-        db.backup.folderPath = body.folderPath;
+        const folderPath = normalizeFolderPath(body.folderPath);
+        const reason = inspectFolder(folderPath);
+        if (reason) fail(422, 'BACKUP_FOLDER_INVALID', FOLDER_MESSAGE[reason], { reason });
+        db.backup.folderPath = folderPath;
+        // The last failure was about the old folder.
+        db.backup.lastError = null;
 
         return buildStatus();
       },
@@ -119,16 +137,27 @@ export const backupMock = [
     handleRoute(
       { body: restoreBackupRequestSchema, response: restoreBackupResponseSchema, status: 202 },
       ({ body }) => {
-        if (db.backup.running) fail(409, 'BACKUP_IN_PROGRESS', 'Já há um backup em andamento');
-        if (
-          !db.backup.folderPath ||
-          !db.backup.files.some((file) => file.fileName === body.fileName)
-        ) {
+        // The order of the API: no folder, a restore or backup under way, the folder gone, the
+        // file not in it, and only then the file itself.
+        if (!db.backup.folderPath)
           fail(404, 'BACKUP_FILE_NOT_FOUND', 'O arquivo não está na pasta');
+        if (db.backup.running) fail(409, 'BACKUP_IN_PROGRESS', 'Já há um backup em andamento');
+        const folderReason = inspectFolder(db.backup.folderPath);
+        if (folderReason) {
+          fail(422, 'BACKUP_FOLDER_INVALID', FOLDER_MESSAGE[folderReason], {
+            reason: folderReason,
+          });
+        }
+        if (!db.backup.files.some((file) => file.fileName === body.fileName)) {
+          fail(404, 'BACKUP_FILE_NOT_FOUND', 'O arquivo não está na pasta');
+        }
+        const fault = findBackupFileFault(body.fileName);
+        if (fault) {
+          fail(422, 'BACKUP_FILE_INVALID', FILE_MESSAGE[fault], { reason: fault });
         }
         // The copy of the database in use is kept next to the others, so restoring can be undone.
         const safetyCopy = buildBackupFile(NOW, db.backup.dbSizeBytes);
-        storeFile(safetyCopy);
+        storeFile(safetyCopy, { rotate: false });
 
         return { safetyCopyFileName: safetyCopy.fileName };
       },

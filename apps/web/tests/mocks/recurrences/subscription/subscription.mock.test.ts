@@ -71,7 +71,7 @@ describe('GET /subscriptions (items and summary)', () => {
       expectedAmountCents: 18_000,
       accountId: findTestCard().id,
       method: 'credit',
-      dateRule: { type: 'fixed_day', day: 12 },
+      dateRule: { type: 'fixed_day', day: 28 },
     });
     expect(created.status).toBe(201);
     const { recurrence } = createRecurrenceResponseSchema.parse(created.json);
@@ -328,6 +328,8 @@ describe('POST /subscriptions/suggestions/accept and /dismiss', () => {
     expect(occurrence?.status).toBe('confirmed');
     // It is marked as a subscription, with the service the description names.
     expect(recurrence).toMatchObject({ isSubscription: true, serviceSlug: 'deezer' });
+    // Only the category of the body counts, never the one of the last charge.
+    expect(recurrence.categoryId).toBeNull();
 
     // The three charges are linked to the occurrences of their months.
     const detail = recurrenceDetailDtoSchema.parse(

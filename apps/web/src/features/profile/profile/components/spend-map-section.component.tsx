@@ -20,6 +20,7 @@ import { formatPeakDay } from '#/features/profile/profile/utils/format-peak-day.
 import { resolveSpendMapView } from '#/features/profile/profile/utils/resolve-spend-map-view.util.ts';
 import { SectionError } from '#/shared/components/states/section-error.component.tsx';
 import { formatMonthParts } from '#/shared/utils/format-month-parts.util.ts';
+import { countWord } from '#/shared/utils/text/count-word.util.ts';
 
 type SpendMapSectionProps = {
   state: 'loading' | 'error' | 'ready';
@@ -154,7 +155,7 @@ export function SpendMapSection({
                     <HeatmapStat
                       label="Média por dia"
                       value={<Money cents={summary.averageCents} sign="none" tone="expense" />}
-                      hint={`${summary.dayCount} dias`}
+                      hint={countWord(summary.dayCount, 'dia', 'dias')}
                     />
                     <HeatmapStat
                       label="Dias sem gasto"

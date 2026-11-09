@@ -1,7 +1,7 @@
 import type { ServiceLogoData } from '@fincheck/ui';
 
 import { buildServiceLogoData } from '#/domain/recurrences/service-logo/rules/build-service-logo-data.rule.ts';
-import { recognizeServiceSlug } from '#/domain/recurrences/service-logo/rules/recognize-service-slug.rule.ts';
+import { recognizeServiceSlug } from '@fincheck/shared/recurrences/subscription-service/recognize-service-slug.util.ts';
 
 /**
  * The service a charge description points to, with its name and logo, or `null` when it names none

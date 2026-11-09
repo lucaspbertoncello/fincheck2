@@ -47,8 +47,10 @@ export type InvoiceSummaryData = {
 
 /** One line of "Para onde foi": a category with its share, and whether it filters the list now. */
 export type InvoiceCategoryRowData = {
-  /** The category id, or `none` for what has no category. */
+  /** The category id, `none` for what has no category, or `lent` for what was lent. */
   key: string;
+  /** What was lent to a friend: its own line, with no category, that does not filter the list. */
+  isLent: boolean;
   name: string;
   icon: IconName;
   totalCents: number;

@@ -32,6 +32,8 @@ export type TransactionRowData = {
   /** Neutralized in the month totals: transfer between own accounts, invoice payment. */
   outOfAccount?: boolean;
   ignored?: boolean;
+  /** Already linked to an occurrence of a recurrence: the menu does not offer "Criar recorrência". */
+  recurring?: boolean;
   /** The part of a friend's debt this payment settled, in cents ("Abateu R$ 150,00 da dívida com Rafa"). */
   debtPaidCents?: number;
   debtPerson?: string;

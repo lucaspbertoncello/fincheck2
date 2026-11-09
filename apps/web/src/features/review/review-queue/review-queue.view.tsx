@@ -32,7 +32,7 @@ export type ReviewQueueViewProps = {
   hiddenCount: number;
   onChooseCandidate: (itemId: string, optionId: string) => void;
   onChooseOther: (itemId: string) => void;
-  /** "Você moveu 3 transações..." offer for something saved in this visit. */
+  /** "3 transações com essa descrição estão em ..." offer for something saved in this visit. */
   ruleSuggestion: {
     message: string;
     onCreate: () => void;

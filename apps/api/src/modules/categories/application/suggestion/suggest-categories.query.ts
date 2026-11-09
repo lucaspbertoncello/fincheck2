@@ -4,7 +4,7 @@ import type { Database } from '#/database/database.type.ts';
 import type { ManualCategorizationReader } from '#/modules/categories/application/suggestion/manual-categorization-reader.interface.ts';
 import type { CategoryRuleRepository } from '#/modules/categories/domain/rule/category-rule-repository.interface.ts';
 import { suggestCategoriesForDescription } from '#/modules/categories/domain/suggestion/suggest-categories-for-description.util.ts';
-import { normalizeDescription } from '#/shared/text/normalize-description.util.ts';
+import { normalizeDescription } from '@fincheck/shared/common/text/normalize-description.util.ts';
 
 // "Parece Restaurantes" in the review queue: up to three categories for each transaction waiting,
 // from what Lucas already did with that description and from the rules. `transactions` asks it

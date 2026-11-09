@@ -2,6 +2,7 @@ import type { FreeBalance } from '@fincheck/shared/dashboard/free-balance/free-b
 
 import { presentAccount } from '#mocks/accounts/account/present-account.util.ts';
 import { buildAgendaItems } from '#mocks/dashboard/agenda/build-agenda-items.util.ts';
+import { compareAgendaItems } from '#mocks/dashboard/agenda/compare-agenda-items.util.ts';
 import { isConnectionStale } from '#mocks/sync/connection/is-connection-stale.util.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
 import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
@@ -19,9 +20,9 @@ export function computeFreeBalance(database: MockState.Database): FreeBalance.Dt
     (entry) => entry.record.source === 'pluggy' && entry.dto.balanceCents === null,
   );
 
-  const items = buildAgendaItems(database, CURRENT_MONTH).filter(
-    (item) => item.countsInFreeBalance && item.remainingCents > 0,
-  );
+  const items = buildAgendaItems(database, CURRENT_MONTH)
+    .filter((item) => item.countsInFreeBalance && item.remainingCents > 0)
+    .sort(compareAgendaItems);
   const receivableItems = items.filter((item) => item.flow === 'in');
   const payableItems = items.filter((item) => item.flow === 'out');
   const sum = (list: { remainingCents: number }[]) =>

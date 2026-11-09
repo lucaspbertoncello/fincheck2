@@ -2,7 +2,7 @@ import { SERVICE_LOGO_ART } from '@fincheck/ui';
 import { describe, expect, it } from 'vitest';
 
 import { SERVICE_LOGO_SLUGS } from '#/domain/recurrences/service-logo/constants/service-logo-slugs.constant.ts';
-import { SERVICE_PATTERNS } from '#/domain/recurrences/service-logo/constants/service-patterns.constant.ts';
+import { SUBSCRIPTION_SERVICE_PATTERNS } from '@fincheck/shared/recurrences/subscription-service/subscription-service.constant.ts';
 import { recognizeService } from '#/domain/recurrences/service-logo/rules/recognize-service.rule.ts';
 
 // What the statement says, then the name and the logo it must give.
@@ -49,7 +49,7 @@ describe('recognizeService', () => {
 
   it('has a case for each of the 25 services', () => {
     expect(new Set(CASES.map(([, name]) => name)).size).toBe(25);
-    expect(SERVICE_PATTERNS).toHaveLength(25);
+    expect(SUBSCRIPTION_SERVICE_PATTERNS).toHaveLength(25);
   });
 
   it('gives 21 services a logo file and 4 the category icon', () => {

@@ -62,6 +62,11 @@ describe('Fatura, página (BR-INV-006)', () => {
       ),
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Para onde foi' })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Das compras lançadas. Recorrências esperadas entram quando forem cobradas.',
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Destaques' })).toBeInTheDocument();
     expect(
       screen.getByText(`${formatMonthParts(addMonths(month, 1)).monthLabel} já começa com`),
@@ -228,11 +233,15 @@ describe('Fatura, página (BR-INV-006)', () => {
     expect(screen.getByRole('button', { name: 'Fatura anterior' })).toBeDisabled();
   });
 
-  it('shows the error state with a way to try again when the invoice does not load', async () => {
-    renderApp('/cards/00000000-0000-7000-8000-000000000000/invoices/2026-10');
+  it('says the invoice does not exist when the card does not exist or the id is malformed', async () => {
+    const view = renderApp('/cards/00000000-0000-7000-8000-000000000000/invoices/2026-10');
 
-    expect(await screen.findByText('Não deu para carregar a fatura')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Tentar de novo' })).toBeInTheDocument();
+    expect(await screen.findByText('Essa fatura não existe')).toBeInTheDocument();
+    expect(screen.queryByText('Não deu para carregar a fatura')).not.toBeInTheDocument();
+    view.unmount();
+
+    renderApp('/cards/abc/invoices/2026-10');
+    expect(await screen.findByText('Essa fatura não existe')).toBeInTheDocument();
   });
 
   it('says the invoice does not exist when the month in the address is not a month', async () => {

@@ -11,50 +11,99 @@ type Extras = Pick<
 
 type TransactionItem = Extract<Invoice.Item, { type: 'transaction' }>;
 
-// Where the money went: one entry per category, refunds taken off, the biggest first. Only the
-// lines the card really has count (the expected recurrences have no category in the invoice).
-function buildCategoryBreakdown(items: TransactionItem[]): Invoice.CategoryShare[] {
-  const groups = new Map<string | null, { totalCents: number; itemCount: number }>();
-  for (const item of items) {
-    const group = groups.get(item.categoryId) ?? { totalCents: 0, itemCount: 0 };
-    group.totalCents -= item.amountCents;
-    group.itemCount += 1;
-    groups.set(item.categoryId, group);
+interface SpendingLine {
+  categoryId: string | null;
+  isLent: boolean;
+  spentCents: number;
+}
+
+// The lines of spending of an item: the parts of a split transaction, or the transaction itself.
+// Only an expense or what was lent is spending on a card; a transfer or an adjustment is not.
+// `spentCents` is positive for a purchase and negative for a refund.
+function explodeSpendingLines(database: MockState.Database, item: TransactionItem): SpendingLine[] {
+  const tx = database.transactions.find((record) => record.id === item.transactionId);
+  if (!tx) return [];
+  const sources =
+    tx.splits.length > 0
+      ? tx.splits.map((part) => ({
+          categoryId: part.categoryId,
+          nature: part.nature,
+          amountCents: part.amountCents,
+        }))
+      : [{ categoryId: tx.categoryId, nature: tx.nature, amountCents: tx.amountCents }];
+
+  return sources.flatMap((source) => {
+    const isLent = source.nature === 'lent' || source.nature === 'reimbursed';
+    if (source.nature !== 'expense' && !isLent) return [];
+
+    return [{ categoryId: source.categoryId, isLent, spentCents: -source.amountCents }];
+  });
+}
+
+// Where the money went: one entry per category, refunds taken off, the biggest first. A split
+// transaction counts by its parts; what was lent has a line of its own (null category, `isLent`).
+// The expected recurrences are not here: they have no category in the invoice.
+function buildCategoryBreakdown(
+  database: MockState.Database,
+  items: TransactionItem[],
+): Invoice.CategoryShare[] {
+  const buckets = new Map<
+    string,
+    { categoryId: string | null; isLent: boolean; totalCents: number; itemCount: number }
+  >();
+  for (const line of items.flatMap((item) => explodeSpendingLines(database, item))) {
+    const key = line.isLent ? 'lent' : (line.categoryId ?? 'none');
+    const bucket = buckets.get(key) ?? {
+      categoryId: line.isLent ? null : line.categoryId,
+      isLent: line.isLent,
+      totalCents: 0,
+      itemCount: 0,
+    };
+    bucket.totalCents += line.spentCents;
+    bucket.itemCount += 1;
+    buckets.set(key, bucket);
   }
-  const kept = [...groups.entries()].filter(([, group]) => group.totalCents > 0);
-  const sum = kept.reduce((total, [, group]) => total + group.totalCents, 0);
+  const kept = [...buckets.entries()].filter(([, bucket]) => bucket.totalCents > 0);
+  const sum = kept.reduce((total, [, bucket]) => total + bucket.totalCents, 0);
 
   return kept
-    .map(([categoryId, group]) => ({
-      categoryId,
-      // The mock has no lent line yet (piece 12 aligns it with the API).
-      isLent: false,
-      totalCents: group.totalCents,
-      sharePercent: Math.round((group.totalCents / sum) * 1000) / 10,
-      itemCount: group.itemCount,
-    }))
-    .sort((a, b) => b.totalCents - a.totalCents);
+    .toSorted(([keyA, a], [keyB, b]) => b.totalCents - a.totalCents || keyA.localeCompare(keyB))
+    .map(([, bucket]) => ({
+      categoryId: bucket.categoryId,
+      isLent: bucket.isLent,
+      totalCents: bucket.totalCents,
+      sharePercent: Math.round((bucket.totalCents * 1000) / sum) / 10,
+      itemCount: bucket.itemCount,
+    }));
 }
 
 function buildHighlights(items: TransactionItem[]): Invoice.Highlights {
   const purchases = items.filter((item) => item.amountCents < 0);
-  const largest = purchases.reduce<TransactionItem | null>(
-    (best, item) => (best === null || item.amountCents < best.amountCents ? item : best),
-    null,
-  );
-  const endingInstallments = items.flatMap((item) =>
-    item.installment && item.installment.number === item.installment.count && item.amountCents < 0
-      ? [
-          {
-            transactionId: item.transactionId,
-            title: item.description,
-            cents: -item.amountCents,
-            number: item.installment.number,
-            total: item.installment.count,
-          },
-        ]
-      : [],
-  );
+  // A tie on the amount goes to the most recent, then to the biggest id.
+  const largest = purchases.toSorted(
+    (a, b) =>
+      a.amountCents - b.amountCents ||
+      b.occurredOn.localeCompare(a.occurredOn) ||
+      b.transactionId.localeCompare(a.transactionId),
+  )[0];
+  const endingInstallments = purchases
+    .filter((item) => item.installment && item.installment.number === item.installment.count)
+    .toSorted(
+      (a, b) => a.amountCents - b.amountCents || b.transactionId.localeCompare(a.transactionId),
+    )
+    .flatMap((item) =>
+      item.installment
+        ? [
+            {
+              transactionId: item.transactionId,
+              title: item.description,
+              cents: -item.amountCents,
+              number: item.installment.number,
+              total: item.installment.count,
+            },
+          ]
+        : [],
+    );
 
   return {
     largestItem: largest
@@ -85,7 +134,7 @@ export function buildInvoiceDetailExtras(
   const next = computeInvoice(database, accountId, addMonths(month, 1)).dto.breakdown;
 
   return {
-    categoryBreakdown: buildCategoryBreakdown(transactions),
+    categoryBreakdown: buildCategoryBreakdown(database, transactions),
     previousTotalCents: hasPrevious ? previous.dto.totalCents : null,
     highlights: buildHighlights(transactions),
     nextInvoiceCommittedCents: Math.max(0, next.installmentsCents + next.expectedRecurringCents),

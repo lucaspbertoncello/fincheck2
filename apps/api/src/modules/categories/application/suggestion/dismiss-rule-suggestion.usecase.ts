@@ -5,7 +5,7 @@ import type { Database } from '#/database/database.type.ts';
 import { requireCategoryRow } from '#/modules/categories/application/category/require-category-row.util.ts';
 import type { Clock } from '#/shared/clock/clock.interface.ts';
 import { generateId } from '#/shared/id/generate-id.util.ts';
-import { normalizeDescription } from '#/shared/text/normalize-description.util.ts';
+import { normalizeDescription } from '@fincheck/shared/common/text/normalize-description.util.ts';
 import type { UnitOfWork } from '#/shared/unit-of-work/unit-of-work.interface.ts';
 
 // "Agora não" (RF-CAT-005): the same suggestion does not come back; the same pattern for another

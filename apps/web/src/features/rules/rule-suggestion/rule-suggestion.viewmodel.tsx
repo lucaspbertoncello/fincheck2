@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import { useRuleOutcomeToasts } from '#/features/rules/hooks/use-rule-outcome-toasts.hook.ts';
 import type { TagOption } from '#/features/rules/types/rule-form.type.ts';
+import { describeRuleSuggestion } from '#/shared/utils/rules/describe-rule-suggestion.util.ts';
 import { buildCategoryGroups } from '#/features/rules/utils/build-category-groups.util.ts';
 import { useRuleSuggestionModel } from '#/features/rules/rule-suggestion/rule-suggestion.model.ts';
 import { buildHistoryLabel } from '#/features/rules/utils/build-history-label.util.ts';
@@ -103,7 +104,11 @@ export function useRuleSuggestionViewModel() {
 
     return {
       key,
-      intro: `Você moveu ${suggestion.recategorizedCount} transações “${suggestion.pattern}” para ${nameOf(suggestion.categoryId)}. A regra faz isso sozinha daqui para a frente.`,
+      intro: describeRuleSuggestion({
+        count: suggestion.recategorizedCount,
+        pattern: suggestion.pattern,
+        categoryName: nameOf(suggestion.categoryId),
+      }),
       pattern: suggestion.pattern,
       categoryId: suggestion.categoryId,
       categoryGroups: buildCategoryGroups(categories, {

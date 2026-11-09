@@ -38,7 +38,7 @@ describe('apiRequest', () => {
     expect(answer.items.length).toBeGreaterThan(0);
   });
 
-  it('sends the local token and the query as text', async () => {
+  it('sends the query as text and no token (the dev proxy adds it)', async () => {
     let seen: { token: string | null; search: string } | undefined;
     server.use(
       http.get('/api/transactions', ({ request }) => {
@@ -58,7 +58,7 @@ describe('apiRequest', () => {
       query: { month: '2026-10', uncategorized: true },
     });
 
-    expect(seen?.token).toBeTruthy();
+    expect(seen?.token).toBeNull();
     expect(seen?.search).toBe('?month=2026-10&uncategorized=true');
   });
 

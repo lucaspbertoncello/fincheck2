@@ -17,6 +17,7 @@ import { formatTimeAgo } from '#/features/settings/settings/connections/utils/fo
 import { focusFirstInvalid } from '#/features/settings/settings/utils/focus-first-invalid.util.ts';
 import { navigateToHref } from '#/shared/layouts/application/navigation/navigate-to-href.util.ts';
 import { getActionErrorMessage } from '#/features/settings/settings/utils/get-action-error-message.util.ts';
+import { countWord } from '#/shared/utils/text/count-word.util.ts';
 
 type SetupErrors = { clientId?: string; clientSecret?: string };
 
@@ -49,7 +50,7 @@ function toItem(connection: Connection.Dto, now: Date): ConnectionItem {
     historyLine:
       history.status === 'done'
         ? null
-        : `Buscando o histórico (${history.transactionCount} transações)`,
+        : `Buscando o histórico (${countWord(history.transactionCount, 'transação', 'transações')})`,
     accounts: connection.accounts.map((account) => ({
       id: account.accountId,
       name: account.name,

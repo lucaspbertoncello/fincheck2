@@ -2,7 +2,6 @@ import type { z } from 'zod';
 
 import { ApiError, CLIENT_ERROR_CODES } from '#/shared/api/api.error.ts';
 import type { ApiRequest } from '#/shared/api/api-request.type.ts';
-import { API_TOKEN, API_TOKEN_HEADER } from '#/shared/api/api-token.constant.ts';
 import { serializeQuery } from '#/shared/api/serialize-query.util.ts';
 
 type Schema = z.ZodType | undefined;
@@ -38,8 +37,8 @@ async function readJson(response: Response): Promise<unknown> {
 
 /**
  * The thin typed client: every call to `/api` goes through here. It validates the query and the body
- * before sending, validates the answer, sends the local token and turns any failure into an
- * `ApiError` with the contract `code`.
+ * before sending, validates the answer and turns any failure into an `ApiError` with the contract
+ * `code`. The local token is not here: the Vite proxy adds it (`scripts/dev-server/`).
  */
 export async function apiRequest<
   Q extends Schema = undefined,
@@ -58,7 +57,6 @@ export async function apiRequest<
   }
 
   const headers: Record<string, string> = { Accept: 'application/json' };
-  headers[API_TOKEN_HEADER] = API_TOKEN;
   let body: string | undefined;
   if (spec.bodySchema) {
     const checked = spec.bodySchema.safeParse(spec.body);

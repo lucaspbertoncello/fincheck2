@@ -392,6 +392,19 @@ describe('describeRuleError', () => {
     );
   });
 
+  it('says what is wrong with the text of a suggestion the API refused (400 on `pattern`)', () => {
+    const refused = new ApiError(400, 'VALIDATION_FAILED', 'x', {
+      issues: [{ path: 'pattern', message: 'too short' }],
+    });
+
+    expect(describeRuleError(refused)).toMatch(/de 2 a 100 caracteres/);
+    expect(
+      describeRuleError(
+        new ApiError(400, 'VALIDATION_FAILED', 'x', { issues: [{ path: 'tagIds', message: 'x' }] }),
+      ),
+    ).toBe('Não deu para salvar a regra agora. Tente de novo.');
+  });
+
   it('falls back to a generic sentence for anything else', () => {
     expect(describeRuleError(new ApiError(500, 'INTERNAL_ERROR', 'x'))).toBe(
       'Não deu para salvar a regra agora. Tente de novo.',

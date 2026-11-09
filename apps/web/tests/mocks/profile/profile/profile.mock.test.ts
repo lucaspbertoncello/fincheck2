@@ -7,6 +7,8 @@ import {
 } from '@fincheck/shared/recurrences/recurrence/recurrence.schema.ts';
 import { describe, expect, it } from 'vitest';
 
+import { db } from '#mocks/state/mock-database.store.ts';
+import { addMonths } from '#mocks/support/dates/add-months.util.ts';
 import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { callApi } from '#tests/support/mocks/call-api.util.ts';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
@@ -16,6 +18,46 @@ resetDatabaseBeforeEach();
 async function profile() {
   return profileDtoSchema.parse((await callApi('GET', '/profile')).json);
 }
+
+describe('profile routes against the API', () => {
+  it('breaks a tie of amount by the name without case or accent, then by the id', async () => {
+    const [first, second] = db.recurrences.filter(
+      (item) => item.kind === 'income' && !item.pausedAt && !item.archivedAt,
+    );
+    if (!first || !second) throw new Error('seed without two income sources');
+    const [low, high] = first.id < second.id ? [first, second] : [second, first];
+    // Same amount, names that differ only in case: the id decides, the lower one first.
+    for (const item of db.recurrences) if (item.kind === 'income') item.expectedAmountCents = 1;
+    low.expectedAmountCents = 999_999_900;
+    high.expectedAmountCents = 999_999_900;
+    low.name = 'Bolsa';
+    high.name = 'bolsa';
+
+    const names = (await profile()).income.sources.slice(0, 2).map((item) => item.recurrenceId);
+
+    expect(names).toEqual([low.id, high.id]);
+  });
+
+  it('waits for the month a source starts in before giving its next day', async () => {
+    const source = db.recurrences.find(
+      (item) => item.kind === 'income' && !item.pausedAt && !item.archivedAt,
+    );
+    if (!source) throw new Error('seed without an income source');
+    source.startsMonth = addMonths(CURRENT_MONTH, 2);
+
+    const found = (await profile()).income.sources.find((item) => item.recurrenceId === source.id);
+
+    expect(
+      found?.nextExpectedOn === null || found!.nextExpectedOn.slice(0, 7) >= source.startsMonth,
+    ).toBe(true);
+  });
+
+  it('cuts the initials to 3 after the capitals ("ß" becomes "SS")', async () => {
+    const saved = await callApi('PUT', '/profile', { name: 'Maria', initials: 'ßßß' });
+
+    expect(profileDtoSchema.parse(saved.json).initials).toBe('SSS');
+  });
+});
 
 describe('profile routes', () => {
   it('reads a made-up profile with the income recurrences as sources', async () => {

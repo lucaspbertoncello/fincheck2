@@ -11,12 +11,14 @@ import { capitalize } from '#/shared/utils/text/capitalize.util.ts';
 import { buildSizePoints } from '#/features/settings/settings/backup/utils/build-size-points.util.ts';
 import { describeBackupError } from '#/features/settings/settings/backup/utils/describe-backup-error.util.ts';
 import { formatBackupDay } from '#/features/settings/settings/backup/utils/format-backup-day.util.ts';
+import { hasSharedMinute } from '#/features/settings/settings/backup/utils/has-shared-minute.util.ts';
 import { formatBackupMoment } from '#/features/settings/settings/backup/utils/format-backup-moment.util.ts';
 import { formatAxisSize } from '#/features/settings/settings/backup/utils/format-axis-size.util.ts';
 import { formatFileSize } from '#/features/settings/settings/backup/utils/format-file-size.util.ts';
 import { formatFirstDay } from '#/features/settings/settings/backup/utils/format-first-day.util.ts';
 import { focusFirstInvalid } from '#/features/settings/settings/utils/focus-first-invalid.util.ts';
 import { getActionErrorMessage } from '#/features/settings/settings/utils/get-action-error-message.util.ts';
+import { isApiError } from '#/shared/api/api.error.ts';
 import { reloadApp } from '#/shared/utils/reload-app.util.ts';
 
 const FOLDER_FORMAT_ERROR =
@@ -34,6 +36,9 @@ export function BackupViewModel() {
   const [folderError, setFolderError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [safetyCopy, setSafetyCopy] = useState<string | null>(null);
+  // From the 202 of a restore until the API answers again (or the wait gives up): the page does
+  // nothing else meanwhile.
+  const [isSwapping, setIsSwapping] = useState(false);
 
   const { status, stats, files, startRun, updateSettings, restore } = useBackupModel();
 
@@ -45,9 +50,10 @@ export function BackupViewModel() {
   const data = status.data;
   const folderPath = data?.folderPath ?? null;
 
-  const allItems: BackupFileItem[] = (files.data?.items ?? []).map((file, index) => ({
+  const listedFiles = files.data?.items ?? [];
+  const allItems: BackupFileItem[] = listedFiles.map((file, index) => ({
     fileName: file.fileName,
-    moment: capitalize(formatBackupMoment(file.createdAt, now)),
+    moment: capitalize(formatBackupMoment(file.createdAt, now, hasSharedMinute(file, listedFiles))),
     size: formatFileSize(file.sizeBytes),
     day: formatBackupDay(file.createdAt),
     isLatest: index === 0,
@@ -73,7 +79,13 @@ export function BackupViewModel() {
     updateSettings.mutate(parsed.data, {
       onSuccess: () => setIsEditingFolder(false),
       onError: (error) =>
-        setFolderError(getActionErrorMessage(error, 'Não deu para usar essa pasta.')),
+        setFolderError(
+          // The 400 of a path the API does not accept comes with its own text: the screen always
+          // says the same sentence, in Portuguese.
+          isApiError(error) && error.code === 'VALIDATION_FAILED'
+            ? FOLDER_FORMAT_ERROR
+            : getActionErrorMessage(error, 'Não deu para usar essa pasta.'),
+        ),
     });
   }
 
@@ -100,9 +112,24 @@ export function BackupViewModel() {
         onSuccess: (answer) => {
           setSafetyCopy(answer.safetyCopyFileName);
           setTargetFile(null);
-          // The API reopens by itself: wait for /health, then reload to read the restored data.
-          void waitForHealthy().then((isBack) => {
-            if (isBack) reloadApp();
+          setIsSwapping(true);
+          // The API swaps the database and reopens by itself: wait for /health, then reload to read
+          // the restored data. If the swap failed the old database is back with `RESTORE_FAILED`
+          // in the status: stay on the page and say so.
+          void waitForHealthy().then(async (isBack) => {
+            if (!isBack) {
+              setIsSwapping(false);
+              setActionError('Não deu para confirmar que o app voltou. Recarregue a página.');
+              return;
+            }
+            const fresh = await status.refetch();
+            if (fresh.data?.lastError?.code === 'RESTORE_FAILED') {
+              setIsSwapping(false);
+              // The failure is already in "Último backup", from the status just read.
+              setSafetyCopy(null);
+              return;
+            }
+            reloadApp();
           });
         },
         onError: (error) => {
@@ -169,13 +196,13 @@ export function BackupViewModel() {
       keepCount={data?.keepCount ?? 30}
       actionError={actionError}
       safetyCopy={safetyCopy}
-      isRunning={startRun.isPending || (data?.running ?? false)}
+      isRunning={startRun.isPending || (data?.running ?? false) || isSwapping}
       onRunBackup={runBackup}
       folder={{
         isEditing: isEditingFolder,
         draft: folderDraft,
         error: folderError,
-        isSaving: updateSettings.isPending,
+        isSaving: updateSettings.isPending || isSwapping,
         onStartEditing: startEditingFolder,
         onDraftChange: setFolderDraft,
         onSave: saveFolder,
@@ -194,7 +221,7 @@ export function BackupViewModel() {
       }}
       restore={{
         target,
-        isRestoring: restore.isPending,
+        isRestoring: restore.isPending || isSwapping,
         onAsk: askRestore,
         onCancel: () => setTargetFile(null),
         onConfirm: confirmRestore,

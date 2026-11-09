@@ -10,6 +10,7 @@ import {
 import { useState } from 'react';
 
 import { InvoiceItemList } from '#/features/invoices/invoice-page/components/invoice-item-list.component.tsx';
+import { countWord } from '#/shared/utils/text/count-word.util.ts';
 import { INVOICE_SORT_OPTIONS } from '#/features/invoices/invoice-page/constants/invoice-sort-options.constant.ts';
 import type {
   InvoiceItemGroupData,
@@ -75,7 +76,7 @@ export function InvoiceItems({
       action={
         <span className="text-meta text-fg-secondary tabular-nums">
           {shownCount === totalCount
-            ? `${totalCount} lançamentos`
+            ? countWord(totalCount, 'lançamento', 'lançamentos')
             : `${shownCount} de ${totalCount}`}
         </span>
       }

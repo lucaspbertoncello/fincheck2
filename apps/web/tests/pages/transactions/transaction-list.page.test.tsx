@@ -191,6 +191,16 @@ describe('TransactionListPage', () => {
     await waitFor(() => expect(window.location.search).not.toContain('edit='));
   });
 
+  it('drops an `?edit=` that points to nothing and says so', async () => {
+    renderApp(`${PAGE}&edit=00000000-0000-7000-8000-000000000000`);
+
+    expect(
+      await screen.findByText('Essa transação não existe mais.', undefined, LONG_WAIT),
+    ).toBeInTheDocument();
+    await waitFor(() => expect(window.location.search).not.toContain('edit='));
+    expect(screen.queryByRole('dialog', { name: 'Editar transação' })).not.toBeInTheDocument();
+  });
+
   it('refuses an edit with an empty description and focuses the field', async () => {
     const user = userEvent.setup();
     renderApp(PAGE);
@@ -203,6 +213,31 @@ describe('TransactionListPage', () => {
 
     expect(await within(dialog).findByText('Escreva uma descrição.')).toBeInTheDocument();
     await waitFor(() => expect(description).toHaveFocus());
+  });
+
+  it('says why the API refused the edit of a transaction linked to a bill, and keeps the modal open', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.patch('/api/transactions/:id', () =>
+        HttpResponse.json(
+          { code: 'TRANSACTION_LINKED_TO_BILL', message: 'Ligada a uma conta' },
+          { status: 422 },
+        ),
+      ),
+    );
+    renderApp(PAGE);
+    await openRowMenu('CINEMARK', 'Editar');
+
+    const dialog = await screen.findByRole('dialog', { name: 'Editar transação' });
+    const description = within(dialog).getByRole('textbox', { name: 'Descrição' });
+    await user.clear(description);
+    await user.type(description, 'Outro texto');
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar' }));
+
+    expect(
+      await within(dialog).findByText(/ligada a uma conta a pagar ou a receber/),
+    ).toBeVisible();
+    expect(screen.getByRole('dialog', { name: 'Editar transação' })).toBeInTheDocument();
   });
 
   it('turns a transaction into a transfer and asks for its other leg', async () => {

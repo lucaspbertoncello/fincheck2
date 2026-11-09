@@ -1,3 +1,4 @@
+import { normalizeDescription } from '@fincheck/shared/common/text/normalize-description.util.ts';
 import { normalizeText } from '@fincheck/shared/common/text/normalize-text.util.ts';
 import {
   reviewQueueDtoSchema,
@@ -30,7 +31,6 @@ import { findCategory } from '#mocks/categories/category/find-category.util.ts';
 import { findTag } from '#mocks/categories/tag/find-tag.util.ts';
 import { invoiceMonthFor } from '#mocks/invoices/invoice/invoice-month-for.util.ts';
 import { ensureOccurrences } from '#mocks/recurrences/occurrence/ensure-occurrences.util.ts';
-import { presentOccurrence } from '#mocks/recurrences/occurrence/present-occurrence.util.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
 import { makeTransactionRecord } from '#mocks/state/seed/make-transaction-record.util.ts';
 import { newId } from '#mocks/state/mock-id.store.ts';
@@ -38,16 +38,28 @@ import type { MockState } from '#mocks/state/mock-state.type.ts';
 import { NOW_ISO } from '#mocks/support/dates/mock-clock.store.ts';
 import { fail } from '#mocks/support/http/fail.util.ts';
 import { handleRoute } from '#mocks/support/http/handle-route.util.ts';
+import { assertNatureChange } from '#mocks/transactions/transaction/assert-nature-change.util.ts';
+import { assertTransferCounterpart } from '#mocks/transactions/transaction/assert-transfer-counterpart.util.ts';
 import { assertUsableCategory } from '#mocks/transactions/transaction/assert-usable-category.util.ts';
 import { assertUsableTags } from '#mocks/transactions/transaction/assert-usable-tags.util.ts';
 import { buildLines } from '#mocks/transactions/transaction/build-lines.util.ts';
+import { compareTransactionKeys } from '#mocks/transactions/transaction/compare-transaction-keys.util.ts';
 import { competenceOn } from '#mocks/transactions/transaction/competence-on.util.ts';
 import { countsInAccounts } from '#mocks/transactions/transaction/counts-in-accounts.util.ts';
+import { decodeTransactionCursor } from '#mocks/transactions/transaction/decode-transaction-cursor.util.ts';
+import {
+  encodeTransactionCursor,
+  type TransactionCursorKey,
+} from '#mocks/transactions/transaction/encode-transaction-cursor.util.ts';
+import { findRecurrenceCandidates } from '#mocks/transactions/transaction/find-recurrence-candidates.util.ts';
 import { findTransaction } from '#mocks/transactions/transaction/find-transaction.util.ts';
 import { isInReview } from '#mocks/transactions/transaction/is-in-review.util.ts';
+import { linkTransferLegs } from '#mocks/transactions/transaction/link-transfer-legs.util.ts';
 import { presentTransaction } from '#mocks/transactions/transaction/present-transaction.util.ts';
+import { remakeInvoiceMonth } from '#mocks/transactions/transaction/remake-invoice-month.util.ts';
 import { suggestCategories } from '#mocks/transactions/transaction/suggest-categories.util.ts';
 import { toPreviousState } from '#mocks/transactions/transaction/to-previous-state.util.ts';
+import { unlinkTransfer } from '#mocks/transactions/transaction/unlink-transfer.util.ts';
 
 const OUTSIDE = new Set([
   'transfer',
@@ -75,7 +87,7 @@ export const transactionMock = [
       ({ query }) => {
         if (query.accountId) findAccount(db, query.accountId);
         const search = query.search ? normalizeText(query.search) : null;
-        const rows = db.transactions
+        const filtered = db.transactions
           .filter((tx) => !query.month || competenceOn(db, tx).slice(0, 7) === query.month)
           .filter((tx) => !query.from || competenceOn(db, tx) >= query.from)
           .filter((tx) => !query.to || competenceOn(db, tx) <= query.to)
@@ -105,26 +117,32 @@ export const transactionMock = [
               normalizeText(
                 `${tx.description} ${tx.bank?.description ?? ''} ${tx.bank?.counterparty ?? ''}`,
               ).includes(search),
-          )
-          // In a month the list keeps the bank order; in a period and in the history the contract
-          // orders by competence first, so a later page never lands above what is on screen.
-          .sort(
-            (a, b) =>
-              (query.month ? 0 : competenceOn(db, b).localeCompare(competenceOn(db, a))) ||
-              b.occurredOn.localeCompare(a.occurredOn) ||
-              b.createdAt.localeCompare(a.createdAt) ||
-              b.id.localeCompare(a.id),
           );
+        const keyOf = (tx: MockState.TransactionRecord): TransactionCursorKey => [
+          competenceOn(db, tx),
+          tx.occurredOn,
+          tx.createdAt,
+          tx.id,
+        ];
+        // The contract orders by competence, day, creation and id, newest first, in a month too.
+        const rows = filtered.sort((a, b) => compareTransactionKeys(keyOf(a), keyOf(b)));
 
         if (query.month)
           return { items: rows.map((tx) => presentTransaction(db, tx)), nextCursor: null };
-        const offset = query.cursor ? Number(atob(query.cursor)) : 0;
+        // The cursor is the key of the last row of the page: the next page starts after it.
+        const after = query.cursor ? decodeTransactionCursor(query.cursor) : null;
+        const start = after
+          ? rows.findIndex((tx) => compareTransactionKeys(keyOf(tx), after) > 0)
+          : 0;
+        const from = start === -1 ? rows.length : start;
         const limit = query.limit ?? 100;
-        const page = rows.slice(offset, offset + limit);
+        const page = rows.slice(from, from + limit);
+        const last = page.at(-1);
 
         return {
           items: page.map((tx) => presentTransaction(db, tx)),
-          nextCursor: offset + limit < rows.length ? btoa(String(offset + limit)) : null,
+          nextCursor:
+            last && from + limit < rows.length ? encodeTransactionCursor(keyOf(last)) : null,
         };
       },
     ),
@@ -191,36 +209,11 @@ export const transactionMock = [
       return {
         total: queue.length,
         items: queue.slice(0, query.limit ?? 50).map((tx) => {
-          const text = normalizeText(`${tx.bank?.counterparty ?? ''} ${tx.description}`);
-          const kind = tx.amountCents > 0 ? 'income' : 'expense';
-          const recurrenceCandidates = db.occurrences
-            .map((record) => presentOccurrence(db, record))
-            .filter((occurrence) => {
-              const recurrence = db.recurrences.find((item) => item.id === occurrence.recurrenceId);
-              return (
-                recurrence !== undefined &&
-                occurrence.kind === kind &&
-                !recurrence.archivedAt &&
-                recurrence.matchText !== null &&
-                text.includes(recurrence.matchText) &&
-                ['expected', 'partial', 'late'].includes(occurrence.status) &&
-                occurrence.payments.length < recurrence.maxPayments
-              );
-            })
-            .map((occurrence) => ({
-              occurrenceId: occurrence.id,
-              recurrenceId: occurrence.recurrenceId,
-              recurrenceName: occurrence.recurrenceName,
-              month: occurrence.month,
-              expectedAmountCents: occurrence.expectedAmountCents,
-              remainingCents: Math.max(1, occurrence.remainingCents),
-            }));
-
           return {
             transaction: presentTransaction(db, tx),
             categorySuggestions: suggestCategories(db, tx),
-            recurrenceCandidates,
-            rulePattern: normalizeText(tx.description),
+            recurrenceCandidates: findRecurrenceCandidates(db, tx),
+            rulePattern: normalizeDescription(tx.description),
           };
         }),
       };
@@ -291,17 +284,56 @@ export const transactionMock = [
     handleRoute(
       { body: restoreBulkRequestSchema, response: restoreBulkResultSchema },
       ({ body }) => {
+        // The body is what a previous action returned, but nothing proves it: a category or a tag
+        // that does not exist is the 404 of its owner, a category without origin or of the other
+        // kind is a 400 (`mock vs api.md` 39).
+        for (const categoryId of new Set(body.items.flatMap((item) => item.categoryId ?? [])))
+          findCategory(db, categoryId);
+        for (const tagId of new Set(body.items.flatMap((item) => item.tagIds))) findTag(db, tagId);
+        body.items.forEach((item, index) => {
+          if (item.categoryId === null) return;
+          if (item.categorySource === null)
+            fail(400, 'VALIDATION_FAILED', 'Entrada fora do contrato', {
+              issues: [
+                { path: `items.${index}.categorySource`, message: 'A category needs its origin.' },
+              ],
+            });
+          const tx = db.transactions.find((entry) => entry.id === item.transactionId);
+          if (
+            tx &&
+            (tx.nature === 'expense' || tx.nature === 'income') &&
+            tx.splits.length === 0 &&
+            findCategory(db, item.categoryId).kind !== tx.nature
+          )
+            fail(400, 'VALIDATION_FAILED', 'Entrada fora do contrato', {
+              issues: [
+                {
+                  path: `items.${index}.categoryId`,
+                  message: 'The category is of the other kind.',
+                },
+              ],
+            });
+        });
+
         let restoredCount = 0;
         for (const item of body.items) {
           const tx = db.transactions.find((entry) => entry.id === item.transactionId);
           if (!tx) continue;
-          tx.categoryId = item.categoryId;
-          tx.categorySource = item.categorySource;
-          tx.categoryRuleId = db.rules.some((rule) => rule.id === item.categoryRuleId)
-            ? item.categoryRuleId
-            : null;
-          tx.tagIds = [...item.tagIds];
+          // The category only fits a whole expense or income: if the nature changed since, or the
+          // transaction was split, the saved category is dropped.
+          const keepsCategory =
+            item.categoryId !== null &&
+            (tx.nature === 'expense' || tx.nature === 'income') &&
+            tx.splits.length === 0;
+          tx.categoryId = keepsCategory ? item.categoryId : null;
+          tx.categorySource = keepsCategory ? item.categorySource : null;
+          tx.categoryRuleId =
+            keepsCategory && db.rules.some((rule) => rule.id === item.categoryRuleId)
+              ? item.categoryRuleId
+              : null;
+          tx.tagIds = [...new Set(item.tagIds)];
           tx.ignoredAt = item.ignoredAt;
+          tx.updatedAt = NOW_ISO;
           restoredCount += 1;
         }
 
@@ -365,6 +397,16 @@ export const transactionMock = [
       { body: updateTransactionRequestSchema, response: transactionDtoSchema },
       ({ params, body }) => {
         const tx = findTransaction(db, params['id'] ?? '');
+        if (body.transferCounterpartId && body.nature !== 'transfer') {
+          fail(400, 'VALIDATION_FAILED', 'Entrada fora do contrato', {
+            issues: [
+              {
+                path: 'transferCounterpartId',
+                message: 'A outra perna só vale junto com nature "transfer".',
+              },
+            ],
+          });
+        }
         if (
           tx.splits.length > 0 &&
           ((body.categoryId !== undefined && body.categoryId !== null) ||
@@ -375,22 +417,22 @@ export const transactionMock = [
         }
         const account = findAccount(db, tx.accountId);
 
-        if (body.nature !== undefined) {
-          const linked = db.invoices.some((invoice) =>
-            invoice.payments.some((payment) => payment.transactionId === tx.id),
+        // Every check comes before the first write, as the API rolls back what it did.
+        if (body.nature !== undefined) assertNatureChange(db, tx, body.nature);
+        const counterpart =
+          body.nature === 'transfer' && body.transferCounterpartId
+            ? findTransaction(db, body.transferCounterpartId)
+            : null;
+        const takesCounterpart =
+          counterpart !== null && tx.transferCounterpartId !== counterpart.id;
+        if (counterpart && takesCounterpart) assertTransferCounterpart(db, tx, counterpart);
+        // The whole `lent` transaction is the origin of a debt: its value is the friend's part.
+        if (body.amountCents !== undefined && tx.nature === 'lent') {
+          fail(
+            422,
+            'TRANSACTION_LINKED_TO_BILL',
+            'A transação está ligada a uma conta: desfaça o vínculo antes de mudar a natureza ou o valor.',
           );
-          if (
-            ['lent', 'reimbursed', 'balance_adjustment'].includes(tx.nature) ||
-            (tx.nature === 'invoice_payment' && linked)
-          ) {
-            fail(422, 'TRANSACTION_NATURE_LOCKED', 'A natureza só muda pelo fluxo dono');
-          }
-          if (
-            (body.nature === 'expense' && tx.amountCents > 0) ||
-            (body.nature === 'income' && tx.amountCents < 0)
-          ) {
-            fail(422, 'TRANSACTION_NATURE_SIGN_MISMATCH', 'Natureza e sinal do valor não combinam');
-          }
         }
         const nature = body.nature ?? tx.nature;
         if (body.categoryId) {
@@ -418,18 +460,21 @@ export const transactionMock = [
             tx.categoryId = null;
             tx.categorySource = null;
             tx.categoryRuleId = null;
-            if (body.transferCounterpartId) {
-              const other = findTransaction(db, body.transferCounterpartId);
-              other.nature = 'transfer';
-              other.natureSetBy = 'user';
-              other.transferCounterpartId = tx.id;
-              tx.transferCounterpartId = other.id;
-            }
           }
+          // Leaving the transfer, or saying there is no other leg, cuts the link.
+          if (body.nature !== 'transfer' || body.transferCounterpartId === null)
+            unlinkTransfer(db, tx);
+          if (counterpart && takesCounterpart) linkTransferLegs(db, tx, counterpart);
+        } else if (body.transferCounterpartId === null) {
+          unlinkTransfer(db, tx);
         }
         if (body.description !== undefined) tx.description = body.description;
-        if (body.amountCents !== undefined)
+        if (body.amountCents !== undefined) {
           tx.amountCents = tx.amountCents < 0 ? -body.amountCents : body.amountCents;
+          // The other leg of a transfer follows the new amount, with the opposite sign.
+          const other = db.transactions.find((item) => item.id === tx.transferCounterpartId);
+          if (other?.transferCounterpartId === tx.id) other.amountCents = -tx.amountCents;
+        }
         if (body.occurredOn !== undefined) {
           tx.occurredOn = body.occurredOn;
           if (account.creditCard && !tx.installment)
@@ -454,6 +499,15 @@ export const transactionMock = [
       const tx = findTransaction(db, params['id'] ?? '');
       if (tx.origin === 'bank') fail(422, 'TRANSACTION_NOT_MANUAL', 'A importada se ignora');
       if (tx.installment) fail(422, 'TRANSACTION_IS_INSTALLMENT', 'Exclua o plano de parcelas');
+      // The other leg of a transfer goes back to expense or income by its sign, with no pair.
+      const other = db.transactions.find((item) => item.id === tx.transferCounterpartId);
+      if (other) {
+        const isCard = db.accounts.find((account) => account.id === other.accountId)?.creditCard;
+        other.transferCounterpartId = null;
+        other.nature = other.amountCents < 0 || isCard ? 'expense' : 'income';
+        other.natureSetBy = 'system';
+        other.updatedAt = NOW_ISO;
+      }
       db.transactions = db.transactions.filter((item) => item.id !== tx.id);
       for (const invoice of db.invoices)
         invoice.payments = invoice.payments.filter((payment) => payment.transactionId !== tx.id);
@@ -473,6 +527,7 @@ export const transactionMock = [
     handleRoute({ response: transactionDtoSchema }, ({ params }) => {
       const tx = findTransaction(db, params['id'] ?? '');
       if (!tx.bank) fail(422, 'TRANSACTION_NOT_FROM_BANK', 'A transação é manual');
+      const dateBefore = tx.occurredOn;
       if (tx.splits.length > 0 && tx.bank.amountCents !== tx.amountCents)
         fail(422, 'TRANSACTION_IS_SPLIT', 'A divisão quebraria');
       tx.description = tx.bank.description;
@@ -480,6 +535,7 @@ export const transactionMock = [
       tx.occurredOn = tx.bank.occurredOn;
       tx.editNote = null;
       tx.bankChange = null;
+      remakeInvoiceMonth(db, tx, dateBefore);
 
       return present(tx);
     }),
@@ -491,11 +547,19 @@ export const transactionMock = [
       { body: resolveBankChangeRequestSchema, response: transactionDtoSchema },
       ({ params, body }) => {
         const tx = findTransaction(db, params['id'] ?? '');
+        const dateBefore = tx.occurredOn;
         if (!tx.bankChange && !tx.removedByBankAt)
           fail(422, 'TRANSACTION_NO_BANK_CHANGE', 'Não há mudança do banco');
         const changesAmount =
           tx.bankChange?.changes.some((change) => change.field === 'amountCents') ?? false;
-        if (body.use === 'bank' && tx.splits.length > 0 && changesAmount)
+        // Taking the bank's version changes the amount of a split one when the bank changed it, or
+        // when it removed the transaction and Lucas had edited the amount.
+        if (
+          body.use === 'bank' &&
+          tx.splits.length > 0 &&
+          (changesAmount ||
+            (tx.removedByBankAt && tx.bank && tx.amountCents !== tx.bank.amountCents))
+        )
           fail(422, 'TRANSACTION_IS_SPLIT', 'A divisão quebraria');
         if (body.use === 'bank') {
           for (const change of tx.bankChange?.changes ?? []) {
@@ -509,6 +573,7 @@ export const transactionMock = [
             tx.amountCents = tx.bank.amountCents;
             tx.occurredOn = tx.bank.occurredOn;
           }
+          remakeInvoiceMonth(db, tx, dateBefore);
         } else {
           tx.removedByBankAt = null;
         }

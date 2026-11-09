@@ -12,7 +12,8 @@ import { handleRoute } from '#mocks/support/http/handle-route.util.ts';
 import { buildLines } from '#mocks/transactions/transaction/build-lines.util.ts';
 
 // The 12 months up to `until`, oldest first, summed by competence as `GET /dashboard/categories`
-// does: ignored transactions stay out and a split one counts by its parts. No sign.
+// does: ignored transactions stay out and a split one counts by its parts. An expense category adds
+// what was spent (a refund lowers it), an income one what was received; never below 0.
 export const categoryTrendMock = [
   http.get(
     '/api/dashboard/categories/:id/trend',
@@ -29,10 +30,13 @@ export const categoryTrendMock = [
           months: Array.from({ length: 12 }, (_, index) => {
             const month = addMonths(until, index - 11);
             const mine = lines.filter((line) => line.competenceOn.slice(0, 7) === month);
+            const sum = mine.reduce((total, line) => total + line.amountCents, 0);
+            const total = category.kind === 'expense' ? -sum : sum;
 
             return {
               month,
-              totalCents: Math.abs(mine.reduce((sum, line) => sum + line.amountCents, 0)),
+              // The bar is never negative: a refund bigger than the spending shows 0.
+              totalCents: total > 0 ? total : 0,
               transactionCount: new Set(mine.map((line) => line.transactionId)).size,
             };
           }),

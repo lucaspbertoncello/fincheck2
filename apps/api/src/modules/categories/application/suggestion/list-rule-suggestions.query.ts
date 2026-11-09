@@ -9,7 +9,7 @@ import { parseTransactionIds } from '#/modules/categories/application/suggestion
 import type { ManualCategorizationReader } from '#/modules/categories/application/suggestion/manual-categorization-reader.interface.ts';
 import type { CategoryRuleRepository } from '#/modules/categories/domain/rule/category-rule-repository.interface.ts';
 import { findRuleSuggestions } from '#/modules/categories/domain/suggestion/find-rule-suggestions.util.ts';
-import { normalizeDescription } from '#/shared/text/normalize-description.util.ts';
+import { normalizeDescription } from '@fincheck/shared/common/text/normalize-description.util.ts';
 
 // The "Sugerida" card and the question after recategorizing (RF-CAT-005), worked out when asked:
 // nothing is born when Lucas recategorizes. Only his answers are stored. Each suggestion comes

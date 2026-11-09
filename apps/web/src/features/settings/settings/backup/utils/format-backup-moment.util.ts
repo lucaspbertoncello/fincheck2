@@ -7,13 +7,23 @@ const timeFormat = new Intl.DateTimeFormat('pt-BR', {
   minute: '2-digit',
 });
 
+const timeWithSecondsFormat = new Intl.DateTimeFormat('pt-BR', {
+  timeZone: 'America/Sao_Paulo',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+});
+
 const DAY_MS = 86_400_000;
 
-/** "hoje às 03:00", "ontem às 03:00", "amanhã às 03:00" or "21/10 às 03:00". */
-export function formatBackupMoment(instant: string, now: Date): string {
+/**
+ * "hoje às 03:00", "ontem às 03:00", "amanhã às 03:00" or "21/10 às 03:00"; with `withSeconds`,
+ * "hoje às 03:00:07" (to tell apart two backups of the same minute).
+ */
+export function formatBackupMoment(instant: string, now: Date, withSeconds = false): string {
   const date = new Date(instant);
   const key = getBusinessDate(date);
-  const time = timeFormat.format(date);
+  const time = (withSeconds ? timeWithSecondsFormat : timeFormat).format(date);
 
   if (key === getBusinessDate(now)) return `hoje às ${time}`;
   if (key === getBusinessDate(new Date(now.getTime() - DAY_MS))) return `ontem às ${time}`;

@@ -1,6 +1,6 @@
 import { healthDtoSchema } from '@fincheck/shared/health/health/health.schema.ts';
 
-import { apiClient } from '#/shared/api/api-client.service.ts';
+import { apiRequest } from '#/shared/api/api-request.service.ts';
 
 type WaitForHealthyOptions = {
   intervalMs?: number;
@@ -9,9 +9,13 @@ type WaitForHealthyOptions = {
 
 async function isHealthy(): Promise<boolean> {
   try {
-    const response = await apiClient.health.$get();
-    if (!response.ok) return false;
-    const health = healthDtoSchema.parse(await response.json());
+    // Any failure (connection refused while the API swaps the database, 5xx, a body off the
+    // contract) throws an `ApiError`: not healthy yet.
+    const health = await apiRequest({
+      method: 'GET',
+      path: '/health',
+      responseSchema: healthDtoSchema,
+    });
     return health.status === 'ok' && health.database === 'ok';
   } catch {
     return false;

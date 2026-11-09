@@ -134,15 +134,41 @@ describe('RuleListPage', () => {
   });
 
   describe('suggestion card', () => {
+    // The API groups by the description without the "n/N" and only a rule with a text condition
+    // covers a suggestion, so the seed has more than the two the flows below are about: answer the
+    // others first.
+    async function keepOnlyNotebookAndUber() {
+      const { json } = await callApi('GET', '/rule-suggestions');
+      const items = (json as { items: { pattern: string; categoryId: string }[] }).items;
+      for (const item of items) {
+        if (item.pattern === 'NOTEBOOK AERO 14' || item.pattern === 'UBER *TRIP') continue;
+        await callApi('POST', '/rule-suggestions/dismiss', {
+          pattern: item.pattern,
+          categoryId: item.categoryId,
+        });
+      }
+    }
+
     it('shows the strongest suggestion with its sentence and how many more are waiting', async () => {
       await openRules();
 
       expect(await screen.findByText('Sugerida')).toBeInTheDocument();
-      expect(screen.getByText(/Você moveu 10 transações “NOTEBOOK AERO 14”/)).toBeInTheDocument();
-      expect(screen.getByText('Mais 6 sugestões esperam a sua resposta.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/10 transações com a descrição “CONDOMINIO RES ALVORADA REF” estão em/),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Mais 14 sugestões esperam a sua resposta.')).toBeInTheDocument();
+    });
+
+    it('groups the installments of one purchase as one suggestion, without the "n/N"', async () => {
+      const { json } = await callApi('GET', '/rule-suggestions');
+      const patterns = (json as { items: { pattern: string }[] }).items.map((item) => item.pattern);
+
+      expect(patterns).toContain('NOTEBOOK AERO 14');
+      expect(patterns.some((pattern) => /\d+\/\d+/.test(pattern))).toBe(false);
     });
 
     it('dismisses it with "Agora não" and the next one comes up', async () => {
+      await keepOnlyNotebookAndUber();
       await openRules();
       await screen.findByText('Sugerida');
 
@@ -153,6 +179,7 @@ describe('RuleListPage', () => {
     });
 
     it('creates the rule, asks before applying to the history, and undoes the history change', async () => {
+      await keepOnlyNotebookAndUber();
       await openRules();
       await screen.findByText('Sugerida');
       fireEvent.click(screen.getByRole('button', { name: 'Agora não' }));
@@ -180,6 +207,7 @@ describe('RuleListPage', () => {
     });
 
     it('creates the rule without the history option, with an undo that deletes the rule', async () => {
+      await keepOnlyNotebookAndUber();
       await openRules();
       await screen.findByText('Sugerida');
 

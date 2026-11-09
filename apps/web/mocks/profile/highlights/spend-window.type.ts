@@ -8,6 +8,7 @@ export interface SpendWindow {
   dates: string[];
   // Spending lines (expense nature) inside the window; `spentCents` is what was spent, so a refund is negative.
   lines: Array<TransactionLine & { spentCents: number }>;
-  // What was spent each day, never below zero (a refund does not make a day negative).
+  // What was spent each day, net: a refund lowers the day (it can end below zero); a day with
+  // spending is one whose sum is above zero.
   spentByDay: Map<string, number>;
 }

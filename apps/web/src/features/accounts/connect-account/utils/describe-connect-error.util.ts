@@ -8,6 +8,8 @@ const MESSAGES: Record<string, string> = {
   SYNC_PROVIDER_UNAVAILABLE:
     'Não deu para falar com o Open Finance agora. Tente de novo em instantes.',
   SYNC_CONNECTION_ALREADY_EXISTS: 'Esse banco já está conectado.',
+  SYNC_RUN_IN_PROGRESS: 'Esse banco já está sendo lido. Espere a busca terminar.',
+  BACKUP_IN_PROGRESS: 'Há um backup ou uma restauração em andamento. Tente de novo em instantes.',
 };
 
 /** What to tell the person when connecting a bank or creating an account failed. */

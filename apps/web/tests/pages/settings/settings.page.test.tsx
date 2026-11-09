@@ -77,7 +77,7 @@ describe('SettingsPage', () => {
       await openPage('connections');
 
       expect(await screen.findByText('Conexão com erro')).toBeInTheDocument();
-      expect(screen.getByText('login com erro')).toBeInTheDocument();
+      expect(screen.getByText(/Login com erro/)).toBeInTheDocument();
       const link = screen.getByRole('link', { name: 'Reconectar no Open Finance' });
       expect(link).toHaveAttribute('href', 'https://meu.pluggy.ai');
       expect(link).toHaveAttribute('target', '_blank');

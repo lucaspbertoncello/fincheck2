@@ -1,4 +1,4 @@
-import { recognizeServiceSlug } from '#/domain/recurrences/service-logo/rules/recognize-service-slug.rule.ts';
+import { recognizeServiceSlug } from '@fincheck/shared/recurrences/subscription-service/recognize-service-slug.util.ts';
 import { OTHER_SERVICE } from '#/features/recurrences/recurrence-form/constants/other-service.constant.ts';
 import type {
   RecurrenceFormValues,

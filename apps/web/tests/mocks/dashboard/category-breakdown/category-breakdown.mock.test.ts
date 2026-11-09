@@ -1,7 +1,11 @@
 import { categoryBreakdownDtoSchema } from '@fincheck/shared/dashboard/category-breakdown/category-breakdown.schema.ts';
 import { describe, expect, it } from 'vitest';
 
-import { CURRENT_MONTH } from '#mocks/support/dates/mock-clock.store.ts';
+import { db } from '#mocks/state/mock-database.store.ts';
+import { addMonths } from '#mocks/support/dates/add-months.util.ts';
+import { dateInMonth } from '#mocks/support/dates/date-in-month.util.ts';
+import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
+import { addTransaction } from '#tests/mocks/dashboard/support/add-transaction.util.ts';
 import { callApi } from '#tests/support/mocks/call-api.util.ts';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
 
@@ -51,10 +55,11 @@ describe('GET /dashboard/categories', () => {
       }
     });
 
-    it('has no expected income from the recurrences: expected is what came in, nothing pending', async () => {
+    it('has no expected income (a period has no expectation): nothing expected, nothing pending', async () => {
       const dto = await breakdown(PERIOD);
 
-      expect(dto.incomes.expectedCents).toBe(dto.incomes.receivedCents);
+      expect(dto.incomes.receivedCents).toBeGreaterThan(0);
+      expect(dto.incomes.expectedCents).toBe(0);
       expect(dto.incomes.items.every((item) => item.pending.length === 0)).toBe(true);
     });
   });
@@ -96,5 +101,86 @@ describe('GET /dashboard/categories', () => {
         )
       ).status,
     ).toBe(400);
+  });
+
+  describe('against the API', () => {
+    it('has an item only for a category with spending in the period, not for one that spent only before', async () => {
+      const month = await breakdown(`?month=${CURRENT_MONTH}`);
+      const spentNow = new Set(month.expenses.items.map((item) => item.categoryId));
+      const category = db.categories.find(
+        (item) => item.kind === 'expense' && !item.archivedAt && !spentNow.has(item.id),
+      );
+      if (!category) throw new Error('seed without an idle expense category');
+      addTransaction({
+        nature: 'expense',
+        amountCents: 4000,
+        occurredOn: dateInMonth(addMonths(CURRENT_MONTH, -1), 2),
+        categoryId: category.id,
+      });
+
+      const dto = await breakdown(`?month=${CURRENT_MONTH}`);
+
+      expect(dto.expenses.items.some((item) => item.categoryId === category.id)).toBe(false);
+      expect(dto.expenses.items.every((item) => item.transactionCount > 0)).toBe(true);
+    });
+
+    it('tests "where it grew the most" on the cents: 9,995 % is not 10 %', async () => {
+      const category = db.categories.find((item) => item.kind === 'expense' && !item.archivedAt)!;
+      const before = addTransaction({
+        nature: 'expense',
+        amountCents: 22_000,
+        occurredOn: dateInMonth(addMonths(CURRENT_MONTH, -1), 1),
+        categoryId: category.id,
+      });
+      const now = addTransaction({
+        nature: 'expense',
+        amountCents: 24_199,
+        occurredOn: TODAY,
+        categoryId: category.id,
+      });
+      // Only these two are left: the category is the one of both.
+      db.transactions = db.transactions.filter((tx) => tx.id === before.id || tx.id === now.id);
+
+      const below = await breakdown(`?month=${CURRENT_MONTH}`);
+      expect(below.expenses.items[0]?.changePct).toBe(10);
+      expect(below.expenses.topGrowth).toBeNull();
+
+      now.amountCents = -24_200;
+      const exact = await breakdown(`?month=${CURRENT_MONTH}`);
+      expect(exact.expenses.topGrowth).toMatchObject({
+        categoryId: category.id,
+        changeCents: 2200,
+      });
+    });
+
+    it('keeps the sign of a category whose refund was bigger than its spending, with a share of 0', async () => {
+      const month = await breakdown(`?month=${CURRENT_MONTH}`);
+      const category = db.categories.find(
+        (item) =>
+          item.kind === 'expense' &&
+          !item.archivedAt &&
+          !month.expenses.items.some((entry) => entry.categoryId === item.id),
+      )!;
+      const refund = addTransaction({
+        nature: 'expense',
+        amountCents: 1000,
+        occurredOn: TODAY,
+        categoryId: category.id,
+      });
+      refund.amountCents = 1000;
+
+      const dto = await breakdown(`?month=${CURRENT_MONTH}`);
+      const item = dto.expenses.items.find((entry) => entry.categoryId === category.id);
+
+      expect(item).toMatchObject({ spentCents: -1000, sharePct: 0 });
+    });
+
+    it('sums the expected income of the month the way the summary does', async () => {
+      const dto = await breakdown(`?month=${CURRENT_MONTH}`);
+      const summary = (await callApi('GET', `/dashboard/month-summary?month=${CURRENT_MONTH}`))
+        .json as { income: { expectedCents: number } };
+
+      expect(dto.incomes.expectedCents).toBe(summary.income.expectedCents);
+    });
   });
 });

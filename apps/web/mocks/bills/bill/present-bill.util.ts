@@ -5,22 +5,33 @@ import type { MockState } from '#mocks/state/mock-state.type.ts';
 import { TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { countsInAccounts } from '#mocks/transactions/transaction/counts-in-accounts.util.ts';
 
+const COUNTABLE_NATURES = new Set(['expense', 'income', 'reimbursed']);
+
 // The contract's Bill.Dto. A payment tied to a transaction is worth what the transaction is worth
-// now, and only while it counts; a hand-made payment is worth what was written.
+// now, and only while it counts and keeps a nature that enters the accounts; a hand-made payment is
+// worth what was written. The payments come in the order `paidOn`, then creation (the order they
+// were recorded in), and each one is cut to what the bill still misses (`amount - accumulated`),
+// so what is paid never passes the bill; a line left at zero is out of `payments`.
 export function presentBill(database: MockState.Database, record: MockState.BillRecord): Bill.Dto {
   const payments: BillPayment.Dto[] = [];
   let paidCents = 0;
 
-  for (const payment of [...record.payments].sort((a, b) => a.paidOn.localeCompare(b.paidOn))) {
-    if (!payment.transactionId) {
-      payments.push(payment);
-      paidCents += payment.amountCents;
-      continue;
+  const ordered = record.payments
+    .map((payment, index) => ({ payment, index }))
+    .sort((a, b) => a.payment.paidOn.localeCompare(b.payment.paidOn) || a.index - b.index);
+
+  for (const { payment } of ordered) {
+    let worth = payment.amountCents;
+    let description = payment.description;
+    if (payment.transactionId) {
+      const tx = database.transactions.find((item) => item.id === payment.transactionId);
+      const countable = tx && COUNTABLE_NATURES.has(tx.nature) && countsInAccounts(tx);
+      worth = countable ? Math.min(payment.amountCents, Math.abs(tx.amountCents)) : 0;
+      description = tx?.description ?? null;
     }
-    const tx = database.transactions.find((item) => item.id === payment.transactionId);
-    if (!tx || !countsInAccounts(tx)) continue;
-    const worth = Math.min(payment.amountCents, Math.abs(tx.amountCents));
-    payments.push({ ...payment, amountCents: worth, description: tx.description });
+    worth = Math.min(worth, Math.max(0, record.amountCents - paidCents));
+    if (worth <= 0) continue;
+    payments.push({ ...payment, amountCents: worth, description });
     paidCents += worth;
   }
 

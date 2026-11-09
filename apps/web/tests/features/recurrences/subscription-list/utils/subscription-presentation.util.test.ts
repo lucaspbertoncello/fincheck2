@@ -140,6 +140,7 @@ describe('suggestion presentation', () => {
       key: 'PODCAST PLUS|card',
       name: 'Podcast Plus',
       service: null,
+      serviceSlug: null,
       title: 'Parece uma assinatura: Podcast Plus, R$\u00a019,90',
       description: 'Cobrada em 3 meses seguidos no Roxinho, a última em 12/10.',
     });
@@ -152,6 +153,14 @@ describe('suggestion presentation', () => {
       name: 'Spotify',
       slug: 'spotify',
     });
+  });
+
+  it('carries the slug it recognized, even for a service with no logo file, to send on "Acompanhar"', () => {
+    const anthropic = { ...suggestion, description: 'ANTHROPIC' };
+    const prime = { ...suggestion, description: 'AMAZON PRIME BR' };
+
+    expect(presentSubscriptionSuggestion(anthropic, new Map(), false).serviceSlug).toBe('claude');
+    expect(presentSubscriptionSuggestion(prime, new Map(), false).serviceSlug).toBe('primevideo');
   });
 
   it('masks the amount of the title when the values are hidden', () => {

@@ -9,7 +9,7 @@ import type { InstallmentPlanRepository } from '#/modules/transactions/domain/in
 import type { Transaction } from '#/modules/transactions/domain/transaction/transaction.entity.ts';
 import { TransactionNotFoundError } from '#/modules/transactions/domain/transaction/transaction-not-found.error.ts';
 import type { TransactionRepository } from '#/modules/transactions/domain/transaction/transaction-repository.interface.ts';
-import { normalizeDescription } from '#/shared/text/normalize-description.util.ts';
+import { normalizeDescription } from '@fincheck/shared/common/text/normalize-description.util.ts';
 
 const NO_LINKS: TransactionContract.LinksDto = {
   occurrence: null,

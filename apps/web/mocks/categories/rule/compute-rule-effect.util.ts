@@ -21,7 +21,9 @@ interface RuleEffect {
 }
 
 // What a rule matches in the history and what applying it would change: never a split or ignored
-// transaction, never a category Lucas, a recurrence or a bill put, never one set by an older rule.
+// transaction. What Lucas, a recurrence or a bill categorized is not touched by any rule, category
+// or tags (PM, 06/11); a category set by an older rule stays. With no action at all (the preview of
+// a rule not finished) every match counts as a change.
 export function computeRuleEffect(
   database: MockState.Database,
   rule: RuleDefinition,
@@ -45,15 +47,13 @@ export function computeRuleEffect(
 
   const changes = matches.filter((tx) => {
     if (!rule.categoryId && tagIds.length === 0) return true;
-    const categoryFree = tx.categorySource === null || tx.categorySource === 'rule';
-    const categoryChanges =
-      Boolean(rule.categoryId) &&
-      categoryFree &&
-      !olderRuleWins(tx) &&
-      tx.categoryId !== rule.categoryId;
+    // Put by hand, by a recurrence or by a bill: no rule touches it.
+    if (tx.categorySource !== null && tx.categorySource !== 'rule') return false;
     const tagsChange = tagIds.some((tagId) => !tx.tagIds.includes(tagId));
+    if (!rule.categoryId) return tagsChange;
+    if (olderRuleWins(tx)) return false;
 
-    return categoryChanges || tagsChange;
+    return tx.categoryId !== rule.categoryId || tagsChange;
   });
 
   const examples = [...changes]

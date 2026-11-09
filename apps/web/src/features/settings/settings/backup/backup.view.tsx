@@ -53,7 +53,7 @@ type BackupViewProps = {
   keepCount: number;
   /** The sentence under an action that failed (a backup or a restore). */
   actionError: string | null;
-  /** Name of the safety copy made by the last restore. */
+  /** Name of the safety copy made by the restore under way. */
   safetyCopy: string | null;
   isRunning: boolean;
   onRunBackup: () => void;
@@ -209,7 +209,7 @@ export function BackupView({
               </div>
             </div>
             {safetyCopy ? (
-              <OkLine>Backup restaurado. A cópia de segurança ficou em {safetyCopy}.</OkLine>
+              <OkLine>Restaurando o backup. A cópia de segurança ficou em {safetyCopy}.</OkLine>
             ) : null}
             <Collapse
               isOpen={Boolean(actionError)}

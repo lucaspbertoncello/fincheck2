@@ -69,7 +69,10 @@ export function SubscriptionListViewModel() {
     setAnswered(suggestion.key, true);
     void run(suggestion.key, `Não deu para acompanhar ${suggestion.name}.`, async () => {
       try {
-        const { recurrence } = await model.accept.mutateAsync({ key: suggestion.key });
+        const { recurrence } = await model.accept.mutateAsync({
+          key: suggestion.key,
+          serviceSlug: suggestion.serviceSlug,
+        });
         showUndoToast({
           message: `${suggestion.name} agora é acompanhada.`,
           onUndo: () =>

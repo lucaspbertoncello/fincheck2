@@ -17,8 +17,8 @@ export function OpenFinanceSuccess({ onConnectAnother }: OpenFinanceSuccessProps
       <div className="flex flex-col gap-s4">
         <p className="font-title text-body font-emphasis text-fg-primary">Banco conectado</p>
         <p className="text-label text-fg-secondary">
-          As contas e os cartões do banco aparecem em Contas e cartões. Saldo e transações se
-          atualizam sozinhos, algumas vezes por dia.
+          As contas e os cartões do banco aparecem em Contas e cartões quando a primeira busca
+          terminar. Saldo e transações se atualizam sozinhos, algumas vezes por dia.
         </p>
         <p className="text-meta text-fg-secondary">
           A primeira busca traz o histórico. O app segue usável enquanto ele chega.

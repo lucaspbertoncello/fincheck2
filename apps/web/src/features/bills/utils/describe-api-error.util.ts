@@ -8,6 +8,7 @@ const MESSAGES: Readonly<Record<string, string>> = {
   BILL_AMOUNT_BELOW_PAID: 'O valor não pode ficar abaixo do que já foi pago.',
   BILL_TRANSACTION_ALREADY_LINKED: 'Essa transação já está ligada a outra conta.',
   BILL_PAYMENT_TRANSACTION_INVALID: 'Essa transação não serve como pagamento desta conta.',
+  BILL_ORIGIN_NOT_ALLOWED: 'A transação que você pagou só vale em dívida de amigo que te deve.',
   BILL_ORIGIN_TRANSACTION_INVALID: 'Essa transação não pode ser a que você pagou.',
   BILL_ORIGIN_AMOUNT_EXCEEDS: 'A parte do amigo passa do valor da transação.',
   BILL_CATEGORY_KIND_MISMATCH: 'Essa categoria não serve para este tipo de conta.',

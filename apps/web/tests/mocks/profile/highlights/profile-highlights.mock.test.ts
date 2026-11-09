@@ -3,8 +3,11 @@ import { profileHighlightsDtoSchema } from '@fincheck/shared/profile/profile/pro
 import { describe, expect, it } from 'vitest';
 
 import { db } from '#mocks/state/mock-database.store.ts';
+import { buildLines } from '#mocks/transactions/transaction/build-lines.util.ts';
+import { addDays } from '#mocks/support/dates/add-days.util.ts';
 import { addMonths } from '#mocks/support/dates/add-months.util.ts';
-import { CURRENT_MONTH } from '#mocks/support/dates/mock-clock.store.ts';
+import { daysBetween } from '#mocks/support/dates/days-between.util.ts';
+import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { callApi } from '#tests/support/mocks/call-api.util.ts';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
 
@@ -76,37 +79,63 @@ describe('profile highlights route', () => {
     );
   });
 
-  it('agrees with the spend heatmap on the month, the weekday and the streak', async () => {
+  it('reads the month, the weekday and the streak from the net spending of each day', async () => {
     const dto = await highlights();
-    const map = await heatmap();
+    const fromOn = `${addMonths(CURRENT_MONTH, -11)}-01`;
+    const net = new Map<string, number>();
+    for (const line of buildLines(db)) {
+      if (line.nature !== 'expense' || line.competenceOn < fromOn || line.competenceOn > TODAY)
+        continue;
+      net.set(line.competenceOn, (net.get(line.competenceOn) ?? 0) - line.amountCents);
+    }
+    const dates = Array.from({ length: daysBetween(fromOn, TODAY) + 1 }, (_, index) =>
+      addDays(fromOn, index),
+    );
 
     const byMonth = new Map<string, number>();
-    for (const day of map.days)
-      byMonth.set(day.date.slice(0, 7), (byMonth.get(day.date.slice(0, 7)) ?? 0) + day.totalCents);
+    for (const date of dates)
+      byMonth.set(date.slice(0, 7), (byMonth.get(date.slice(0, 7)) ?? 0) + (net.get(date) ?? 0));
     expect(dto.costliestMonth?.totalCents).toBe(Math.max(...byMonth.values()));
     expect(byMonth.get(dto.costliestMonth?.month ?? '')).toBe(dto.costliestMonth?.totalCents);
-    expect((dto.costliestMonth?.month ?? '') >= addMonths(CURRENT_MONTH, -11)).toBe(true);
 
+    // The count starts the day after the first day with spending.
+    const firstSpent = dates.findIndex((date) => (net.get(date) ?? 0) > 0);
     let longest = 0;
     let run = 0;
-    for (const day of map.days) {
-      run = day.totalCents === 0 ? run + 1 : 0;
+    for (const date of dates.slice(firstSpent + 1)) {
+      run = (net.get(date) ?? 0) <= 0 ? run + 1 : 0;
       longest = Math.max(longest, run);
     }
     expect(dto.longestNoSpendStreak?.days).toBe(longest);
     const { from, to } = dto.longestNoSpendStreak ?? { from: '', to: '' };
-    const inside = map.days.filter((day) => day.date >= from && day.date <= to);
+    expect(from > dates[firstSpent]!).toBe(true);
+    const inside = dates.filter((date) => date >= from && date <= to);
     expect(inside).toHaveLength(longest);
-    expect(inside.every((day) => day.totalCents === 0)).toBe(true);
+    expect(inside.every((date) => (net.get(date) ?? 0) <= 0)).toBe(true);
 
     const weekdayTotals = new Map<number, { total: number; count: number }>();
-    for (const day of map.days) {
-      const weekday = new Date(`${day.date}T12:00:00Z`).getUTCDay();
+    for (const date of dates) {
+      const weekday = new Date(`${date}T12:00:00Z`).getUTCDay();
       const entry = weekdayTotals.get(weekday) ?? { total: 0, count: 0 };
-      weekdayTotals.set(weekday, { total: entry.total + day.totalCents, count: entry.count + 1 });
+      weekdayTotals.set(weekday, {
+        total: entry.total + (net.get(date) ?? 0),
+        count: entry.count + 1,
+      });
     }
     const best = Math.max(...[...weekdayTotals.values()].map((e) => Math.round(e.total / e.count)));
     expect(dto.costliestWeekday?.averageCents).toBe(best);
+  });
+
+  it('starts the streak the day after the first day with spending, and has none without spending', async () => {
+    const dto = await highlights();
+    const firstSpentOn = buildLines(db)
+      .filter((line) => line.nature === 'expense' && line.amountCents < 0)
+      .map((line) => line.competenceOn)
+      .sort()[0]!;
+    expect((dto.longestNoSpendStreak?.from ?? '') > firstSpentOn).toBe(true);
+
+    db.transactions = db.transactions.filter((tx) => tx.nature !== 'expense');
+    expect((await highlights()).longestNoSpendStreak).toBeNull();
   });
 
   it('names the category that spent the most, with its share of the spending', async () => {
@@ -135,6 +164,27 @@ describe('profile highlights route', () => {
       costliestWeekday: null,
       longestNoSpendStreak: null,
     });
+  });
+
+  it('names the Pix only by what the bank printed, never by the statement text', async () => {
+    const before = await highlights();
+    const biggest = db.transactions.find((tx) => tx.id === before.largestPixSent?.transactionId);
+    if (!biggest?.bank) throw new Error('seed without a bank Pix sent');
+    biggest.bank.counterparty = '  ';
+
+    expect((await highlights()).largestPixSent?.counterparty).toBeNull();
+  });
+
+  it('does not count a Pix that is a transfer or an invoice payment, whatever its nature is otherwise', async () => {
+    const before = await highlights();
+    const biggest = db.transactions.find((tx) => tx.id === before.largestPixSent?.transactionId);
+    if (!biggest) throw new Error('seed without a Pix sent');
+    biggest.nature = 'transfer';
+
+    expect((await highlights()).largestPixSent?.transactionId).not.toBe(biggest.id);
+
+    biggest.nature = 'lent';
+    expect((await highlights()).largestPixSent?.transactionId).toBe(biggest.id);
   });
 
   it('has no spending curiosity but keeps the Pix when only a Pix exists, outside the 12 months', async () => {

@@ -64,10 +64,14 @@ export function buildCategories(
   breakdown: CategoryBreakdown.Dto,
   categories: readonly Category.Dto[],
 ): CategoriesData {
-  const { items, topGrowth } = breakdown.expenses;
+  const { topGrowth } = breakdown.expenses;
+  // A category whose refund was bigger than its spending comes with a spent of zero or below: it
+  // is not a slice (the donut cannot draw it) and does not lead.
+  const items = breakdown.expenses.items.filter((item) => item.spentCents > 0);
+  const growthSource = breakdown.expenses.items;
   const previousKey = shiftMonthKey(month, -1);
   const growthItem = topGrowth
-    ? items.find((item) => item.categoryId === topGrowth.categoryId)
+    ? growthSource.find((item) => item.categoryId === topGrowth.categoryId)
     : undefined;
   const growthName = topGrowth ? nameOf(topGrowth.categoryId, categories) : undefined;
   const leader = items[0];
@@ -98,6 +102,6 @@ export function buildCategories(
       topGrowth && growthName && topGrowth.changePct !== null
         ? `${growthName} cresceu ${new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 }).format(topGrowth.changePct)}%`
         : undefined,
-    hasSpending: items.some((item) => item.spentCents > 0),
+    hasSpending: items.length > 0,
   };
 }

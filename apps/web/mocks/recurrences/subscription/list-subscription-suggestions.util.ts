@@ -1,13 +1,16 @@
 import { normalizeText } from '@fincheck/shared/common/text/normalize-text.util.ts';
 import { SUBSCRIPTION_SUGGESTION_LIMITS } from '@fincheck/shared/recurrences/subscription/subscription.constant.ts';
-import { isExcludedFromSuggestions } from '@fincheck/shared/recurrences/subscription-service/is-excluded-from-suggestions.util.ts';
 import type { Subscription } from '@fincheck/shared/recurrences/subscription/subscription.type.ts';
+import { isExcludedFromSuggestions } from '@fincheck/shared/recurrences/subscription-service/is-excluded-from-suggestions.util.ts';
 
 import { buildSubscriptionKey } from '#mocks/recurrences/subscription/build-subscription-key.util.ts';
+import { containsAsWords } from '#mocks/recurrences/subscription/contains-as-words.util.ts';
+import { parseSubscriptionKey } from '#mocks/recurrences/subscription/parse-subscription-key.util.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
 import { addMonths } from '#mocks/support/dates/add-months.util.ts';
 import { dayOf } from '#mocks/support/dates/day-of.util.ts';
-import { CURRENT_MONTH } from '#mocks/support/dates/mock-clock.store.ts';
+import { daysInMonth } from '#mocks/support/dates/days-in-month.util.ts';
+import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { countsInAccounts } from '#mocks/transactions/transaction/counts-in-accounts.util.ts';
 
 export interface SuggestionCandidate {
@@ -16,24 +19,44 @@ export interface SuggestionCandidate {
   charges: MockState.TransactionRecord[];
 }
 
+// How many months back the purchases are read: enough for a run of charges to show, and no more
+// (`monthsSeen` is counted inside this window, so it goes up to 13 with the current month).
+const MONTHS_LOOKED_BACK = 12;
+
+// How many days apart two charges are on the "day of the month" circle: a card that charges on the
+// 30th one month and on the 2nd the next is 3 days apart, not 28. The older day is read in the
+// month of the newer one (held at its end if that month is shorter).
+function computeDayDistance(newer: string, older: string): number {
+  const length = daysInMonth(newer.slice(0, 7));
+  const olderDay = Math.min(dayOf(older), length);
+  const gap = Math.abs(dayOf(newer) - olderDay);
+
+  return Math.min(gap, length - gap);
+}
+
 // A recurrence on the same card already answers for the description (an ended one too). A deleted
-// one does not: undoing the acceptance of a suggestion brings it back.
-function isCovered(database: MockState.Database, accountId: string, description: string): boolean {
+// one does not: undoing the acceptance of a suggestion brings it back. The text is the normalized
+// description of the key, and the recurrence matches it as a whole word.
+function isCovered(database: MockState.Database, accountId: string, normalized: string): boolean {
   return database.recurrences.some(
     (recurrence) =>
       !recurrence.archivedAt &&
       recurrence.kind === 'expense' &&
       recurrence.accountId === accountId &&
-      description.includes(recurrence.matchText ?? normalizeText(recurrence.name)),
+      containsAsWords(normalized, recurrence.matchText ?? normalizeText(recurrence.name)),
   );
 }
 
-// BR-REC-017: the same normalized description on a card, one charge a month, in 2 months in a row,
-// each within 15% of the amount after it and within 5 days of its day, and no recurrence on the
-// card that already covers it, and not on the exclusion list (delivery, restaurant, groceries,
-// ride apps, fuel). The last charge is in this month or the one before.
+// BR-REC-017: the same normalized description (no installment "n/N") on a card, one charge a month,
+// in 2 months in a row, each within 15% of the amount after it and within 5 days of its day (on the
+// circle of the month), and no recurrence on the card that already covers it, and not on the
+// exclusion list (delivery, restaurant, groceries, ride apps, fuel). Only an expense counts as a
+// purchase (what was lent or moved is not a subscription), read from 12 months back to today. The
+// last charge is in this month or the one before.
 export function listSubscriptionSuggestions(database: MockState.Database): SuggestionCandidate[] {
   const { amountTolerance, dayTolerance, minMonths } = SUBSCRIPTION_SUGGESTION_LIMITS;
+  const tolerancePercent = Math.round(amountTolerance * 100);
+  const readFrom = `${addMonths(CURRENT_MONTH, -MONTHS_LOOKED_BACK)}-01`;
   const linkedToLiveRecurrence = new Set(
     database.occurrences
       .filter((occurrence) => {
@@ -52,8 +75,11 @@ export function listSubscriptionSuggestions(database: MockState.Database): Sugge
     if (
       !cardIds.has(tx.accountId) ||
       tx.method !== 'credit' ||
+      tx.nature !== 'expense' ||
       tx.amountCents >= 0 ||
       tx.installment ||
+      tx.occurredOn < readFrom ||
+      tx.occurredOn > TODAY ||
       !countsInAccounts(tx) ||
       isExcludedFromSuggestions(tx.description) ||
       linkedToLiveRecurrence.has(tx.id)
@@ -85,9 +111,9 @@ export function listSubscriptionSuggestions(database: MockState.Database): Sugge
       const newer = run.at(-1);
       if (
         newer &&
-        (Math.abs(newer.amountCents - charge.amountCents) >
-          Math.abs(newer.amountCents) * amountTolerance ||
-          Math.abs(dayOf(newer.occurredOn) - dayOf(charge.occurredOn)) > dayTolerance)
+        (Math.abs(newer.amountCents - charge.amountCents) * 100 >
+          Math.abs(newer.amountCents) * tolerancePercent ||
+          computeDayDistance(newer.occurredOn, charge.occurredOn) > dayTolerance)
       )
         break;
       run.push(charge);
@@ -95,7 +121,8 @@ export function listSubscriptionSuggestions(database: MockState.Database): Sugge
     if (run.length < minMonths) continue;
 
     const [last] = run;
-    if (!last || isCovered(database, last.accountId, normalizeText(last.description))) continue;
+    const parsed = parseSubscriptionKey(key);
+    if (!last || !parsed || isCovered(database, last.accountId, parsed.pattern)) continue;
     const charges = [...run].reverse();
     result.push({
       suggestion: {

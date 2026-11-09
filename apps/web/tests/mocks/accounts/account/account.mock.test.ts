@@ -6,6 +6,7 @@ import { apiErrorSchema } from '@fincheck/shared/common/api-error/api-error.sche
 import { listResponseSchema } from '@fincheck/shared/common/list/list.schema.ts';
 import { describe, expect, it } from 'vitest';
 
+import { db } from '#mocks/state/mock-database.store.ts';
 import { CURRENT_MONTH } from '#mocks/support/dates/mock-clock.store.ts';
 import { callApi } from '#tests/support/mocks/call-api.util.ts';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
@@ -112,5 +113,102 @@ describe('accounts routes', () => {
     const wallet = (await listAccounts()).find((account) => account.type === 'wallet');
     expect((await callApi('DELETE', `/accounts/${wallet?.id}`)).status).toBe(204);
     expect((await callApi('GET', `/accounts/${wallet?.id}`)).status).toBe(404);
+  });
+});
+
+describe('accounts routes: aligned with the api (mock vs api 1, 2, 3, 17, 54)', () => {
+  async function create(body: Record<string, unknown>) {
+    return accountDtoSchema.parse((await callApi('POST', '/accounts', body)).json);
+  }
+
+  it('shows the balance a Pluggy card came with, not the sum of its invoices', async () => {
+    const card = (await listAccounts()).find((account) => account.name === 'Roxinho');
+    const record = db.accounts.find((account) => account.id === card?.id);
+    if (record) record.bankBalanceCents = 123_456;
+
+    const read = accountDtoSchema.parse((await callApi('GET', `/accounts/${card?.id}`)).json);
+
+    expect(read.balanceCents).toBe(123_456);
+  });
+
+  it('refuses the bank "wallet" on a bank account and the change of bank of a wallet', async () => {
+    const savings = await create({ type: 'savings', name: 'Reserva', institutionCode: 'inter' });
+    const wallet = (await listAccounts()).find((account) => account.type === 'wallet');
+
+    const toWallet = await callApi('PATCH', `/accounts/${savings.id}`, {
+      institutionCode: 'wallet',
+    });
+    const walletBank = await callApi('PATCH', `/accounts/${wallet?.id}`, {
+      institutionCode: 'inter',
+    });
+
+    expect(toWallet.status).toBe(400);
+    expect(apiErrorSchema.parse(toWallet.json).code).toBe('VALIDATION_FAILED');
+    expect(walletBank.status).toBe(400);
+  });
+
+  it('clears the name of the bank when the account moves to a common bank', async () => {
+    const other = await create({
+      type: 'checking',
+      name: 'Conta',
+      institutionCode: 'other',
+      institutionName: 'Banco do Bairro',
+    });
+    expect(other.institutionName).toBe('Banco do Bairro');
+
+    const moved = accountDtoSchema.parse(
+      (await callApi('PATCH', `/accounts/${other.id}`, { institutionCode: 'inter' })).json,
+    );
+    expect(moved).toMatchObject({ institutionCode: 'inter', institutionName: null });
+
+    expect(
+      (await callApi('PATCH', `/accounts/${other.id}`, { institutionName: 'Sobra' })).status,
+    ).toBe(400);
+    expect(
+      (await callApi('PATCH', `/accounts/${other.id}`, { institutionCode: 'other' })).status,
+    ).toBe(400);
+  });
+
+  it('writes the initial balance as "Ajuste de saldo: Saldo inicial"', async () => {
+    const account = await create({
+      type: 'savings',
+      name: 'Reserva',
+      institutionCode: 'inter',
+      initialBalanceCents: 10_000,
+    });
+    const { json } = await callApi('GET', `/transactions?accountId=${account.id}`);
+
+    expect((json as { items: { description: string }[] }).items[0]?.description).toBe(
+      'Ajuste de saldo: Saldo inicial',
+    );
+  });
+
+  it('counts in the deletion impact every month the card has an invoice row or a transaction in', async () => {
+    const card = await create({
+      type: 'credit_card',
+      name: 'Cartão novo',
+      institutionCode: 'inter',
+      creditCard: { brand: 'visa', closingDay: 10, dueDay: 20 },
+    });
+    const impact = async () =>
+      deletionImpactDtoSchema.parse(
+        (await callApi('GET', `/accounts/${card.id}/deletion-impact`)).json,
+      ).invoiceCount;
+    expect(await impact()).toBe(0);
+
+    for (const occurredOn of ['2026-02-03', '2026-02-05', '2026-04-20']) {
+      await callApi('POST', '/transactions', {
+        type: 'expense',
+        accountId: card.id,
+        method: 'credit',
+        description: 'Compra',
+        amountCents: 1000,
+        occurredOn,
+      });
+    }
+
+    // Two purchases land on the invoice of February, the other on the one of May: no row was written.
+    expect(db.invoices.some((invoice) => invoice.accountId === card.id)).toBe(false);
+    expect(await impact()).toBe(2);
   });
 });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { hasSharedMinute } from '#/features/settings/settings/backup/utils/has-shared-minute.util.ts';
 import { formatBackupMoment } from '#/features/settings/settings/backup/utils/format-backup-moment.util.ts';
 import { formatFileSize } from '#/features/settings/settings/backup/utils/format-file-size.util.ts';
 import { formatTimeAgo } from '#/features/settings/settings/connections/utils/format-time-ago.util.ts';
@@ -23,6 +24,24 @@ describe('formatTimeAgo', () => {
 
   it('never goes negative when the instant is ahead of the clock', () => {
     expect(formatTimeAgo('2026-10-22T18:30:00.000Z', NOW)).toBe('agora há pouco');
+  });
+});
+
+describe('hasSharedMinute', () => {
+  const files = [
+    { fileName: 'a.db', createdAt: '2026-11-09T10:04:44.000Z' },
+    { fileName: 'b.db', createdAt: '2026-11-09T10:04:36.000Z' },
+    { fileName: 'c.db', createdAt: '2026-11-09T09:00:00.000Z' },
+  ];
+
+  it('is true only for the backups that share a minute with another one', () => {
+    expect(hasSharedMinute(files[0]!, files)).toBe(true);
+    expect(hasSharedMinute(files[1]!, files)).toBe(true);
+    expect(hasSharedMinute(files[2]!, files)).toBe(false);
+  });
+
+  it('shows the seconds of a moment on request', () => {
+    expect(formatBackupMoment('2026-10-22T06:00:07.000Z', NOW, true)).toBe('hoje às 03:00:07');
   });
 });
 
@@ -85,7 +104,7 @@ describe('getActionErrorMessage', () => {
 
     expect(getActionErrorMessage(folder, 'falhou')).toBe('Essa pasta não existe.');
     expect(getActionErrorMessage(busy, 'falhou')).toBe(
-      'Já há um backup ou uma restauração em andamento.',
+      'Há um backup ou uma restauração em andamento. Espere terminar e tente de novo.',
     );
     expect(getActionErrorMessage(other, 'falhou')).toBe('falhou');
     expect(getActionErrorMessage(new Error('boom'), 'falhou')).toBe('falhou');

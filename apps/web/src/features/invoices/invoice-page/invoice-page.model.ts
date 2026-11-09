@@ -1,3 +1,4 @@
+import { isMissingApiError } from '#/shared/api/is-missing-api-error.util.ts';
 import { useAccount } from '#/domain/accounts/account/hooks/use-account.hook.ts';
 import { useCategories } from '#/domain/categories/category/hooks/use-categories.hook.ts';
 import { useCardInvoice } from '#/domain/invoices/invoice/hooks/use-card-invoice.hook.ts';
@@ -25,6 +26,8 @@ export function useInvoicePageModel(accountId: string, month: string) {
     categories: categories.data?.items ?? [],
     listedMonths: (listed.data?.items ?? []).map((item) => item.month),
     isLoading: invoice.isPending || card.isPending || categories.isPending,
+    // The card or the month of the address is not there (404), or the id is not even an id (400).
+    isMissing: isMissingApiError(invoice.error) || isMissingApiError(card.error),
     isError: invoice.isError || card.isError || categories.isError,
     retry: () => {
       void invoice.refetch();

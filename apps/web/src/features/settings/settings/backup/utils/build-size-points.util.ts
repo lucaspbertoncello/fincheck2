@@ -4,6 +4,7 @@ import type { ValueTrendPoint } from '@fincheck/ui';
 import { BYTES_PER_MEGABYTE } from '#/features/settings/settings/backup/constants/bytes-per-megabyte.constant.ts';
 import { formatBackupDay } from '#/features/settings/settings/backup/utils/format-backup-day.util.ts';
 import { formatBackupMoment } from '#/features/settings/settings/backup/utils/format-backup-moment.util.ts';
+import { hasSharedMinute } from '#/features/settings/settings/backup/utils/has-shared-minute.util.ts';
 import { capitalize } from '#/shared/utils/text/capitalize.util.ts';
 
 /**
@@ -21,7 +22,7 @@ export function buildSizePoints(
     .map((file) => ({
       key: file.createdAt,
       label: formatBackupDay(file.createdAt),
-      fullLabel: capitalize(formatBackupMoment(file.createdAt, now)),
+      fullLabel: capitalize(formatBackupMoment(file.createdAt, now, hasSharedMinute(file, files))),
       value: file.sizeBytes / BYTES_PER_MEGABYTE,
     }));
 }

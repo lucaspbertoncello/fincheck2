@@ -7,7 +7,7 @@ import { inReviewSql } from '#/modules/transactions/application/transaction/in-r
 import type { RecurrenceCandidateReader } from '#/modules/transactions/application/transaction/recurrence-candidate-reader.interface.ts';
 import type { TransactionDtoBuilder } from '#/modules/transactions/application/transaction/transaction-dto-builder.service.ts';
 import { Month } from '#/shared/date/month.value-object.ts';
-import { normalizeDescription } from '#/shared/text/normalize-description.util.ts';
+import { normalizeDescription } from '@fincheck/shared/common/text/normalize-description.util.ts';
 import { normalizeText } from '@fincheck/shared/common/text/normalize-text.util.ts';
 
 const DEFAULT_LIMIT = 50;

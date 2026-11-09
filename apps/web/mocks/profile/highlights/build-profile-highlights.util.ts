@@ -8,18 +8,17 @@ import { findTopCategory } from '#mocks/profile/highlights/find-top-category.uti
 import { listSpendWindow } from '#mocks/profile/highlights/list-spend-window.util.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
 
-// The six curiosities (BR-PRF-005), read from the same transactions as everything else. With no
-// spending in the 12 months the four window ones are null (a streak of the whole year says nothing).
+// The six curiosities (BR-PRF-005), read from the same transactions as everything else. Each one is
+// null without data (no spending in the 12 months leaves the four window ones null).
 export function buildProfileHighlights(database: MockState.Database): Profile.Highlights {
   const window = listSpendWindow(database);
-  const hasSpending = [...window.spentByDay.values()].some((spent) => spent > 0);
 
   return {
     largestPixSent: findLargestPix(database, 'sent'),
     largestPixReceived: findLargestPix(database, 'received'),
-    topCategory: hasSpending ? findTopCategory(window) : null,
-    costliestMonth: hasSpending ? findCostliestMonth(window) : null,
-    costliestWeekday: hasSpending ? findCostliestWeekday(window) : null,
-    longestNoSpendStreak: hasSpending ? findLongestNoSpendStreak(window) : null,
+    topCategory: findTopCategory(window),
+    costliestMonth: findCostliestMonth(window),
+    costliestWeekday: findCostliestWeekday(window),
+    longestNoSpendStreak: findLongestNoSpendStreak(window),
   };
 }

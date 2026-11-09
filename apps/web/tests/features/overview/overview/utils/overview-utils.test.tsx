@@ -88,6 +88,22 @@ describe('buildCategories', () => {
     expect(data.insight).toBeUndefined();
     expect(data.hasSpending).toBe(true);
   });
+
+  it('draws no slice for a category whose refund was bigger than its spending', () => {
+    const refunded = { ...expense('b', -500, 100), sharePct: 0 };
+    const data = buildCategories(
+      '2026-10',
+      breakdown([expense('a', 300, 100), refunded], null),
+      CATEGORIES,
+    );
+
+    expect(data.slices.map((slice) => slice.name)).toEqual(['Cat a']);
+    expect(data.hasSpending).toBe(true);
+
+    const onlyRefund = buildCategories('2026-10', breakdown([refunded], null), CATEGORIES);
+    expect(onlyRefund.slices).toEqual([]);
+    expect(onlyRefund.hasSpending).toBe(false);
+  });
 });
 
 function day(date: string, overrides: Partial<Timeline.Day> = {}): Timeline.Day {

@@ -9,8 +9,8 @@ import type { TransactionRepository } from '#/modules/transactions/domain/transa
 import { BusinessDate } from '#/shared/date/business-date.value-object.ts';
 import type { Month } from '#/shared/date/month.value-object.ts';
 import { Money } from '#/shared/money/money.value-object.ts';
-import { normalizeDescription } from '#/shared/text/normalize-description.util.ts';
-import { stripInstallmentSuffix } from '#/shared/text/strip-installment-suffix.util.ts';
+import { normalizeDescription } from '@fincheck/shared/common/text/normalize-description.util.ts';
+import { stripInstallmentSuffix } from '@fincheck/shared/common/text/strip-installment-suffix.util.ts';
 
 // How far apart (R$ 0,05) the value of a parcel may be from the one of its plan (BR-INV-005).
 const PARCEL_TOLERANCE_CENTS = 5;

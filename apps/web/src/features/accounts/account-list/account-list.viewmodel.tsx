@@ -73,7 +73,7 @@ export function AccountListViewModel() {
       return {
         connectionId: item.id,
         title: `Buscando o histórico do ${item.institutionName}`,
-        detail: `${monthsDone} de cerca de ${monthsTotal} meses, ${count} transações. O app segue usável.`,
+        detail: `${monthsDone} de cerca de ${monthsTotal} meses, ${count} ${item.history.transactionCount === 1 ? 'transação' : 'transações'}. O app segue usável.`,
       };
     });
 

@@ -14,11 +14,13 @@ import { listMonthOccurrences } from '#mocks/recurrences/occurrence/list-month-o
 import { presentOccurrence } from '#mocks/recurrences/occurrence/present-occurrence.util.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
 import { newId } from '#mocks/state/mock-id.store.ts';
+import { assertSupportedMonth } from '#mocks/support/dates/assert-supported-month.util.ts';
 import { NOW_ISO } from '#mocks/support/dates/mock-clock.store.ts';
 import { addDays } from '#mocks/support/dates/add-days.util.ts';
 import { fail } from '#mocks/support/http/fail.util.ts';
 import { handleRoute } from '#mocks/support/http/handle-route.util.ts';
 import { countsInAccounts } from '#mocks/transactions/transaction/counts-in-accounts.util.ts';
+import { isTransactionLinked } from '#mocks/transactions/transaction/is-transaction-linked.util.ts';
 import { findTransaction } from '#mocks/transactions/transaction/find-transaction.util.ts';
 
 const idOf = (params: Record<string, string>) => params['id'] ?? '';
@@ -42,13 +44,17 @@ export const occurrenceMock = [
     '/api/occurrences',
     handleRoute(
       { query: listOccurrencesQuerySchema, response: listResponseSchema(occurrenceDtoSchema) },
-      ({ query }) => ({
-        items: listMonthOccurrences(db, query.month).filter(
-          (occurrence) =>
-            query.needsAttention === undefined ||
-            occurrence.needsAttention === query.needsAttention,
-        ),
-      }),
+      ({ query }) => {
+        assertSupportedMonth(query.month, 'month');
+
+        return {
+          items: listMonthOccurrences(db, query.month).filter(
+            (occurrence) =>
+              query.needsAttention === undefined ||
+              occurrence.needsAttention === query.needsAttention,
+          ),
+        };
+      },
     ),
   ),
 
@@ -117,18 +123,21 @@ export const occurrenceMock = [
         const { record, recurrence } = recurrenceOf(idOf(params));
         const tx = findTransaction(db, body.transactionId);
         if (record.skippedAt) fail(422, 'OCCURRENCE_SKIPPED', 'A ocorrência está dispensada');
-        if (isLinkedToOccurrence(tx.id))
-          fail(409, 'OCCURRENCE_TRANSACTION_ALREADY_LINKED', 'A transação já abate uma ocorrência');
+        // An income takes a credit of nature income, an expense a debit of nature expense, and
+        // only a transaction that counts: a transfer, a payment of invoice, a debt or an
+        // adjustment pays no occurrence.
         const rightWay =
           recurrence.kind === 'income'
             ? tx.amountCents > 0 && tx.nature === 'income'
             : tx.amountCents < 0 && tx.nature === 'expense';
-        if (!rightWay || tx.ignoredAt)
+        if (!rightWay || !countsInAccounts(tx))
           fail(
             422,
             'OCCURRENCE_TRANSACTION_KIND_MISMATCH',
             'A transação não bate com o tipo da recorrência',
           );
+        if (isTransactionLinked(db, tx.id))
+          fail(409, 'OCCURRENCE_TRANSACTION_ALREADY_LINKED', 'A transação já abate uma ocorrência');
 
         record.payments.push({
           id: newId(),

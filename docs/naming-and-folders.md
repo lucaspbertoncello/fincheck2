@@ -196,9 +196,9 @@ packages/ui/
 | `modules/<contexto>/application/` | Casos de uso, queries (leitura direta com Kysely, sem entidade) e as portas que o caso de uso precisa                                                             |
 | `modules/<contexto>/infra/`       | Repositórios Kysely, `.item.ts`, gateways e translators (Pluggy, Telegram)                                                                                              |
 | `modules/<contexto>/http/`        | Controllers (sem framework: recebem e devolvem dado) e o `.route.ts` que registra as rotas no Hono                                                               |
-| `shared/`                         | Núcleo compartilhado: `errors/`, `config/`, `money/`, `date/` (`BusinessDate`, `Month`), `clock/`, `calendar/`, `text/`, `id/`, `local-token/`, `unit-of-work/` (a porta) e `http/` (o validador; só `http` e `main` importam) |
+| `shared/`                         | Núcleo compartilhado: `errors/`, `config/`, `money/`, `date/` (`BusinessDate`, `Month`), `clock/`, `calendar/`, `id/`, `local-token/`, `unit-of-work/` (a porta) e `http/` (o validador; só `http` e `main` importam) |
 | `database/`                       | Conexão (`sqlite.client.ts`), `database.type.ts` (junta os tipos das tabelas), `tables/<contexto>/<tabela>-table.type.ts` (o tipo de cada tabela; o dono é a pasta), `unit-of-work/` (implementação Kysely), `migrate-to-latest.util.ts` e `migrations/` |
-| `main/`                           | `main.ts` (sobe tudo), `http/` (`create-app.util.ts` monta os controllers à mão e as rotas; `app.type.ts`; `handle-error.util.ts`; `middlewares/`) e `schedules/` |
+| `main/`                           | `main.ts` (sobe tudo), `http/` (`create-app.util.ts` monta os controllers à mão e as rotas; `handle-error.util.ts`; `middlewares/`) e `schedules/` |
 
 - **A dependência aponta para dentro:** `http` → `application` → `domain`; `infra` implementa as portas do `domain` e do `application`. O `domain` não importa Kysely, Hono, Zod nem `node:`. Só o `main` monta tudo (injeção à mão, sem container). A lint barra.
 - **Dono entre contextos:** um módulo não importa o `domain`, o `infra` nem o `http` de outro. Lê pela query do outro e altera pelo caso de uso do dono (os dois em `application`). Escrita que cruza contextos passa por um caso de uso só, com unidade de trabalho. A lint barra.
@@ -243,9 +243,9 @@ apps/api/                                                          (exemplo)
 │  │  │  └─ http/invoice/            close-invoice.controller.ts · invoice.route.ts
 │  │  ├─ sync/infra/pluggy/          pluggy.client.ts · pluggy.gateway.ts · pluggy-transaction.translator.ts
 │  │  └─ health/                     application/health/check-database.query.ts · http/health/get-health.controller.ts · health.route.ts
-│  ├─ shared/                        errors/ · config/ · money/ · date/ · clock/ · calendar/ · text/ · id/ · local-token/ · unit-of-work/ · http/
+│  ├─ shared/                        errors/ · config/ · money/ · date/ · clock/ · calendar/ · id/ · local-token/ · unit-of-work/ · http/
 │  ├─ database/                      sqlite.client.ts · database.type.ts · tables/invoices/invoices-table.type.ts · unit-of-work/ · migrate-to-latest.util.ts · migrations/202611051430-create-invoices.ts
-│  └─ main/                          main.ts · http/ (create-app.util.ts · app.type.ts · handle-error.util.ts · middlewares/) · schedules/
+│  └─ main/                          main.ts · http/ (create-app.util.ts · handle-error.util.ts · middlewares/) · schedules/
 └─ tests/                            unit/ · integration/ · e2e/, cada uma com o mesmo caminho do src/
    ├─ unit/modules/invoices/domain/invoice/       invoice.entity.test.ts
    ├─ integration/modules/health/http/health/     health.route.test.ts

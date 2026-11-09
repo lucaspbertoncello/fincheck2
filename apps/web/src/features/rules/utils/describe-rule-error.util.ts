@@ -1,4 +1,4 @@
-import { isApiError } from '#/shared/api/api.error.ts';
+import { isApiError, type ApiError } from '#/shared/api/api.error.ts';
 
 const MESSAGES: Record<string, string> = {
   RULE_DUPLICATE: 'Já existe uma regra com essa condição.',
@@ -10,11 +10,27 @@ const MESSAGES: Record<string, string> = {
   RULE_NOT_FOUND: 'Essa regra não existe mais.',
 };
 
+// The 400 of the API names the field in `details.issues`: a pattern that is too short (or too long)
+// once normalized is the one a suggestion can hit.
+function hasIssueAt(error: ApiError, path: string): boolean {
+  const issues = error.details?.['issues'];
+
+  return (
+    Array.isArray(issues) &&
+    issues.some(
+      (issue: unknown) =>
+        typeof issue === 'object' && issue !== null && 'path' in issue && issue.path === path,
+    )
+  );
+}
+
 /** What went wrong with a rule write, as a sentence for the person; the contract `code` decides. */
 export function describeRuleError(error: unknown): string {
   if (isApiError(error)) {
     const message = MESSAGES[error.code];
     if (message) return message;
+    if (error.code === 'VALIDATION_FAILED' && hasIssueAt(error, 'pattern'))
+      return 'O texto da regra precisa ter de 2 a 100 caracteres, sem contar o número da parcela.';
   }
   return 'Não deu para salvar a regra agora. Tente de novo.';
 }

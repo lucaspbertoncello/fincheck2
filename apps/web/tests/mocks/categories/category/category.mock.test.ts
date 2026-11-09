@@ -9,6 +9,7 @@ import { tagDtoSchema } from '@fincheck/shared/categories/tag/tag.schema.ts';
 import { listResponseSchema } from '@fincheck/shared/common/list/list.schema.ts';
 import { describe, expect, it } from 'vitest';
 
+import { db } from '#mocks/state/mock-database.store.ts';
 import { callApi } from '#tests/support/mocks/call-api.util.ts';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
 
@@ -232,5 +233,28 @@ describe('rules routes', () => {
         (item) => item.pattern === first?.pattern && item.categoryId === first?.categoryId,
       ),
     ).toBe(false);
+  });
+});
+
+describe('category usage count (mock vs api 27)', () => {
+  it('counts a transaction once, also when the category is on its category and on its parts', async () => {
+    const target = (await categories()).find(
+      (category) => category.kind === 'expense' && category.transactionCount === 0,
+    );
+    const tx = db.transactions.find(
+      (item) => item.nature === 'expense' && item.splits.length === 0 && item.origin === 'bank',
+    );
+    const amount = Math.abs(tx?.amountCents ?? 0);
+
+    const split = await callApi('PUT', `/transactions/${tx?.id}/splits`, {
+      parts: [
+        { amountCents: 1, categoryId: target?.id },
+        { amountCents: amount - 1, categoryId: target?.id },
+      ],
+    });
+    expect(split.status).toBe(200);
+
+    const after = (await categories()).find((category) => category.id === target?.id);
+    expect(after?.transactionCount).toBe(1);
   });
 });

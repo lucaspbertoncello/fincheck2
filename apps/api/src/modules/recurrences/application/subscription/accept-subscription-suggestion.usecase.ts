@@ -13,7 +13,7 @@ import { DateRule } from '#/modules/recurrences/domain/recurrence/date-rule.valu
 import { Recurrence } from '#/modules/recurrences/domain/recurrence/recurrence.entity.ts';
 import { buildSubscriptionName } from '#/modules/recurrences/domain/subscription/build-subscription-name.util.ts';
 import { parseSubscriptionKey } from '#/modules/recurrences/domain/subscription/parse-subscription-key.util.ts';
-import { recognizeSubscriptionService } from '#/modules/recurrences/domain/subscription/recognize-subscription-service.util.ts';
+import { recognizeServiceSlug } from '@fincheck/shared/recurrences/subscription-service/recognize-service-slug.util.ts';
 import { SubscriptionSuggestionNotFoundError } from '#/modules/recurrences/domain/subscription/subscription-suggestion-not-found.error.ts';
 import type { Clock } from '#/shared/clock/clock.interface.ts';
 import { Month } from '#/shared/date/month.value-object.ts';
@@ -90,7 +90,7 @@ export class AcceptSubscriptionSuggestionUseCase {
           isSubscription: true,
           serviceSlug:
             input.serviceSlug === undefined
-              ? recognizeSubscriptionService(candidate.suggestion.description)
+              ? recognizeServiceSlug(candidate.suggestion.description)
               : input.serviceSlug,
           dateRule: DateRule.create({ type: 'fixed_day', day: last.occurredOn.day }),
           maxPayments: 1,

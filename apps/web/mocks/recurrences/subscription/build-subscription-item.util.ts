@@ -4,15 +4,15 @@ import type { Subscription } from '@fincheck/shared/recurrences/subscription/sub
 import { findMonthOccurrence } from '#mocks/recurrences/subscription/find-month-occurrence.util.ts';
 import { findRecurrenceCharges } from '#mocks/recurrences/subscription/find-recurrence-charges.util.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
+import { businessDateOfInstant } from '#mocks/support/dates/business-date-of-instant.util.ts';
 import { dayOf } from '#mocks/support/dates/day-of.util.ts';
-import { daysInMonth } from '#mocks/support/dates/days-in-month.util.ts';
 import { CURRENT_MONTH } from '#mocks/support/dates/mock-clock.store.ts';
 
 // The business date a recurrence ended on (paused or deleted), when it did.
 function endedOn(recurrence: MockState.RecurrenceRecord): string | null {
   const instant = recurrence.pausedAt ?? recurrence.archivedAt;
 
-  return instant ? instant.slice(0, 10) : null;
+  return instant ? businessDateOfInstant(instant) : null;
 }
 
 // One row of the tab: the recurrence, the state of the month and the warning that fits it. Returns
@@ -24,10 +24,7 @@ export function buildSubscriptionItem(
 ): Subscription.Item | null {
   const endDate = endedOn(recurrence);
   const occurrence = findMonthOccurrence(database, recurrence.id, month);
-  const monthEnd = `${month}-${String(daysInMonth(month)).padStart(2, '0')}`;
-  const charges = findRecurrenceCharges(database, recurrence).filter(
-    (tx) => tx.occurredOn <= monthEnd,
-  );
+  const charges = findRecurrenceCharges(database, recurrence, month);
   const monthCharges = charges.filter((tx) => tx.occurredOn.startsWith(month));
   const lastCharge = charges.at(-1) ?? null;
   const lastChargeCents = lastCharge ? Math.abs(lastCharge.amountCents) : null;

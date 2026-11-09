@@ -1,7 +1,8 @@
 import { categoryTrendDtoSchema } from '@fincheck/shared/dashboard/category-trend/category-trend.schema.ts';
 import { describe, expect, it } from 'vitest';
 
-import { CURRENT_MONTH } from '#mocks/support/dates/mock-clock.store.ts';
+import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
+import { addTransaction } from '#tests/mocks/dashboard/support/add-transaction.util.ts';
 import { callApi } from '#tests/support/mocks/call-api.util.ts';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
 
@@ -90,5 +91,16 @@ describe('GET /dashboard/categories/:id/trend', () => {
     expect(
       (await callApi('GET', `/dashboard/categories/${mercado.id}/trend?until=2026-13`)).status,
     ).toBe(400);
+  });
+
+  it('shows 0, never a negative bar, for a month whose refund was bigger than its spending', async () => {
+    const mercado = await findCategory('Mercado');
+    const refund = addTransaction({ nature: 'expense', amountCents: 900_000, occurredOn: TODAY });
+    Object.assign(refund, { categoryId: mercado.id, amountCents: 900_000 });
+
+    const dto = await trend(mercado.id);
+
+    expect(dto.months.at(-1)?.totalCents).toBe(0);
+    expect(dto.months.every((item) => item.totalCents >= 0)).toBe(true);
   });
 });

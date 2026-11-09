@@ -9,8 +9,8 @@ import type { TransactionLookups } from '#/shared/types/transactions/transaction
 import { buildCategoryOptions } from '#/features/transactions/utils/build-category-options.util.ts';
 import { buildCounterpartOptions } from '#/features/transactions/transaction-list/utils/build-counterpart-options.util.ts';
 import { buildEditValues } from '#/features/transactions/transaction-list/utils/build-edit-values.util.ts';
+import { describeEditError } from '#/features/transactions/transaction-list/utils/describe-edit-error.util.ts';
 import { buildUpdateBody } from '#/features/transactions/transaction-list/utils/build-update-body.util.ts';
-import { describeTransactionError } from '#/shared/utils/transactions/describe-transaction-error.util.ts';
 import { focusFirstInvalid } from '#/features/transactions/utils/focus-first-invalid.util.ts';
 
 function describeOrigin(transaction: Transaction.Dto, lookups: TransactionLookups): string {
@@ -101,7 +101,7 @@ export function useTransactionEditing({
       }
       close();
     } catch (error) {
-      const { field, message } = describeTransactionError(error);
+      const { field, message } = describeEditError(error);
       setProblem({
         id: transaction.id,
         errors: field ? { [field]: message } : {},

@@ -133,6 +133,11 @@ export function CategoryListView({
                 Número de transações com cada tag, em todo o histórico. Use o menu … de cada tag
                 para renomear ou arquivar.
               </p>
+              {tags.length === 0 ? (
+                <p className="text-label text-fg-secondary">
+                  Nenhuma tag ainda. Use o “+” (Nova tag) para criar a primeira.
+                </p>
+              ) : null}
               <TagList
                 tags={tags}
                 label="Tags"

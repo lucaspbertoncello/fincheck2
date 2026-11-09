@@ -3,6 +3,7 @@ import type { InvoicePayment } from '@fincheck/shared/invoices/invoice-payment/i
 
 import { closesOnFor } from '#mocks/invoices/invoice/closes-on-for.util.ts';
 import { dueOnFor } from '#mocks/invoices/invoice/due-on-for.util.ts';
+import { isMirrorCredit } from '#mocks/invoices/invoice/is-mirror-credit.util.ts';
 import { invoiceMonthFor } from '#mocks/invoices/invoice/invoice-month-for.util.ts';
 import { openMonthFor } from '#mocks/invoices/invoice/open-month-for.util.ts';
 import { ensureOccurrences } from '#mocks/recurrences/occurrence/ensure-occurrences.util.ts';
@@ -99,7 +100,16 @@ export function computeInvoice(
   const totalOverrideCents = row?.totalOverrideCents ?? null;
   const totalCents = totalOverrideCents ?? bankTotalCents ?? computedTotalCents;
 
-  const payments = [...(row?.payments ?? [])].sort((a, b) => a.paidOn.localeCompare(b.paidOn));
+  // Same day: the order they were made in (the row keeps them in creation order), then the id.
+  const payments = (row?.payments ?? [])
+    .map((payment, index) => ({ payment, index }))
+    .sort(
+      (a, b) =>
+        a.payment.paidOn.localeCompare(b.payment.paidOn) ||
+        a.index - b.index ||
+        a.payment.id.localeCompare(b.payment.id),
+    )
+    .map(({ payment }) => payment);
   const paidCents = paidFromPayments(database, payments);
 
   let status: Invoice.Status;
@@ -114,42 +124,57 @@ export function computeInvoice(
   let paymentSuggestion: Invoice.PaymentSuggestion | null = null;
   const leftBeforePresumed = Math.max(0, totalCents - paidCents);
   if (['closed', 'partial', 'overdue'].includes(status) && leftBeforePresumed > 0) {
+    const mirrorCredits = database.transactions.filter(
+      (tx) =>
+        tx.accountId === accountId &&
+        tx.nature === 'invoice_payment' &&
+        tx.amountCents > 0 &&
+        countsInAccounts(tx),
+    );
     const candidates = database.transactions
       .filter((tx) => {
         const txAccount = database.accounts.find((item) => item.id === tx.accountId);
+
         return (
           tx.nature === 'invoice_payment' &&
           tx.amountCents < 0 &&
           txAccount?.type !== 'credit_card' &&
+          tx.method !== 'credit' &&
           countsInAccounts(tx) &&
           tx.occurredOn >= closesOn &&
           tx.occurredOn <= addDays(dueOn, 5) &&
-          Math.abs(Math.abs(tx.amountCents) - leftBeforePresumed) <= 100 &&
           !isTransactionLinked(database, tx.id) &&
           !(row?.dismissedTransactionIds ?? []).includes(tx.id)
         );
       })
+      .map((tx) => ({
+        tx,
+        hasMirror: mirrorCredits.some((credit) => isMirrorCredit(tx, credit)),
+        difference: Math.abs(Math.abs(tx.amountCents) - leftBeforePresumed),
+      }))
+      .filter((entry) => entry.hasMirror || entry.difference <= 100)
       .sort(
         (a, b) =>
-          Math.abs(Math.abs(a.amountCents) - leftBeforePresumed) -
-            Math.abs(Math.abs(b.amountCents) - leftBeforePresumed) ||
-          b.occurredOn.localeCompare(a.occurredOn),
+          a.difference - b.difference ||
+          b.tx.occurredOn.localeCompare(a.tx.occurredOn) ||
+          b.tx.id.localeCompare(a.tx.id),
       );
     const best = candidates[0];
     if (best) {
       paymentSuggestion = {
-        transactionId: best.id,
-        accountId: best.accountId,
-        amountCents: best.amountCents,
-        occurredOn: best.occurredOn,
-        description: best.description,
-        isPresumed: candidates.length === 1,
+        transactionId: best.tx.id,
+        accountId: best.tx.accountId,
+        amountCents: best.tx.amountCents,
+        occurredOn: best.tx.occurredOn,
+        description: best.tx.description,
+        isPresumed: best.hasMirror || candidates.length === 1,
       };
     }
   }
 
+  // The whole value of the transaction counts as presumed paid; what is left never goes below 0.
   const presumedPaidCents = paymentSuggestion?.isPresumed
-    ? Math.min(Math.abs(paymentSuggestion.amountCents), leftBeforePresumed)
+    ? Math.abs(paymentSuggestion.amountCents)
     : 0;
 
   const dto: Invoice.Dto = {
@@ -179,7 +204,8 @@ export function computeInvoice(
       description: tx.description,
       occurredOn: tx.occurredOn,
       amountCents: tx.amountCents,
-      categoryId: tx.categoryId,
+      // A split transaction has its categories on its parts.
+      categoryId: tx.splits.length > 0 ? null : tx.categoryId,
       installment: tx.installment
         ? { number: tx.installment.number, count: tx.installment.count }
         : null,
@@ -197,7 +223,10 @@ export function computeInvoice(
     if (dateA === '' && dateB !== '') return 1;
     if (dateB === '' && dateA !== '') return -1;
 
-    return dateB.localeCompare(dateA);
+    const idA = a.type === 'transaction' ? a.transactionId : a.occurrenceId;
+    const idB = b.type === 'transaction' ? b.transactionId : b.occurrenceId;
+
+    return dateB.localeCompare(dateA) || idB.localeCompare(idA);
   });
 
   return { dto, items };

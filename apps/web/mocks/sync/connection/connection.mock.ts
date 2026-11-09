@@ -21,6 +21,7 @@ import { fail } from '#mocks/support/http/fail.util.ts';
 import { handleRoute } from '#mocks/support/http/handle-route.util.ts';
 import { finishRunningRuns } from '#mocks/sync/connection/finish-running-runs.util.ts';
 import { presentConnection } from '#mocks/sync/connection/present-connection.util.ts';
+import { readItemOutcome } from '#mocks/sync/connection/read-item-outcome.util.ts';
 import { countsInAccounts } from '#mocks/transactions/transaction/counts-in-accounts.util.ts';
 
 const idOf = (params: Record<string, string>) => params['id'] ?? '';
@@ -30,6 +31,13 @@ function findConnection(id: string): MockState.ConnectionRecord {
     db.connections.find((item) => item.id === id) ??
     fail(404, 'SYNC_CONNECTION_NOT_FOUND', 'A conexão não existe')
   );
+}
+
+// A backup or a restore is running (the database is being swapped): the routes of `sync` that read
+// or write refuse first, before anything else (contract, `BACKUP_IN_PROGRESS`).
+function assertNoBackupRunning() {
+  if (db.backup.running)
+    fail(409, 'BACKUP_IN_PROGRESS', 'Há um backup ou uma restauração em andamento');
 }
 
 function assertConfigured() {
@@ -72,9 +80,12 @@ export const connectionMock = [
     handleRoute(
       { body: saveSyncSettingsRequestSchema, response: syncSettingsDtoSchema },
       ({ body }) => {
-        // The mock has no Pluggy: this secret plays "the Pluggy refused the keys".
+        // The mock has no Pluggy: these secrets play "the Pluggy refused the keys" and "the Pluggy
+        // could not be reached".
         if (body.clientSecret === 'invalid')
           fail(422, 'SYNC_CREDENTIALS_INVALID', 'O Pluggy recusou as chaves');
+        if (body.clientSecret === 'unavailable')
+          fail(422, 'SYNC_PROVIDER_UNAVAILABLE', 'Não foi possível falar com o Pluggy');
         db.syncSettings = { clientId: body.clientId, updatedAt: NOW_ISO };
 
         return { configured: true, clientId: body.clientId, updatedAt: NOW_ISO };
@@ -86,6 +97,11 @@ export const connectionMock = [
     '/api/sync/connect-token',
     handleRoute({ response: connectTokenDtoSchema }, () => {
       assertConfigured();
+      // The saved Client ID plays the Pluggy: the keys that stopped working, or no Pluggy at all.
+      if (db.syncSettings?.clientId === 'invalid')
+        fail(422, 'SYNC_CREDENTIALS_INVALID', 'O Pluggy recusou as chaves');
+      if (db.syncSettings?.clientId === 'unavailable')
+        fail(422, 'SYNC_PROVIDER_UNAVAILABLE', 'Não foi possível falar com o Pluggy');
 
       return {
         connectToken: 'token-de-demonstracao',
@@ -115,6 +131,9 @@ export const connectionMock = [
     handleRoute(
       { body: createConnectionRequestSchema, response: connectionDtoSchema, status: 202 },
       ({ body }) => {
+        // The order of the API: a backup running (409), no keys (422), the connection that exists
+        // (409), what the Pluggy says of the item (422), then a round already running (409).
+        assertNoBackupRunning();
         assertConfigured();
         const existing = db.connections.find((item) => item.pluggyItemId === body.pluggyItemId);
         if (existing && existing.status !== 'disconnected') {
@@ -123,18 +142,29 @@ export const connectionMock = [
             status: existing.status,
           });
         }
+        const outcome = readItemOutcome(body.pluggyItemId);
+        if (outcome.type === 'refused') fail(422, outcome.code, 'O Pluggy recusou o item');
+        if (
+          existing &&
+          db.runs.some(
+            (entry) => entry.connectionId === existing.id && entry.run.status === 'running',
+          )
+        ) {
+          fail(409, 'SYNC_RUN_IN_PROGRESS', 'Já há uma rodada em andamento');
+        }
 
         if (existing) {
-          // The same item again: the accounts that became manual go back to the bank.
+          // The same item again: the accounts that became manual go back to the bank, the history
+          // starts over and the balance of each account comes from the bank in the round.
           existing.status = 'active';
+          existing.errorCode = null;
+          existing.lastBankUpdateAt = NOW_ISO;
+          existing.history = { ...existing.history, status: 'running' };
           for (const accountId of existing.accountIds) {
             const account = db.accounts.find((item) => item.id === accountId);
             if (account) {
               account.source = 'pluggy';
               account.connectionId = existing.id;
-              account.bankBalanceCents =
-                account.type === 'credit_card' ? 0 : (account.bankBalanceCents ?? 0);
-              account.balanceAt = NOW_ISO;
             }
           }
           startRun(existing.id, 'first_connection');
@@ -142,6 +172,7 @@ export const connectionMock = [
           return presentConnection(db, existing);
         }
 
+        // A new item has no account yet: the first round creates them from what the bank says.
         const connection: MockState.ConnectionRecord = {
           id: newId(),
           pluggyItemId: body.pluggyItemId,
@@ -149,35 +180,17 @@ export const connectionMock = [
           institutionName: 'Inter',
           status: 'active',
           errorCode: null,
-          lastBankUpdateAt: null,
+          lastBankUpdateAt: NOW_ISO,
           lastSuccessAt: null,
           history: { status: 'running', fromOn: null, transactionCount: 0 },
           accountIds: [],
           createdAt: NOW_ISO,
           readsSinceStart: 0,
         };
-        // The account appears with no balance until the first run ends: that makes the Livre "parcial".
-        const account: MockState.AccountRecord = {
-          id: newId(),
-          type: 'checking',
-          source: 'pluggy',
-          name: 'Inter',
-          institutionCode: 'inter',
-          institutionName: null,
-          bankBalanceCents: null,
-          balanceAt: null,
-          connectionId: connection.id,
-          creditCard: null,
-          archivedAt: null,
-          createdAt: NOW_ISO,
-        };
-        db.accounts.push(account);
-        connection.accountIds.push(account.id);
         db.connections.push(connection);
         startRun(connection.id, 'first_connection');
 
-        // Contract: 202 with no accounts yet.
-        return { ...presentConnection(db, connection), accounts: [] };
+        return presentConnection(db, connection);
       },
     ),
   ),
@@ -187,7 +200,13 @@ export const connectionMock = [
     handleRoute(
       { body: resolveAccountMatchesRequestSchema, response: connectionDtoSchema, status: 202 },
       ({ params, body }) => {
+        assertNoBackupRunning();
         const connection = findConnection(idOf(params));
+        if (connection.status === 'disconnected')
+          fail(422, 'SYNC_CONNECTION_DISCONNECTED', 'A conexão foi desconectada');
+        // The mock never leaves an account of the Pluggy waiting for a choice (the connection always
+        // answers `pendingAccountMatches: []`), so any choice is "not pending". With no choice there
+        // is nothing to import and no round is opened.
         if (body.matches.length > 0)
           fail(422, 'SYNC_ACCOUNT_MATCH_INVALID', 'Nenhuma conta do Pluggy espera escolha');
 
@@ -208,11 +227,10 @@ export const connectionMock = [
         const account = db.accounts.find((item) => item.id === accountId);
         if (!account) continue;
         if (account.type !== 'credit_card' && account.bankBalanceCents !== null) {
-          // The last bank balance becomes the opening balance of the manual account.
+          // The last bank balance becomes the opening balance of the manual account: the sum is
+          // of every transaction that enters the account, whatever its day.
           const own = db.transactions
-            .filter(
-              (tx) => tx.accountId === account.id && countsInAccounts(tx) && tx.occurredOn <= TODAY,
-            )
+            .filter((tx) => tx.accountId === account.id && countsInAccounts(tx))
             .reduce((sum, tx) => sum + tx.amountCents, 0);
           const difference = account.bankBalanceCents - own;
           if (difference !== 0) {
@@ -223,7 +241,7 @@ export const connectionMock = [
                 method: 'other',
                 nature: 'balance_adjustment',
                 natureSetBy: 'system',
-                description: 'Ajuste de saldo (desconexão)',
+                description: 'Ajuste de saldo: Saldo do banco ao desconectar',
                 amountCents: difference,
                 occurredOn: TODAY,
               }),
@@ -256,9 +274,11 @@ export const connectionMock = [
   http.post(
     '/api/sync/connections/:id/runs',
     handleRoute({ response: runDtoSchema, status: 202 }, ({ params }) => {
+      assertNoBackupRunning();
       const connection = findConnection(idOf(params));
       if (connection.status === 'disconnected')
         fail(422, 'SYNC_CONNECTION_DISCONNECTED', 'A conexão foi desconectada');
+      assertConfigured();
       if (
         db.runs.some(
           (entry) => entry.connectionId === connection.id && entry.run.status === 'running',
@@ -266,7 +286,6 @@ export const connectionMock = [
       ) {
         fail(409, 'SYNC_RUN_IN_PROGRESS', 'Já há uma rodada em andamento');
       }
-      assertConfigured();
 
       return startRun(connection.id, 'retry');
     }),

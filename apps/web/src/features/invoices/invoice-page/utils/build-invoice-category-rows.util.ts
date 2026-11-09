@@ -1,7 +1,10 @@
 import type { Category } from '@fincheck/shared/categories/category/category.type.ts';
 import type { Invoice } from '@fincheck/shared/invoices/invoice/invoice.type.ts';
 
-import { NO_CATEGORY_KEY } from '#/features/invoices/invoice-page/constants/no-category-key.constant.ts';
+import {
+  LENT_KEY,
+  NO_CATEGORY_KEY,
+} from '#/features/invoices/invoice-page/constants/no-category-key.constant.ts';
 import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 import type { InvoiceCategoryRowData } from '#/features/invoices/invoice-page/types/invoice-page.type.ts';
 
@@ -16,14 +19,19 @@ export function buildInvoiceCategoryRows(
   const byId = new Map(categories.map((category) => [category.id, category]));
 
   return breakdown.map((share) => {
-    const key = share.categoryId ?? NO_CATEGORY_KEY;
+    const key = share.isLent ? LENT_KEY : (share.categoryId ?? NO_CATEGORY_KEY);
     const category = share.categoryId ? byId.get(share.categoryId) : undefined;
     const rounded = Math.round(share.sharePercent);
 
     return {
       key,
-      name: share.categoryId ? (category?.name ?? 'Categoria') : 'Sem categoria',
-      icon: mapCategoryIcon(category?.icon, 'tag'),
+      isLent: share.isLent,
+      name: share.isLent
+        ? 'Emprestado'
+        : share.categoryId
+          ? (category?.name ?? 'Categoria')
+          : 'Sem categoria',
+      icon: share.isLent ? 'hand-money' : mapCategoryIcon(category?.icon, 'tag'),
       totalCents: share.totalCents,
       share: share.sharePercent,
       shareLabel: rounded === 0 ? '<1%' : `${percentFormat.format(rounded)}%`,

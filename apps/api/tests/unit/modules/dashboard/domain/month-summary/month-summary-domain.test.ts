@@ -76,7 +76,7 @@ describe('computeIncomeExpectation', () => {
 describe('computeDaysLate', () => {
   const today = BusinessDate.of('2026-10-22');
 
-  it('counts from the end of the window: the day after is 1, the same day or earlier is 0', () => {
+  it('counts from the expected day: the day after is 1, the same day or earlier is 0', () => {
     expect(computeDaysLate('2026-10-20', today)).toBe(2);
     expect(computeDaysLate('2026-10-21', today)).toBe(1);
     expect(computeDaysLate('2026-10-22', today)).toBe(0);
@@ -114,8 +114,13 @@ describe('buildMonthAlerts', () => {
       isStale: true,
     },
   ];
-  const late = (id: string, name: string, windowEndOn: string): AgendaOccurrence =>
-    ({ id, recurrenceName: name, status: 'late', windowEndOn }) as AgendaOccurrence;
+  const late = (
+    id: string,
+    name: string,
+    expectedOn: string | null,
+    windowEndOn = expectedOn,
+  ): AgendaOccurrence =>
+    ({ id, recurrenceName: name, status: 'late', expectedOn, windowEndOn }) as AgendaOccurrence;
 
   it('orders the connection error, the data that stopped and the late ones, the most days late first', () => {
     const alerts = buildMonthAlerts({
@@ -150,6 +155,23 @@ describe('buildMonthAlerts', () => {
       recurrenceName: null,
       daysLate: null,
     });
+  });
+
+  it('counts the days late from the expected day, not from the end of the window', () => {
+    const alerts = buildMonthAlerts({
+      isCurrentMonth: true,
+      today,
+      connections: [],
+      occurrences: [
+        late('o1', 'Netflix', '2026-10-16', '2026-10-19'),
+        late('o2', 'Aluguel', null, '2026-10-20'),
+      ],
+    });
+
+    expect(alerts.map((alert) => [alert.occurrenceId, alert.daysLate])).toEqual([
+      ['o1', 6],
+      ['o2', 2],
+    ]);
   });
 
   it('leaves the connection alerts out of a month that is not the current one, keeping the late ones', () => {

@@ -7,7 +7,7 @@ import type { RuleCreator } from '#/modules/categories/application/rule/rule-cre
 import type { Clock } from '#/shared/clock/clock.interface.ts';
 import { RequestValidationError } from '#/shared/errors/request-validation.error.ts';
 import { generateId } from '#/shared/id/generate-id.util.ts';
-import { normalizeDescription } from '#/shared/text/normalize-description.util.ts';
+import { normalizeDescription } from '@fincheck/shared/common/text/normalize-description.util.ts';
 import type { UnitOfWork } from '#/shared/unit-of-work/unit-of-work.interface.ts';
 
 // "Criar regra" on the card and on the question after recategorizing (RF-CAT-005): creates the rule

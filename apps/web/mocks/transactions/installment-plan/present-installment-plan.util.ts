@@ -3,6 +3,7 @@ import type { InstallmentPlan } from '@fincheck/shared/transactions/installment-
 import { openMonthFor } from '#mocks/invoices/invoice/open-month-for.util.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
 import { TODAY } from '#mocks/support/dates/mock-clock.store.ts';
+import { countsInAccounts } from '#mocks/transactions/transaction/counts-in-accounts.util.ts';
 
 // The contract's InstallmentPlan.Dto: every installment, the next one and what is still to pay
 // (from the open invoice of the card on).
@@ -24,7 +25,15 @@ export function presentInstallmentPlan(
     }))
     .sort((a, b) => a.number - b.number);
 
-  const upcoming = installments.filter((item) => item.invoiceMonth >= openMonth);
+  // An installment that does not enter the accounts (ignored, or removed by the bank without an
+  // edit) is not charged on the invoice: it is neither the next one nor part of what is left. It
+  // stays in the list.
+  const entering = new Set(
+    database.transactions.filter((tx) => countsInAccounts(tx)).map((tx) => tx.id),
+  );
+  const upcoming = installments.filter(
+    (item) => item.invoiceMonth >= openMonth && entering.has(item.transactionId),
+  );
   const next = upcoming[0];
 
   return {

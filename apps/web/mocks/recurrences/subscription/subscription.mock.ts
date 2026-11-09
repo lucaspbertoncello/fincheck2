@@ -48,6 +48,8 @@ export const subscriptionMock = [
   http.post(
     '/api/subscriptions/suggestions/dismiss',
     handleRoute({ body: dismissSubscriptionSuggestionRequestSchema }, ({ body }) => {
+      // Answering twice records once.
+      if (db.subscriptionDismissals.includes(body.key)) return;
       const exists = listSubscriptionSuggestions(db).some(
         (candidate) => candidate.suggestion.key === body.key,
       );

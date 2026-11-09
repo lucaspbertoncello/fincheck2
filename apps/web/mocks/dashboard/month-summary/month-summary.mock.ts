@@ -4,7 +4,9 @@ import type { MonthSummary } from '@fincheck/shared/dashboard/month-summary/mont
 import { http } from 'msw';
 
 import { computeFreeBalance } from '#mocks/dashboard/free-balance/compute-free-balance.util.ts';
+import { computeIncomeExpectation } from '#mocks/dashboard/month-summary/compute-income-expectation.util.ts';
 import { computePeriod } from '#mocks/dashboard/month-summary/compute-period.util.ts';
+import { roundPct } from '#mocks/dashboard/month-summary/round-pct.util.ts';
 import { sumLines } from '#mocks/dashboard/month-summary/sum-lines.util.ts';
 import { listMonthOccurrences } from '#mocks/recurrences/occurrence/list-month-occurrences.util.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
@@ -13,8 +15,6 @@ import { daysBetween } from '#mocks/support/dates/days-between.util.ts';
 import { handleRoute } from '#mocks/support/http/handle-route.util.ts';
 import { isConnectionStale } from '#mocks/sync/connection/is-connection-stale.util.ts';
 import { buildLines } from '#mocks/transactions/transaction/build-lines.util.ts';
-
-const roundOne = (value: number) => Math.round(value * 10) / 10;
 
 export const monthSummaryMock = [
   http.get(
@@ -39,12 +39,12 @@ export const monthSummaryMock = [
         period.previousUntilOn,
       );
 
-      // Expected income (PM rule): the sum of the expected amount of every income occurrence of the
-      // month (received, partial and pending); dismissed (skipped) ones stay out.
+      // Expected income (BR-DSH-011): per income occurrence of the month the larger of what was
+      // expected and what was received, plus the income of the month no occurrence took in.
       const occurrences = listMonthOccurrences(db, query.month).filter(
         (item) => item.kind === 'income' && item.status !== 'skipped' && !item.carriedOver,
       );
-      const expected = occurrences.reduce((sum, item) => sum + item.expectedAmountCents, 0);
+      const expected = computeIncomeExpectation(occurrences, lines, query.month).totalCents;
 
       const alerts: MonthSummary.Alert[] = [
         ...db.connections
@@ -78,7 +78,7 @@ export const monthSummaryMock = [
             institutionName: null,
             occurrenceId: item.id,
             recurrenceName: item.recurrenceName,
-            daysLate: Math.max(0, daysBetween(item.windowEndOn, TODAY)),
+            daysLate: Math.max(0, daysBetween(item.expectedOn ?? item.windowEndOn, TODAY)),
           }))
           .sort((a, b) => b.daysLate - a.daysLate),
       ];
@@ -99,14 +99,13 @@ export const monthSummaryMock = [
         income: {
           receivedCents: received,
           expectedCents: expected,
-          receivedPct: expected > 0 ? roundOne((received / expected) * 100) : null,
+          receivedPct: roundPct(received, expected),
         },
         expenses: {
           spentCents: spent,
           previousSpentCents: previousSpent,
           changeCents: spent - previousSpent,
-          changePct:
-            previousSpent === 0 ? null : roundOne(((spent - previousSpent) / previousSpent) * 100),
+          changePct: roundPct(spent - previousSpent, previousSpent),
           comparedFromOn: period.fromOn,
           comparedUntilOn: period.asOfOn,
           previousComparedUntilOn: period.previousUntilOn,

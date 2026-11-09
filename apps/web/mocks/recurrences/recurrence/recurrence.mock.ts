@@ -26,10 +26,13 @@ import { presentOccurrence } from '#mocks/recurrences/occurrence/present-occurre
 import { db } from '#mocks/state/mock-database.store.ts';
 import { newId } from '#mocks/state/mock-id.store.ts';
 import type { MockState } from '#mocks/state/mock-state.type.ts';
+import { assertSupportedMonth } from '#mocks/support/dates/assert-supported-month.util.ts';
 import { addMonths } from '#mocks/support/dates/add-months.util.ts';
 import { CURRENT_MONTH, NOW_ISO, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { fail } from '#mocks/support/http/fail.util.ts';
 import { handleRoute } from '#mocks/support/http/handle-route.util.ts';
+import { countsInAccounts } from '#mocks/transactions/transaction/counts-in-accounts.util.ts';
+import { isTransactionLinked } from '#mocks/transactions/transaction/is-transaction-linked.util.ts';
 import { findTransaction } from '#mocks/transactions/transaction/find-transaction.util.ts';
 
 const idOf = (params: Record<string, string>) => params['id'] ?? '';
@@ -57,6 +60,16 @@ function monthOccurrence(recurrenceId: string, month: string) {
   return record ? presentOccurrence(db, record) : null;
 }
 
+function isSameDateRule(a: Recurrence.DateRule, b: Recurrence.DateRule): boolean {
+  return (
+    a.type === b.type &&
+    a.day === b.day &&
+    a.businessDayNumber === b.businessDayNumber &&
+    a.toleranceDays === b.toleranceDays &&
+    a.nonBusinessDayShift === b.nonBusinessDayShift
+  );
+}
+
 function assertRegimeForIncome(kind: string, regime: string | null | undefined) {
   if (regime && kind !== 'income')
     fail(422, 'RECURRENCE_REGIME_ONLY_FOR_INCOME', 'O regime s� vale para receita');
@@ -73,6 +86,7 @@ export const recurrenceMock = [
     handleRoute(
       { query: summaryRecurrencesQuerySchema, response: recurrenceSummarySchema },
       ({ query }) => {
+        assertSupportedMonth(query.month, 'month');
         const month = listMonthOccurrences(db, query.month).filter(
           (item) => !item.carriedOver && item.status !== 'skipped',
         );
@@ -104,6 +118,7 @@ export const recurrenceMock = [
     handleRoute(
       { body: previewRecurrenceRequestSchema, response: previewRecurrenceResponseSchema },
       ({ body }) => {
+        if (body.startsMonth) assertSupportedMonth(body.startsMonth, 'startsMonth');
         const occurrences = [];
         let month =
           body.startsMonth && body.startsMonth > CURRENT_MONTH ? body.startsMonth : CURRENT_MONTH;
@@ -123,6 +138,7 @@ export const recurrenceMock = [
     handleRoute(
       { query: listRecurrencesQuerySchema, response: listResponseSchema(recurrenceListItemSchema) },
       ({ query }) => {
+        assertSupportedMonth(query.month, 'month');
         ensureOccurrences(db);
         const items = db.recurrences
           .filter((item) => query.includeArchived || !item.archivedAt)
@@ -169,26 +185,39 @@ export const recurrenceMock = [
         status: 201,
       },
       ({ body }) => {
-        if (body.accountId) findAccount(db, body.accountId);
-        if (body.categoryId) assertCategoryKind(body.categoryId, body.kind);
+        // The order of the errors: the month out of range (400), the account, the category and the
+        // transaction that do not exist (404), the archived account, the regime and the category of
+        // the wrong kind and the transaction of the wrong kind (422), the transaction linked (409).
+        if (body.startsMonth) assertSupportedMonth(body.startsMonth, 'startsMonth');
+        const account = body.accountId ? findAccount(db, body.accountId) : null;
+        const category = body.categoryId ? findCategory(db, body.categoryId) : null;
         const linked = body.linkTransactionId ? findTransaction(db, body.linkTransactionId) : null;
+        if (account?.archivedAt) fail(422, 'ACCOUNT_ARCHIVED', 'A conta está arquivada');
+        assertRegimeForIncome(body.kind, body.employmentRegime);
+        if (category) assertCategoryKind(category.id, body.kind);
         if (linked) {
-          const taken = db.occurrences.some((item) =>
-            item.payments.some((payment) => payment.transactionId === linked.id),
-          );
-          if (taken)
+          const rightWay =
+            body.kind === 'income'
+              ? linked.amountCents > 0 && linked.nature === 'income'
+              : linked.amountCents < 0 && linked.nature === 'expense';
+          if (!rightWay || !countsInAccounts(linked))
+            fail(422, 'OCCURRENCE_TRANSACTION_KIND_MISMATCH', 'A transação não bate com o tipo');
+          if (isTransactionLinked(db, linked.id))
             fail(
               409,
               'OCCURRENCE_TRANSACTION_ALREADY_LINKED',
               'A transação já abate outra ocorrência',
             );
-          const rightWay = body.kind === 'income' ? linked.amountCents > 0 : linked.amountCents < 0;
-          if (!rightWay)
-            fail(422, 'OCCURRENCE_TRANSACTION_KIND_MISMATCH', 'A transação não bate com o tipo');
         }
 
-        assertRegimeForIncome(body.kind, body.employmentRegime);
         const linkedMonth = linked ? linked.occurredOn.slice(0, 7) : null;
+        const dateRule = normalizeDateRule(body.dateRule);
+        // No first month asked and no transaction: this month, unless its window already closed
+        // (the day has passed), then the next one. A month or a transaction given is taken as is.
+        const defaultStart =
+          computeOccurrenceWindow(dateRule, CURRENT_MONTH).windowEndOn < TODAY
+            ? addMonths(CURRENT_MONTH, 1)
+            : CURRENT_MONTH;
         const record: MockState.RecurrenceRecord = {
           id: newId(),
           kind: body.kind,
@@ -204,9 +233,9 @@ export const recurrenceMock = [
           // The schema already refuses the flag on an income and a service without the flag.
           isSubscription: body.isSubscription,
           serviceSlug: body.isSubscription ? (body.serviceSlug ?? null) : null,
-          dateRule: normalizeDateRule(body.dateRule),
+          dateRule,
           maxPayments: body.maxPayments ?? 1,
-          startsMonth: body.startsMonth ?? linkedMonth ?? CURRENT_MONTH,
+          startsMonth: body.startsMonth ?? linkedMonth ?? defaultStart,
           pausedAt: null,
           archivedAt: null,
           createdAt: NOW_ISO,
@@ -267,8 +296,15 @@ export const recurrenceMock = [
       ({ params, body }) => {
         const record = findRecurrence(idOf(params));
         if (record.archivedAt) fail(422, 'RECURRENCE_ARCHIVED', 'A recorrência está arquivada');
-        if (body.accountId) findAccount(db, body.accountId);
-        if (body.categoryId) assertCategoryKind(body.categoryId, record.kind);
+        if (body.startsMonth) assertSupportedMonth(body.startsMonth, 'startsMonth');
+        if (body.accountId) {
+          const account = findAccount(db, body.accountId);
+          // Moving it to an archived account is refused; one that already lives there stays.
+          if (account.archivedAt && body.accountId !== record.accountId) {
+            fail(422, 'ACCOUNT_ARCHIVED', 'A conta está arquivada');
+          }
+        }
+        if (body.categoryId) findCategory(db, body.categoryId);
         assertRegimeForIncome(record.kind, body.employmentRegime);
         const isSubscription = body.isSubscription ?? record.isSubscription;
         if (isSubscription && record.kind !== 'expense')
@@ -279,12 +315,20 @@ export const recurrenceMock = [
           fail(400, 'VALIDATION_FAILED', 'O serviço só vale para assinatura', {
             issues: [{ path: 'serviceSlug', message: 'A service only goes with a subscription' }],
           });
+        if (body.categoryId) assertCategoryKind(body.categoryId, record.kind);
 
         const { applyFrom, ...changes } = body;
+        // The occurrences copy only the field that moved in this edit, not the one that came.
         const touched = {
-          amount: changes.expectedAmountCents !== undefined,
-          rule: changes.dateRule !== undefined,
+          amount:
+            changes.expectedAmountCents !== undefined &&
+            changes.expectedAmountCents !== record.expectedAmountCents,
+          rule:
+            changes.dateRule !== undefined &&
+            !isSameDateRule(normalizeDateRule(changes.dateRule), record.dateRule),
         };
+        const startsLater =
+          changes.startsMonth !== undefined && record.startsMonth < changes.startsMonth;
         Object.assign(record, {
           ...changes,
           ...(changes.dateRule ? { dateRule: normalizeDateRule(changes.dateRule) } : {}),
@@ -304,25 +348,25 @@ export const recurrenceMock = [
           updatedAt: NOW_ISO,
         });
 
+        // From the current month on, an untouched occurrence: the ones before a first month moved
+        // later are dropped; the others are redone with the field that moved (the current month
+        // only on "também neste mês"). Past months and months with a payment or a mark stay.
         for (const occurrence of [...db.occurrences]) {
           if (occurrence.recurrenceId !== record.id) continue;
-          if (
-            changes.startsMonth &&
-            occurrence.month < changes.startsMonth &&
-            occurrence.month >= CURRENT_MONTH &&
-            isUntouched(occurrence)
-          ) {
+          if (occurrence.month < CURRENT_MONTH || !isUntouched(occurrence)) continue;
+          if (startsLater && occurrence.month < record.startsMonth) {
             db.occurrences = db.occurrences.filter((item) => item.id !== occurrence.id);
             continue;
           }
           const editable =
             occurrence.month > CURRENT_MONTH ||
             (occurrence.month === CURRENT_MONTH && applyFrom === 'current_month');
-          if (!editable || !isUntouched(occurrence)) continue;
+          if (!editable) continue;
           if (touched.amount) occurrence.expectedAmountCents = record.expectedAmountCents;
           if (touched.rule)
             Object.assign(occurrence, computeOccurrenceWindow(record.dateRule, occurrence.month));
         }
+        // A first month moved earlier: the occurrences that are missing are created.
         ensureOccurrences(db);
 
         return toDto(record);

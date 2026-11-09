@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { useLinkReviewPayment } from '#/features/review/review-queue/hooks/use-link-review-payment.hook.ts';
 import { useReviewRuleSuggestion } from '#/features/review/review-queue/hooks/use-review-rule-suggestion.hook.ts';
+import { describeRuleSuggestion } from '#/shared/utils/rules/describe-rule-suggestion.util.ts';
 import { useSaveReviewEntry } from '#/features/review/review-queue/hooks/use-save-review-entry.hook.ts';
 import { useUndoReviewEntry } from '#/features/review/review-queue/hooks/use-undo-review-entry.hook.ts';
 import {
@@ -279,7 +280,11 @@ function ReviewVisit({ month }: { month: string }) {
       ruleSuggestion={
         firstSuggestion
           ? {
-              message: `Você moveu ${firstSuggestion.recategorizedCount} transações “${firstSuggestion.pattern}” para ${categoryById.get(firstSuggestion.categoryId)?.name}. A regra faz isso sozinha daqui para a frente.`,
+              message: describeRuleSuggestion({
+                count: firstSuggestion.recategorizedCount,
+                pattern: firstSuggestion.pattern,
+                categoryName: categoryById.get(firstSuggestion.categoryId)?.name,
+              }),
               onCreate: () => {
                 setActionError(null);
                 void ruleSuggestion.accept(firstSuggestion);

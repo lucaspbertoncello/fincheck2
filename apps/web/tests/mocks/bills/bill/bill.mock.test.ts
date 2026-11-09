@@ -144,7 +144,7 @@ describe('bills routes', () => {
           transactionId: candidates[0]?.transactionId,
         })
       ).status,
-    ).toBe(422);
+    ).toBe(409);
   });
 
   it('creates and deletes a friend debt that is owed to me, with the Pix of the friend not counted as income', async () => {

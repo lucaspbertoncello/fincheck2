@@ -50,42 +50,60 @@ function assertCategoryWay(
     fail(422, 'BILL_CATEGORY_KIND_MISMATCH', 'Categoria de tipo errado');
 }
 
+// The order of the errors of a payment tied to a transaction: already linked (409), then the
+// transaction that does not serve (422), then the bill settled and the value over what is missing.
 function assertPaymentTransaction(
-  bill: MockState.BillRecord,
   tx: MockState.TransactionRecord,
+  direction: 'payable' | 'receivable',
   amountCents: number,
 ) {
+  if (isTransactionLinked(db, tx.id))
+    fail(409, 'BILL_TRANSACTION_ALREADY_LINKED', 'A transação já está ligada');
   const rightWay =
-    bill.direction === 'payable'
+    direction === 'payable'
       ? tx.amountCents < 0 && tx.nature === 'expense'
       : tx.amountCents > 0 && tx.nature === 'income';
   if (
     !rightWay ||
-    tx.ignoredAt ||
+    tx.splits.length > 0 ||
     !countsInAccounts(tx) ||
     amountCents > Math.abs(tx.amountCents)
   ) {
     fail(422, 'BILL_PAYMENT_TRANSACTION_INVALID', 'A transação não serve como pagamento');
   }
-  if (isTransactionLinked(db, tx.id))
-    fail(409, 'BILL_TRANSACTION_ALREADY_LINKED', 'A transação já está ligada');
 }
 
+// Money that comes back from a friend and is bigger than the debt splits: without an amount, the
+// payment is worth what is still missing. Any other bill keeps the whole transaction.
+function defaultPaymentCents(bill: MockState.BillRecord, tx: MockState.TransactionRecord): number {
+  const worth = Math.abs(tx.amountCents);
+  const missing = presentBill(db, bill).remainingCents;
+  const reimbursement = bill.kind === 'friend' && bill.direction === 'receivable';
+
+  return reimbursement && missing > 0 ? Math.min(worth, missing) : worth;
+}
+
+function assertCanReceive(bill: MockState.BillRecord, amountCents: number) {
+  const view = presentBill(db, bill);
+  if (view.status === 'settled') fail(422, 'BILL_ALREADY_SETTLED', 'A conta já está quitada');
+  if (amountCents > view.remainingCents) fail(422, 'BILL_OVERPAID', 'O valor passa do que falta');
+}
+
+// Writes what `assertCanReceive` and `assertPaymentTransaction` already accepted.
 function addPayment(
   bill: MockState.BillRecord,
   tx: MockState.TransactionRecord,
   amountCents: number,
+  paidOn: string,
 ) {
-  const remaining = presentBill(db, bill).remainingCents;
-  if (amountCents > remaining) fail(422, 'BILL_OVERPAID', 'O valor passa do que falta');
   bill.payments.push({
     id: newId(),
     amountCents,
-    paidOn: tx.occurredOn,
+    paidOn,
     transactionId: tx.id,
     description: null,
   });
-  applyBillPaymentEffect(bill, tx, remaining);
+  applyBillPaymentEffect(bill, tx, amountCents);
 }
 
 export const billMock = [
@@ -172,9 +190,13 @@ export const billMock = [
       { body: createBillRequestSchema, response: billDtoSchema, status: 201 },
       ({ body }) => {
         const friendReceivable = body.kind === 'friend' && body.direction === 'receivable';
+        // The order of the API: what does not exist (404), what is tied (409), the rules (422).
+        const category = body.categoryId ? findCategory(db, body.categoryId) : null;
+        const originTx = body.origin ? findTransaction(db, body.origin.transactionId) : null;
+        const paymentTx = body.payment ? findTransaction(db, body.payment.transactionId) : null;
         if (body.origin && !friendReceivable)
           fail(422, 'BILL_ORIGIN_NOT_ALLOWED', 'Origem só em "me devem" de amigo');
-        if (body.categoryId) assertCategoryWay(body.categoryId, body.direction, friendReceivable);
+        if (category) assertCategoryWay(category.id, body.direction, friendReceivable);
 
         const record: MockState.BillRecord = {
           id: newId(),
@@ -192,36 +214,32 @@ export const billMock = [
           updatedAt: NOW_ISO,
         };
 
-        if (
-          body.origin &&
-          body.payment &&
-          body.origin.transactionId === body.payment.transactionId
-        ) {
-          fail(409, 'BILL_TRANSACTION_ALREADY_LINKED', 'A mesma transação em origem e pagamento');
-        }
-        let originTx: MockState.TransactionRecord | null = null;
         let originShare = 0;
-        if (body.origin) {
-          originTx = findTransaction(db, body.origin.transactionId);
+        if (body.origin && originTx) {
+          if (originTx.id === paymentTx?.id || isTransactionLinked(db, originTx.id))
+            fail(409, 'BILL_TRANSACTION_ALREADY_LINKED', 'A transação já está ligada');
           if (
             originTx.amountCents >= 0 ||
             originTx.nature !== 'expense' ||
             originTx.splits.length > 0 ||
-            originTx.ignoredAt
+            !countsInAccounts(originTx)
           ) {
             fail(422, 'BILL_ORIGIN_TRANSACTION_INVALID', 'A origem tem de ser uma saída comum');
           }
-          if (isTransactionLinked(db, originTx.id))
-            fail(409, 'BILL_TRANSACTION_ALREADY_LINKED', 'A transação já está ligada');
           originShare = body.origin.amountCents ?? Math.abs(originTx.amountCents);
           if (originShare > Math.abs(originTx.amountCents) || originShare > body.amountCents) {
             fail(422, 'BILL_ORIGIN_AMOUNT_EXCEEDS', 'A parte do amigo passa do valor');
           }
         }
-        const paymentTx = body.payment ? findTransaction(db, body.payment.transactionId) : null;
-        if (paymentTx) assertPaymentTransaction(record, paymentTx, Math.abs(paymentTx.amountCents));
+        // Everything that can fail is checked before anything is written.
+        let paymentCents = 0;
+        if (paymentTx) {
+          paymentCents = defaultPaymentCents(record, paymentTx);
+          assertPaymentTransaction(paymentTx, record.direction, paymentCents);
+          assertCanReceive(record, paymentCents);
+        }
 
-        if (originTx) {
+        if (body.origin && originTx) {
           record.origin = {
             transactionId: originTx.id,
             amountCents: originShare,
@@ -260,7 +278,7 @@ export const billMock = [
           }
         }
         db.bills.push(record);
-        if (paymentTx) addPayment(record, paymentTx, Math.abs(paymentTx.amountCents));
+        if (paymentTx) addPayment(record, paymentTx, paymentCents, paymentTx.occurredOn);
 
         return presentBill(db, record);
       },
@@ -301,7 +319,10 @@ export const billMock = [
       }
       const origin = db.transactions.find((item) => item.id === bill.origin?.transactionId);
       if (origin) {
-        if (origin.nature === 'lent') origin.nature = 'expense';
+        if (origin.nature === 'lent') {
+          origin.nature = 'expense';
+          origin.natureSetBy = 'system';
+        }
         const own = origin.splits.find((part) => part.nature === 'expense');
         if (own) {
           origin.categoryId = own.categoryId;
@@ -318,7 +339,14 @@ export const billMock = [
     handleRoute({ response: listResponseSchema(billPaymentCandidateDtoSchema) }, ({ params }) => {
       const bill = findBill(idOf(params));
 
-      return { items: listPaymentCandidates(db, bill.direction, bill.counterparty) };
+      return {
+        items: listPaymentCandidates(
+          db,
+          bill.direction,
+          bill.counterparty,
+          bill.dismissedTransactionIds,
+        ),
+      };
     }),
   ),
 
@@ -359,18 +387,16 @@ export const billMock = [
       { body: createBillPaymentRequestSchema, response: billDtoSchema, status: 201 },
       ({ params, body }) => {
         const bill = findBill(idOf(params));
-        const view = presentBill(db, bill);
-        if (view.status === 'settled') fail(422, 'BILL_ALREADY_SETTLED', 'A conta já está quitada');
 
         if (body.transactionId) {
           const tx = findTransaction(db, body.transactionId);
-          const amount = body.amountCents ?? Math.abs(tx.amountCents);
-          assertPaymentTransaction(bill, tx, amount);
-          addPayment(bill, tx, amount);
+          const amount = body.amountCents ?? defaultPaymentCents(bill, tx);
+          assertPaymentTransaction(tx, bill.direction, amount);
+          assertCanReceive(bill, amount);
+          addPayment(bill, tx, amount, body.paidOn ?? tx.occurredOn);
         } else {
           const amount = body.amountCents ?? 0;
-          if (amount > view.remainingCents)
-            fail(422, 'BILL_OVERPAID', 'O valor passa do que falta');
+          assertCanReceive(bill, amount);
           bill.payments.push({
             id: newId(),
             amountCents: amount,

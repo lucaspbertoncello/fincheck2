@@ -44,4 +44,21 @@ describe('buildInvoiceCategoryRows', () => {
     const rows = buildInvoiceCategoryRows(breakdown, CATEGORIES, 'none');
     expect(rows.map((row) => row.selected)).toEqual([false, true, false]);
   });
+
+  it('gives what was lent its own line, "Emprestado", apart from what has no category (isLent)', () => {
+    const rows = buildInvoiceCategoryRows(
+      [
+        { categoryId: null, isLent: false, totalCents: 20_000, sharePercent: 50, itemCount: 1 },
+        { categoryId: null, isLent: true, totalCents: 20_000, sharePercent: 50, itemCount: 2 },
+      ],
+      CATEGORIES,
+      null,
+    );
+
+    expect(rows.map((row) => [row.key, row.name, row.isLent])).toEqual([
+      ['none', 'Sem categoria', false],
+      ['lent', 'Emprestado', true],
+    ]);
+    expect(rows[1]).toMatchObject({ icon: 'hand-money', countLabel: '2 lançamentos' });
+  });
 });

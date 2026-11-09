@@ -158,13 +158,14 @@ function InvoicePageContent({ accountId, month }: ContentProps) {
   }
 
   const isMonthValid = monthSchema.safeParse(month).success;
-  const status: InvoicePageViewProps['status'] = !isMonthValid
-    ? 'not-found'
-    : model.isError
-      ? 'error'
-      : model.isLoading || !invoice
-        ? 'loading'
-        : 'ready';
+  const status: InvoicePageViewProps['status'] =
+    !isMonthValid || model.isMissing
+      ? 'not-found'
+      : model.isError
+        ? 'error'
+        : model.isLoading || !invoice
+          ? 'loading'
+          : 'ready';
 
   const props: InvoicePageViewProps = {
     status,
@@ -172,7 +173,10 @@ function InvoicePageContent({ accountId, month }: ContentProps) {
     backHref,
     backLabel: back.label,
     onBack: () => navigateToHref(router, backHref),
-    title: isMonthValid ? `Fatura de ${monthLabel.toLowerCase()} ${yearLabel}` : 'Fatura',
+    title:
+      isMonthValid && !model.isMissing
+        ? `Fatura de ${monthLabel.toLowerCase()} ${yearLabel}`
+        : 'Fatura',
     card: model.card
       ? { ...buildCardFace(model.card), transitionName: buildCardTransitionName(accountId) }
       : null,

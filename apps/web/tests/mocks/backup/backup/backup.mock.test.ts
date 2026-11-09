@@ -4,13 +4,27 @@ import { restoreBackupResponseSchema } from '@fincheck/shared/backup/backup-rest
 import { backupStatsDtoSchema } from '@fincheck/shared/backup/backup-stats/backup-stats.schema.ts';
 import { backupStatusDtoSchema } from '@fincheck/shared/backup/backup-status/backup-status.schema.ts';
 import { listResponseSchema } from '@fincheck/shared/common/list/list.schema.ts';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
+import {
+  clearBackupFileFaults,
+  markBackupFileFault,
+} from '#mocks/backup/backup/backup-file-fault.store.ts';
+import { buildBackupFile } from '#mocks/backup/backup/build-backup-file.util.ts';
 import { db } from '#mocks/state/mock-database.store.ts';
+import { addDays } from '#mocks/support/dates/add-days.util.ts';
+import { NOW, setMockClock, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { callApi } from '#tests/support/mocks/call-api.util.ts';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
 
 resetDatabaseBeforeEach();
+
+const NOW_AT_START = new Date(NOW);
+
+afterEach(() => {
+  setMockClock(NOW_AT_START);
+  clearBackupFileFaults();
+});
 
 async function status() {
   return backupStatusDtoSchema.parse((await callApi('GET', '/backup')).json);
@@ -137,6 +151,121 @@ describe('backup routes', () => {
       await status(); // the backup ends on this read
 
       expect((await files())[0]!.sizeBytes).toBe(dbSizeBytes);
+    });
+  });
+
+  describe('against the API', () => {
+    const at = (day: string, time: string) => `${day}T${time}.000Z`;
+
+    it('schedules tomorrow at 03:00 when today already has its file', async () => {
+      db.backup.files = [buildBackupFile(NOW)];
+
+      expect((await status()).nextScheduledAt).toBe(at(addDays(TODAY, 1), '06:00:00'));
+    });
+
+    it('schedules now when today has no file and 03:00 has passed, and 03:00 before it', async () => {
+      const afterThree = new Date(`${TODAY}T15:00:00.000Z`);
+      setMockClock(afterThree);
+      db.backup.files = [];
+      expect((await status()).nextScheduledAt).toBe(afterThree.toISOString());
+
+      const beforeThree = new Date(`${TODAY}T05:00:00.000Z`);
+      setMockClock(beforeThree);
+      expect((await status()).nextScheduledAt).toBe(at(TODAY, '06:00:00'));
+    });
+
+    it('tries again an hour after a failure, and then right away', async () => {
+      const failedAt = new Date(`${TODAY}T12:00:00.000Z`);
+      db.backup.files = [];
+      db.backup.lastError = { at: failedAt.toISOString(), code: 'BACKUP_FAILED' };
+
+      setMockClock(new Date(`${TODAY}T12:30:00.000Z`));
+      expect((await status()).nextScheduledAt).toBe(at(TODAY, '13:00:00'));
+
+      const later = new Date(`${TODAY}T13:30:00.000Z`);
+      setMockClock(later);
+      expect((await status()).nextScheduledAt).toBe(later.toISOString());
+    });
+
+    it('keeps the safety copy of a restore without cutting the list (31 until the next backup)', async () => {
+      const list = await files();
+      const restored = await callApi('POST', '/backup/restore', { fileName: list[2]?.fileName });
+      const copy = restoreBackupResponseSchema.parse(restored.json);
+
+      const after = await files();
+      expect(after).toHaveLength(31);
+      expect(after.some((file) => file.fileName === copy.safetyCopyFileName)).toBe(true);
+      expect(after.some((file) => file.fileName === list.at(-1)!.fileName)).toBe(true);
+    });
+
+    it('answers the errors of a restore in the order of the API', async () => {
+      const name = (await files())[0]!.fileName;
+      db.backup.running = true;
+      expect((await callApi('POST', '/backup/restore', { fileName: name })).status).toBe(409);
+
+      // No folder is a 404 even with a backup running.
+      db.backup.folderPath = null;
+      expect((await callApi('POST', '/backup/restore', { fileName: name })).status).toBe(404);
+      db.backup.running = false;
+      db.backup.folderPath = 'D:\\Backups\\Inexistente';
+
+      const gone = await callApi('POST', '/backup/restore', { fileName: name });
+      expect(gone.status).toBe(422);
+      expect((gone.json as { details: { reason: string } }).details.reason).toBe('not_found');
+
+      db.backup.folderPath = 'D:\\Backups\\fincheck';
+      expect(
+        (await callApi('POST', '/backup/restore', { fileName: 'fincheck-2000-01-01-000000.db' }))
+          .status,
+      ).toBe(404);
+    });
+
+    it.each(['corrupt', 'not_fincheck', 'newer_version'] as const)(
+      'refuses a file that is %s and swaps nothing',
+      async (reason) => {
+        const name = (await files())[1]!.fileName;
+        markBackupFileFault(name, reason);
+        const before = await files();
+
+        const refused = await callApi('POST', '/backup/restore', { fileName: name });
+
+        expect(refused.status).toBe(422);
+        expect((refused.json as { code: string }).code).toBe('BACKUP_FILE_INVALID');
+        expect((refused.json as { details: { reason: string } }).details.reason).toBe(reason);
+        expect(await files()).toEqual(before);
+      },
+    );
+
+    it('checks the folder on the "disk" and gives the path back normalized', async () => {
+      const reason = async (folderPath: string) => {
+        const answer = await callApi('PUT', '/backup/settings', { folderPath });
+        expect(answer.status).toBe(422);
+
+        return (answer.json as { details: { reason: string } }).details.reason;
+      };
+      expect(await reason('E:\\Pasta\\Inexistente')).toBe('not_found');
+      expect(await reason('E:\\Copias\\arquivo.txt')).toBe('not_a_folder');
+      expect(await reason('E:\\Somente-Leitura')).toBe('not_writable');
+
+      const changed = backupStatusDtoSchema.parse(
+        (
+          await callApi('PUT', '/backup/settings', {
+            folderPath: 'E:\\Copias\\.\\x\\..\\fincheck\\',
+          })
+        ).json,
+      );
+      expect(changed.folderPath).toBe('E:\\Copias\\fincheck');
+    });
+
+    it('clears the last failure when the folder changes', async () => {
+      db.backup.lastError = { at: new Date().toISOString(), code: 'BACKUP_FOLDER_INVALID' };
+      expect((await status()).lastError).not.toBeNull();
+
+      const changed = backupStatusDtoSchema.parse(
+        (await callApi('PUT', '/backup/settings', { folderPath: 'E:\\Copias' })).json,
+      );
+
+      expect(changed.lastError).toBeNull();
     });
   });
 });

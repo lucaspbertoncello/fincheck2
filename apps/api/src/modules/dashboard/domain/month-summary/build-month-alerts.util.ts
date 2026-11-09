@@ -7,7 +7,8 @@ import type { BusinessDate } from '#/shared/date/business-date.value-object.ts';
 // The amber line below "Faltam N dias": nothing in it when nothing is out of the ordinary. Order:
 // a connection with an error, data that stopped, a recurrence that is late (the most days first).
 // The connection ones are about now, so they come only in the current month; the late ones of the
-// month asked come always. `daysLate` counts from the end of the window of the occurrence.
+// month asked come always. `daysLate` counts from the expected day of the occurrence (the end of its window when it has no
+// day), the same count as the bills screen.
 export function buildMonthAlerts(input: {
   isCurrentMonth: boolean;
   today: BusinessDate;
@@ -53,7 +54,7 @@ export function buildMonthAlerts(input: {
       type: 'late_occurrence' as const,
       occurrenceId: occurrence.id,
       recurrenceName: occurrence.recurrenceName,
-      daysLate: computeDaysLate(occurrence.windowEndOn, input.today),
+      daysLate: computeDaysLate(occurrence.expectedOn ?? occurrence.windowEndOn, input.today),
     }))
     .toSorted((a, b) => b.daysLate - a.daysLate || a.occurrenceId.localeCompare(b.occurrenceId));
 

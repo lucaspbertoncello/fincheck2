@@ -7,20 +7,20 @@ import type { MockState } from '#mocks/state/mock-state.type.ts';
 export function applyBillPaymentEffect(
   bill: MockState.BillRecord,
   tx: MockState.TransactionRecord,
-  remainingCents: number,
+  paymentCents: number,
 ): void {
   if (bill.kind === 'friend' && bill.direction === 'receivable') {
     tx.natureSetBy = 'user';
     tx.categoryId = null;
     tx.categorySource = null;
     tx.categoryRuleId = null;
-    if (Math.abs(tx.amountCents) > remainingCents) {
-      // More came in than was owed: what was owed is the reimbursement, the rest stays income.
+    if (Math.abs(tx.amountCents) > paymentCents) {
+      // More came in than the payment is worth: the payment is the reimbursement, the rest stays income.
       tx.splits = [
         {
           id: newId(),
           position: 1,
-          amountCents: remainingCents,
+          amountCents: paymentCents,
           nature: 'reimbursed',
           categoryId: null,
           description: bill.counterparty,
@@ -28,7 +28,7 @@ export function applyBillPaymentEffect(
         {
           id: newId(),
           position: 2,
-          amountCents: Math.abs(tx.amountCents) - remainingCents,
+          amountCents: Math.abs(tx.amountCents) - paymentCents,
           nature: 'income',
           categoryId: null,
           description: null,

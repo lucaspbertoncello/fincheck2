@@ -18,7 +18,54 @@ type RowProps = {
   onToggle: (key: string) => void;
 };
 
+const ROW_CLASS =
+  'grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-s12 rounded-input px-s8 py-s12 text-left transition-opacity duration-(--duration-fast)';
+
+function CategoryRowBody({ row }: { row: InvoiceCategoryRowData }) {
+  return (
+    <>
+      <CategoryIcon icon={row.icon} size="sm" />
+      <span className="flex min-w-0 flex-col gap-s4">
+        <span title={row.name} className="truncate text-body font-emphasis text-fg-primary">
+          {row.name}
+        </span>
+        <span
+          aria-hidden="true"
+          className="block h-1.5 w-full overflow-hidden rounded-capsule bg-track"
+        >
+          <span
+            className="block h-full rounded-capsule bg-brand"
+            style={{ width: `${Math.max(2, row.share)}%` }}
+          />
+        </span>
+        <span className="text-meta whitespace-nowrap text-fg-secondary">{row.countLabel}</span>
+      </span>
+      <span className="flex flex-col items-end gap-s4 text-right whitespace-nowrap">
+        <Money
+          cents={row.totalCents}
+          sign="none"
+          tone="expense"
+          weight="plain"
+          className="text-money-row"
+        />
+        <span className="text-meta text-fg-secondary tabular-nums">{row.shareLabel}</span>
+      </span>
+    </>
+  );
+}
+
 function CategoryRow({ row, dimmed, onToggle }: RowProps) {
+  // What was lent has no category to filter by: the line only tells how much it is.
+  if (row.isLent) {
+    return (
+      <li>
+        <div className={[ROW_CLASS, dimmed ? 'opacity-50' : ''].join(' ')}>
+          <CategoryRowBody row={row} />
+        </div>
+      </li>
+    );
+  }
+
   return (
     <li>
       <button
@@ -26,37 +73,13 @@ function CategoryRow({ row, dimmed, onToggle }: RowProps) {
         aria-pressed={row.selected}
         onClick={() => onToggle(row.key)}
         className={[
-          'focus-ring grid w-full cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-s12 rounded-input px-s8 py-s12 text-left transition-opacity duration-(--duration-fast) hover:bg-subtle',
+          'focus-ring cursor-pointer hover:bg-subtle',
+          ROW_CLASS,
           row.selected ? 'bg-brand-weak hover:bg-brand-weak' : '',
           dimmed ? 'opacity-50' : '',
         ].join(' ')}
       >
-        <CategoryIcon icon={row.icon} size="sm" />
-        <span className="flex min-w-0 flex-col gap-s4">
-          <span title={row.name} className="truncate text-body font-emphasis text-fg-primary">
-            {row.name}
-          </span>
-          <span
-            aria-hidden="true"
-            className="block h-1.5 w-full overflow-hidden rounded-capsule bg-track"
-          >
-            <span
-              className="block h-full rounded-capsule bg-brand"
-              style={{ width: `${Math.max(2, row.share)}%` }}
-            />
-          </span>
-          <span className="text-meta whitespace-nowrap text-fg-secondary">{row.countLabel}</span>
-        </span>
-        <span className="flex flex-col items-end gap-s4 text-right whitespace-nowrap">
-          <Money
-            cents={row.totalCents}
-            sign="none"
-            tone="expense"
-            weight="plain"
-            className="text-money-row"
-          />
-          <span className="text-meta text-fg-secondary tabular-nums">{row.shareLabel}</span>
-        </span>
+        <CategoryRowBody row={row} />
       </button>
     </li>
   );
@@ -93,6 +116,9 @@ export function InvoiceCategoryComposition({
         )
       }
     >
+      <p className="m-0 text-meta text-fg-secondary">
+        Das compras lançadas. Recorrências esperadas entram quando forem cobradas.
+      </p>
       <ul className="m-0 flex list-none flex-col p-0">
         {shown.map((row) => (
           <CategoryRow key={row.key} row={row} dimmed={dimOthers(row)} onToggle={onToggle} />

@@ -7,6 +7,7 @@ import { useConfirmation } from '#/features/transactions/transaction-list/hooks/
 import { useFiltersView } from '#/features/transactions/transaction-list/hooks/use-filters-view.hook.ts';
 import { useActionError } from '#/shared/hooks/transactions/use-action-error.hook.ts';
 import { useBulkActions } from '#/features/transactions/transaction-list/hooks/use-bulk-actions.hook.ts';
+import { useEditTarget } from '#/features/transactions/transaction-list/hooks/use-edit-target.hook.ts';
 import { useDebouncedSearchText } from '#/features/transactions/transaction-list/hooks/use-debounced-search-text.hook.ts';
 import { useSyncFailures } from '#/features/transactions/transaction-list/hooks/use-sync-failures.hook.ts';
 import { useEndOfList } from '#/shared/hooks/transactions/use-end-of-list.hook.ts';
@@ -115,10 +116,15 @@ export function TransactionListViewModel() {
         model.monthTransactions.data?.items.find((item) => item.id === id))
       : undefined;
   const closePanels = () => update({ edit: null, split: null });
+  const editTarget = useEditTarget({
+    id: search.edit,
+    found: findTransaction(search.edit),
+    clear: () => update({ edit: null }),
+  });
   const editing = useTransactionEditing({
     model,
     lookups,
-    transaction: findTransaction(search.edit),
+    transaction: editTarget,
     close: closePanels,
     recategorize: rowActions.recategorize,
     askRule: setRuleQuestionIds,

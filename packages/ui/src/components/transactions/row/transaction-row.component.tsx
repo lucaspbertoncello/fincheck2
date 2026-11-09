@@ -6,10 +6,7 @@ import { ListRow } from '#/components/list-row/index.ts';
 import { OverflowMenu } from '#/components/menus/index.ts';
 import { Money } from '#/components/money/index.ts';
 import { buildTransactionRowFlags } from '#/components/transactions/row/build-transaction-row-flags.util.tsx';
-import {
-  IGNORED_TRANSACTION_MENU_ITEMS,
-  TRANSACTION_MENU_ITEMS,
-} from '#/components/transactions/row/transaction-row-menu.constant.ts';
+import { buildTransactionMenuItems } from '#/components/transactions/row/build-transaction-menu-items.util.ts';
 import type {
   TransactionMenuKey,
   TransactionRowData,
@@ -65,6 +62,7 @@ export function TransactionRow({
     ? [...base, ...plainParts].join(' · ')
     : undefined;
   const [firstChip, secondChip] = chips;
+  const menuItems = buildTransactionMenuItems(transaction);
 
   return (
     <li
@@ -127,7 +125,7 @@ export function TransactionRow({
           menu={
             <OverflowMenu
               label={`Ações de ${name}`}
-              items={ignored ? IGNORED_TRANSACTION_MENU_ITEMS : TRANSACTION_MENU_ITEMS}
+              items={menuItems}
               onAction={(key) => onMenuAction?.(id, key as TransactionMenuKey)}
             />
           }

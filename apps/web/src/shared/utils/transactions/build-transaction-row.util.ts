@@ -57,6 +57,7 @@ export function buildTransactionRow(
     splitParts: isSplit ? transaction.splits.length : undefined,
     outOfAccount: !counts,
     ignored: transaction.ignoredAt !== null,
+    recurring: transaction.links.occurrence !== null,
     debtPaidCents: bill?.role === 'payment' ? bill.amountCents : undefined,
     debtPerson: bill?.role === 'payment' ? (bill.counterparty ?? undefined) : undefined,
   };

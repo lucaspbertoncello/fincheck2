@@ -1,3 +1,4 @@
+import { recognizeServiceSlug } from '@fincheck/shared/recurrences/subscription-service/recognize-service-slug.util.ts';
 import type { Subscription } from '@fincheck/shared/recurrences/subscription/subscription.type.ts';
 
 import { recognizeService } from '#/domain/recurrences/service-logo/rules/recognize-service.rule.ts';
@@ -19,6 +20,7 @@ export function presentSubscriptionSuggestion(
     key: suggestion.key,
     name,
     service: recognizeService(suggestion.description),
+    serviceSlug: recognizeServiceSlug(suggestion.description),
     title: `Parece uma assinatura: ${name}, ${formatMoneyText(suggestion.lastAmountCents, hidden)}`,
     description: `Cobrada em ${suggestion.monthsSeen} meses seguidos${card ? ` no ${card}` : ''}, a última em ${formatShortDate(suggestion.lastChargedOn)}.`,
   };

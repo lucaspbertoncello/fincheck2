@@ -1,4 +1,5 @@
 import { apiErrorSchema } from '@fincheck/shared/common/api-error/api-error.schema.ts';
+import { idSchema } from '@fincheck/shared/common/id/id.schema.ts';
 import { HttpResponse, type HttpResponseResolver } from 'msw';
 import type { z } from 'zod';
 
@@ -37,6 +38,19 @@ function validationError(error: z.ZodError) {
   });
 }
 
+// The API reads every `:id` and `:<name>Id` of the path as a UUID: a malformed one is a 400, never a
+// 404 (`mock vs api.md` 6, 26, 47, 58, 110).
+function assertIdParams(params: Record<string, string>): void {
+  const issues = Object.entries(params)
+    .filter(
+      ([key, value]) => (key === 'id' || key.endsWith('Id')) && !idSchema.safeParse(value).success,
+    )
+    .map(([key]) => ({ path: key, message: 'Invalid UUID' }));
+  if (issues.length > 0) {
+    throw new MockApiError(400, 'VALIDATION_FAILED', 'Entrada fora do contrato', { issues });
+  }
+}
+
 // Wraps a route: validates query and body with the contract schemas, runs the handler against the
 // in-memory state, validates the answer and turns thrown `MockApiError`s into the error body.
 export function handleRoute<
@@ -52,6 +66,8 @@ export function handleRoute<
       const pathParams = Object.fromEntries(
         Object.entries(params).map(([key, value]) => [key, String(value)]),
       );
+
+      assertIdParams(pathParams);
 
       let query: unknown;
       if (spec.query) {

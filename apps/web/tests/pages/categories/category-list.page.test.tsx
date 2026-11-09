@@ -55,6 +55,13 @@ describe('CategoryListPage', () => {
     expect(window.location.search).toContain('filter=tags');
   });
 
+  it('says there are no tags yet when the API has none (it starts with 0 tags)', async () => {
+    server.use(http.get('/api/tags', () => HttpResponse.json({ items: [] })));
+    renderApp('/categories?filter=tags');
+
+    expect(await screen.findByText(/Nenhuma tag ainda/)).toBeInTheDocument();
+  });
+
   it('shows the skeleton first and then the list', async () => {
     renderApp('/categories');
 
