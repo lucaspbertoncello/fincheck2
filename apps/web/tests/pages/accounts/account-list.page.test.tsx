@@ -201,9 +201,22 @@ describe('AccountListPage', () => {
     expect(await within(cards!).findByText(/1\.000,00/)).toBeInTheDocument();
   });
 
-  it('swaps the cards for the future invoices and goes back', async () => {
+  it('has "Compras parceladas" in each card and it opens the page of the plans of the card', async () => {
     await openAccounts();
     await screen.findByRole('heading', { name: 'Cartões de crédito' });
+
+    press((await screen.findAllByRole('button', { name: 'Compras parceladas' }))[0]!);
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: /Compras parceladas do/ }),
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toMatch(/^\/cards\/[^/]+\/installments$/);
+  });
+
+  it('keeps "Faturas futuras" beside "Compras parceladas": it swaps the cards for the projection and goes back', async () => {
+    await openAccounts();
+    await screen.findByRole('heading', { name: 'Cartões de crédito' });
+    expect(screen.getAllByRole('button', { name: 'Compras parceladas' }).length).toBeGreaterThan(0);
 
     press((await screen.findAllByRole('button', { name: 'Faturas futuras' }))[0]!);
 

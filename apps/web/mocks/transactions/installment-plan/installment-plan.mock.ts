@@ -4,6 +4,7 @@ import {
   createInstallmentPlanRequestSchema,
   installmentPlanDtoSchema,
   listInstallmentPlansQuerySchema,
+  updateInstallmentPlanRequestSchema,
 } from '@fincheck/shared/transactions/installment-plan/installment-plan.schema.ts';
 import { http } from 'msw';
 
@@ -17,6 +18,7 @@ import { dateInMonth } from '#mocks/support/dates/date-in-month.util.ts';
 import { dayOf } from '#mocks/support/dates/day-of.util.ts';
 import { fail } from '#mocks/support/http/fail.util.ts';
 import { handleRoute } from '#mocks/support/http/handle-route.util.ts';
+import { assertInstallmentPlanEditable } from '#mocks/transactions/installment-plan/assert-installment-plan-editable.util.ts';
 import { assertUsableCategory } from '#mocks/transactions/transaction/assert-usable-category.util.ts';
 import { assertUsableTags } from '#mocks/transactions/transaction/assert-usable-tags.util.ts';
 import { presentInstallmentPlan } from '#mocks/transactions/installment-plan/present-installment-plan.util.ts';
@@ -95,6 +97,98 @@ export const installmentPlanMock = [
             }),
           );
         });
+
+        return presentInstallmentPlan(db, plan);
+      },
+    ),
+  ),
+
+  http.patch(
+    '/api/installment-plans/:id',
+    handleRoute(
+      { body: updateInstallmentPlanRequestSchema, response: installmentPlanDtoSchema },
+      ({ params, body }) => {
+        const plan =
+          db.installmentPlans.find((item) => item.id === params['id']) ??
+          fail(404, 'INSTALLMENT_PLAN_NOT_FOUND', 'O plano não existe');
+        if (plan.origin === 'bank')
+          fail(422, 'INSTALLMENT_PLAN_NOT_MANUAL', 'O plano do banco não se edita');
+
+        const categoryId = body.categoryId === undefined ? plan.categoryId : body.categoryId;
+        if (body.categoryId) assertUsableCategory(db, body.categoryId, 'expense');
+        const existing = db.transactions.filter((tx) => tx.installment?.planId === plan.id);
+        if (body.tagIds)
+          assertUsableTags(
+            db,
+            body.tagIds,
+            categoryId ? [categoryId] : [],
+            existing.flatMap((tx) => tx.tagIds),
+          );
+
+        const description = body.description ?? plan.description;
+        const totalCents = body.totalCents ?? plan.totalCents;
+        const count = body.installmentCount ?? plan.installmentCount;
+        const firstInvoiceMonth = body.firstInvoiceMonth ?? plan.firstInvoiceMonth;
+        const purchaseDay = dayOf(plan.purchaseOn);
+        const amounts = allocateCents(totalCents, count);
+        assertInstallmentPlanEditable(db, plan, existing, {
+          amounts,
+          firstInvoiceMonth,
+          categoryChanges: categoryId !== plan.categoryId,
+        });
+
+        // Numbers 1..min(old, new) stay the same transactions (same id); the rest is added or cut.
+        const byNumber = new Map(existing.map((tx) => [tx.installment?.number ?? 0, tx]));
+        amounts.forEach((amount, index) => {
+          const number = index + 1;
+          const month = addMonths(firstInvoiceMonth, index);
+          const tx = byNumber.get(number);
+          if (tx) {
+            tx.description = description;
+            tx.amountCents = -amount;
+            tx.invoiceMonth = month;
+            tx.occurredOn = dateInMonth(month, purchaseDay);
+            tx.categoryId = categoryId;
+            tx.categorySource = categoryId ? 'user' : null;
+            tx.categoryRuleId = null;
+            if (body.tagIds) tx.tagIds = [...body.tagIds];
+            tx.installment = { planId: plan.id, number, count };
+
+            return;
+          }
+          db.transactions.push(
+            makeTransactionRecord({
+              accountId: plan.accountId,
+              origin: 'manual',
+              method: 'credit',
+              nature: 'expense',
+              natureSetBy: 'user',
+              description,
+              amountCents: -amount,
+              occurredOn: dateInMonth(month, purchaseDay),
+              invoiceMonth: month,
+              categoryId,
+              tagIds: body.tagIds ?? [],
+              installment: { planId: plan.id, number, count },
+            }),
+          );
+        });
+        const cut = new Set(
+          existing.filter((tx) => (tx.installment?.number ?? 0) > count).map((tx) => tx.id),
+        );
+        if (cut.size > 0) {
+          db.transactions = db.transactions.filter((tx) => !cut.has(tx.id));
+          for (const invoice of db.invoices)
+            invoice.payments = invoice.payments.filter(
+              (payment) => !payment.transactionId || !cut.has(payment.transactionId),
+            );
+        }
+
+        plan.description = description;
+        plan.totalCents = totalCents;
+        plan.installmentCount = count;
+        plan.firstInvoiceMonth = firstInvoiceMonth;
+        plan.categoryId = categoryId;
 
         return presentInstallmentPlan(db, plan);
       },

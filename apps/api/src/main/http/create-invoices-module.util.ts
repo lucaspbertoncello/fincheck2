@@ -23,6 +23,7 @@ import { CreateInvoicePaymentUseCase } from '#/modules/invoices/application/invo
 import { DeleteInvoicePaymentUseCase } from '#/modules/invoices/application/invoice-payment/delete-invoice-payment.usecase.ts';
 import { DismissPaymentSuggestionUseCase } from '#/modules/invoices/application/invoice-payment/dismiss-payment-suggestion.usecase.ts';
 import { GetTransactionInvoiceLinksQuery } from '#/modules/invoices/application/invoice-payment/get-transaction-invoice-links.query.ts';
+import { ListPaidInvoiceMonthsQuery } from '#/modules/invoices/application/invoice-payment/list-paid-invoice-months.query.ts';
 import { FindInvoiceLinkedTransactionsQuery } from '#/modules/invoices/application/invoice-payment/find-invoice-linked-transactions.query.ts';
 import type { LinkedTransactionReader } from '#/modules/invoices/application/invoice-payment/linked-transaction-reader.interface.ts';
 import type { InvoicePaymentCandidateReader } from '#/modules/invoices/application/invoice-payment/invoice-payment-candidate-reader.interface.ts';
@@ -46,9 +47,9 @@ import type { Clock } from '#/shared/clock/clock.interface.ts';
 import type { UnitOfWork } from '#/shared/unit-of-work/unit-of-work.interface.ts';
 
 // Builds the `invoices` module by hand: its routes and the readers `transactions` and `accounts`
-// ask it for (the invoice month of a purchase, the open invoice of each card, the link of a
-// payment, the count and the deletion of the invoices of a card). It asks three owners back:
-// `accounts` (the cycle days of a card), `transactions` (the lines and sums of the cycle, the
+// ask it for (the invoice month of a purchase, the open invoice of each card, the invoices that
+// already have a payment, the link of a payment, the count and the deletion of the invoices of a
+// card). It asks three owners back: `accounts` (the cycle days of a card), `transactions` (the lines and sums of the cycle, the
 // transactions that pay, the candidates of the payment found, and the use cases that link and
 // unlink a payment) and, once it exists, `recurrences` (the occurrences still expected on a card).
 // They come in as ports. The readers of `recurrences` are optional: without the first no invoice has
@@ -158,6 +159,7 @@ export function createInvoicesModule(deps: {
     transactionReaders: {
       invoiceMonths: new GetInvoiceMonthQuery(cards),
       openInvoiceMonths: new GetOpenInvoiceMonthsQuery(cards, clock),
+      paidInvoiceMonths: new ListPaidInvoiceMonthsQuery(db),
       links: new GetTransactionInvoiceLinksQuery(db),
     },
     // The reader `bills` declares and `invoices` fulfils.

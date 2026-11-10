@@ -12,6 +12,8 @@ import { DeleteInstallmentPlanUseCase } from '#/modules/transactions/application
 import { InstallmentPlanDtoBuilder } from '#/modules/transactions/application/installment-plan/installment-plan-dto-builder.service.ts';
 import { ListInstallmentPlansQuery } from '#/modules/transactions/application/installment-plan/list-installment-plans.query.ts';
 import type { OpenInvoiceMonthReader } from '#/modules/transactions/application/installment-plan/open-invoice-month-reader.interface.ts';
+import type { PaidInvoiceMonthReader } from '#/modules/transactions/application/installment-plan/paid-invoice-month-reader.interface.ts';
+import { UpdateInstallmentPlanUseCase } from '#/modules/transactions/application/installment-plan/update-installment-plan.usecase.ts';
 import { BulkTransactionsUseCase } from '#/modules/transactions/application/transaction/bulk-transactions.usecase.ts';
 import type { CategoryRuleReader } from '#/modules/transactions/application/transaction/category-rule-reader.interface.ts';
 import type { CategorySuggestionReader } from '#/modules/transactions/application/transaction/category-suggestion-reader.interface.ts';
@@ -43,6 +45,7 @@ import { DeleteInstallmentPlanController } from '#/modules/transactions/http/ins
 import { createInstallmentPlanDeletionRoute } from '#/modules/transactions/http/installment-plan/installment-plan-deletion.route.ts';
 import { createInstallmentPlanRoute } from '#/modules/transactions/http/installment-plan/installment-plan.route.ts';
 import { ListInstallmentPlansController } from '#/modules/transactions/http/installment-plan/list-installment-plans.controller.ts';
+import { UpdateInstallmentPlanController } from '#/modules/transactions/http/installment-plan/update-installment-plan.controller.ts';
 import { BulkTransactionsController } from '#/modules/transactions/http/transaction/bulk-transactions.controller.ts';
 import { CreateTransactionController } from '#/modules/transactions/http/transaction/create-transaction.controller.ts';
 import { DeleteTransactionController } from '#/modules/transactions/http/transaction/delete-transaction.controller.ts';
@@ -82,6 +85,7 @@ export function createTransactionsModule(deps: {
     categoryRules?: CategoryRuleReader | undefined;
     invoiceMonths?: InvoiceMonthReader | undefined;
     openInvoiceMonths?: OpenInvoiceMonthReader | undefined;
+    paidInvoiceMonths?: PaidInvoiceMonthReader | undefined;
     links?: TransactionLinksReader | undefined;
     categorySuggestions?: CategorySuggestionReader | undefined;
     recurrenceCandidates?: RecurrenceCandidateReader | undefined;
@@ -239,6 +243,19 @@ export function createTransactionsModule(deps: {
         ),
         listInstallmentPlans: new ListInstallmentPlansController(
           new ListInstallmentPlansQuery(plans, accounts, planBuilder),
+        ),
+        updateInstallmentPlan: new UpdateInstallmentPlanController(
+          new UpdateInstallmentPlanUseCase(
+            plans,
+            transactions,
+            accounts,
+            references,
+            readers.paidInvoiceMonths,
+            readers.links,
+            planBuilder,
+            unitOfWork,
+            clock,
+          ),
         ),
       })
     : undefined;

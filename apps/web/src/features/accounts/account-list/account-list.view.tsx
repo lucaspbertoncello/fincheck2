@@ -40,6 +40,7 @@ type AccountListViewProps = {
   onAddCard: () => void;
   onViewInvoice: (cardId: string, month: string) => void;
   onCorrectInvoice: (cardId: string, month: string) => void;
+  onOpenInstallments: (cardId: string) => void;
   onOpenFuture: (cardId: string) => void;
   onCardMenuAction: (cardId: string, key: string) => void;
   onAccountAction: (accountId: string) => void;
@@ -63,6 +64,7 @@ export function AccountListView({
   onAddCard,
   onViewInvoice,
   onCorrectInvoice,
+  onOpenInstallments,
   onOpenFuture,
   onCardMenuAction,
   onAccountAction,
@@ -120,6 +122,7 @@ export function AccountListView({
                 onAddCard={onAddCard}
                 onViewInvoice={onViewInvoice}
                 onCorrectInvoice={onCorrectInvoice}
+                onOpenInstallments={onOpenInstallments}
                 onOpenFuture={onOpenFuture}
                 onMenuAction={onCardMenuAction}
               />

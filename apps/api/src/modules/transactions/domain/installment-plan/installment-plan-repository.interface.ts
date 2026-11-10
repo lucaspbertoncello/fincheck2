@@ -8,6 +8,9 @@ export interface InstallmentPlanRepository<Executor> {
   list(options: { accountId?: string }, executor?: Executor): Promise<InstallmentPlan[]>;
   // Creates the plan. The parcels are saved by the transactions' repository, after it.
   insert(plan: InstallmentPlan, executor?: Executor): Promise<void>;
+  // Saves the edit of the plan: description, total, count, first invoice, category and `updatedAt`.
+  // The parcels are saved (and the extra ones deleted) by the transactions' repository.
+  update(plan: InstallmentPlan, executor?: Executor): Promise<void>;
   // Deletes the plan; its parcels (and what hangs on them) go by `ON DELETE CASCADE`.
   delete(id: string, executor?: Executor): Promise<void>;
 }

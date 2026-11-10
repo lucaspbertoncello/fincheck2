@@ -18,6 +18,7 @@ describe('InvoiceCard', () => {
         dueLine="Fecha 30/10, vence 06/11"
         cycleProgress={0.5}
         installments={INSTALLMENTS}
+        onOpenInstallments={() => {}}
         onOpenFuture={() => {}}
       />,
     );
@@ -27,8 +28,33 @@ describe('InvoiceCard', () => {
     expect(html).toContain('Loja Aurora');
     expect(html).toContain('Parcela 3 de 10');
     expect(html).toContain('129,90');
+    expect(html).toContain('Compras parceladas');
     expect(html).toContain('Faturas futuras');
     expect(html).toContain('aria-valuenow="50"');
+  });
+
+  it('lets the two links wrap inside the box, each label whole on one line', () => {
+    const html = renderToStaticMarkup(
+      <InvoiceCard
+        status="open"
+        totalCents={1000}
+        dueLine="Fecha 30/10"
+        installments={[]}
+        onOpenInstallments={() => {}}
+        onOpenFuture={() => {}}
+      />,
+    );
+    const rawGroup =
+      html.match(/<div class="([^"]*)"[^>]*><button[^>]*>Compras parceladas/)?.[1] ?? '';
+    const group = rawGroup.replaceAll('&gt;', '>').replaceAll('&amp;', '&');
+
+    expect(group).toContain('flex-wrap');
+    expect(group).toContain('max-w-full');
+    expect(group).toContain('min-w-0');
+    expect(group).toContain('justify-end');
+    expect(group).toContain('[&>*]:whitespace-nowrap');
+    expect(group).toContain('[&>*]:shrink-0');
+    expect(html.indexOf('Compras parceladas')).toBeLessThan(html.indexOf('Faturas futuras'));
   });
 
   it('writes "crédito de" for a negative total, without a minus sign', () => {
@@ -45,6 +71,7 @@ describe('InvoiceCard', () => {
       <InvoiceCard status="paid" totalCents={0} dueLine="Paga em 05/11" installments={[]} />,
     );
     expect(html).toContain('Nenhuma parcela nesta fatura.');
+    expect(html).not.toContain('Compras parceladas');
     expect(html).not.toContain('Faturas futuras');
     expect(html).not.toContain('progressbar');
     expect(html).toContain('Fatura paga');

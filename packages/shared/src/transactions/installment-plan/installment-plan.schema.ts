@@ -45,6 +45,21 @@ export const createInstallmentPlanRequestSchema = z.object({
   tagIds: z.array(idSchema).max(20).optional(),
 });
 
+// Edit of a plan: every field is optional, but at least one is sent. `categoryId: null` takes the
+// category off (and the tags with it); `tagIds` replaces the tags of the parcels.
+export const updateInstallmentPlanRequestSchema = z
+  .strictObject({
+    description: z.string().trim().min(1).max(200).optional(),
+    totalCents: positiveCentsSchema.optional(),
+    installmentCount: installmentCountSchema.optional(),
+    firstInvoiceMonth: monthSchema.optional(),
+    categoryId: idSchema.nullable().optional(),
+    tagIds: z.array(idSchema).max(20).optional(),
+  })
+  .refine((value) => Object.values(value).some((field) => field !== undefined), {
+    message: 'Send at least one field',
+  });
+
 export const listInstallmentPlansQuerySchema = z.object({
   accountId: idSchema.optional(),
   active: queryBooleanSchema.optional(),

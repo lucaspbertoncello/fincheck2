@@ -11,6 +11,7 @@ type CardSectionProps = {
   onAddCard: () => void;
   onViewInvoice: (cardId: string, month: string) => void;
   onCorrectInvoice: (cardId: string, month: string) => void;
+  onOpenInstallments: (cardId: string) => void;
   onOpenFuture: (cardId: string) => void;
   onMenuAction: (cardId: string, key: string) => void;
 };
@@ -27,6 +28,7 @@ export function CardSection({
   onAddCard,
   onViewInvoice,
   onCorrectInvoice,
+  onOpenInstallments,
   onOpenFuture,
   onMenuAction,
 }: CardSectionProps) {
@@ -42,6 +44,7 @@ export function CardSection({
       data={card}
       onViewInvoice={onViewInvoice}
       onCorrectInvoice={onCorrectInvoice}
+      onOpenInstallments={onOpenInstallments}
       onOpenFuture={onOpenFuture}
       onMenuAction={onMenuAction}
     />

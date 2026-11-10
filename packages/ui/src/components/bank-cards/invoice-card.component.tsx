@@ -27,7 +27,9 @@ type InvoiceCardProps = {
   /** From 0 to 1; the bar is hidden when absent (a paid invoice has no cycle). */
   cycleProgress?: number;
   installments: readonly InvoiceInstallment[];
-  /** Opens the future invoices; the link is hidden when absent. */
+  /** Opens the installment purchases of the card ("Compras parceladas"); the link is hidden when absent. */
+  onOpenInstallments?: () => void;
+  /** Opens the future invoices ("Faturas futuras"); the link is hidden when absent. */
   onOpenFuture?: () => void;
   /** Footer actions ("Registrar pagamento"), built with the shared buttons. */
   actions?: ReactNode;
@@ -45,6 +47,7 @@ export function InvoiceCard({
   dueLine,
   cycleProgress,
   installments,
+  onOpenInstallments,
   onOpenFuture,
   actions,
   className,
@@ -77,12 +80,23 @@ export function InvoiceCard({
       {cycleProgress === undefined ? null : <InvoiceCycleBar progress={cycleProgress} />}
 
       <div className="flex flex-col">
-        <div className="flex items-center justify-between gap-s12 pb-s8">
+        <div className="flex flex-wrap items-center justify-between gap-x-s12 pb-s8">
           <h3 className="text-label font-normal text-fg-secondary">Próximas parcelas</h3>
-          {onOpenFuture ? (
-            <CardAction variant="tertiary" onPress={onOpenFuture}>
-              Faturas futuras
-            </CardAction>
+          {onOpenInstallments || onOpenFuture ? (
+            // The links wrap onto their own lines, right-aligned, and never pass the box: each label
+            // stays whole on one line.
+            <div className="ml-auto flex min-w-0 max-w-full flex-wrap items-center justify-end gap-x-s4 [&>*]:shrink-0 [&>*]:whitespace-nowrap">
+              {onOpenInstallments ? (
+                <CardAction variant="tertiary" onPress={onOpenInstallments}>
+                  Compras parceladas
+                </CardAction>
+              ) : null}
+              {onOpenFuture ? (
+                <CardAction variant="tertiary" onPress={onOpenFuture}>
+                  Faturas futuras
+                </CardAction>
+              ) : null}
+            </div>
           ) : null}
         </div>
         {installments.length === 0 ? (

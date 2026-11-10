@@ -3,6 +3,7 @@ import {
   ChoiceField,
   Collapse,
   DateQuickField,
+  FineNote,
   FormModal,
   FormModalMore,
   FormModalSplit,
@@ -12,6 +13,7 @@ import {
 
 import { InstallmentCountField } from '#/features/transactions/transaction-creation/installment-create/components/installment-count-field.component.tsx';
 import { InstallmentPreview } from '#/features/transactions/transaction-creation/installment-create/components/installment-preview.component.tsx';
+import { LockedField } from '#/features/transactions/transaction-creation/installment-create/components/locked-field.component.tsx';
 import type { InstallmentCreateViewProps } from '#/features/transactions/transaction-creation/installment-create/types/installment-create-view.type.ts';
 import { AccountChoiceField } from '#/features/transactions/components/account-choice-field.component.tsx';
 import { CategoryChipsField } from '#/features/transactions/components/category-chips-field.component.tsx';
@@ -22,13 +24,16 @@ const AMOUNT_MODES = [
 ];
 
 /**
- * "Compra parcelada" on the form-modal pattern. The amount is the hero, and a switch above it says
- * whether the number is the whole purchase or one installment (a store shows either). Count and
- * card are taps; the preview answers "how will this land?" before saving. Date of purchase, first
- * invoice and category wait in "Mais opções", with sensible defaults.
+ * "Compra parcelada" on the form-modal pattern, to launch a purchase and to edit a plan (the same
+ * form, only the words and the locked fields change). The amount is the hero, and a switch above it
+ * says whether the number is the whole purchase or one installment (a store shows either). Count and
+ * card are taps (the card is text when it is already decided); the preview answers "how will this
+ * land?" before saving. Date of purchase, first invoice and category wait in "Mais opções" (open in
+ * an edit, where they are the point), with sensible defaults.
  */
 export function InstallmentCreateView(props: InstallmentCreateViewProps) {
   const { values, errors, preview } = props;
+  const isEdit = props.mode === 'edit';
   const noAmount = values.amountCents <= 0;
   const firstInvoice = props.invoiceMonths.find((month) => month.id === values.firstInvoiceMonth);
 
@@ -38,10 +43,14 @@ export function InstallmentCreateView(props: InstallmentCreateViewProps) {
       onOpenChange={(isOpen) => {
         if (!isOpen) props.onClose();
       }}
-      title="Compra parcelada"
-      description="Lançada à mão no cartão, uma parcela em cada fatura."
-      submitLabel="Lançar compra"
-      submittingLabel="Lançando..."
+      title={isEdit ? 'Editar compra parcelada' : 'Compra parcelada'}
+      description={
+        isEdit
+          ? 'O cartão e a data da compra não mudam.'
+          : 'Lançada à mão no cartão, uma parcela em cada fatura.'
+      }
+      submitLabel={isEdit ? 'Salvar' : 'Lançar compra'}
+      submittingLabel={isEdit ? 'Salvando...' : 'Lançando...'}
       isSubmitting={props.saving}
       submitDisabled={props.loading || noAmount}
       submitHint={!props.loading && noAmount ? 'Informe o valor da compra.' : undefined}
@@ -52,14 +61,16 @@ export function InstallmentCreateView(props: InstallmentCreateViewProps) {
         aside={
           <>
             <div className="flex flex-col gap-s12">
-              <SegmentedControl
-                label="O valor informado é"
-                options={AMOUNT_MODES}
-                value={values.amountMode}
-                onChange={(amountMode) =>
-                  props.onChange({ amountMode: amountMode as typeof values.amountMode })
-                }
-              />
+              {isEdit ? null : (
+                <SegmentedControl
+                  label="O valor informado é"
+                  options={AMOUNT_MODES}
+                  value={values.amountMode}
+                  onChange={(amountMode) =>
+                    props.onChange({ amountMode: amountMode as typeof values.amountMode })
+                  }
+                />
+              )}
               <AmountField
                 label={values.amountMode === 'total' ? 'Valor total' : 'Valor da parcela'}
                 cents={values.amountCents}
@@ -84,7 +95,9 @@ export function InstallmentCreateView(props: InstallmentCreateViewProps) {
           onChange={(countText) => props.onChange({ countText })}
           error={errors.count}
         />
-        {props.cards.length > 0 ? (
+        {props.lockedCard ? (
+          <LockedField label="Cartão" value={props.lockedCard} />
+        ) : props.cards.length > 0 ? (
           <AccountChoiceField
             label="Cartão"
             accounts={props.cards}
@@ -105,16 +118,30 @@ export function InstallmentCreateView(props: InstallmentCreateViewProps) {
       >
         {preview ? <InstallmentPreview preview={preview} /> : null}
       </Collapse>
+      <Collapse
+        isOpen={props.showsRecalculation}
+        trackClassName="-mt-s16 lg:-mt-s24"
+        contentClassName="pt-s16 lg:pt-s24"
+      >
+        <FineNote icon="warning">
+          As parcelas serão recalculadas: a soma continua igual ao total.
+        </FineNote>
+      </Collapse>
       <FormModalMore
+        defaultOpen={isEdit}
         summary={firstInvoice ? `fatura de ${firstInvoice.label.toLowerCase()}` : 'data, fatura'}
         hasError={Boolean(errors.date || errors.firstInvoice)}
       >
-        <DateQuickField
-          label="Data da compra"
-          value={values.purchaseOn}
-          onChange={(purchaseOn) => props.onChange({ purchaseOn, firstInvoiceMonth: null })}
-          error={errors.date}
-        />
+        {props.lockedPurchaseDate ? (
+          <LockedField label="Data da compra" value={props.lockedPurchaseDate} />
+        ) : (
+          <DateQuickField
+            label="Data da compra"
+            value={values.purchaseOn}
+            onChange={(purchaseOn) => props.onChange({ purchaseOn, firstInvoiceMonth: null })}
+            error={errors.date}
+          />
+        )}
         <ChoiceField
           label="Primeira fatura"
           options={props.invoiceMonths.map((month) => ({ key: month.id, label: month.label }))}

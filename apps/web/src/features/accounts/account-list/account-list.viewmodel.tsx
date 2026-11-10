@@ -108,6 +108,16 @@ export function AccountListViewModel() {
     });
   }
 
+  /** "Compras parceladas": the page of the plans of the card, which leads back here. */
+  function openInstallments(cardId: string) {
+    void navigate({
+      to: '/cards/$accountId/installments',
+      params: { accountId: cardId },
+      search: ((previous: { month?: string }) =>
+        previous.month ? { month: previous.month } : {}) as never,
+    });
+  }
+
   function handleRetryConnection(connectionId: string) {
     setActionError(null);
     const name = connectionsById.get(connectionId)?.institutionName ?? 'o banco';
@@ -178,6 +188,7 @@ export function AccountListViewModel() {
       onAddCard={() => update({ new: 'card' })}
       onViewInvoice={(cardId, month) => openInvoice(cardId, month, { withCard: true })}
       onCorrectInvoice={(cardId, month) => update({ correct: `${cardId}:${month}` })}
+      onOpenInstallments={openInstallments}
       onOpenFuture={(cardId) => update({ future: cardId })}
       onCardMenuAction={handleMenuAction}
       onAccountAction={(accountId) => update({ adjust: accountId })}

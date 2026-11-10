@@ -58,6 +58,18 @@ describe('RecurrenceRow', () => {
     expect(html).toContain('w-sign-col');
   });
 
+  it('puts aria-expanded and aria-controls on the name button of a row that opens', () => {
+    const opens = render({ transactions: [] });
+    const fixed = render();
+
+    const nameButton =
+      /<button(?=[^>]*aria-label="Transações de Academia Corpo")(?=[^>]*aria-expanded="false")(?=[^>]*aria-controls=")/;
+
+    expect(opens).toMatch(nameButton);
+    expect(fixed).not.toMatch(nameButton);
+    expect(fixed).not.toContain('aria-controls');
+  });
+
   it('shows "+" and the income tone for income', () => {
     const html = render({ flow: 'income', status: 'received', amountCents: 120000 });
 

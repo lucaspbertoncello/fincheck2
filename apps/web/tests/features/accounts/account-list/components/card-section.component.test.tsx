@@ -54,6 +54,7 @@ function renderSection(count: number, onAddCard = vi.fn()) {
       onAddCard={onAddCard}
       onViewInvoice={vi.fn()}
       onCorrectInvoice={vi.fn()}
+      onOpenInstallments={vi.fn()}
       onOpenFuture={vi.fn()}
       onMenuAction={vi.fn()}
     />,

@@ -6,6 +6,7 @@ type CardBlockProps = {
   data: CardBlockData;
   onViewInvoice: (cardId: string, month: string) => void;
   onCorrectInvoice: (cardId: string, month: string) => void;
+  onOpenInstallments: (cardId: string) => void;
   onOpenFuture: (cardId: string) => void;
   onMenuAction: (cardId: string, key: string) => void;
 };
@@ -15,6 +16,7 @@ export function CardBlock({
   data,
   onViewInvoice,
   onCorrectInvoice,
+  onOpenInstallments,
   onOpenFuture,
   onMenuAction,
 }: CardBlockProps) {
@@ -61,6 +63,7 @@ export function CardBlock({
           dueLine={invoice.dueLine}
           cycleProgress={invoice.cycleProgress}
           installments={data.installments}
+          onOpenInstallments={() => onOpenInstallments(data.id)}
           onOpenFuture={() => onOpenFuture(data.id)}
           actions={
             <>

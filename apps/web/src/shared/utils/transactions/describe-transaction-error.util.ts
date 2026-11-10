@@ -49,3 +49,8 @@ export function describeTransactionError(error: unknown): ErrorDescription {
   }
   return { message: 'Não deu certo. Tente de novo.' };
 }
+
+/** True when the code has text of its own here (a known business code or the network error). */
+export function hasTransactionErrorText(error: unknown): boolean {
+  return isApiError(error) && (error.code in BY_CODE || error.code === 'NETWORK_ERROR');
+}

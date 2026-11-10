@@ -57,6 +57,22 @@ export class KyselyInstallmentPlanRepository implements InstallmentPlanRepositor
       .execute();
   }
 
+  async update(plan: InstallmentPlan, executor: Kysely<Database> = this.db): Promise<void> {
+    // `account_id`, `origin`, `purchase_on` and `created_at` never change.
+    await executor
+      .updateTable('installment_plans')
+      .set({
+        description: plan.description,
+        total_cents: plan.total.cents,
+        installment_count: plan.installmentCount,
+        first_invoice_month: plan.firstInvoiceMonth.value,
+        category_id: plan.categoryId,
+        updated_at: plan.updatedAt,
+      })
+      .where('id', '=', plan.id)
+      .execute();
+  }
+
   async delete(id: string, executor: Kysely<Database> = this.db): Promise<void> {
     await executor.deleteFrom('installment_plans').where('id', '=', id).execute();
   }

@@ -151,6 +151,7 @@ export const BANK_CARDS_SECTIONS: GallerySectionDef[] = [
             dueLine="Fecha 30/10, vence 06/11"
             cycleProgress={0.7}
             installments={INSTALLMENTS}
+            onOpenInstallments={noop}
             onOpenFuture={noop}
             actions={
               <Button size="sm" onPress={noop}>
