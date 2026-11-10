@@ -299,7 +299,7 @@ export function TransactionListViewModel() {
           tagPicker: editing.tagPicker,
           errors: editing.errors,
           description: editing.description,
-          direction: editing.direction,
+          amount: editing.amount,
           formError: editing.formError,
           original: editing.original,
           saving: editing.saving,

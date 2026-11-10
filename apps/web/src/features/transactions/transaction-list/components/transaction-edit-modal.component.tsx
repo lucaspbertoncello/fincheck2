@@ -11,7 +11,6 @@ import {
   SelectField,
   TagPicker,
   TextField,
-  type AmountKind,
   type TransactionEditValues,
   type TransactionNature,
 } from '@fincheck/ui';
@@ -29,10 +28,6 @@ const NATURES = [
   { key: 'transfer', label: 'Transferência' },
 ];
 const OUT_OF_ACCOUNT = { key: 'out_of_account', label: 'Fora da conta' };
-
-function kindOf(nature: TransactionNature, direction: AmountKind): AmountKind {
-  return nature === 'expense' || nature === 'income' ? nature : direction;
-}
 
 /**
  * "Editar transação": the same modal as "Nova transação" (form-modal pattern), with the values of
@@ -80,7 +75,8 @@ export function TransactionEditModal({ editor }: TransactionEditModalProps) {
             <AmountField
               cents={values.amountCents}
               onChange={(amountCents) => patch({ amountCents })}
-              kind={kindOf(values.nature, editor.direction)}
+              kind={editor.amount.tone}
+              description={editor.amount.note}
               error={errors.amount}
             />
             <TextField
@@ -140,7 +136,7 @@ export function TransactionEditModal({ editor }: TransactionEditModalProps) {
         <OriginalFromBankNote
           original={editor.original}
           onRestore={editor.onRestoreOriginal}
-          tone={kindOf(values.nature, editor.direction)}
+          tone={editor.amount.tone}
         />
       ) : null}
       {isTransfer && values.categoryId === null ? null : (

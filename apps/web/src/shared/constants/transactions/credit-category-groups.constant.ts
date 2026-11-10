@@ -9,6 +9,9 @@ export const CREDIT_CATEGORY_GROUP_LABELS: Readonly<Record<Category.Dto['kind'],
   income: 'Conta como receita',
 };
 
+/** The short note under the amount of a credit on a card whose category is of expense. */
+export const CREDIT_AMOUNT_NOTE = `${CREDIT_CATEGORY_GROUP_LABELS.expense} da categoria`;
+
 /**
  * The group of the category that is a transfer ("Rotação entre contas") on a credit: it is neither
  * of the two above and has no hint, since it does neither of the things they say.

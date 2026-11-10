@@ -71,8 +71,11 @@ export type TransactionEditorView = {
   errors: TransactionEditErrors;
   /** One line under the title: where the transaction is from. */
   description: string;
-  /** The sign of the amount, which a transfer keeps whichever way it goes. */
-  direction: AmountKind;
+  /**
+   * How the amount is drawn: the tone gives its sign and color (a credit on a card is income
+   * whatever its nature), the note goes under it ("Abate gasto da categoria").
+   */
+  amount: { tone: AmountKind; note?: string };
   formError?: string;
   original?: OriginalFromBank;
   saving: boolean;

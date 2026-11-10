@@ -4,10 +4,11 @@ import { useState } from 'react';
 import type { Tag } from '@fincheck/shared/categories/tag/tag.type.ts';
 
 import { getAcceptedCategoryKinds } from '#/domain/transactions/transaction/rules/get-accepted-category-kinds.rule.ts';
-import { getTransactionDirection } from '#/domain/transactions/transaction/rules/get-transaction-direction.rule.ts';
+import { getEditAmountPresentation } from '#/domain/transactions/transaction/rules/get-edit-amount-presentation.rule.ts';
 import { validateTransactionEdit } from '#/domain/transactions/transaction/rules/validate-transaction-edit.rule.ts';
 import type { TransactionListModel } from '#/features/transactions/transaction-list/transaction-list.model.ts';
 import type { TransactionLookups } from '#/shared/types/transactions/transaction-lookups.type.ts';
+import { CREDIT_AMOUNT_NOTE } from '#/shared/constants/transactions/credit-category-groups.constant.ts';
 import { buildCategoryOptionsForKinds } from '#/shared/utils/transactions/build-category-options-for-kinds.util.ts';
 import { buildCategoryOptions } from '#/shared/utils/transactions/build-category-options.util.ts';
 import { buildCounterpartOptions } from '#/features/transactions/transaction-list/utils/build-counterpart-options.util.ts';
@@ -62,6 +63,16 @@ export function useTransactionEditing({
   const mine = problem?.id === transaction.id ? problem : undefined;
   const kind = values.nature === 'income' ? 'income' : 'expense';
   const isCardAccount = lookups.accounts.get(transaction.accountId)?.type === 'credit_card';
+  // The sign and tone of the amount, and the note under it, follow the form (the nature and the
+  // category picked), not only what was saved.
+  const amount = getEditAmountPresentation({
+    nature: values.nature,
+    amountCents: transaction.amountCents,
+    isCardAccount,
+    categoryKind: values.categoryId
+      ? (lookups.categories.get(values.categoryId)?.kind ?? null)
+      : null,
+  });
   // The kinds the transaction takes: its nature's, or both for a credit on a card (a refund).
   const kindsOf = (nature: 'expense' | 'income') =>
     getAcceptedCategoryKinds({
@@ -236,7 +247,7 @@ export function useTransactionEditing({
     ),
     errors: mine?.errors ?? {},
     description: describeOrigin(transaction, lookups),
-    direction: getTransactionDirection(transaction.amountCents),
+    amount: { tone: amount.tone, note: amount.note ? CREDIT_AMOUNT_NOTE : undefined },
     formError: mine?.message,
     original:
       transaction.isEdited && transaction.bank

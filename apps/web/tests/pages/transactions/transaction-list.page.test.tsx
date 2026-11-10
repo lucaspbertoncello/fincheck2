@@ -556,6 +556,59 @@ describe('TransactionListPage', () => {
       );
     });
 
+    it('shows the credit as money in ("+"), and says it abates the spending only with a category of expense', async () => {
+      const refund = addRefund();
+      renderApp(PAGE);
+      await openRowMenu(refund.description, 'Editar');
+      const dialog = await screen.findByRole('dialog', { name: 'Editar transação' });
+
+      // Despesa stays checked, but the amount is money in, as the list shows it.
+      expect(within(dialog).getByRole('radio', { name: 'Despesa' })).toBeChecked();
+      expect(within(dialog).getByText('+')).toBeInTheDocument();
+      expect(within(dialog).queryByText('−')).not.toBeInTheDocument();
+      expect(within(dialog).queryByText('Abate gasto da categoria')).not.toBeInTheDocument();
+
+      await pickFromSearch(dialog, 'Laz', 'Lazer');
+      expect(await within(dialog).findByText('Abate gasto da categoria')).toBeInTheDocument();
+      expect(within(dialog).getByText('+')).toBeInTheDocument();
+      expect(within(dialog).queryByText('−')).not.toBeInTheDocument();
+    });
+
+    it('adds no note to the credit with a category of income: the "+" is already right', async () => {
+      const refund = addRefund();
+      renderApp(PAGE);
+      await openRowMenu(refund.description, 'Editar');
+      const dialog = await screen.findByRole('dialog', { name: 'Editar transação' });
+
+      await pickFromSearch(dialog, 'Salár', 'Salário');
+      expect(await within(dialog).findByText(/^Conta como receita: /)).toBeInTheDocument();
+
+      expect(within(dialog).getByText('+')).toBeInTheDocument();
+      expect(within(dialog).queryByText('−')).not.toBeInTheDocument();
+      expect(within(dialog).queryByText('Abate gasto da categoria')).not.toBeInTheDocument();
+    });
+
+    it('keeps "−" and no note on a debit on a card and on an ordinary account', async () => {
+      const debit = addCardTransaction('COMPRA LOJA TESTE', -5990);
+      const user = userEvent.setup();
+      renderApp(PAGE);
+      await openRowMenu(debit.description, 'Editar');
+      const debitDialog = await screen.findByRole('dialog', { name: 'Editar transação' });
+
+      expect(within(debitDialog).getByText('−')).toBeInTheDocument();
+      expect(within(debitDialog).queryByText('+')).not.toBeInTheDocument();
+      expect(within(debitDialog).queryByText('Abate gasto da categoria')).not.toBeInTheDocument();
+
+      await user.click(within(debitDialog).getByRole('button', { name: 'Cancelar' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await openRowMenu('COMPRA DEBITO ELETROPECAS', 'Editar');
+      const dialog = await screen.findByRole('dialog', { name: 'Editar transação' });
+
+      expect(within(dialog).getByText('−')).toBeInTheDocument();
+      expect(within(dialog).queryByText('+')).not.toBeInTheDocument();
+      expect(within(dialog).queryByText('Abate gasto da categoria')).not.toBeInTheDocument();
+    });
+
     it('does not offer Receita as the type of a transaction on a card (the API refuses it)', async () => {
       const refund = addRefund();
       renderApp(PAGE);
