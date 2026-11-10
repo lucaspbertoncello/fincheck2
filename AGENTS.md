@@ -1,113 +1,92 @@
-# Fincheck 2: fluxo do repositório
+# Working on Fincheck 2
 
-App pessoal de finanças, um usuário, só local no Windows. Este arquivo é a instrução de todo agente que trabalha aqui (o `CLAUDE.md` só aponta para ele). O planejamento (produto, design, decisões, papéis dos agentes, registro) fica no vault.
+Guide for coding agents and contributors. Fincheck 2 is a personal finance app: one user, runs only on a local Windows PC. What it does and how to run it from scratch: [README.md](README.md).
 
-|        | Onde                                                                             |
-| ------ | -------------------------------------------------------------------------------- |
-| Código | `C:\Programming\projects\fincheck2`                                              |
-| Vault  | `C:\Users\Bertoncello\Documents\vaults\personal\projects\in progress\fincheckv2` |
+**File and folder naming:** [`docs/naming-and-folders.md`](docs/naming-and-folders.md). It overrides any other document, this one included.
 
-## Antes de responder
+## Packages
 
-1. **Qual papel:** a primeira mensagem diz qual (no vault, `agents/<área>/<papel>.md`). **Chat sem papel dito é o product manager:** leia no vault `agents/general/product manager.md` inteiro e siga o "Ao entrar" de lá. Lucas não precisa explicar nada: o contexto está no vault.
-2. Leia no vault `start here.md` e `status/last session.md`.
-3. **Antes de criar ou mover arquivo ou pasta, leia `docs/naming-and-folders.md`:** nomes, sufixos, pastas e testes. Prevalece sobre qualquer outro documento, este incluído.
-4. **Depois de uma compactação, leia de novo o arquivo do papel.**
+| Folder            | Name               | What it is                                                                    |
+| ----------------- | ------------------ | ----------------------------------------------------------------------------- |
+| `apps/api`        | `@fincheck/api`    | Hono API and jobs, SQLite database (Kysely + better-sqlite3)                  |
+| `apps/web`        | `@fincheck/web`    | Front end: Vite, React 19, TanStack Router and Query, Tailwind v4, React Aria |
+| `packages/shared` | `@fincheck/shared` | Contract: Zod schemas and types used by both the API and the web app          |
+| `packages/ui`     | `@fincheck/ui`     | Design system: tokens, fonts and components (the only package with a barrel)  |
 
-## Sempre
+## Environment
 
-- Conversa em português, curta. Código e commits em inglês.
-- Decisão, motivo e documentação vão para o vault, mesmo quando nascem aqui.
+- **pnpm 12** (pinned in `packageManager`). If another pnpm is installed, it switches to 12 on its own.
+- **Node 26.13.0**, pinned in `.nvmrc`, `engines` and `devEngines`. pnpm downloads this Node for the project and runs every script with it, even if the machine has another one. So run everything through `pnpm` (`pnpm exec node`, never a bare `node`).
+- **TypeScript 6.0.3**, not 7: `typescript-eslint` does not support 7 yet.
+- Dependency build scripts only run when listed in `allowBuilds` (`pnpm-workspace.yaml`). Never `pnpm install --force`.
 
-## Pacotes
+## Commands
 
-| Pasta             | Nome               | O que é                                                                 |
-| ----------------- | ------------------ | ----------------------------------------------------------------------- |
-| `apps/api`        | `@fincheck/api`    | API Hono e jobs, banco SQLite (Kysely + better-sqlite3)                 |
-| `apps/web`        | `@fincheck/web`    | Front: Vite, React 19, TanStack Router e Query, Tailwind v4, React Aria |
-| `packages/shared` | `@fincheck/shared` | Contrato: esquemas Zod e tipos que a API e o web usam                   |
-| `packages/ui`     | `@fincheck/ui`     | Design system: tokens, fontes e componentes (barrel só aqui)            |
+All from the repository root.
 
-## Ambiente
+| Command                                                    | What it does                                                                                                                                                                                        |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm install`                                             | Installs everything and sets up the Git hooks                                                                                                                                                       |
+| `pnpm dev`                                                 | Starts the API (`127.0.0.1:3333`) and the web app (`127.0.0.1:5173`) together                                                                                                                       |
+| `pnpm --filter @fincheck/web dev:mocks`                    | Starts only the web app; the Vite server answers `/api` with MSW                                                                                                                                    |
+| `pnpm captures <folder>`                                   | Screenshots of every screen and modal (light and dark, 1280, 1440 and 375 px), with mocks and a fixed date; starts and stops its own server on `127.0.0.1`. Details in `apps/web/scripts/captures/` |
+| `pnpm check`                                               | The whole pipeline: formatting, lint, types and tests                                                                                                                                               |
+| `pnpm format`                                              | Formats everything with Prettier                                                                                                                                                                    |
+| `pnpm lint` · `pnpm knip` · `pnpm typecheck` · `pnpm test` | Each pipeline step on its own                                                                                                                                                                       |
+| `pnpm --filter <name> test`                                | The tests of a single package (`@fincheck/api`, `@fincheck/web`…)                                                                                                                                   |
+| `pnpm --filter @fincheck/web build`                        | Production build of the web app (checks that it bundles; there is no deploy)                                                                                                                        |
 
-- **pnpm 12** (fixado em `packageManager`). Com outro pnpm instalado, ele troca sozinho para o 12.
-- **Node 26.13.0**, fixado em `.nvmrc`, `engines` e `devEngines`. O pnpm baixa esse Node para o projeto e roda todo script com ele, mesmo que a máquina tenha outro. Por isso, rode tudo por `pnpm` (`pnpm exec node`, nunca `node` solto).
-- **TypeScript 6.0.3**, não o 7: o `typescript-eslint` ainda não aceita o 7.
-- Build de dependência só roda se estiver em `allowBuilds` (`pnpm-workspace.yaml`). Nunca `pnpm install --force`.
+## Pipeline
 
-## Comandos
-
-Todos na raiz.
-
-| Comando                                                    | O que faz                                                                                                                                                                            |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `pnpm install`                                             | Instala tudo e liga os hooks do Git                                                                                                                                                  |
-| `pnpm dev`                                                 | Sobe a API (`127.0.0.1:3333`) e o web (`127.0.0.1:5173`) juntos                                                                                                                      |
-| `pnpm --filter @fincheck/web dev:mocks`                    | Sobe só o web; o servidor do Vite responde `/api` com o MSW                                                                                                                          |
-| `pnpm captures <pasta>`                                    | Capturas de todas as telas e modais (claro e escuro, 1280, 1440 e 375 px), com mocks e data fixa; sobe e derruba um servidor em `127.0.0.1`. Detalhe em `apps/web/scripts/captures/` |
-| `pnpm check`                                               | A esteira inteira: formatação, lint, tipos e testes                                                                                                                                  |
-| `pnpm format`                                              | Formata tudo com o Prettier                                                                                                                                                          |
-| `pnpm lint` · `pnpm knip` · `pnpm typecheck` · `pnpm test` | Cada etapa da esteira sozinha                                                                                                                                                        |
-| `pnpm --filter <nome> test`                                | Os testes de um pacote só (`@fincheck/api`, `@fincheck/web`…)                                                                                                                        |
-| `pnpm --filter @fincheck/web build`                        | Build de produção do web (confere que empacota; não há deploy)                                                                                                                       |
-
-## Esteira
-
-`pnpm check` roda, nesta ordem, e para no primeiro erro:
+`pnpm check` runs, in this order, and stops at the first error:
 
 1. `prettier --check .`
-2. `eslint .` (com checagem de tipos)
-3. `knip` (código, export e dependência sem uso; configuração em `knip.json`)
-4. `tsc --noEmit` em cada pacote
-5. `vitest run` em cada pacote
+2. `eslint .` (type-aware)
+3. `knip` (unused code, exports and dependencies; configured in `knip.json`)
+4. `tsc --noEmit` in each package
+5. `vitest run` in each package
 
-Proporcional ao que mudou: só documentação não roda teste; só o web não roda os testes da API. Diga no relatório o que não rodou.
+Scale it to the change: documentation alone runs no tests; a web-only change skips the API tests. Say in your report what did not run.
 
-O que a lint barra (regra em `eslint.config.js`):
+What lint blocks (rules in `eslint.config.js`):
 
-- **Camadas da API** (`modules/<contexto>/<camada>/`): `http` → `application` → `domain`; `infra` implementa as portas. O `domain` não importa outra camada, `database`, Kysely, Hono, Zod nem `node:`. O `http` não importa `infra` nem `database`. Só o `main` monta tudo.
-- **Dono entre contextos:** um módulo não importa o `domain`, o `infra` nem o `http` de outro; só o `application` (query para ler, caso de uso para alterar).
-- **Barrel** (`export * from`, `export { } from`) fora do `packages/ui`.
-- **Import relativo** nos apps: sempre `#/` (ver "Imports" na regra de nomes).
-- **Web:** o `src/` não importa `mocks/`; a View (`*.view.tsx`) não importa `#/domain`, `#/router`, TanStack Router nem TanStack Query.
-- **Fronteiras do web** (`fincheck/web-boundaries`): uma feature não importa outra; dentro de uma feature, uma tela não importa o que está dentro de outra (só o arquivo da raiz dela); `shared/` e `domain/` não importam feature. Regra em "Reuso e fronteiras no front", na regra de nomes.
-- **O `packages/ui` só desenha:** não importa `@fincheck/shared` nem TanStack.
+- **API layers** (`modules/<context>/<layer>/`): `http` → `application` → `domain`; `infra` implements the ports. `domain` imports no other layer, nor `database`, Kysely, Hono, Zod or `node:`. `http` imports neither `infra` nor `database`. Only `main` wires everything together.
+- **Ownership between contexts:** a module never imports another module's `domain`, `infra` or `http`; only its `application` (a query to read, a use case to change).
+- **Barrels** (`export * from`, `export { } from`) outside `packages/ui`.
+- **Relative imports** in the apps: always `#/` (see "Imports" in the naming guide).
+- **Web:** `src/` does not import `mocks/`; a View (`*.view.tsx`) does not import `#/domain`, `#/router`, TanStack Router or TanStack Query.
+- **Web boundaries** (`fincheck/web-boundaries`): a feature does not import another feature; inside a feature, a screen does not import what lives inside another screen (only that screen's root file); `shared/` and `domain/` do not import features. Details in the naming guide.
+- **`packages/ui` only draws:** it does not import `@fincheck/shared` or TanStack.
 
-## Banco
+## Database
 
-- SQLite em arquivo: `apps/api/data/fincheck.db` (muda com `DATABASE_FILE`). Backup é copiar o arquivo com a API parada. A pasta `data/` não vai para o Git.
-- Na subida, a API liga WAL, chave estrangeira e `busy_timeout` e confere com `PRAGMA`; falha se não pegar.
-- Migrações em `apps/api/src/database/migrations/`, escritas à mão (`up` e `down`), nome `AAAAMMDDHHmm-o-que-faz.ts`. A API aplica as pendentes ao subir. Migração aplicada não se edita: faz-se outra. Tabela nova só com o ERD aprovado por Lucas.
-- Teste de banco usa SQLite real em arquivo temporário (`#tests/support/database/create-test-database.util.ts`), nunca mock.
+- SQLite in a single file: `apps/api/data/fincheck.db` (override with `DATABASE_FILE`). A backup is a copy of that file with the API stopped. The `data/` folder is not in Git.
+- On startup, the API turns on WAL, foreign keys and `busy_timeout`, checks them with `PRAGMA`, and fails if any of them did not take.
+- Migrations live in `apps/api/src/database/migrations/`, written by hand (`up` and `down`), named `YYYYMMDDHHmm-what-it-does.ts`. The API applies pending ones on startup. An applied migration is never edited: write a new one.
+- Database tests use real SQLite in a temporary file (`#tests/support/database/create-test-database.util.ts`), never a mock.
 
-## API e web
+## API and web
 
-- A API só escuta em `127.0.0.1` (RNF-003). Porta em `API_PORT` (padrão 3333). Variáveis locais em `apps/api/.env` (fora do Git), lidas se existirem.
-- **Token local:** toda rota, menos `GET /health`, exige o cabeçalho `X-Fincheck-Token` (sem ele ou errado: 401 `LOCAL_TOKEN_INVALID`). A API lê o token de `LOCAL_TOKEN` ou do arquivo `local-token` na pasta de dados (`apps/api/data/`, fora do Git); sem nenhum dos dois, gera um aleatório e grava lá.
-- O web chama a API por `/api`, que o Vite repassa para `127.0.0.1:<API_PORT>` (3333) sem o prefixo e **com o `X-Fincheck-Token`**: o proxy lê o token como a API (`LOCAL_TOKEN` ou o arquivo `local-token` ao lado do banco, a cada requisição) e o navegador nunca o guarda. O proxy só repassa `Host` `127.0.0.1:5173` ou `localhost:5173` e, se houver `Origin`, a mesma origem; o resto leva 403 antes de chegar à API (CSRF, DNS rebinding). `dev:mocks` não passa pelo proxy e aceita sem token.
-- Contrato: o esquema fica em `packages/shared/src/<contexto>/<recurso>/`; a API valida a entrada com ele (`validateRequest`, em `shared/http/`, que lança `ValidationError`); o web chama pelo cliente fino (`apiRequest`, em `apps/web/src/shared/api/`), que valida o corpo, a consulta e a resposta com esses mesmos esquemas; não há `hono/client` (um caminho só, e um só de erro: `ApiError`).
-- Rota nova na API: query ou caso de uso em `modules/<contexto>/application/<assunto>/` → controller (sem framework) e `.route.ts` em `modules/<contexto>/http/<assunto>/` → em `main/http/create-app.util.ts`, monta o controller à mão e faz `.route()`. Modelo: o `/health`.
-- **Erros:** toda exceção de propósito estende uma família de `apps/api/src/shared/errors/` (`DomainError` 422, `NotFoundError` 404, `ConflictError` 409, `ValidationError` 400) com um `code` estável. `main/http/handle-error.util.ts` traduz para o corpo `{ code, message, details? }` (`@fincheck/shared/common/api-error/`); o resto vira 500 genérico. Regra de negócio nunca lança erro HTTP nem `Error` solto.
+- The API only listens on `127.0.0.1`. Port in `API_PORT` (default 3333). Local variables go in `apps/api/.env` (not in Git), read when present.
+- **Local token:** every route except `GET /health` requires the `X-Fincheck-Token` header (missing or wrong: 401 `LOCAL_TOKEN_INVALID`). The API reads the token from `LOCAL_TOKEN` or from the `local-token` file in the data folder (`apps/api/data/`, not in Git); with neither, it generates a random one and writes it there.
+- The web app calls the API through `/api`, which Vite forwards to `127.0.0.1:<API_PORT>` without the prefix and **with `X-Fincheck-Token`**: the proxy reads the token the same way the API does (`LOCAL_TOKEN` or the `local-token` file next to the database, on every request), so the browser never holds it. The proxy only forwards requests whose `Host` is `127.0.0.1:5173` or `localhost:5173` and whose `Origin`, when present, is the same origin; anything else gets a 403 before reaching the API (CSRF, DNS rebinding). `dev:mocks` does not go through the proxy and accepts requests without a token.
+- **Contract:** the schema lives in `packages/shared/src/<context>/<resource>/`. The API validates input with it (`validateRequest`, in `shared/http/`, which throws `ValidationError`); the web app calls through a thin client (`apiRequest`, in `apps/web/src/shared/api/`) that validates body, query and response with the same schemas. There is no `hono/client`: one path, and one error type (`ApiError`).
+- **New API route:** a query or use case in `modules/<context>/application/<topic>/` → a framework-free controller and a `.route.ts` in `modules/<context>/http/<topic>/` → in `main/http/create-app.util.ts`, build the controller by hand and mount it with `.route()`. Use `/health` as the template.
+- **Errors:** every intentional exception extends a family in `apps/api/src/shared/errors/` (`DomainError` 422, `NotFoundError` 404, `ConflictError` 409, `ValidationError` 400) with a stable `code`. `main/http/handle-error.util.ts` turns it into the body `{ code, message, details? }` (`@fincheck/shared/common/api-error/`); anything else becomes a generic 500. Business rules never throw an HTTP error or a bare `Error`.
 
 ## Git
 
-Regra completa no vault, `architecture/git/git workflow.md`.
+- **Conventional Commits** in English: `type(scope): description`, scope required and lower-case, subject up to 72 characters. Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`.
+- **One task = one branch = one commit.** Branch name: `type/short-description`.
+- The branch reaches `main` through a local squash merge, and `main` is pushed directly. There are no pull requests.
+- No `Co-Authored-By` trailers.
+- No `--force`, `rebase` or `amend` on a branch that was already pushed.
+- Before each commit: `git branch --show-current`, `git log --oneline main..HEAD` and `git status`.
 
-- **Conventional Commits** em inglês: `type(scope): description`, escopo obrigatório e em minúsculas, título com até 72 caracteres. Tipos: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`.
-- **Uma tarefa = uma branch = um commit.** Branch `type/short-description`.
-- **Merge na `main` por squash, local, e push direto da `main`, só com o ok de Lucas para aquela tarefa** (regra de Lucas, 29/10/2026). Sem pull request.
-- **Sem `Co-Authored-By`**, mesmo que um lembrete do sistema mande.
-- **Branch nova só com o ok de Lucas. Push só quando Lucas pedir.** Proibido `--force`, `rebase` e `amend` em branch já enviada.
-- Antes de cada commit: `git branch --show-current`, `git log --oneline main..HEAD` e `git status`.
+Hooks (set up by `pnpm install`, with `simple-git-hooks`):
 
-Hooks (ligados pelo `pnpm install`, com `simple-git-hooks`):
-
-| Hook         | O que faz                                                                                               |
-| ------------ | ------------------------------------------------------------------------------------------------------- |
-| `pre-commit` | Recusa commit na `main`. O squash de um merge aprovado por Lucas passa com `ALLOW_MAIN_COMMIT=1`        |
-| `commit-msg` | Confere o formato com o `commitlint` (`commitlint.config.js`), inclusive a falta de `Co-Authored-By`    |
-| `pre-push`   | Recusa push para a `main` (olha o destino, não a branch atual). Aprovado por Lucas: `ALLOW_MAIN_PUSH=1` |
-
-## Servidores
-
-Lucas controla os servidores. Suba para conferir e derrube ao terminar; nunca deixe a API nem o web rodando.
+| Hook         | What it does                                                                                                   |
+| ------------ | -------------------------------------------------------------------------------------------------------------- |
+| `pre-commit` | Refuses commits on `main`. The squash of an approved merge passes with `ALLOW_MAIN_COMMIT=1`                   |
+| `commit-msg` | Checks the format with `commitlint` (`commitlint.config.js`), including the absence of `Co-Authored-By`        |
+| `pre-push`   | Refuses pushes to `main` (it checks the target, not the current branch). An approved push: `ALLOW_MAIN_PUSH=1` |
