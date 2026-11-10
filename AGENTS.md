@@ -1,8 +1,23 @@
 # Fincheck 2: fluxo do repositório
 
-App pessoal de finanças, um usuário, só local no Windows. O planejamento (produto, design, decisões, papéis dos agentes) fica no vault: `C:\Users\Bertoncello\Documents\vaults\personal\projects\in progress\fincheckv2`. Comece lá por `start here.md`.
+App pessoal de finanças, um usuário, só local no Windows. Este arquivo é a instrução de todo agente que trabalha aqui (o `CLAUDE.md` só aponta para ele). O planejamento (produto, design, decisões, papéis dos agentes, registro) fica no vault.
 
-**Nome de arquivo e pasta:** `docs/naming-and-folders.md`. Prevalece sobre qualquer outro documento, este incluído.
+|        | Onde                                                                             |
+| ------ | -------------------------------------------------------------------------------- |
+| Código | `C:\Programming\projects\fincheck2`                                              |
+| Vault  | `C:\Users\Bertoncello\Documents\vaults\personal\projects\in progress\fincheckv2` |
+
+## Antes de responder
+
+1. **Qual papel:** a primeira mensagem diz qual (no vault, `agents/<área>/<papel>.md`). **Chat sem papel dito é o product manager:** leia no vault `agents/general/product manager.md` inteiro e siga o "Ao entrar" de lá. Lucas não precisa explicar nada: o contexto está no vault.
+2. Leia no vault `start here.md` e `status/last session.md`.
+3. **Antes de criar ou mover arquivo ou pasta, leia `docs/naming-and-folders.md`:** nomes, sufixos, pastas e testes. Prevalece sobre qualquer outro documento, este incluído.
+4. **Depois de uma compactação, leia de novo o arquivo do papel.**
+
+## Sempre
+
+- Conversa em português, curta. Código e commits em inglês.
+- Decisão, motivo e documentação vão para o vault, mesmo quando nascem aqui.
 
 ## Pacotes
 
