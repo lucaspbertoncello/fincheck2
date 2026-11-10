@@ -3,7 +3,9 @@ import { HttpResponse, http } from 'msw';
 import { describe, expect, it, vi } from 'vitest';
 
 import { server } from '#mocks/setup/server.util.ts';
-import { CURRENT_MONTH } from '#mocks/support/dates/mock-clock.store.ts';
+import { db } from '#mocks/state/mock-database.store.ts';
+import { makeTransactionRecord } from '#mocks/state/seed/make-transaction-record.util.ts';
+import { CURRENT_MONTH, TODAY } from '#mocks/support/dates/mock-clock.store.ts';
 import { renderApp } from '#tests/support/app/render-app.util.tsx';
 import { callApi } from '#tests/support/mocks/call-api.util.ts';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
@@ -18,6 +20,7 @@ const LONG_WAIT = { timeout: 5000 };
 
 // The seed has two friend debts: Rafa (you owe R$ 420,00, R$ 150,00 paid: R$ 270,00 left) and
 // Júlia (she owes R$ 116,00, R$ 58,00 paid: R$ 58,00 left; it came from a dinner transaction).
+// A second Pix of R$ 58,00 from Júlia is in the account, found for the debt and not linked yet.
 
 async function openFriends(search = '') {
   renderApp(`${URL}${search}`);
@@ -287,6 +290,133 @@ describe('FriendListPage', () => {
     expect(dialog.textContent).toContain('A dívida com Bia some e não dá para desfazer.');
     expect(dialog.textContent).not.toContain('origem');
     expect(dialog.textContent).not.toContain('pagamentos ligados');
+  });
+
+  describe('the Pix found and not linked yet', () => {
+    // The seed Pix of Júlia that no debt has among its payments.
+    function foundPixDay(): string {
+      const pix = db.transactions.find(
+        (tx) =>
+          tx.description === 'PIX JULIA TAVARES' &&
+          !db.bills.some((bill) =>
+            bill.payments.some((payment) => payment.transactionId === tx.id),
+          ),
+      );
+      if (!pix) throw new Error('The seed has no Pix of Júlia to link');
+      return `${pix.occurredOn.slice(8, 10)}/${pix.occurredOn.slice(5, 7)}`;
+    }
+
+    it('flags the person with "1 Pix a conferir" and keeps the balance as registered', async () => {
+      await openFriends();
+
+      expect(personRow('Júlia')).toHaveTextContent('1 dívida em aberto · 1 Pix a conferir');
+      expect(personRow('Júlia')).toHaveTextContent('te deve');
+      expect(personRow('Júlia')).toHaveTextContent('58,00');
+      expect(personRow('Rafa')).not.toHaveTextContent('Pix');
+    });
+
+    it('shows, inside the person, the Pix found with its day, its value and "Vincular"', async () => {
+      await openFriends();
+
+      const group = await openPerson('Júlia');
+
+      const line = await within(group).findByText(`Pix achado em ${foundPixDay()}`);
+      const row = line.closest('li') as HTMLElement;
+      expect(row).toHaveTextContent('58,00');
+      expect(row).toHaveTextContent('Para "Jantar na Nonna", ainda sem vínculo');
+      expect(within(row).getByRole('button', { name: 'Vincular' })).toBeVisible();
+      // The Pix comes before the debts of the person
+      expect(within(group).getAllByRole('listitem')[0]).toBe(row);
+    });
+
+    it('links it with the "Vincular" of A pagar e receber: the line goes and the balance follows', async () => {
+      await openFriends();
+      const group = await openPerson('Júlia');
+      fireEvent.click(await within(group).findByRole('button', { name: 'Vincular' }));
+
+      expect(await screen.findByText('Júlia te deve: pagamento vinculado.')).toBeInTheDocument();
+      await waitFor(() => expect(within(group).queryByText(/^Pix achado/)).toBeNull());
+      expect(within(group).queryByRole('button', { name: 'Vincular' })).toBeNull();
+      await waitFor(() => expect(personRow('Júlia')).toHaveTextContent('quite'));
+      expect(personRow('Júlia')).not.toHaveTextContent('Pix a conferir');
+    });
+
+    it('has a line for each Pix when the person has more than one', async () => {
+      const seeded = db.transactions.find((tx) => tx.description === 'PIX JULIA TAVARES');
+      if (!seeded) throw new Error('The seed has no Pix of Júlia');
+      db.transactions.push(
+        makeTransactionRecord({
+          accountId: seeded.accountId,
+          method: 'pix',
+          description: 'PIX JULIA TAVARES',
+          amountCents: 3_000,
+          occurredOn: TODAY,
+          counterparty: 'JULIA TAVARES',
+        }),
+      );
+      const created = await callApi('POST', '/bills', {
+        direction: 'receivable',
+        kind: 'friend',
+        description: 'Uber da volta',
+        counterparty: 'Júlia',
+        amountCents: 3_000,
+        dueOn: TODAY,
+      });
+      expect(created.status).toBe(201);
+      await openFriends();
+
+      expect(personRow('Júlia')).toHaveTextContent('2 Pix a conferir');
+      const group = await openPerson('Júlia');
+      expect(await within(group).findAllByRole('button', { name: 'Vincular' })).toHaveLength(2);
+      expect(within(group).getAllByText(/^Pix achado/)).toHaveLength(2);
+      expect(group).toHaveTextContent('Para "Uber da volta", ainda sem vínculo');
+    });
+
+    it('shows nothing of it on a person with no Pix found', async () => {
+      await openFriends();
+
+      const group = await openPerson('Rafa');
+
+      expect(within(group).queryByText(/^Pix achado/)).toBeNull();
+      expect(within(group).queryByRole('button', { name: 'Vincular' })).toBeNull();
+    });
+
+    it('works without the lines when the agenda fails to load', async () => {
+      server.use(
+        http.get('/api/agenda', () =>
+          HttpResponse.json({ code: 'BOOM', message: 'x' }, { status: 500 }),
+        ),
+      );
+      await openFriends();
+
+      expect(personRow('Júlia')).toHaveTextContent('58,00');
+      expect(personRow('Júlia')).toHaveTextContent('1 dívida em aberto');
+      expect(personRow('Júlia')).not.toHaveTextContent('Pix a conferir');
+      const group = await openPerson('Júlia');
+      expect(within(group).getByText('Jantar na Nonna')).toBeInTheDocument();
+      expect(within(group).queryByRole('button', { name: 'Vincular' })).toBeNull();
+      expect(screen.queryByText('Tentar de novo')).toBeNull();
+    });
+
+    it('says what went wrong when the link fails, and keeps the line', async () => {
+      await openFriends();
+      const group = await openPerson('Júlia');
+      server.use(
+        http.post('/api/bills/:id/payments', () =>
+          HttpResponse.json(
+            { code: 'BILL_TRANSACTION_ALREADY_LINKED', message: 'x' },
+            { status: 409 },
+          ),
+        ),
+      );
+
+      fireEvent.click(await within(group).findByRole('button', { name: 'Vincular' }));
+
+      expect(
+        await screen.findByText('Essa transação já está ligada a outra conta.'),
+      ).toBeInTheDocument();
+      expect(within(group).getByRole('button', { name: 'Vincular' })).toBeInTheDocument();
+    });
   });
 
   it('has no month picker: the debts do not depend on the month', async () => {

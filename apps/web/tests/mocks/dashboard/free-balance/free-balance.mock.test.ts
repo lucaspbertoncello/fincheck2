@@ -67,7 +67,12 @@ describe('dashboard routes', () => {
     expect(bradesco?.paymentFound).not.toBeNull();
     expect(bradesco?.paymentFound?.description).toEqual(expect.any(String));
     expect(bradesco?.invoiceState).toBe('closed');
-    expect(view.friendsReceivable).toMatchObject({ peopleCount: 1, totalCents: 5800 });
+    // Júlia owes R$ 58,00 more, and the Pix that paid it is found and not linked: the agenda
+    // counts it as received (the Amigos tab, which reads what is registered, still shows R$ 58,00).
+    const julia = view.receivable.find((item) => item.counterparty === 'Júlia');
+    expect(julia).toMatchObject({ presumedPaidCents: 5800, remainingCents: 0 });
+    expect(julia?.presumedTransactionId).not.toBeNull();
+    expect(view.friendsReceivable).toMatchObject({ peopleCount: 1, totalCents: 0 });
     expect(view.undated.map((item) => item.title)).toEqual(['Conserto do notebook']);
     expect(view.settled.some((item) => item.title === 'Seguro do celular')).toBe(true);
   });
@@ -94,7 +99,8 @@ describe('dashboard routes', () => {
     const recurrences = recurrenceSummarySchema.parse(
       (await callApi('GET', `/recurrences/summary?month=${CURRENT_MONTH}`)).json,
     );
-    expect(summary.income.expectedCents).toBe(recurrences.incomes.expectedCents);
+    // Plus the Pix of Júlia found and not linked yet: income of the month that no occurrence took in.
+    expect(summary.income.expectedCents).toBe(recurrences.incomes.expectedCents + 5800);
   });
 
   it('moves the Livre when a bill is paid and when a transaction is created', async () => {

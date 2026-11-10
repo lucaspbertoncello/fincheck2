@@ -23,6 +23,8 @@ export function FriendListView({
   onDebtEdit,
   onDebtDelete,
   onDebtRegister,
+  onFoundPixLink,
+  isLinkingPix,
 }: FriendListViewProps) {
   if (status === 'loading') return <ContentSkeleton variant="list" />;
   if (status === 'error') return <LoadErrorState what="as dívidas com amigos" onRetry={onRetry} />;
@@ -69,6 +71,8 @@ export function FriendListView({
                 onDebtEdit={onDebtEdit}
                 onDebtDelete={onDebtDelete}
                 onDebtRegister={onDebtRegister}
+                onFoundPixLink={onFoundPixLink}
+                isLinkingPix={isLinkingPix}
               />
             ))}
           </ul>

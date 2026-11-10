@@ -81,6 +81,8 @@ describe('GET /agenda against the API', () => {
       ...structuredClone(friend),
       id: newId(),
       counterparty: friend.counterparty.toUpperCase(),
+      // No due day: the Pix the seed found for the first one is not presumed for this copy too.
+      dueOn: null,
     });
 
     const after = await agenda();

@@ -1,6 +1,7 @@
 import { Button, CategoryIcon, Collapse, Icon, ListRow, Money } from '@fincheck/ui';
 import { useEffect, useId, useRef } from 'react';
 
+import { FriendFoundPixRow } from '#/features/bills/friend-list/components/friend-found-pix-row.component.tsx';
 import { FriendDebtRow } from '#/features/bills/friend-list/components/friend-debt-row.component.tsx';
 import { MenuSpace } from '#/shared/components/lists/menu-space.component.tsx';
 import type {
@@ -20,6 +21,8 @@ type FriendRowProps = {
   onDebtEdit: FriendListViewProps['onDebtEdit'];
   onDebtDelete: FriendListViewProps['onDebtDelete'];
   onDebtRegister: FriendListViewProps['onDebtRegister'];
+  onFoundPixLink: FriendListViewProps['onFoundPixLink'];
+  isLinkingPix: boolean;
 };
 
 const MARK_TYPE = { 'owes-me': 'income', 'i-owe': 'expense', even: undefined } as const;
@@ -30,6 +33,7 @@ const VALUE_TONE = { 'owes-me': 'income', 'i-owe': 'expense', even: 'faded' } as
  * opens the debts, with a chevron after it), how many debts as the detail, and the balance at the
  * right end over "te deve", "você deve" or "quite". The debts unfold under the row with `Collapse`,
  * on the same bill row as A pagar e receber, followed by "Nova dívida" with the person filled in.
+ * A Pix found and not linked yet comes first, with its "Vincular".
  * The empty box where the "…" would be keeps the balance in the column of the debts below it.
  */
 export function FriendRow({
@@ -42,6 +46,8 @@ export function FriendRow({
   onDebtEdit,
   onDebtDelete,
   onDebtRegister,
+  onFoundPixLink,
+  isLinkingPix,
 }: FriendRowProps) {
   const panelId = useId();
   const itemRef = useRef<HTMLLIElement>(null);
@@ -91,6 +97,14 @@ export function FriendRow({
       <Collapse isOpen={isOpen} id={panelId} contentClassName="pb-s12">
         <div role="group" aria-label={`Dívidas de ${friend.name}`}>
           <ul className="m-0 flex list-none flex-col divide-y divide-line border-t border-line p-0">
+            {friend.foundPixes.map((pix) => (
+              <FriendFoundPixRow
+                key={pix.billId}
+                pix={pix}
+                onLink={onFoundPixLink}
+                isLinking={isLinkingPix}
+              />
+            ))}
             {friend.debts.map((debt) => (
               <FriendDebtRow
                 key={debt.billId}

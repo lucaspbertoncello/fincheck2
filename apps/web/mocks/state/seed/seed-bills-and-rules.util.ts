@@ -100,6 +100,21 @@ export function seedBillsAndRules(database: MockState.Database, ids: SeedIds): v
     counterparty: 'JULIA TAVARES',
   });
   database.transactions.push(juliaPix);
+  // The other half arrived by Pix too, and nobody tied it to the debt yet: the agenda counts it as
+  // received ("pago, falta vincular") while the Amigos tab, which reads what is registered, still
+  // shows R$ 58,00 and flags the Pix to check.
+  database.transactions.push(
+    makeTransactionRecord({
+      accountId: acc.nuConta,
+      method: 'pix',
+      description: 'PIX JULIA TAVARES',
+      amountCents: 5800,
+      occurredOn: cur(1),
+      counterparty: 'JULIA TAVARES',
+      // Already sorted by hand, so it does not join the "Para revisar" queue.
+      categoryId: cat.outrasReceitas,
+    }),
+  );
   database.bills.push({
     id: newId(),
     direction: 'receivable',
@@ -107,7 +122,7 @@ export function seedBillsAndRules(database: MockState.Database, ids: SeedIds): v
     description: 'Jantar na Nonna',
     counterparty: 'Júlia',
     amountCents: 11_600,
-    dueOn: null,
+    dueOn: ahead(6),
     categoryId: null,
     origin: {
       transactionId: dinner.id,

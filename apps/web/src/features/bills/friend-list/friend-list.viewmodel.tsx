@@ -14,6 +14,8 @@ import { presentFriend } from '#/features/bills/friend-list/utils/present-friend
 import { useBillSearch } from '#/features/bills/hooks/use-bill-search.hook.ts';
 import { useDebtActions } from '#/features/bills/hooks/use-debt-actions.hook.ts';
 import { PaymentRegisterDialog } from '#/features/bills/payment-register/payment-register.viewmodel.tsx';
+import { useFoundPayment } from '#/features/bills/hooks/use-found-payment.hook.ts';
+import { describeApiError } from '#/features/bills/utils/describe-api-error.util.ts';
 import { useScreenSearch } from '#/shared/hooks/use-screen-search.hook.ts';
 import { getBusinessDate } from '#/shared/utils/date/get-business-date.util.ts';
 
@@ -21,7 +23,8 @@ import { getBusinessDate } from '#/shared/utils/date/get-business-date.util.ts';
  * Recorrentes › Amigos: the friend debts by person. It reads them all (settled included), nets
  * each person's balance, opens the person of `?person=` and mounts the debt modals: new (`?new=debt`,
  * with `?friend=` for a person already chosen), edit (`?debt=`), the payment (`?pay=bill:<id>`) and
- * the delete confirmation.
+ * the delete confirmation. The agenda is a complement: a Pix it found for a debt and not yet
+ * linked shows as a line inside the person, with the "Vincular" of A pagar e receber.
  */
 export function FriendList() {
   const model = useFriendListModel();
@@ -29,6 +32,7 @@ export function FriendList() {
   const billSearch = useBillSearch();
   const [actionError, setActionError] = useState<string | null>(null);
   const debts = useDebtActions({ onError: setActionError });
+  const foundPayment = useFoundPayment();
 
   const bills = model.bills.data?.items ?? [];
   const balances = computeFriendBalances(bills);
@@ -44,7 +48,15 @@ export function FriendList() {
     ]),
   );
   const today = getBusinessDate();
-  const people = balances.map((friend) => presentFriend(friend, today, categoryIcons));
+  const people = balances.map((friend) =>
+    presentFriend(
+      friend,
+      today,
+      categoryIcons,
+      model.foundPayments.get(friend.key) ?? [],
+      model.transactions,
+    ),
+  );
   const payBill = billSearch.payKey
     ? bills.find((bill) => `bill:${bill.id}` === billSearch.payKey)
     : undefined;
@@ -56,6 +68,19 @@ export function FriendList() {
       : people.length === 0
         ? 'empty'
         : 'ready';
+
+  async function linkFoundPix(billId: string) {
+    const found = [...model.foundPayments.values()].flat().find((entry) => entry.billId === billId);
+    if (!found) return;
+    setActionError(null);
+
+    try {
+      // The same link A pagar e receber gives that debt: it confirms the Pix the API found.
+      await foundPayment.link(found.item);
+    } catch (error) {
+      setActionError(describeApiError(error));
+    }
+  }
 
   return (
     <>
@@ -76,6 +101,8 @@ export function FriendList() {
         }}
         onDebtDelete={(target) => void debts.askDelete(target)}
         onDebtRegister={(billId) => billSearch.openPayment(`bill:${billId}`)}
+        onFoundPixLink={(billId) => void linkFoundPix(billId)}
+        isLinkingPix={foundPayment.isPending}
       />
       <DebtFormModal />
       <PaymentRegisterDialog

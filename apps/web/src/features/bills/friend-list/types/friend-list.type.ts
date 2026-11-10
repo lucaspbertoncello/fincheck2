@@ -22,6 +22,16 @@ export type FriendDebtRowData = {
   registerLabel: string | undefined;
 };
 
+/** A Pix the system found for a debt of the person and that is not linked yet. */
+export type FriendFoundPixRowData = {
+  billId: string;
+  /** "Pix achado em 05/11"; without the date until the transaction is read. */
+  title: string;
+  /** What the Pix pays: the debt it is for. */
+  detail: string;
+  amountCents: number;
+};
+
 /** One person of the Amigos tab. */
 export type FriendRowData = {
   key: string;
@@ -34,6 +44,8 @@ export type FriendRowData = {
   /** "2 dívidas em aberto", "1 em aberto · 1 quitada". */
   detail: string;
   debts: FriendDebtRowData[];
+  /** The Pix found and not linked yet, one per debt; empty for most people. */
+  foundPixes: FriendFoundPixRowData[];
 };
 
 export type FriendListViewProps = {
@@ -54,4 +66,8 @@ export type FriendListViewProps = {
   onDebtEdit: (billId: string) => void;
   onDebtDelete: (target: { billId: string; person: string }) => void;
   onDebtRegister: (billId: string) => void;
+  /** "Vincular" on a Pix found: turns it into the payment of that debt. */
+  onFoundPixLink: (billId: string) => void;
+  /** A link is in flight: the buttons wait. */
+  isLinkingPix: boolean;
 };
