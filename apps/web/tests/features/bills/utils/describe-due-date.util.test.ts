@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { describeDueDate } from '#/features/bills/bill-list/utils/describe-due-date.util.ts';
+import { describeDueDate } from '#/features/bills/utils/describe-due-date.util.ts';
 
 const base = { dueOn: '2026-10-25', state: 'upcoming', settledOn: null, flow: 'out' } as const;
 

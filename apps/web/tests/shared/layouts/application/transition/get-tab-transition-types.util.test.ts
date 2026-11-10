@@ -36,6 +36,13 @@ describe('getTabTransitionTypes', () => {
       'tab',
       'back',
     ]);
+    expect(
+      getTabTransitionTypes(change('/recurrences/subscriptions', '/recurrences/friends')),
+    ).toEqual(['tab', 'fwd']);
+    expect(getTabTransitionTypes(change('/recurrences/friends', '/recurrences/bills'))).toEqual([
+      'tab',
+      'back',
+    ]);
     expect(getTabTransitionTypes(change('/categories', '/categories/rules'))).toEqual([
       'tab',
       'fwd',

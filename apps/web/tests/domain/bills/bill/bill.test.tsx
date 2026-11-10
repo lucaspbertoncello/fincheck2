@@ -3,6 +3,9 @@ import { describe, expect, it } from 'vitest';
 
 import { useBillCounterparties } from '#/domain/bills/bill/hooks/use-bill-counterparties.hook.ts';
 import { useBill } from '#/domain/bills/bill/hooks/use-bill.hook.ts';
+import { useBills } from '#/domain/bills/bill/hooks/use-bills.hook.ts';
+import { useDeleteBill } from '#/domain/bills/bill/hooks/use-delete-bill.hook.ts';
+import { useUpdateBill } from '#/domain/bills/bill/hooks/use-update-bill.hook.ts';
 import { useCreateBill } from '#/domain/bills/bill/hooks/use-create-bill.hook.ts';
 import { useCreateBillPayment } from '#/domain/bills/bill-payment/hooks/use-create-bill-payment.hook.ts';
 import { useDeleteBillPayment } from '#/domain/bills/bill-payment/hooks/use-delete-bill-payment.hook.ts';
@@ -19,6 +22,41 @@ describe('bills domain', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(result.current.data?.items.map((item) => item.name)).toContain('Rafa');
+  });
+
+  it('lists the friend debts, and an edit and a delete reach the list', async () => {
+    const { wrapper } = createQueryWrapper();
+    const { result } = renderHook(
+      () => ({
+        friends: useBills({ kind: 'friend', status: 'all' }),
+        update: useUpdateBill(),
+        remove: useDeleteBill(),
+      }),
+      { wrapper },
+    );
+    await waitFor(() => expect(result.current.friends.isSuccess).toBe(true));
+    const [first, second] = result.current.friends.data?.items ?? [];
+    expect(result.current.friends.data?.items.every((bill) => bill.kind === 'friend')).toBe(true);
+    if (!first || !second) throw new Error('The seed has two friend debts');
+
+    await act(async () => {
+      await result.current.update.mutateAsync({
+        id: first.id,
+        body: { description: 'Outro nome' },
+      });
+    });
+    await waitFor(() =>
+      expect(
+        result.current.friends.data?.items.find((bill) => bill.id === first.id)?.description,
+      ).toBe('Outro nome'),
+    );
+
+    await act(async () => {
+      await result.current.remove.mutateAsync(second.id);
+    });
+    await waitFor(() =>
+      expect(result.current.friends.data?.items.map((bill) => bill.id)).toEqual([first.id]),
+    );
   });
 
   it('creates a bill, pays it and undoes the payment; the bill and the Livre follow', async () => {

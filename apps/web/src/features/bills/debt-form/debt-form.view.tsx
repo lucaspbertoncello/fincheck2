@@ -14,10 +14,7 @@ import { CandidateRowsField } from '#/features/bills/components/candidate-rows-f
 import { CategoryChipsField } from '#/features/bills/components/category-chips-field.component.tsx';
 import { DueDateField } from '#/features/bills/components/due-date-field.component.tsx';
 import { PersonField } from '#/features/bills/components/person-field.component.tsx';
-import type {
-  DebtCreateViewProps,
-  DebtNote,
-} from '#/features/bills/debt-create/debt-create.model.ts';
+import type { DebtFormViewProps, DebtNote } from '#/features/bills/debt-form/debt-form.model.ts';
 import { NO_CATEGORY_ID } from '#/features/bills/hooks/use-category-options.hook.ts';
 import { formatDayMonth } from '#/features/bills/utils/format-day-month.util.ts';
 
@@ -54,9 +51,10 @@ function DebtNoteText({ note }: { note: DebtNote }) {
   );
 }
 
-export function DebtCreateView({
+export function DebtFormView({
   isOpen,
   onClose,
+  isEdit,
   mode,
   onModeChange,
   counterparty,
@@ -76,7 +74,7 @@ export function DebtCreateView({
   submitError,
   isSaving,
   onSubmit,
-}: DebtCreateViewProps) {
+}: DebtFormViewProps) {
   const isOwe = mode === 'owe';
   const selectedOrigin = origin?.options.find((option) => option.transactionId === origin.selected);
   const moreSummary = [
@@ -92,8 +90,12 @@ export function DebtCreateView({
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
-      title="Dívida com amigo"
-      description="Dinheiro que você deve ou que devem a você."
+      title={isEdit ? 'Editar dívida com amigo' : 'Dívida com amigo'}
+      description={
+        isEdit
+          ? 'Ajuste a pessoa, o valor ou a data. O sentido da dívida não muda.'
+          : 'Dinheiro que você deve ou que devem a você.'
+      }
       submitLabel="Salvar dívida"
       onSubmit={onSubmit}
       isSubmitting={isSaving}
@@ -106,6 +108,7 @@ export function DebtCreateView({
               label="Sentido da dívida"
               variant="segmented"
               options={MODES}
+              isDisabled={isEdit}
               value={mode}
               onChange={(key) => onModeChange(key === 'owed' ? 'owed' : 'owe')}
             />
@@ -152,7 +155,7 @@ export function DebtCreateView({
             onChange={categories.onChange}
           />
         ) : null}
-        {origin ? (
+        {origin && !isEdit ? (
           <CandidateRowsField
             label="Transação que você pagou"
             tone="expense"
@@ -171,16 +174,18 @@ export function DebtCreateView({
             onChange={onDueOnChange}
             error={errors.dueOn}
           />
-          <CandidateRowsField
-            label={isOwe ? 'Pix de volta já feito' : 'Pix já recebido'}
-            tone={isOwe ? 'expense' : 'income'}
-            optional
-            options={pix.options}
-            value={pix.selected}
-            onChange={pix.onSelect}
-            isLoading={pix.isLoading}
-            emptyText="Nenhum Pix recente encontrado. Você liga depois, quando o Pix acontecer."
-          />
+          {isEdit ? null : (
+            <CandidateRowsField
+              label={isOwe ? 'Pix de volta já feito' : 'Pix já recebido'}
+              tone={isOwe ? 'expense' : 'income'}
+              optional
+              options={pix.options}
+              value={pix.selected}
+              onChange={pix.onSelect}
+              isLoading={pix.isLoading}
+              emptyText="Nenhum Pix recente encontrado. Você liga depois, quando o Pix acontecer."
+            />
+          )}
         </FormModalMore>
       </FormModalSplit>
     </FormModal>

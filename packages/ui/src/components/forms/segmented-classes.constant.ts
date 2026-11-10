@@ -23,5 +23,14 @@ export const SEGMENTED_ITEM_FIT_CLASS = `${SEGMENTED_ITEM_BASE_CLASS} flex-auto`
  */
 export const SEGMENTED_ITEM_COMPACT_CLASS = `${SEGMENTED_ITEM_FIT_CLASS.replace('px-s12', 'px-s8')} max-lg:flex-col max-lg:gap-s4 max-lg:py-s8`;
 
+/**
+ * Four or more links that must fit on the phone without scrolling (`dense`, the scrolling track is only the last resort): the icon goes away, the
+ * label drops to 12 px and the side padding to 4 px, and the item grows to fill the track but never
+ * shrinks below its label. The four labels of Recorrentes measure 317 px at 14 px (Inter Tight 600),
+ * so 272 px at 12 px, plus 4 x 8 = 32 px of padding: 304 px, inside the 328 px of the track at 375 px
+ * and the 318 px at 360 px. From the desktop, the same as the others.
+ */
+export const SEGMENTED_ITEM_DENSE_CLASS = `${SEGMENTED_ITEM_FIT_CLASS} max-lg:flex-[1_0_auto] max-lg:px-s4 max-lg:text-caption`;
+
 export const SEGMENTED_ITEM_ACTIVE_CLASS = 'text-fg-primary';
 export const SEGMENTED_ITEM_INACTIVE_CLASS = 'text-fg-tertiary data-[hovered]:text-fg-primary';

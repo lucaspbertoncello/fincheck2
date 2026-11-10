@@ -82,3 +82,47 @@ describe('SegmentedNav with three links', () => {
     expect(html).toContain('px-s12');
   });
 });
+
+describe('SegmentedNav with four links (dense)', () => {
+  const FOUR = [
+    { key: 'a', label: 'Recorrências', href: '/a' },
+    { key: 'b', label: 'A pagar e receber', href: '/b' },
+    { key: 'c', label: 'Assinaturas', href: '/c' },
+    { key: 'd', label: 'Amigos', href: '/d' },
+  ];
+
+  it('with `dense`: no icons, 12 px labels, 4 px of padding and items that never shrink, on the phone', () => {
+    const items = FOUR.map((item) => ({ ...item, icon: 'calendar' as const }));
+    const html = renderToStaticMarkup(
+      <SegmentedNav items={items} activeKey="a" label="Seções" dense />,
+    );
+
+    expect(count(html, 'max-lg:hidden')).toBe(4);
+    expect(count(html, 'max-lg:text-caption')).toBe(4);
+    expect(count(html, 'max-lg:px-s4')).toBe(4);
+    expect(count(html, 'max-lg:flex-[1_0_auto]')).toBe(4);
+    expect(html).not.toContain('max-lg:flex-col');
+    expect(html).not.toContain('max-lg:flex-none');
+    // The scroll stays as the last resort
+    expect(html).toContain('max-lg:overflow-x-auto');
+    expect(html).toContain('whitespace-nowrap');
+  });
+
+  it('without `dense` keeps the icons and the 14 px labels', () => {
+    const items = FOUR.map((item) => ({ ...item, icon: 'calendar' as const }));
+    const html = renderToStaticMarkup(<SegmentedNav items={items} activeKey="a" label="Seções" />);
+
+    expect(html).not.toContain('max-lg:hidden');
+    expect(html).not.toContain('max-lg:text-caption');
+    // The scrolling track belongs to `dense` only
+    expect(html).not.toContain('max-lg:overflow-x-auto');
+  });
+
+  it('does not fade the edge before it knows there is more to scroll to', () => {
+    const html = renderToStaticMarkup(
+      <SegmentedNav items={FOUR} activeKey="a" label="Seções" dense />,
+    );
+
+    expect(html).not.toContain('data-more');
+  });
+});

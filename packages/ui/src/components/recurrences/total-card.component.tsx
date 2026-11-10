@@ -177,7 +177,18 @@ function ExpandableTotalCard({
           {items.map((item) => (
             <li key={item.key} className="flex items-center justify-between gap-s16 py-s12">
               <span className="min-w-0">
-                <span className="block text-list text-fg-primary">{item.label}</span>
+                {item.href ? (
+                  <Link
+                    href={item.href}
+                    // Padding grows the tap area without moving the line (the negative margin takes it back).
+                    className="focus-ring -mx-s4 -my-s4 flex w-fit cursor-pointer items-center rounded-input px-s4 py-s4 text-list text-fg-primary no-underline underline-offset-4 data-[focus-visible]:underline data-[hovered]:underline"
+                  >
+                    {item.label}
+                    {item.srHint ? <span className="sr-only">, {item.srHint}</span> : null}
+                  </Link>
+                ) : (
+                  <span className="block text-list text-fg-primary">{item.label}</span>
+                )}
                 {item.note ? (
                   <span className="block text-meta text-fg-secondary">{item.note}</span>
                 ) : null}

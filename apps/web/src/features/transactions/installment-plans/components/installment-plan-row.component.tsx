@@ -1,6 +1,7 @@
 import { CategoryIcon, Chip, Collapse, Icon, ListRow, Money, OverflowMenu } from '@fincheck/ui';
 import { useId, useState } from 'react';
 
+import { MenuSpace } from '#/shared/components/lists/menu-space.component.tsx';
 import type { InstallmentPlanRowData } from '#/features/transactions/installment-plans/types/installment-plans.type.ts';
 
 type InstallmentPlanRowProps = {
@@ -73,7 +74,7 @@ export function InstallmentPlanRow({ plan, first, onEdit, onDelete }: Installmen
         }
         menu={
           plan.isFromBank ? (
-            <span aria-hidden="true" className="block size-ctl-touch lg:size-ctl-tab" />
+            <MenuSpace />
           ) : (
             <OverflowMenu
               label={`Ações de ${plan.name}`}

@@ -11,6 +11,7 @@ const GROUPS = {
       { key: 'recurrences', label: 'Recorrências', icon: 'repeat' },
       { key: 'bills', label: 'A pagar e receber', icon: 'calendar' },
       { key: 'subscriptions', label: 'Assinaturas', icon: 'subscription' },
+      { key: 'friends', label: 'Amigos', icon: 'people' },
     ],
   },
   categories: {
@@ -26,7 +27,7 @@ type ScreenSubNavProps = {
   group: keyof typeof GROUPS;
 };
 
-/** Sub-tabs under the header: Recorrências | A pagar e receber | Assinaturas, Categorias | Regras. */
+/** Sub-tabs under the header: Recorrências | A pagar e receber | Assinaturas | Amigos, Categorias | Regras. */
 export function ScreenSubNav({ group }: ScreenSubNavProps) {
   const { screen, monthParam } = useActiveScreen();
   const { label, items } = GROUPS[group];
@@ -37,5 +38,13 @@ export function ScreenSubNav({ group }: ScreenSubNavProps) {
     href: buildHref(SCREENS[item.key].path, monthParam),
   }));
 
-  return <SegmentedNav items={links} activeKey={screen.key} label={label} />;
+  // Recorrentes has four tabs: on the phone they fit only without icons and with tighter labels.
+  return (
+    <SegmentedNav
+      items={links}
+      activeKey={screen.key}
+      label={label}
+      dense={group === 'recurrences'}
+    />
+  );
 }

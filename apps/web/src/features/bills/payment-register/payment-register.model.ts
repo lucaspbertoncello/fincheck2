@@ -1,4 +1,15 @@
+import type { Agenda } from '@fincheck/shared/dashboard/agenda/agenda.type.ts';
+
 import type { PaymentCandidateOption } from '#/features/bills/types/payment-candidate-option.type.ts';
+
+/**
+ * What the dialog needs of the thing being paid: an agenda item has all of it, and so does the
+ * item a friend debt is turned into on the Amigos tab.
+ */
+export type PaymentRegisterItem = Pick<
+  Agenda.Item,
+  'key' | 'source' | 'title' | 'flow' | 'amountCents' | 'paidCents' | 'remainingCents'
+>;
 
 export type PaymentRegisterViewProps = {
   isOpen: boolean;

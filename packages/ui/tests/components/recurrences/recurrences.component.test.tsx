@@ -121,6 +121,38 @@ describe('BillRow', () => {
     expect(html).toContain('Registrar pagamento');
   });
 
+  it('puts the "…" menu it is given after the value, on the standard row', () => {
+    const html = renderToStaticMarkup(
+      <BillRow
+        name="Ingresso do show"
+        icon="debt"
+        flow="expense"
+        status="open"
+        dueText="Vence 27/10"
+        amountCents={42000}
+        menu={<button aria-label="Ações de Ingresso do show">…</button>}
+      />,
+    );
+
+    expect(html).toContain('aria-label="Ações de Ingresso do show"');
+    expect(html.indexOf('420,00')).toBeLessThan(html.indexOf('Ações de Ingresso do show'));
+  });
+
+  it('has no menu box when none is given', () => {
+    const html = renderToStaticMarkup(
+      <BillRow
+        name="Internet Fibra"
+        icon="wifi"
+        flow="expense"
+        status="open"
+        dueText="Vence 27/10"
+        amountCents={11990}
+      />,
+    );
+
+    expect(html).not.toContain('col-start-4');
+  });
+
   it('puts a second button beside the payment one, and keeps it on a settled row', () => {
     const open = renderToStaticMarkup(
       <BillRow

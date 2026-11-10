@@ -24,6 +24,8 @@ export const SCREEN_TARGETS: CaptureTarget[] = [
   { name: 'recurrences incomes', path: '/recurrences?flow=income', kind: 'screen' },
   { name: 'bills', path: '/recurrences/bills', kind: 'screen' },
   { name: 'subscriptions', path: '/recurrences/subscriptions', kind: 'screen' },
+  { name: 'friends', path: '/recurrences/friends', kind: 'screen' },
+  { name: 'friends person open', path: '/recurrences/friends?person=Rafa', kind: 'screen' },
   { name: 'accounts', path: '/accounts', kind: 'screen' },
   {
     name: 'invoice open',

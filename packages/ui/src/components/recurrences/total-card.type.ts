@@ -4,6 +4,10 @@ export type TotalCardItem = {
   /** Under the label: "vence 25/10". */
   note?: string;
   cents: number;
+  /** Makes the label a link to where the line comes from (the person on the friends tab). */
+  href?: string;
+  /** Said after the label by a screen reader only, so the link name keeps the visible text. */
+  srHint?: string;
 };
 
 /** A line under the value of a `TotalCard`: plain text, or a link to where the number comes from. */

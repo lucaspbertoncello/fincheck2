@@ -2,7 +2,7 @@ import type { Agenda } from '@fincheck/shared/dashboard/agenda/agenda.type.ts';
 import type { BillBadge, IconName, ServiceLogoData } from '@fincheck/ui';
 
 import type { BillRowModel } from '#/features/bills/bill-list/bill-list.model.ts';
-import { describeDueDate } from '#/features/bills/bill-list/utils/describe-due-date.util.ts';
+import { describeDueDate } from '#/features/bills/utils/describe-due-date.util.ts';
 import { resolveRowStatus } from '#/domain/bills/bill/rules/resolve-row-status.rule.ts';
 
 type RowContext = {
@@ -50,6 +50,14 @@ function describeFoundPayment(item: Agenda.Item, context: RowContext): string | 
   return account ? `Pagamento encontrado no ${account}` : 'Pagamento encontrado';
 }
 
+/** The friend debts (to pay or to receive) are the rows with a "…" menu. */
+function resolveDebt(item: Agenda.Item): BillRowModel['debt'] {
+  const isDebt = item.badge === 'debt' || item.badge === 'friend_receivable';
+  if (!isDebt || item.source.type !== 'bill' || !item.source.billId) return undefined;
+
+  return { billId: item.source.billId, person: item.counterparty };
+}
+
 /** The agenda items as rows of `BillRow`: status, badges, due text and the found-payment chip. */
 export function buildBillRows(items: readonly Agenda.Item[], context: RowContext): BillRowModel[] {
   return items.map((item) => {
@@ -72,6 +80,7 @@ export function buildBillRows(items: readonly Agenda.Item[], context: RowContext
         status !== 'settled' && item.badge === 'bill' && item.source.type === 'bill'
           ? (item.source.billId ?? undefined)
           : undefined,
+      debt: resolveDebt(item),
       invoiceTarget:
         item.source.type === 'invoice' && item.source.accountId && item.source.month
           ? { accountId: item.source.accountId, month: item.source.month }

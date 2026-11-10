@@ -1,4 +1,3 @@
-import type { Agenda } from '@fincheck/shared/dashboard/agenda/agenda.type.ts';
 import { useToast } from '@fincheck/ui';
 import { useState } from 'react';
 
@@ -11,6 +10,7 @@ import { splitInHalf } from '#/domain/bills/bill/rules/split-in-half.rule.ts';
 import { resolvePaymentTarget } from '#/domain/bills/bill/rules/resolve-payment-target.rule.ts';
 import { INVALID_FIELD_OR_DATE_SEGMENT_SELECTOR } from '#/shared/constants/form/invalid-field-selector.constant.ts';
 import { useFocusFirstInvalid } from '#/shared/hooks/form/use-focus-first-invalid.hook.ts';
+import type { PaymentRegisterItem } from '#/features/bills/payment-register/payment-register.model.ts';
 import { PaymentRegisterView } from '#/features/bills/payment-register/payment-register.view.tsx';
 import { validatePayment } from '#/features/bills/payment-register/utils/validate-payment.util.ts';
 import { buildCandidateOptions } from '#/features/bills/utils/build-candidate-options.util.ts';
@@ -18,7 +18,7 @@ import { describeApiError } from '#/features/bills/utils/describe-api-error.util
 import { getBusinessDate } from '#/shared/utils/date/get-business-date.util.ts';
 
 type PaymentRegisterFormProps = {
-  item: Agenda.Item;
+  item: PaymentRegisterItem;
   onClose: () => void;
 };
 
@@ -152,7 +152,7 @@ function PaymentRegisterForm({ item, onClose }: PaymentRegisterFormProps) {
 
 type PaymentRegisterDialogProps = {
   /** The agenda item being paid; null keeps the dialog closed. */
-  item: Agenda.Item | null;
+  item: PaymentRegisterItem | null;
   onClose: () => void;
 };
 

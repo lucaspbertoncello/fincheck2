@@ -8,6 +8,7 @@ export type ScreenKey =
   | 'recurrences'
   | 'bills'
   | 'subscriptions'
+  | 'friends'
   | 'accounts'
   | 'categories'
   | 'rules'

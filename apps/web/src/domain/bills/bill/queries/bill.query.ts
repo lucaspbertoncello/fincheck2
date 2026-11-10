@@ -3,6 +3,7 @@ import {
   billDtoSchema,
   billPaymentCandidateDtoSchema,
   listBillPaymentCandidatesQuerySchema,
+  listBillsQuerySchema,
 } from '@fincheck/shared/bills/bill/bill.schema.ts';
 import { listResponseSchema } from '@fincheck/shared/common/list/list.schema.ts';
 import { queryOptions } from '@tanstack/react-query';
@@ -13,6 +14,19 @@ import { apiRequest } from '#/shared/api/api-request.service.ts';
 import type { ApiRequest } from '#/shared/api/api-request.type.ts';
 
 export const billQueries = {
+  list: (query: ApiRequest.QueryInput<typeof listBillsQuerySchema> = {}) =>
+    queryOptions({
+      queryKey: billsKeys.list(query),
+      queryFn: ({ signal }) =>
+        apiRequest({
+          method: 'GET',
+          path: '/bills',
+          querySchema: listBillsQuerySchema,
+          query,
+          responseSchema: listResponseSchema(billDtoSchema),
+          signal,
+        }),
+    }),
   counterparties: () =>
     queryOptions({
       queryKey: billsKeys.counterparties(),

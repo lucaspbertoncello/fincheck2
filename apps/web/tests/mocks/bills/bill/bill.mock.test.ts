@@ -29,6 +29,47 @@ describe('bills routes', () => {
     expect(await bills('?kind=friend&direction=receivable')).toHaveLength(1);
   });
 
+  it('lists the friend debts of both directions, settled ones too, for the Amigos tab', async () => {
+    const friends = await bills('?kind=friend&status=all');
+
+    expect(friends.map((bill) => bill.counterparty).sort()).toEqual(['Júlia', 'Rafa']);
+    expect(friends.every((bill) => bill.kind === 'friend')).toBe(true);
+    const rafa = friends.find((bill) => bill.counterparty === 'Rafa');
+    await callApi('POST', `/bills/${rafa?.id}/payments`, {
+      amountCents: 27_000,
+      paidOn: '2026-11-05',
+    });
+
+    expect(
+      (await bills('?kind=friend&status=all')).find((bill) => bill.id === rafa?.id),
+    ).toMatchObject({
+      status: 'settled',
+      remainingCents: 0,
+    });
+    // The default list is the open ones: a settled friend debt leaves it
+    expect((await bills('?kind=friend')).map((bill) => bill.counterparty)).toEqual(['Júlia']);
+  });
+
+  it('edits the person, the value and the date of a friend debt, and refuses a value below what is paid', async () => {
+    const [rafa] = await bills('?kind=friend&direction=payable');
+    const edited = await callApi('PATCH', `/bills/${rafa?.id}`, {
+      counterparty: 'Rafael',
+      amountCents: 50_000,
+      dueOn: null,
+    });
+    expect(edited.status).toBe(200);
+    expect(billDtoSchema.parse(edited.json)).toMatchObject({
+      counterparty: 'Rafael',
+      amountCents: 50_000,
+      dueOn: null,
+      remainingCents: 35_000,
+    });
+
+    const below = await callApi('PATCH', `/bills/${rafa?.id}`, { amountCents: 10_000 });
+    expect(below.status).toBe(422);
+    expect(below.json).toMatchObject({ code: 'BILL_AMOUNT_BELOW_PAID' });
+  });
+
   it('covers the friend debts: Rafa partial, Júlia with origin and a Pix received', async () => {
     const items = await bills('?status=all');
     const rafa = items.find((bill) => bill.counterparty === 'Rafa');

@@ -1,6 +1,8 @@
 import { BillRow, Section } from '@fincheck/ui';
 
-import type { BillRowModel } from '#/features/bills/bill-list/bill-list.model.ts';
+import type { BillRowModel, DebtTarget } from '#/features/bills/bill-list/bill-list.model.ts';
+import { DebtMenu } from '#/features/bills/components/debt-menu.component.tsx';
+import { MenuSpace } from '#/shared/components/lists/menu-space.component.tsx';
 
 type BillAgendaSectionProps = {
   title: string;
@@ -13,6 +15,10 @@ type BillAgendaSectionProps = {
   onRowAction: (key: string) => void;
   onRowEdit?: (billId: string) => void;
   onRowOpenInvoice?: (target: { accountId: string; month: string }) => void;
+  /** The screen has friend debts: they carry a "…" menu and the other rows keep its space. */
+  withMenu?: boolean;
+  onDebtEdit?: (billId: string) => void;
+  onDebtDelete?: (target: DebtTarget) => void;
 };
 
 /** A section of the agenda: header with its note and the rows as `BillRow`. Renders nothing when empty. */
@@ -25,6 +31,9 @@ export function BillAgendaSection({
   onRowAction,
   onRowEdit,
   onRowOpenInvoice,
+  withMenu = false,
+  onDebtEdit,
+  onDebtDelete,
 }: BillAgendaSectionProps) {
   if (rows.length === 0) return null;
 
@@ -61,6 +70,17 @@ export function BillAgendaSection({
             }
             onEdit={
               onRowEdit && row.editBillId ? () => onRowEdit(row.editBillId as string) : undefined
+            }
+            menu={
+              !withMenu ? undefined : row.debt && onDebtEdit && onDebtDelete ? (
+                <DebtMenu
+                  name={row.name}
+                  onEdit={() => onDebtEdit((row.debt as DebtTarget).billId)}
+                  onDelete={() => onDebtDelete(row.debt as DebtTarget)}
+                />
+              ) : (
+                <MenuSpace />
+              )
             }
           />
         ))}

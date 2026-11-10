@@ -69,6 +69,18 @@ export const SCREENS: Record<ScreenKey, ScreenDefinition> = {
     showsPanel: true,
     subNav: 'recurrences',
   },
+  friends: {
+    key: 'friends',
+    path: '/recurrences/friends',
+    title: 'Recorrentes',
+    tab: 'recurrences',
+    plusLabel: 'Nova dívida',
+    plusMode: 'direct',
+    plusAction: 'new-friend-debt',
+    filtersByMonth: false,
+    showsPanel: true,
+    subNav: 'recurrences',
+  },
   accounts: {
     key: 'accounts',
     path: '/accounts',

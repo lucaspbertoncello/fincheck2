@@ -12,6 +12,8 @@ export const PLUS_ACTION_PATHS: Record<string, string> = {
   'new-recurrence': '/recurrences?new=recurrence',
   // Nova recorrência already as an expense on the card, without leaving the Assinaturas tab.
   'new-subscription': '/recurrences/subscriptions?new=subscription',
+  // Nova dívida on the Amigos tab itself, so the "+" does not leave it (the menu one goes to A pagar e receber).
+  'new-friend-debt': '/recurrences/friends?new=debt',
   'connect-account': '/accounts?new=account',
   'new-category': '/categories?new=category',
   'new-rule': '/categories/rules?new=rule',

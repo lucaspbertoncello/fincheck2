@@ -82,4 +82,37 @@ describe('buildFriendsModel', () => {
     expect(model.caption).toBe('1 pessoa, não conta como receita');
     expect(model.items.map((entry) => entry.label)).toEqual(['Júlia te deve']);
   });
+
+  it('links each person to the Amigos tab with ?person=, carrying the month of the address', () => {
+    const friend = item({
+      key: 'bill:2',
+      title: 'Ana Júlia te deve',
+      counterparty: 'Ana Júlia',
+      badge: 'friend_receivable',
+      flow: 'in',
+      remainingCents: 5800,
+    });
+    const data = agenda({
+      friendsReceivable: { totalCents: 5800, peopleCount: 1 },
+      receivable: [friend],
+    });
+
+    expect(buildFriendsModel(data).items[0]).toMatchObject({
+      href: '/recurrences/friends?person=Ana%20J%C3%BAlia',
+      srHint: 'ver as dívidas de Ana Júlia',
+    });
+    expect(buildFriendsModel(data, '2026-10').items[0]?.href).toBe(
+      '/recurrences/friends?person=Ana%20J%C3%BAlia&month=2026-10',
+    );
+  });
+
+  it('leaves a line with no person as plain text', () => {
+    const model = buildFriendsModel(
+      agenda({
+        receivable: [item({ key: 'bill:4', badge: 'friend_receivable', counterparty: null })],
+      }),
+    );
+
+    expect(model.items[0]?.href).toBeUndefined();
+  });
 });

@@ -20,7 +20,9 @@ import { describeInvoicesNote } from '#/features/bills/bill-list/utils/describe-
 import { getEndOfMonth } from '#/features/bills/bill-list/utils/get-end-of-month.util.ts';
 import { resolvePaymentTarget } from '#/domain/bills/bill/rules/resolve-payment-target.rule.ts';
 import { resolveRowStatus } from '#/domain/bills/bill/rules/resolve-row-status.rule.ts';
-import { DebtCreateModal } from '#/features/bills/debt-create/debt-create.viewmodel.tsx';
+import { DebtDeleteDialog } from '#/features/bills/debt-delete/debt-delete.viewmodel.tsx';
+import { DebtFormModal } from '#/features/bills/debt-form/debt-form.viewmodel.tsx';
+import { useDebtActions } from '#/features/bills/hooks/use-debt-actions.hook.ts';
 import { useBillSearch } from '#/features/bills/hooks/use-bill-search.hook.ts';
 import { useFoundPayment } from '#/features/bills/hooks/use-found-payment.hook.ts';
 import { InvoiceLinkDialog } from '#/features/bills/invoice-link/invoice-link.viewmodel.tsx';
@@ -30,6 +32,7 @@ import { formatDayMonth } from '#/features/bills/utils/format-day-month.util.ts'
 import { getBusinessDate } from '#/shared/utils/date/get-business-date.util.ts';
 import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 import { useSelectedMonth } from '#/shared/hooks/use-selected-month.hook.ts';
+import { useActiveScreen } from '#/shared/layouts/application/navigation/use-active-screen.hook.ts';
 
 function indexItems(agenda: Agenda.Dto): Map<string, Agenda.Item> {
   const all = [
@@ -59,7 +62,9 @@ export function BillList() {
   const settleOccurrence = useSettleOccurrence();
   const unsettleOccurrence = useUnsettleOccurrence();
   const foundPayment = useFoundPayment();
+  const { monthParam } = useActiveScreen();
   const [actionError, setActionError] = useState<string | null>(null);
+  const debts = useDebtActions({ onError: setActionError });
 
   const agenda = agendaQuery.data;
   const itemsByKey = agenda ? indexItems(agenda) : new Map<string, Agenda.Item>();
@@ -125,7 +130,7 @@ export function BillList() {
       sections.undated.length ===
     0;
   const payableModel = agenda ? buildPayableModel(agenda, endOfMonth) : null;
-  const friendsModel = agenda ? buildFriendsModel(agenda) : null;
+  const friendsModel = agenda ? buildFriendsModel(agenda, monthParam) : null;
   const closePayment = search.closePayment;
   const showsLink = payItem?.paymentFound && payItem.source.type === 'invoice';
 
@@ -155,10 +160,20 @@ export function BillList() {
             search: { from: 'bills', month } as never,
           })
         }
+        onDebtEdit={(billId) => {
+          setActionError(null);
+          void debts.edit(billId);
+        }}
+        onDebtDelete={(target) => void debts.askDelete(target)}
         onNewDebt={() => search.openNewModal('debt')}
       />
+      <DebtDeleteDialog
+        target={debts.deleteTarget}
+        onClose={debts.closeDelete}
+        onError={setActionError}
+      />
       <BillFormModal />
-      <DebtCreateModal />
+      <DebtFormModal />
       <InvoiceLinkDialog item={showsLink ? payItem : null} onClose={closePayment} />
       <PaymentRegisterDialog item={showsLink ? null : payItem} onClose={closePayment} />
     </>

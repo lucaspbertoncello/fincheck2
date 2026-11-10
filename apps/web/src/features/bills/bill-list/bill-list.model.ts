@@ -29,7 +29,12 @@ export type BillRowModel = {
   editBillId: string | undefined;
   /** The card and the closing month of an invoice row: "Ver fatura" opens its page. */
   invoiceTarget: { accountId: string; month: string } | undefined;
+  /** A friend debt: the id of its bill and the person, for the "…" menu (Editar, Excluir). */
+  debt: DebtTarget | undefined;
 };
+
+/** The friend debt behind a row. */
+export type DebtTarget = { billId: string; person: string | null };
 
 /** A summary card ("A pagar", "A receber de amigos"). */
 export type BillTotalModel = {
@@ -69,5 +74,9 @@ export type BillListViewProps = {
   /** Tap on the name of an editable bill: opens the edit modal. */
   onRowEdit: (billId: string) => void;
   onRowOpenInvoice: (target: { accountId: string; month: string }) => void;
+  /** "Editar" in the "…" menu of a friend debt. */
+  onDebtEdit: (billId: string) => void;
+  /** "Excluir" in the "…" menu of a friend debt: asks for the confirmation. */
+  onDebtDelete: (target: DebtTarget) => void;
   onNewDebt: () => void;
 };

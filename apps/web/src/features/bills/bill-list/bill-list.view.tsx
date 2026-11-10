@@ -19,9 +19,13 @@ export function BillListView({
   onRowAction,
   onRowEdit,
   onRowOpenInvoice,
+  onDebtEdit,
+  onDebtDelete,
   onNewDebt,
 }: BillListViewProps) {
   if (status === 'loading') return <ContentSkeleton variant="list" />;
+
+  const withMenu = Object.values(sections).some((rows) => rows.some((row) => row.debt));
 
   if (status === 'error') {
     return (
@@ -80,6 +84,9 @@ export function BillListView({
             onRowAction={onRowAction}
             onRowEdit={onRowEdit}
             onRowOpenInvoice={onRowOpenInvoice}
+            withMenu={withMenu}
+            onDebtEdit={onDebtEdit}
+            onDebtDelete={onDebtDelete}
           />
           <BillAgendaSection
             title="Faturas abertas"
@@ -88,6 +95,9 @@ export function BillListView({
             onRowAction={onRowAction}
             onRowEdit={onRowEdit}
             onRowOpenInvoice={onRowOpenInvoice}
+            withMenu={withMenu}
+            onDebtEdit={onDebtEdit}
+            onDebtDelete={onDebtDelete}
           />
           <BillAgendaSection
             title="A receber"
@@ -96,6 +106,9 @@ export function BillListView({
             onRowAction={onRowAction}
             onRowEdit={onRowEdit}
             onRowOpenInvoice={onRowOpenInvoice}
+            withMenu={withMenu}
+            onDebtEdit={onDebtEdit}
+            onDebtDelete={onDebtDelete}
           />
           <BillAgendaSection
             title="Sem data"
@@ -104,6 +117,9 @@ export function BillListView({
             onRowAction={onRowAction}
             onRowEdit={onRowEdit}
             onRowOpenInvoice={onRowOpenInvoice}
+            withMenu={withMenu}
+            onDebtEdit={onDebtEdit}
+            onDebtDelete={onDebtDelete}
           />
         </>
       )}
@@ -114,6 +130,9 @@ export function BillListView({
         onRowAction={onRowAction}
         onRowEdit={onRowEdit}
         onRowOpenInvoice={onRowOpenInvoice}
+        withMenu={withMenu}
+        onDebtEdit={onDebtEdit}
+        onDebtDelete={onDebtDelete}
       />
     </div>
   );

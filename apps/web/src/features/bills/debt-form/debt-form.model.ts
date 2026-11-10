@@ -5,7 +5,7 @@ import type { PaymentCandidateOption } from '#/features/bills/types/payment-cand
 /** "Eu devo" (`payable`) or "Me devem" (`receivable`). */
 export type DebtMode = 'owe' | 'owed';
 
-export type DebtCreateErrors = {
+export type DebtFormErrors = {
   counterparty?: string;
   description?: string;
   amountCents?: string;
@@ -30,9 +30,11 @@ export type DebtNote = {
   remainingCents: number;
 };
 
-export type DebtCreateViewProps = {
+export type DebtFormViewProps = {
   isOpen: boolean;
   onClose: () => void;
+  /** The same modal creates and edits: an edit keeps the direction and has no Pix or origin to pick. */
+  isEdit: boolean;
   mode: DebtMode;
   onModeChange: (mode: DebtMode) => void;
   counterparty: string;
@@ -56,7 +58,7 @@ export type DebtCreateViewProps = {
   /** The Pix already made, linked to the debt. */
   pix: CandidatePicker;
   note: DebtNote;
-  errors: DebtCreateErrors;
+  errors: DebtFormErrors;
   submitError: string | null;
   isSaving: boolean;
   onSubmit: () => void;

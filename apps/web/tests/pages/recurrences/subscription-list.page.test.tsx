@@ -295,7 +295,7 @@ describe('SubscriptionListPage', () => {
     });
   });
 
-  it('is the third tab of Recorrentes, after "A pagar e receber"', async () => {
+  it('is the third tab of Recorrentes, after "A pagar e receber" and before "Amigos"', async () => {
     renderApp(URL);
     await findRow('Netflix');
 
@@ -306,6 +306,7 @@ describe('SubscriptionListPage', () => {
       'Recorrências',
       'A pagar e receber',
       'Assinaturas',
+      'Amigos',
     ]);
     expect(links[2]).toHaveAttribute('aria-current', 'page');
     expect(links[2]).toHaveAttribute('href', expect.stringContaining('/recurrences/subscriptions'));

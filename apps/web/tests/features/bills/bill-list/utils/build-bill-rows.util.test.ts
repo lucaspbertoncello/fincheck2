@@ -43,6 +43,37 @@ const context = {
   serviceLogos: new Map([['r-netflix', logo]]),
 };
 
+describe('buildBillRows friend debts', () => {
+  const debt = (overrides: Partial<Agenda.Item>) =>
+    agendaItem({
+      key: 'bill:b1',
+      source: { ...agendaItem({}).source, type: 'bill', billId: 'b1', occurrenceId: null },
+      badge: 'debt',
+      counterparty: 'Rafa',
+      ...overrides,
+    });
+
+  it('gives a friend debt (to pay or to receive) its bill and person for the "…" menu', () => {
+    expect(buildBillRows([debt({})], context)[0]?.debt).toEqual({ billId: 'b1', person: 'Rafa' });
+    expect(buildBillRows([debt({ badge: 'friend_receivable' })], context)[0]?.debt).toEqual({
+      billId: 'b1',
+      person: 'Rafa',
+    });
+  });
+
+  it('keeps the menu on a settled debt', () => {
+    expect(buildBillRows([debt({ state: 'settled' })], context)[0]?.debt).toEqual({
+      billId: 'b1',
+      person: 'Rafa',
+    });
+  });
+
+  it('gives no menu to a general bill, an invoice or a recurrence', () => {
+    expect(buildBillRows([debt({ badge: 'bill' })], context)[0]?.debt).toBeUndefined();
+    expect(buildBillRows([agendaItem({})], context)[0]?.debt).toBeUndefined();
+  });
+});
+
 describe('buildBillRows service logo', () => {
   it('draws the logo of the recurrence the item comes from', () => {
     expect(buildBillRows([agendaItem({})], context)[0]?.service).toEqual(logo);

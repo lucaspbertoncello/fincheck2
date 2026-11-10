@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { Button } from '#/components/buttons/index.ts';
 import { Chip } from '#/components/chips/index.ts';
 import { CategoryIcon } from '#/components/icons/index.ts';
@@ -37,6 +39,8 @@ type BillRowProps = {
   onEdit?: () => void;
   /** A second, quieter button beside the main one ("Ver fatura"). It stays on a settled row. */
   secondaryAction?: { label: string; onPress: () => void };
+  /** The "…" menu after the value (an `OverflowMenu`). Give it to every row of a list or to none. */
+  menu?: ReactNode;
   className?: string;
 };
 
@@ -61,6 +65,7 @@ export function BillRow({
   onAction,
   onEdit,
   secondaryAction,
+  menu,
   className,
 }: BillRowProps) {
   const settled = status === 'settled';
@@ -156,6 +161,7 @@ export function BillRow({
           </>
         ) : undefined
       }
+      menu={menu}
       className={cx(settled && 'text-fg-tertiary', className)}
     />
   );

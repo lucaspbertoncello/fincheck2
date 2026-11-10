@@ -157,6 +157,110 @@ describe('BillListPage', () => {
     expect(await findRow('IPTU, parcela 3')).toHaveTextContent('Sem data');
   });
 
+  it('gives every friend debt a "…" menu with Editar and Excluir, and no other row', async () => {
+    renderApp(URL);
+    await findRow('Você deve a Rafa');
+
+    for (const debt of ['Você deve a Rafa', 'Júlia te deve']) {
+      fireEvent.click(within(rowOf(debt)).getByRole('button', { name: `Ações de ${debt}` }));
+      const menu = await screen.findByRole('menu');
+      expect(
+        within(menu)
+          .getAllByRole('menuitem')
+          .map((item) => item.textContent),
+      ).toEqual(['Editar', 'Excluir']);
+      fireEvent.keyDown(menu, { key: 'Escape' });
+      await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
+    }
+    // A general bill, an invoice and a recurrence keep their own buttons and have no "…" menu
+    expect(within(rowOf('IPVA, cota 2')).queryByRole('button', { name: /^Ações de/ })).toBeNull();
+    expect(screen.getAllByRole('button', { name: /^Ações de/ })).toHaveLength(2);
+  });
+
+  it('edits a friend debt launched by the "+" in the debt form, filled in', async () => {
+    renderApp(URL);
+    await findRow('Você deve a Rafa');
+
+    fireEvent.click(
+      within(rowOf('Você deve a Rafa')).getByRole('button', { name: 'Ações de Você deve a Rafa' }),
+    );
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Editar' }));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Editar dívida com amigo' });
+    expect(window.location.search).toContain('debt=');
+    expect(within(dialog).getByLabelText('O que foi')).toHaveValue('Ingresso do show');
+    expect(within(dialog).getByLabelText('Valor total')).toHaveValue('420,00');
+    fireEvent.change(within(dialog).getByLabelText('O que foi'), {
+      target: { value: 'Ingresso do show (pista)' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Salvar dívida' }));
+
+    expect(await screen.findByText('Dívida "Ingresso do show (pista)" salva.')).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(window.location.search).not.toContain('debt=');
+  });
+
+  it('opens the transaction behind a "Você pagou" debt on "Editar", where it is undone', async () => {
+    renderApp(URL);
+    await findRow('Você deve a Rafa');
+
+    fireEvent.click(
+      within(rowOf('Júlia te deve')).getByRole('button', { name: 'Ações de Júlia te deve' }),
+    );
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Editar' }));
+
+    await waitFor(() => expect(window.location.pathname).toBe('/transactions'), {
+      timeout: SCREEN_LOAD_TIMEOUT,
+    });
+    expect(window.location.search).toContain('edit=');
+  });
+
+  it('deletes a friend debt only after the confirmation, which says there is no undo', async () => {
+    renderApp(URL);
+    await findRow('Você deve a Rafa');
+
+    fireEvent.click(
+      within(rowOf('Você deve a Rafa')).getByRole('button', { name: 'Ações de Você deve a Rafa' }),
+    );
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Excluir' }));
+
+    const dialog = await screen.findByRole('alertdialog', { name: 'Excluir esta dívida?' });
+    expect(dialog).toHaveTextContent('A dívida com Rafa some e não dá para desfazer.');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Excluir' }));
+
+    expect(await screen.findByText('Dívida com Rafa excluída.')).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText('Você deve a Rafa')).toBeNull());
+    expect(screen.getByText('Júlia te deve')).toBeInTheDocument();
+  });
+
+  it('leads each person of "A receber de amigos" to the Amigos tab with that person open', async () => {
+    renderApp(URL);
+    await findRow('Você deve a Rafa');
+
+    fireEvent.click(screen.getByRole('button', { name: /A receber de amigos/ }));
+    const link = await screen.findByRole('link', { name: /Júlia te deve/ });
+    expect(link).toHaveAttribute(
+      'href',
+      `/recurrences/friends?person=J%C3%BAlia&month=${CURRENT_MONTH}`,
+    );
+    fireEvent.click(link);
+
+    await waitFor(() => expect(window.location.pathname).toBe('/recurrences/friends'), {
+      timeout: SCREEN_LOAD_TIMEOUT,
+    });
+    expect(
+      await screen.findByRole(
+        'button',
+        { name: 'Dívidas de Júlia' },
+        { timeout: SCREEN_LOAD_TIMEOUT },
+      ),
+    ).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('button', { name: 'Dívidas de Rafa' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+  });
+
   it('shows the empty state when there is nothing to pay or receive', async () => {
     server.use(
       http.get('/api/agenda', () =>
