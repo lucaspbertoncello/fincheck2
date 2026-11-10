@@ -2,20 +2,23 @@ import type { Category } from '@fincheck/shared/categories/category/category.typ
 import { useRef, useState } from 'react';
 
 import { hasApiErrorCode } from '#/shared/api/api.error.ts';
-import { useCategoryFormModel } from '#/features/categories/category-form/category-form.model.ts';
+import { useCategoryFormModel } from '#/shared/components/categories/category-form/category-form.model.ts';
 import type {
   CategoryFormErrors,
   CategoryFormTarget,
-} from '#/features/categories/types/category-form.type.ts';
-import { validateCategoryForm } from '#/features/categories/category-form/utils/validate-category-form.util.ts';
+} from '#/shared/types/categories/category-form.type.ts';
+import { validateCategoryForm } from '#/shared/components/categories/category-form/utils/validate-category-form.util.ts';
+import { CATEGORY_NAME_MAX_LENGTH } from '#/shared/constants/categories/category-name-length.constant.ts';
 import { INVALID_FIELD_OR_STAND_IN_SELECTOR } from '#/shared/constants/form/invalid-field-selector.constant.ts';
 import { useFocusFirstInvalid } from '#/shared/hooks/form/use-focus-first-invalid.hook.ts';
-import { describeArchivedCategory } from '#/features/categories/utils/describe-archived-category.util.ts';
-import { describeCategoryUsage } from '#/features/categories/utils/describe-category-usage.util.ts';
+import { describeArchivedCategory } from '#/shared/utils/categories/describe-archived-category.util.ts';
+import { describeCategoryUsage } from '#/shared/components/categories/category-form/utils/describe-category-usage.util.ts';
 
 type Options = {
   target: CategoryFormTarget;
   onClose: () => void;
+  /** A category was created: hands it back, then the modal closes. */
+  onCreated?: (category: Category.Dto) => void;
   /** Edit of an active category: closes this modal and asks for the archive confirmation. */
   onArchive?: (id: string) => void;
   /** Edit of an archived category: brings it back to the pickers. */
@@ -23,11 +26,20 @@ type Options = {
 };
 
 /** State and submit of the category modal. The modal is mounted per target, so it starts fresh. */
-export function useCategoryFormViewModel({ target, onClose, onArchive, onRestore }: Options) {
+export function useCategoryFormViewModel({
+  target,
+  onClose,
+  onCreated,
+  onArchive,
+  onRestore,
+}: Options) {
   const model = useCategoryFormModel();
   const editing = target.mode === 'edit' ? target.category : null;
 
-  const [name, setName] = useState(editing?.name ?? '');
+  const [name, setName] = useState(
+    editing?.name ??
+      (target.mode === 'create' ? (target.name ?? '').slice(0, CATEGORY_NAME_MAX_LENGTH) : ''),
+  );
   const [icon, setIcon] = useState<Category.Icon>(editing?.icon ?? 'tag');
   const [kind, setKind] = useState<Category.Kind>(
     target.mode === 'create' ? target.kind : target.category.kind,
@@ -61,12 +73,19 @@ export function useCategoryFormViewModel({ target, onClose, onArchive, onRestore
           await model.update.mutateAsync({ id: editing.id, body });
         }
       } else {
-        await model.create.mutateAsync(result.body);
+        const created = await model.create.mutateAsync(result.body);
+        onCreated?.(created);
       }
       onClose();
     } catch (error) {
       if (hasApiErrorCode(error, 'CATEGORY_NAME_TAKEN')) {
-        setErrors({ name: 'Já existe uma categoria com esse nome.' });
+        // A picker lists only the active ones, so from there the clash may be with an archived one.
+        const fromPicker = target.mode === 'create' && target.name !== undefined;
+        setErrors({
+          name: fromPicker
+            ? 'Já existe uma categoria com esse nome (pode estar arquivada).'
+            : 'Já existe uma categoria com esse nome.',
+        });
         setFocusToken((token) => token + 1);
       } else {
         setSubmitError('Não deu para salvar. Tente de novo.');
@@ -79,9 +98,10 @@ export function useCategoryFormViewModel({ target, onClose, onArchive, onRestore
     title: editing ? 'Editar categoria' : 'Nova categoria',
     subtitle: editing
       ? 'O tipo não muda depois de criada.'
-      : 'Aparece na escolha de categoria das transações.',
+      : ((target.mode === 'create' ? target.subtitle : undefined) ??
+        'Aparece na escolha de categoria das transações.'),
     submitLabel: editing ? 'Salvar' : 'Criar categoria',
-    canPickKind: editing === null,
+    canPickKind: target.mode === 'create' && !target.lockKind,
     kind,
     onKindChange: setKind,
     name,

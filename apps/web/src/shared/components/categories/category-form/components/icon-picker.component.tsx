@@ -3,7 +3,7 @@ import type { Category } from '@fincheck/shared/categories/category/category.typ
 import { Icon } from '@fincheck/ui';
 import { Label, Radio, RadioGroup } from 'react-aria-components';
 
-import { CATEGORY_ICON_LABELS } from '#/features/categories/constants/category-icon-labels.constant.ts';
+import { CATEGORY_ICON_LABELS } from '#/shared/constants/categories/category-icon-labels.constant.ts';
 import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 
 type IconPickerProps = {

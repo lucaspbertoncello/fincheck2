@@ -120,6 +120,7 @@ export function TransactionEditModal({ editor }: TransactionEditModalProps) {
         ) : (
           <CategoryChipsField
             categories={editor.categories}
+            newCategoryKind={editor.categoryKind}
             value={values.categoryId}
             onChange={(categoryId) => patch({ categoryId })}
             error={errors.category}

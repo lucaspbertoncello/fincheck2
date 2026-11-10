@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import { CURRENT_MONTH } from '#mocks/support/dates/mock-clock.store.ts';
+import { db } from '#mocks/state/mock-database.store.ts';
 import { renderApp } from '#tests/support/app/render-app.util.tsx';
 import { resetDatabaseBeforeEach } from '#tests/support/mocks/reset-database-before-each.util.ts';
 
@@ -218,5 +219,58 @@ describe('bill row', () => {
     await user.click(name);
 
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+});
+
+describe('a category created from the search of the bill modal', () => {
+  async function createFromSearch(dialog: HTMLElement, name: string) {
+    const user = userEvent.setup();
+    await user.click(await within(dialog).findByRole('button', { name: 'Outras…' }));
+    await user.type(await screen.findByRole('combobox', { name: 'Buscar categoria' }), name);
+    await user.click(await screen.findByRole('option', { name: `Criar categoria "${name}"` }));
+    const inner = await screen.findByRole('dialog', { name: 'Nova categoria' });
+    expect(within(inner).queryByRole('radio', { name: 'Receita' })).not.toBeInTheDocument();
+    expect(within(inner).queryByRole('radio', { name: 'Despesa' })).not.toBeInTheDocument();
+    await user.click(within(inner).getByRole('button', { name: 'Criar categoria' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Nova categoria' })).not.toBeInTheDocument(),
+    );
+
+    return db.categories.find((category) => category.name === name);
+  }
+
+  it('is of expense for a bill to pay and is chosen', async () => {
+    renderApp(`${URL}&new=bill`);
+    const dialog = await screen.findByRole('dialog', { name: 'Nova conta a pagar ou receber' });
+
+    const created = await createFromSearch(dialog, 'Taxa do condomínio');
+
+    expect(created).toMatchObject({ kind: 'expense' });
+    expect(
+      await within(dialog).findByRole('button', {
+        name: 'Taxa do condomínio',
+        pressed: true,
+        hidden: true,
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('is of income for a bill to receive', async () => {
+    const user = userEvent.setup();
+    renderApp(`${URL}&new=bill`);
+    const dialog = await screen.findByRole('dialog', { name: 'Nova conta a pagar ou receber' });
+    await within(dialog).findByRole('button', { name: 'Outras…' });
+    await user.click(within(dialog).getByRole('radio', { name: 'A receber' }));
+
+    const created = await createFromSearch(dialog, 'Aluguel recebido');
+
+    expect(created).toMatchObject({ kind: 'income' });
+    expect(
+      await within(dialog).findByRole('button', {
+        name: 'Aluguel recebido',
+        pressed: true,
+        hidden: true,
+      }),
+    ).toBeInTheDocument();
   });
 });

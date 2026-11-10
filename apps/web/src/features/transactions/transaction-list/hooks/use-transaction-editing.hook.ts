@@ -145,6 +145,8 @@ export function useTransactionEditing({
       ? 'Categorize uma das partes da divisão antes de usar tags: cada tag pertence a uma categoria.'
       : undefined,
     options: tagOptions,
+    // With several categories no tag can be started from here: the fixed line would only fail.
+    offersNewLine: Boolean(categoryId),
     selected: values.tagIds.flatMap((id) => {
       const tag = knownTags.get(id);
       return tag ? [{ id: tag.id, name: labelOfTag(tag) }] : [];
@@ -230,6 +232,8 @@ export function useTransactionEditing({
     canBeIncome: !isCardAccount || transaction.nature === 'income',
     // The category that is a transfer fits both legs of a rotation, so it shows for any kind.
     categories: buildCategoryOptionsForKinds(allCategories, kindsOf(kind), { withTransfer: true }),
+    // On a credit on a card (both kinds) a new category abates the spending, the first group.
+    categoryKind: kindsOf(kind)[0] ?? kind,
     transferCategories: transferByCategory
       ? buildCategoryOptions(
           allCategories.filter((category) => category.isTransfer),

@@ -1,7 +1,7 @@
 import type { Category } from '@fincheck/shared/categories/category/category.type.ts';
 import type { ManagedCategory } from '@fincheck/ui';
 
-import { describeArchivedCategory } from '#/features/categories/utils/describe-archived-category.util.ts';
+import { describeArchivedCategory } from '#/shared/utils/categories/describe-archived-category.util.ts';
 import { formatLastUsed } from '#/features/categories/utils/format-last-used.util.ts';
 import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
 

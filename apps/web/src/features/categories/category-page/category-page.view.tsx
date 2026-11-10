@@ -8,7 +8,7 @@ import {
   Section,
 } from '@fincheck/ui';
 
-import { CategoryForm } from '#/features/categories/category-form/category-form.component.tsx';
+import { CategoryForm } from '#/shared/components/categories/category-form/category-form.component.tsx';
 import { CategorySummary } from '#/features/categories/category-page/components/category-summary.component.tsx';
 import { BackPageFrame } from '#/shared/components/page/back-page-frame.component.tsx';
 import type { CategoryPageViewProps } from '#/features/categories/category-page/types/category-page-view.type.ts';

@@ -7,7 +7,10 @@ import {
   Money,
   SplitSumIndicator,
 } from '@fincheck/ui';
+import { useRef } from 'react';
 
+import { CategoryForm } from '#/shared/components/categories/category-form/category-form.component.tsx';
+import { useCategoryCreation } from '#/shared/hooks/categories/use-category-creation.hook.ts';
 import type { TransactionSplitterView } from '#/shared/types/transactions/transaction-list-view.type.ts';
 
 type TransactionSplitModalProps = {
@@ -19,10 +22,16 @@ type TransactionSplitModalProps = {
  * hero; each part is a group with its category and amount, side by side on the desktop. Typing one
  * part gives the rest to the other, so the sum only breaks on purpose, and the indicator says how
  * much is missing. "Dividir" waits until the parts close the total. A split one can be undone from
- * the footer.
+ * the footer. Each part's picker ends in "Nova categoria", which comes back chosen for that part.
  */
 export function TransactionSplitModal({ splitter }: TransactionSplitModalProps) {
   const { parts, totalCents, check } = splitter;
+  // The part whose picker opened the category modal: the new category goes to it.
+  const creatingFor = useRef(0);
+  const creation = useCategoryCreation({
+    kind: splitter.categoryKind,
+    onCreated: (category) => splitter.onCategoryChange(creatingFor.current, category.id),
+  });
 
   return (
     <FormModal
@@ -66,6 +75,10 @@ export function TransactionSplitModal({ splitter }: TransactionSplitModalProps) 
               categories={splitter.categories}
               value={part.categoryId}
               onChange={(categoryId) => splitter.onCategoryChange(index, categoryId)}
+              onCreate={(name) => {
+                creatingFor.current = index;
+                creation.open(name);
+              }}
               autoFocus={index === 0}
             />
             <MoneyField
@@ -83,6 +96,7 @@ export function TransactionSplitModal({ splitter }: TransactionSplitModalProps) 
           Dividir por igual
         </Button>
       </div>
+      <CategoryForm {...creation.formProps} />
     </FormModal>
   );
 }

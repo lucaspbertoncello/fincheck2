@@ -78,6 +78,7 @@ export function useTransactionSplitting({ model, lookups, transaction, close }: 
   }
 
   const amounts = parts.map((part) => part.amountCents);
+  const partKind = getSplitPartCategoryKind(transaction.nature) ?? 'expense';
   const change = (next: SplitPart[]) => setDraft({ id: transaction.id, parts: next });
 
   return {
@@ -97,10 +98,8 @@ export function useTransactionSplitting({ model, lookups, transaction, close }: 
       change(parts.map((part, position) => ({ ...part, amountCents: even[position] ?? 0 })));
     },
     // The parts take the kind of the nature (a refund on a card is an expense), not the sign.
-    categories: buildCategoryOptions(
-      [...lookups.categories.values()],
-      getSplitPartCategoryKind(transaction.nature) ?? 'expense',
-    ),
+    categories: buildCategoryOptions([...lookups.categories.values()], partKind),
+    categoryKind: partKind,
     createPartId: () => `new-part-${(nextPartId.current += 1)}`,
     description: `${transaction.description}: reparta o valor entre duas categorias.`,
     saving: model.splitTransaction.isPending,

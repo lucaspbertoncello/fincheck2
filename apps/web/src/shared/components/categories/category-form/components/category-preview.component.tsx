@@ -2,7 +2,7 @@ import type { Category } from '@fincheck/shared/categories/category/category.typ
 import { CategoryIcon } from '@fincheck/ui';
 
 import { mapCategoryIcon } from '#/domain/categories/category/rules/map-category-icon.rule.ts';
-import { CATEGORY_KIND_LABELS } from '#/features/categories/constants/category-kind-labels.constant.ts';
+import { CATEGORY_KIND_LABELS } from '#/shared/constants/categories/category-kind-labels.constant.ts';
 
 type CategoryPreviewProps = {
   name: string;

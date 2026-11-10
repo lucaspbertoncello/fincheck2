@@ -19,6 +19,14 @@ type CollapseProps = {
   /** The content box: put the space between the trigger and the content here (`pt-*`), never outside. */
   contentClassName?: string;
   /**
+   * Room for what sits on the edge of its content and must not be cut: a field's border and its
+   * focus ring (`field-ring` draws the ring 1 px OUTSIDE the box). Adds 4 px above and below
+   * inside the clipping box and takes the same 4 px back with a negative margin, so the content
+   * lands where it would anyway and a closed Collapse still takes no room. Turn it on for a
+   * Collapse that holds a field (a search, a text field, a select).
+   */
+  bleedY?: boolean;
+  /**
    * Keep the children mounted while closed. By default they mount when it opens and leave when the
    * closing finishes, so a field inside takes its `autoFocus` on open and heavy lists cost nothing
    * while closed. Turn it on when the children hold state that must survive (a form).
@@ -45,6 +53,7 @@ export function Collapse({
   className,
   trackClassName,
   contentClassName,
+  bleedY = false,
   keepMounted = false,
   onOpened,
 }: CollapseProps) {
@@ -82,7 +91,7 @@ export function Collapse({
         trackClassName,
       )}
     >
-      <div className={cx('-mx-s8 min-h-0 overflow-hidden', className)}>
+      <div className={cx('-mx-s8 min-h-0 overflow-hidden', bleedY && '-my-s4 py-s4', className)}>
         <div
           ref={contentRef}
           id={id}

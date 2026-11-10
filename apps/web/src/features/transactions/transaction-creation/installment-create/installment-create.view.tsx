@@ -152,6 +152,7 @@ export function InstallmentCreateView(props: InstallmentCreateViewProps) {
         <CategoryChipsField
           aside="opcional"
           categories={props.categories}
+          newCategoryKind="expense"
           value={values.categoryId}
           onChange={(categoryId) => props.onChange({ categoryId })}
         />

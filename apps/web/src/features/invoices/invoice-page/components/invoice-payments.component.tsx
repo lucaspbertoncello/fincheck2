@@ -75,7 +75,7 @@ export function InvoicePayments({
           ))}
         </ul>
       )}
-      <Collapse isOpen={registering} trackClassName="-mt-s16" contentClassName="pt-s16">
+      <Collapse isOpen={registering} bleedY trackClassName="-mt-s16" contentClassName="pt-s16">
         <div className="flex flex-col gap-s16">
           <PaymentForm
             formId={PAYMENT_FORM_ID}

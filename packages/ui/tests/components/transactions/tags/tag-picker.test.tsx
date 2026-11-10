@@ -30,18 +30,25 @@ function picker(overrides: Partial<TagPickerProps> = {}) {
 }
 
 describe('buildTagRows', () => {
-  it('lists every tag for an empty text, marking the selected ones, and offers nothing to create', () => {
+  it('lists every tag for an empty text, marking the selected ones, and ends in the fixed "Nova tag" line', () => {
     expect(buildTagRows(OPTIONS, ['b'], '')).toEqual([
       { kind: 'tag', id: 'a', name: 'Promoção', selected: false },
       { kind: 'tag', id: 'b', name: 'viagem', selected: true },
       { kind: 'tag', id: 'c', name: 'trabalho', selected: false },
+      { kind: 'new' },
     ]);
+  });
+
+  it('has only "Nova tag" when the category has no tag, and treats blank text as empty', () => {
+    expect(buildTagRows([], [], '')).toEqual([{ kind: 'new' }]);
+    expect(buildTagRows(OPTIONS, [], '   ').at(-1)).toEqual({ kind: 'new' });
   });
 
   it('filters by what the text is inside of, with no difference for case or accent', () => {
     const rows = buildTagRows(OPTIONS, [], 'PROMO');
 
     expect(rows.map((row) => row.kind === 'tag' && row.name)).toEqual(['Promoção', false]);
+    expect(rows.some((row) => row.kind === 'new')).toBe(false);
   });
 
   it('offers to create the typed text when no name is exactly that, trimmed', () => {
@@ -55,6 +62,8 @@ describe('buildTagRows', () => {
   it('does not offer to create a name that already exists, whatever the case or the accent', () => {
     expect(buildTagRows(OPTIONS, [], 'promocao').some((row) => row.kind === 'create')).toBe(false);
     expect(buildTagRows(OPTIONS, [], 'VIAGEM').some((row) => row.kind === 'create')).toBe(false);
+    // And the fixed line goes away too: a name is typed, "Nova tag" would have nothing to ask.
+    expect(buildTagRows(OPTIONS, [], 'VIAGEM').some((row) => row.kind === 'new')).toBe(false);
   });
 });
 
@@ -85,6 +94,13 @@ describe('TagPicker', () => {
     expect(html).toContain('role="combobox"');
   });
 
+  it('ends the list in the fixed "Nova tag" line, which is not a marked tag', () => {
+    const html = picker();
+
+    expect(html).toContain('Nova tag');
+    expect(html.match(/aria-selected="true"/g)).toHaveLength(1);
+  });
+
   it('asks for a category first when the transaction has none, with no field', () => {
     const html = picker({ categoryName: null });
 
@@ -96,15 +112,26 @@ describe('TagPicker', () => {
     const html = picker({ options: [], selected: [] });
 
     expect(html).toContain('Nenhuma tag em Mercado ainda');
+    expect(html).toContain('Nova tag');
     expect(html).toContain('Nome da primeira tag');
   });
 
   it('shows the loading and the error states, the error with a way to try again', () => {
     expect(picker({ status: 'loading' })).toContain('Carregando as tags de Mercado');
+    expect(picker({ status: 'loading' })).not.toContain('Nova tag');
     const error = picker({ status: 'error', onRetry: noop });
 
     expect(error).toContain('Não deu para carregar as tags.');
     expect(error).toContain('Tentar de novo');
     expect(error).not.toContain('role="combobox"');
+  });
+});
+
+describe('TagPicker without the fixed line', () => {
+  it('leaves "Nova tag" out when offersNewLine is false', () => {
+    const html = picker({ offersNewLine: false });
+
+    expect(html).not.toContain('Nova tag');
+    expect(buildTagRows(OPTIONS, [], '', false).some((row) => row.kind === 'new')).toBe(false);
   });
 });

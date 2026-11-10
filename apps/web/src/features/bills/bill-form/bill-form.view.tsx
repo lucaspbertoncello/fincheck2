@@ -121,6 +121,7 @@ export function BillFormView({
           label="Categoria"
           categories={categories}
           noneId={NO_CATEGORY_ID}
+          newCategoryKind={isPayable ? 'expense' : 'income'}
           value={categoryId}
           onChange={onCategoryChange}
           error={errors.categoryId}

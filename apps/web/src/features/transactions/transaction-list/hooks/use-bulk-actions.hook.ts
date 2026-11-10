@@ -124,6 +124,7 @@ export function useBulkActions({
     setTagId,
     pending: model.bulkTransactions.isPending,
     categories: buildCategoryOptionsForKinds(categories, kinds),
+    categoryKind: kinds[0] ?? ('expense' as const),
     noCategoryReason:
       kinds.length > 0 ? null : takesNone ? ('none-takes' as const) : ('mixed' as const),
     tags: [...lookups.tags.values()].filter((tag) => tag.archivedAt === null),

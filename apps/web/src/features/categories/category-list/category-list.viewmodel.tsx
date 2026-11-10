@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useCategoryListModel } from '#/features/categories/category-list/category-list.model.ts';
 import { categoryListSearchSchema } from '#/features/categories/category-list/schemas/category-list-search.schema.ts';
 import { buildArchiveCategoryImpact } from '#/features/categories/utils/build-archive-category-impact.util.ts';
-import type { CategoryFormTarget } from '#/features/categories/types/category-form.type.ts';
+import type { CategoryFormTarget } from '#/shared/types/categories/category-form.type.ts';
 import { useScreenSearch } from '#/shared/hooks/use-screen-search.hook.ts';
 import type { TagFormTarget } from '#/features/categories/types/tag-form.type.ts';
 import { filterCategories } from '#/features/categories/utils/filter-categories.util.ts';

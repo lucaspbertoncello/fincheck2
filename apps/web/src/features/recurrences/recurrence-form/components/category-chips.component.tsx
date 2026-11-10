@@ -1,10 +1,16 @@
-import { CategoryPicker, Collapse, FieldSet, Icon } from '@fincheck/ui';
+import type { Category } from '@fincheck/shared/categories/category/category.type.ts';
+import { Button, CategoryPicker, Collapse, FieldSet, Icon } from '@fincheck/ui';
 import type { CategoryOption, IconName } from '@fincheck/ui';
 import { useEffect, useRef, useState } from 'react';
 import { Label, Radio, RadioGroup } from 'react-aria-components';
 
+import { CategoryForm } from '#/shared/components/categories/category-form/category-form.component.tsx';
+import { useCategoryCreation } from '#/shared/hooks/categories/use-category-creation.hook.ts';
+
 type CategoryChipsProps = {
   label: string;
+  /** The type of the recurrence: the kind a category created from the search takes. */
+  kind: Category.Kind;
   /** Every category of the type, the most used first. */
   categories: readonly CategoryOption[];
   value: string | null;
@@ -22,16 +28,25 @@ type ChipOption = { key: string; label: string; icon: IconName };
  * "Outras…", which opens the search for the rest. A category picked from the search takes the place
  * of the second chip, so the choice is always visible. The chips stay on ONE row, so the column has
  * room for "É assinatura" and the modal keeps its height at 1280×720 (Lucas, 06/11/2026): when two
- * long names do not fit beside "Outras…", only one shortcut shows; no name is ever cut.
+ * long names do not fit beside "Outras…", only one shortcut shows; no name is ever cut. The search
+ * ends in "Nova categoria": the modal opens and the new category comes back chosen.
  */
 export function CategoryChips({
   label,
+  kind,
   categories,
   value,
   onChange,
   className,
 }: CategoryChipsProps) {
   const [searching, setSearching] = useState(false);
+  const creation = useCategoryCreation({
+    kind,
+    onCreated: (category) => {
+      setSearching(false);
+      onChange(category.id);
+    },
+  });
   const rowRef = useRef<HTMLDivElement>(null);
   // The list and the choice the fit was measured for: when either changes, back to two shortcuts.
   const fitKey = `${categories.map((category) => category.id).join()}|${value ?? ''}`;
@@ -53,10 +68,19 @@ export function CategoryChips({
   }, [fitKey]);
 
   if (categories.length === 0) {
+    // Same root as below, so the modal that creates the first category stays mounted when it arrives.
     return (
-      <FieldSet label={label} className={className}>
-        <p className="text-meta text-fg-tertiary">Nenhuma categoria deste tipo ainda.</p>
-      </FieldSet>
+      <div className={`flex flex-col ${className ?? ''}`}>
+        <CategoryForm {...creation.formProps} />
+        <FieldSet label={label}>
+          <p className="text-meta text-fg-tertiary">Nenhuma categoria deste tipo ainda.</p>
+          <div>
+            <Button variant="tertiary" size="sm" onPress={() => creation.open('')}>
+              Nova categoria
+            </Button>
+          </div>
+        </FieldSet>
+      </div>
     );
   }
 
@@ -69,12 +93,12 @@ export function CategoryChips({
     label: category.name,
     icon: category.icon,
   }));
-  if (categories.length > shown.length) {
-    options.push({ key: OTHERS_KEY, label: 'Outras…', icon: 'search' });
-  }
+  // Always there: the search is also where a new category is created.
+  options.push({ key: OTHERS_KEY, label: 'Outras…', icon: 'search' });
 
   return (
     <div className={`flex flex-col ${className ?? ''}`}>
+      <CategoryForm {...creation.formProps} />
       <RadioGroup
         value={searching ? OTHERS_KEY : value}
         onChange={(key) => {
@@ -98,11 +122,12 @@ export function CategoryChips({
           ))}
         </div>
       </RadioGroup>
-      <Collapse isOpen={searching} contentClassName="pt-s8">
+      <Collapse isOpen={searching} bleedY contentClassName="pt-s8">
         <CategoryPicker
           label="Buscar outra categoria"
           categories={categories}
           value={value}
+          onCreate={creation.open}
           autoFocus
           onChange={(categoryId) => {
             if (categoryId === null) return;

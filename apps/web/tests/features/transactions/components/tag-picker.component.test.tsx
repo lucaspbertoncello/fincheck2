@@ -48,7 +48,8 @@ describe('TagPicker (the tag chooser of a transaction)', () => {
     const user = userEvent.setup();
     render(<Harness />);
 
-    expect(screen.getAllByRole('option')).toHaveLength(3);
+    // The three tags and the fixed "Nova tag" at the end.
+    expect(screen.getAllByRole('option')).toHaveLength(4);
     await user.click(screen.getByRole('option', { name: /viagem/ }));
     expect(screen.getByRole('option', { name: /viagem/ })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('button', { name: 'Remover a tag viagem' })).toBeInTheDocument();
@@ -114,7 +115,88 @@ describe('TagPicker (the tag chooser of a transaction)', () => {
     await user.keyboard('{Escape}');
 
     expect(field()).toHaveValue('');
-    expect(screen.getAllByRole('option')).toHaveLength(3);
+    expect(screen.getAllByRole('option')).toHaveLength(4);
+  });
+
+  describe('the fixed "Nova tag" line', () => {
+    const newTag = () => screen.getByRole('option', { name: 'Nova tag' });
+
+    it('ends the list, with nothing typed, and is not a marked tag', () => {
+      render(<Harness />);
+
+      expect(screen.getAllByRole('option').at(-1)).toBe(newTag());
+      expect(newTag()).toHaveAttribute('aria-selected', 'false');
+    });
+
+    it('asks for the name: the focus goes to the field with the hint, and the next create marks the tag', async () => {
+      const user = userEvent.setup();
+      const onCreate = vi.fn((name: string) => Promise.resolve(`new-${name}`));
+      render(<Harness onCreate={onCreate} />);
+
+      await user.click(newTag());
+
+      expect(field()).toHaveFocus();
+      expect(screen.getByText('Digite o nome da nova tag')).toBeInTheDocument();
+
+      await user.type(field(), 'feira');
+      expect(screen.queryByText('Digite o nome da nova tag')).not.toBeInTheDocument();
+      await user.keyboard('{Enter}');
+
+      await waitFor(() => expect(onCreate).toHaveBeenCalledWith('feira'));
+      expect(
+        await screen.findByRole('button', { name: 'Remover a tag feira' }),
+      ).toBeInTheDocument();
+    });
+
+    it('is reached with the keyboard: ArrowUp from the field lands on it and Enter asks for the name', async () => {
+      const user = userEvent.setup();
+      render(<Harness />);
+
+      await user.click(field());
+      await user.keyboard('{ArrowUp}');
+      expect(field()).toHaveAttribute('aria-activedescendant', newTag().id);
+
+      await user.keyboard('{Enter}');
+      expect(screen.getByText('Digite o nome da nova tag')).toBeInTheDocument();
+      expect(field()).toHaveFocus();
+    });
+
+    it('Esc takes the hint away without leaving the modal behind it', async () => {
+      const user = userEvent.setup();
+      render(<Harness />);
+
+      await user.click(newTag());
+      await user.keyboard('{Escape}');
+
+      expect(screen.queryByText('Digite o nome da nova tag')).not.toBeInTheDocument();
+    });
+
+    it('with a text that matches no tag, "Criar tag" takes its place: there is only one line to create', async () => {
+      const user = userEvent.setup();
+      render(<Harness />);
+
+      await user.type(field(), 'feira');
+
+      expect(screen.queryByRole('option', { name: 'Nova tag' })).not.toBeInTheDocument();
+      expect(screen.getAllByRole('option')).toHaveLength(1);
+      expect(screen.getByRole('option', { name: 'Criar tag "feira" em Mercado' })).toBeVisible();
+    });
+
+    it('with the text of an existing tag, offers neither a duplicate nor "Nova tag"', async () => {
+      const user = userEvent.setup();
+      render(<Harness />);
+
+      await user.type(field(), 'viagem');
+
+      expect(screen.queryByRole('option', { name: 'Nova tag' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: /Criar tag/ })).not.toBeInTheDocument();
+    });
+
+    it('is the only line of a category with no tag yet', () => {
+      render(<Harness options={[]} />);
+
+      expect(screen.getAllByRole('option')).toEqual([newTag()]);
+    });
   });
 
   it('shows why a tag could not be created and keeps the text', async () => {

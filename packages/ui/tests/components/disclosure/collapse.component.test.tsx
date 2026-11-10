@@ -77,4 +77,28 @@ describe('Collapse', () => {
     expect(html).toContain('-mt-s16');
     expect(html).toContain('pt-s16');
   });
+
+  it('clips at the edge of the content by default: nothing is left of room for a ring', () => {
+    const html = renderToStaticMarkup(
+      <Collapse isOpen>
+        <p>Detalhe</p>
+      </Collapse>,
+    );
+
+    expect(html).toContain('overflow-hidden');
+    expect(html).not.toContain('py-s4');
+    expect(html).not.toContain('-my-s4');
+  });
+
+  it('with bleedY gives the clipping box 4 px above and below and takes them back, so a field keeps its whole border', () => {
+    const html = renderToStaticMarkup(
+      <Collapse isOpen bleedY>
+        <p>Detalhe</p>
+      </Collapse>,
+    );
+
+    expect(html).toContain('overflow-hidden');
+    expect(html).toContain('py-s4');
+    expect(html).toContain('-my-s4');
+  });
 });

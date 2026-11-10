@@ -69,6 +69,7 @@ export function TransactionCreateView(props: TransactionCreateViewProps) {
         <CategoryChipsField
           aside="opcional"
           categories={props.categories}
+          newCategoryKind={values.type}
           value={values.categoryId}
           onChange={(categoryId) => props.onChange({ categoryId })}
         />

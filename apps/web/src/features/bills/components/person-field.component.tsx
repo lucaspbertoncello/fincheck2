@@ -62,7 +62,11 @@ export function PersonField({ label, recent, value, onChange, error }: PersonFie
           </ToggleButton>
         </div>
       ) : null}
-      <Collapse isOpen={showInput} contentClassName={people.length > 0 ? 'pt-s8' : undefined}>
+      <Collapse
+        isOpen={showInput}
+        bleedY
+        contentClassName={people.length > 0 ? 'pt-s8' : undefined}
+      >
         <TextField
           label="Nome"
           value={value}

@@ -356,6 +356,122 @@ describe('TransactionListPage', () => {
     expect(await screen.findByRole('option', { name: /Rotação entre contas/ })).toBeInTheDocument();
   });
 
+  describe('creating a category from the search of the edit modal', () => {
+    async function openCreatingFromSearch(name: string) {
+      const user = userEvent.setup();
+      renderApp(PAGE);
+      await openRowMenu('CINEMARK', 'Editar');
+      const dialog = await screen.findByRole('dialog', { name: 'Editar transação' });
+      await user.click(within(dialog).getByRole('button', { name: 'Outras…' }));
+      const search = await screen.findByRole('combobox', { name: 'Buscar outra categoria' });
+      await user.type(search, name);
+      await user.click(await screen.findByRole('option', { name: `Criar categoria "${name}"` }));
+      const inner = await screen.findByRole('dialog', { name: 'Nova categoria' });
+
+      return { user, inner };
+    }
+
+    it('creates it with the typed name and the kind of the transaction, chooses it and keeps the edit open with what was typed', async () => {
+      const cinema = db.transactions.find((tx) => tx.description === 'CINEMARK');
+      if (!cinema) throw new Error('seed without CINEMARK');
+      const user = userEvent.setup();
+      renderApp(PAGE);
+      await openRowMenu('CINEMARK', 'Editar');
+      const dialog = await screen.findByRole('dialog', { name: 'Editar transação' });
+      const description = within(dialog).getByRole('textbox', { name: 'Descrição' });
+      await user.clear(description);
+      await user.type(description, 'Cinema com os amigos');
+      await user.click(within(dialog).getByRole('button', { name: 'Outras…' }));
+      await user.type(
+        await screen.findByRole('combobox', { name: 'Buscar outra categoria' }),
+        'Barbearia',
+      );
+      await user.click(await screen.findByRole('option', { name: 'Criar categoria "Barbearia"' }));
+
+      const inner = await screen.findByRole('dialog', { name: 'Nova categoria' });
+      expect(within(inner).getByRole('textbox', { name: 'Nome' })).toHaveValue('Barbearia');
+      // A debit takes expense categories only: the type is fixed, not asked.
+      expect(within(inner).queryByRole('radio', { name: 'Receita' })).not.toBeInTheDocument();
+      await user.click(within(inner).getByRole('button', { name: 'Criar categoria' }));
+
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog', { name: 'Nova categoria' })).not.toBeInTheDocument(),
+      );
+      const created = db.categories.find((category) => category.name === 'Barbearia');
+      expect(created).toMatchObject({ kind: 'expense' });
+      // The edit is still open, with the text typed before, and the new category chosen.
+      expect(screen.getByRole('dialog', { name: 'Editar transação' })).toBeInTheDocument();
+      expect(within(dialog).getByRole('textbox', { name: 'Descrição' })).toHaveValue(
+        'Cinema com os amigos',
+      );
+      expect(
+        await within(dialog).findByRole('button', { name: 'Barbearia', pressed: true }),
+      ).toBeInTheDocument();
+      // The focus is on the chip of the new category, not on the body of the modal.
+      await waitFor(() =>
+        expect(
+          within(dialog).getByRole('button', { name: 'Barbearia', pressed: true }),
+        ).toHaveFocus(),
+      );
+
+      await user.click(within(dialog).getByRole('button', { name: 'Salvar', hidden: true }));
+      await waitFor(() => expect(cinema.categoryId).toBe(created?.id), LONG_WAIT);
+      expect(cinema.description).toBe('Cinema com os amigos');
+    });
+
+    it('Esc closes only the category modal: the edit stays and the focus goes back inside it', async () => {
+      const { user } = await openCreatingFromSearch('Barbearia');
+
+      await user.keyboard('{Escape}');
+
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog', { name: 'Nova categoria' })).not.toBeInTheDocument(),
+      );
+      expect(screen.getByRole('dialog', { name: 'Editar transação' })).toBeInTheDocument();
+      await waitFor(() =>
+        expect(screen.getByRole('combobox', { name: 'Buscar outra categoria' })).toHaveFocus(),
+      );
+      expect(db.categories.some((category) => category.name === 'Barbearia')).toBe(false);
+    });
+
+    it('does not submit the edit when the category is created: the transaction keeps its category until saved', async () => {
+      const cinema = db.transactions.find((tx) => tx.description === 'CINEMARK');
+      if (!cinema) throw new Error('seed without CINEMARK');
+      const before = cinema.categoryId;
+      const { user, inner } = await openCreatingFromSearch('Barbearia');
+
+      await user.click(within(inner).getByRole('button', { name: 'Criar categoria' }));
+
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog', { name: 'Nova categoria' })).not.toBeInTheDocument(),
+      );
+      expect(screen.getByRole('dialog', { name: 'Editar transação' })).toBeInTheDocument();
+      expect(cinema.categoryId).toBe(before);
+    });
+
+    it('opens the split of a part and gives the new category to that part only', async () => {
+      const user = userEvent.setup();
+      renderApp(PAGE);
+      await openRowMenu('PIX MERCADINHO SAO JOSE', 'Dividir');
+      const dialog = await screen.findByRole('dialog', { name: 'Dividir transação' });
+
+      const second = within(dialog).getByRole('combobox', { name: 'Categoria da parte 2' });
+      await user.type(second, 'Barbearia');
+      await user.click(await screen.findByRole('option', { name: 'Criar categoria "Barbearia"' }));
+      const inner = await screen.findByRole('dialog', { name: 'Nova categoria' });
+      await user.click(within(inner).getByRole('button', { name: 'Criar categoria' }));
+
+      await waitFor(() =>
+        expect(within(dialog).getByRole('combobox', { name: 'Categoria da parte 2' })).toHaveValue(
+          'Barbearia',
+        ),
+      );
+      expect(
+        within(dialog).getByRole('combobox', { name: 'Categoria da parte 1' }),
+      ).not.toHaveValue('Barbearia');
+    });
+  });
+
   it('shows the category of a transfer that has one, next to the other leg', async () => {
     const rotation = db.categories.find((category) => category.isTransfer);
     const cinema = db.transactions.find((tx) => tx.description === 'CINEMARK');
@@ -417,6 +533,38 @@ describe('TransactionListPage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('does not offer "Nova tag" for a split in several categories, but keeps it for one category', async () => {
+    const split = db.transactions.find(
+      (tx) => tx.splits.length > 1 && tx.occurredOn.startsWith(CURRENT_MONTH),
+    );
+    const other = db.categories.find(
+      (category) => category.kind === 'expense' && category.id !== split?.splits[0]?.categoryId,
+    );
+    const [first, second] = split?.splits ?? [];
+    if (!split || !first || !second || !other) throw new Error('seed without a split');
+    const user = userEvent.setup();
+    renderApp(PAGE);
+    await openRowMenu(split.description, 'Editar');
+    let dialog = await screen.findByRole('dialog', { name: 'Editar transação' });
+    await user.click(within(dialog).getByRole('button', { name: /Mais opções/ }));
+    expect(
+      await within(dialog).findByRole('option', { name: 'Nova tag' }, LONG_WAIT),
+    ).toBeVisible();
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(window.location.search).not.toContain('edit='));
+
+    second.categoryId = other.id;
+    first.categoryId = first.categoryId === other.id ? null : first.categoryId;
+    await openRowMenu(split.description, 'Editar');
+    dialog = await screen.findByRole('dialog', { name: 'Editar transação' });
+    await user.click(within(dialog).getByRole('button', { name: /Mais opções/ }));
+
+    expect(
+      await within(dialog).findByRole('combobox', { name: /Buscar ou criar tag/ }, LONG_WAIT),
+    ).toBeVisible();
+    expect(within(dialog).queryByRole('option', { name: 'Nova tag' })).not.toBeInTheDocument();
+  });
+
   it('splits a transaction in two parts', async () => {
     const user = userEvent.setup();
     renderApp(PAGE);
@@ -463,6 +611,79 @@ describe('TransactionListPage', () => {
     await waitFor(() =>
       expect(screen.getAllByText('Para revisar').length).toBeGreaterThanOrEqual(2),
     );
+  });
+
+  describe('the type of a category created from the search follows the field', () => {
+    async function createFromSearch(dialog: HTMLElement, name: string) {
+      const user = userEvent.setup();
+      await user.click(await within(dialog).findByRole('button', { name: 'Outras…' }));
+      await user.type(
+        await screen.findByRole('combobox', { name: 'Buscar outra categoria' }),
+        name,
+      );
+      await user.click(await screen.findByRole('option', { name: `Criar categoria "${name}"` }));
+      const inner = await screen.findByRole('dialog', { name: 'Nova categoria' });
+      expect(within(inner).queryByRole('radio', { name: 'Despesa' })).not.toBeInTheDocument();
+      expect(within(inner).queryByRole('radio', { name: 'Receita' })).not.toBeInTheDocument();
+      await user.click(within(inner).getByRole('button', { name: 'Criar categoria' }));
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog', { name: 'Nova categoria' })).not.toBeInTheDocument(),
+      );
+
+      return db.categories.find((category) => category.name === name);
+    }
+
+    it('a new transaction of Receita creates a category of income', async () => {
+      const user = userEvent.setup();
+      renderApp(`${PAGE}&new=transaction`);
+      const dialog = await screen.findByRole('dialog', { name: 'Nova transação' }, LONG_WAIT);
+      await user.click(await within(dialog).findByRole('radio', { name: 'Receita' }));
+
+      const created = await createFromSearch(dialog, 'Freela de design');
+
+      expect(created).toMatchObject({ kind: 'income' });
+      expect(
+        await within(dialog).findByRole('button', {
+          name: 'Freela de design',
+          pressed: true,
+          hidden: true,
+        }),
+      ).toBeInTheDocument();
+    });
+
+    it('a bulk categorization of income creates a category of income', async () => {
+      const account = db.accounts.find((item) => !item.creditCard);
+      if (!account) throw new Error('seed without an account');
+      const income = makeTransactionRecord({
+        accountId: account.id,
+        method: 'pix',
+        description: 'PIX RECEBIDO BONUS',
+        amountCents: 250000,
+        occurredOn: TODAY,
+      });
+      db.transactions.push(income);
+      const user = userEvent.setup();
+      renderApp(PAGE);
+      await screen.findByText(income.description, undefined, LONG_WAIT);
+
+      await user.click(screen.getByRole('button', { name: 'Selecionar' }));
+      await user.click(
+        await screen.findByRole('checkbox', { name: `Selecionar ${income.description}` }),
+      );
+      await user.click(screen.getByRole('button', { name: 'Categorizar' }));
+      const dialog = await screen.findByRole('dialog', { name: 'Categorizar' });
+
+      const created = await createFromSearch(dialog, 'Bônus do ano');
+
+      expect(created).toMatchObject({ kind: 'income' });
+      expect(
+        await within(dialog).findByRole('button', {
+          name: 'Bônus do ano',
+          pressed: true,
+          hidden: true,
+        }),
+      ).toBeInTheDocument();
+    });
   });
 
   describe('a credit on a card (a refund)', () => {
@@ -529,6 +750,38 @@ describe('TransactionListPage', () => {
       expect(db.categories.find((category) => category.id === refund.categoryId)?.name).toBe(
         'Lazer',
       );
+    });
+
+    it('creates a category of expense from the search of a refund (it abates the spending) and the modal says what each type does', async () => {
+      const refund = addRefund();
+      const user = userEvent.setup();
+      renderApp(PAGE);
+      await openRowMenu(refund.description, 'Editar');
+      const dialog = await screen.findByRole('dialog', { name: 'Editar transação' });
+
+      await user.click(within(dialog).getByRole('button', { name: 'Outras…' }));
+      await user.click(await screen.findByRole('combobox', { name: 'Buscar outra categoria' }));
+      await user.keyboard('{ArrowDown}');
+      await user.click(await screen.findByRole('option', { name: 'Nova categoria' }));
+
+      const inner = await screen.findByRole('dialog', { name: 'Nova categoria' });
+      expect(within(inner).getByRole('radio', { name: 'Despesa' })).toBeChecked();
+      expect(within(inner).getByRole('radio', { name: 'Receita' })).toBeEnabled();
+      expect(within(inner).getByText(/a categoria de despesa abate o gasto/)).toBeInTheDocument();
+      await user.type(within(inner).getByRole('textbox', { name: 'Nome' }), 'Estorno de loja');
+      await user.click(within(inner).getByRole('button', { name: 'Criar categoria' }));
+
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog', { name: 'Nova categoria' })).not.toBeInTheDocument(),
+      );
+      const created = db.categories.find((category) => category.name === 'Estorno de loja');
+      expect(created).toMatchObject({ kind: 'expense' });
+      // It comes back chosen, in the group that abates the spending.
+      expect(await within(dialog).findByText(/^Abate gasto: /)).toBeInTheDocument();
+      await user.click(within(dialog).getByRole('button', { name: 'Salvar', hidden: true }));
+
+      await waitFor(() => expect(refund.categoryId).toBe(created?.id), LONG_WAIT);
+      expect(refund.nature).toBe('expense');
     });
 
     it('counts as income with a category of income and the edit shows it as Receita', async () => {

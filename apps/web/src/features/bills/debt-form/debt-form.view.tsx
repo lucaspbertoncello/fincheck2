@@ -151,6 +151,7 @@ export function DebtFormView({
             label="Categoria do que foi pago"
             categories={categories.options}
             noneId={NO_CATEGORY_ID}
+            newCategoryKind="expense"
             value={categories.value}
             onChange={categories.onChange}
           />

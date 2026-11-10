@@ -1,7 +1,7 @@
 import type { ConfirmChange, IconName, MonthBar } from '@fincheck/ui';
 import type { ReactNode } from 'react';
 
-import type { CategoryFormTarget } from '#/features/categories/types/category-form.type.ts';
+import type { CategoryFormTarget } from '#/shared/types/categories/category-form.type.ts';
 import type {
   TransactionMonthView,
   TransactionRowHandlers,

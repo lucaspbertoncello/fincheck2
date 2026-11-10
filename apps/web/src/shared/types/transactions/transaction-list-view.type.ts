@@ -1,3 +1,4 @@
+import type { Category } from '@fincheck/shared/categories/category/category.type.ts';
 import type {
   AmountKind,
   CategoryGroupData,
@@ -61,6 +62,8 @@ export type TransactionEditorView = {
   values: TransactionEditValues;
   onChange: (values: TransactionEditValues) => void;
   categories: CategoryOption[];
+  /** The kind a category created from the picker takes (the first of the kinds the transaction takes). */
+  categoryKind: Category.Kind;
   /** False for a transaction on a card that is not income: "Receita" is not offered as the type. */
   canBeIncome: boolean;
   /** The categories that are a transfer, offered next to the other leg when the transaction has one. */
@@ -98,6 +101,8 @@ export type TransactionSplitterView = {
   onCategoryChange: (index: number, categoryId: string | null) => void;
   onEvenSplit: () => void;
   categories: CategoryOption[];
+  /** The kind a category created from a part's picker takes: the one the parts list. */
+  categoryKind: Category.Kind;
   createPartId: () => string;
   description: string;
   saving: boolean;
@@ -214,6 +219,8 @@ export type BulkPickerView = {
    * when all of them are credits on a card. Empty when none fits (expenses and incomes mixed).
    */
   categories: CategoryOption[];
+  /** The kind a category created from the picker takes (the first of the kinds that fit them all). */
+  categoryKind: Category.Kind;
   /**
    * Why `categories` is empty: "mixed" (expenses and incomes: no category fits all) or "none-takes"
    * (none of the selected takes a category: split, transfers, invoice payments). Null with options.

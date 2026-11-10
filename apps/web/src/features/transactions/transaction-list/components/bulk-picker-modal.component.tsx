@@ -48,6 +48,7 @@ export function BulkPickerModal({ bulk }: BulkPickerModalProps) {
         bulk.categories.length > 0 ? (
           <CategoryChipsField
             categories={bulk.categories}
+            newCategoryKind={bulk.categoryKind}
             value={bulk.categoryId}
             onChange={bulk.onCategoryChange}
           />

@@ -193,6 +193,7 @@ export function RecurrenceFormView({
                 key={values.kind}
                 className="order-4"
                 label="Categoria"
+                kind={values.kind}
                 categories={categories}
                 value={values.categoryId}
                 onChange={(categoryId) => onChange({ categoryId })}
@@ -209,6 +210,7 @@ export function RecurrenceFormView({
                   On the phone, `order-2` keeps it right after the name. Only an expense has it. */}
               <Collapse
                 isOpen={!income}
+                bleedY
                 trackClassName="order-2 @xl:order-6 @xl:-mt-s16"
                 contentClassName="pt-s16"
               >
@@ -219,7 +221,7 @@ export function RecurrenceFormView({
                     isSelected={values.isSubscription}
                     onChange={(isSubscription) => onChange({ isSubscription })}
                   />
-                  <Collapse isOpen={values.isSubscription} trackClassName="min-w-0 flex-1">
+                  <Collapse isOpen={values.isSubscription} bleedY trackClassName="min-w-0 flex-1">
                     <SelectField
                       label="Serviço"
                       hideLabel
@@ -311,7 +313,7 @@ export function RecurrenceFormView({
                   onChange={(key) => onChange({ anyPayments: key === 'any' })}
                   description={PAYMENTS_DESCRIPTIONS[values.anyPayments ? 'any' : 'number']}
                 />
-                <Collapse isOpen={!values.anyPayments} contentClassName="pt-s12">
+                <Collapse isOpen={!values.anyPayments} bleedY contentClassName="pt-s12">
                   <TextField
                     label="Máximo de pagamentos"
                     name="maxPayments"

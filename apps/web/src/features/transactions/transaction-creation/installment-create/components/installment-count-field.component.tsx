@@ -53,7 +53,7 @@ export function InstallmentCountField({ countText, onChange, error }: Installmen
           Outro
         </AriaButton>
       </div>
-      <Collapse isOpen={custom} contentClassName="pt-s8">
+      <Collapse isOpen={custom} bleedY contentClassName="pt-s8">
         <TextField
           label="Número de parcelas"
           value={countText}

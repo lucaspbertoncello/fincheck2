@@ -9,9 +9,10 @@ import {
 import type { Category } from '@fincheck/shared/categories/category/category.type.ts';
 import type { RefObject } from 'react';
 
-import { CategoryPreview } from '#/features/categories/category-form/components/category-preview.component.tsx';
-import { IconPicker } from '#/features/categories/category-form/components/icon-picker.component.tsx';
-import type { CategoryFormErrors } from '#/features/categories/types/category-form.type.ts';
+import { CategoryPreview } from '#/shared/components/categories/category-form/components/category-preview.component.tsx';
+import { IconPicker } from '#/shared/components/categories/category-form/components/icon-picker.component.tsx';
+import { CATEGORY_NAME_MAX_LENGTH } from '#/shared/constants/categories/category-name-length.constant.ts';
+import type { CategoryFormErrors } from '#/shared/types/categories/category-form.type.ts';
 
 type CategoryFormViewProps = {
   formRef: RefObject<HTMLDivElement | null>;
@@ -102,7 +103,7 @@ export function CategoryFormView({
                   value={name}
                   onChange={onNameChange}
                   error={errors.name}
-                  maxLength={40}
+                  maxLength={CATEGORY_NAME_MAX_LENGTH}
                   autoComplete="off"
                 />
               </FormModalGroup>

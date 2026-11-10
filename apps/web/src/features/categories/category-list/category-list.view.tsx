@@ -11,7 +11,7 @@ import {
   TagList,
 } from '@fincheck/ui';
 
-import { CategoryForm } from '#/features/categories/category-form/category-form.component.tsx';
+import { CategoryForm } from '#/shared/components/categories/category-form/category-form.component.tsx';
 import type { useCategoryListViewModel } from '#/features/categories/category-list/category-list.viewmodel.tsx';
 import { TagForm } from '#/features/categories/tag-form/tag-form.component.tsx';
 

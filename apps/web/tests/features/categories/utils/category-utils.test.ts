@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 
 import type { Tag } from '@fincheck/shared/categories/tag/tag.type.ts';
 import { buildTagGroups } from '#/features/categories/utils/build-tag-groups.util.ts';
-import { describeArchivedCategory } from '#/features/categories/utils/describe-archived-category.util.ts';
 import { filterCategories } from '#/features/categories/utils/filter-categories.util.ts';
 import { countCategoriesByFilter } from '#/features/categories/utils/count-categories-by-filter.util.ts';
 import { formatLastUsed } from '#/features/categories/utils/format-last-used.util.ts';
@@ -48,22 +47,6 @@ describe('formatLastUsed', () => {
 
   it('has a dash for a category never used', () => {
     expect(formatLastUsed(null, today)).toBe('—');
-  });
-});
-
-describe('describeArchivedCategory', () => {
-  it('lists the type, the count and the month of the last use', () => {
-    expect(
-      describeArchivedCategory(
-        category({ kind: 'expense', transactionCount: 27, lastUsedOn: '2026-05-12' }),
-      ),
-    ).toBe('Despesa · 27 transações · usada até maio');
-  });
-
-  it('uses the singular and handles a category never used', () => {
-    expect(
-      describeArchivedCategory(category({ kind: 'income', transactionCount: 1, lastUsedOn: null })),
-    ).toBe('Receita · 1 transação · nunca usada');
   });
 });
 

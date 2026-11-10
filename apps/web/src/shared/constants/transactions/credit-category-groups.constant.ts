@@ -23,3 +23,6 @@ export const CREDIT_CATEGORY_GROUP_HINTS: Readonly<Record<string, string>> = {
   [CREDIT_CATEGORY_GROUP_LABELS.expense]: 'O crédito reduz o gasto da categoria e a fatura.',
   [CREDIT_CATEGORY_GROUP_LABELS.income]: 'O crédito vira receita do mês e também reduz a fatura.',
 };
+
+/** What the modal of a new category says on a credit on a card: the two kinds do different things. */
+export const CREDIT_NEW_CATEGORY_NOTE = `No crédito do cartão, a categoria de despesa abate o gasto e a de receita conta como receita do mês.`;

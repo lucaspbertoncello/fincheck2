@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { Button as AriaButton } from 'react-aria-components';
 
 import { FIELD_BOX_CLASS, FIELD_LABEL_CLASS } from '#/components/forms/field-classes.constant.ts';
@@ -28,6 +28,8 @@ export type TagPickerProps = {
   onChange: (tagIds: string[]) => void;
   /** Creates a tag with the typed name in the category and gives its id. Rejects with the reason. */
   onCreate: (name: string) => Promise<string>;
+  /** False takes the fixed "Nova tag" line out (default true): the typed-text line stays. */
+  offersNewLine?: boolean;
   /** Reading the tags of the category. */
   status?: 'ready' | 'loading' | 'error';
   onRetry?: () => void;
@@ -38,7 +40,8 @@ export type TagPickerProps = {
  * Tags of a transaction (components.md 15): the tags of ITS category, always listed, so nothing has
  * to be typed to find one. A search field filters them; each line marks or unmarks a tag, and when
  * the text matches no name the last line says `Criar tag "texto" em Categoria`, which creates it
- * and marks it. Arrows move, Enter chooses, Esc clears the text. With no category it asks for one
+ * and marks it; with nothing typed the last line is "Nova tag", which takes the focus to the field
+ * to ask for the name. Arrows move, Enter chooses, Esc clears the text. With no category it asks for one
  * first. A tag never lives outside a category.
  */
 export function TagPicker({
@@ -49,6 +52,7 @@ export function TagPicker({
   selected,
   onChange,
   onCreate,
+  offersNewLine = true,
   status = 'ready',
   onRetry,
   className,
@@ -58,9 +62,13 @@ export function TagPicker({
   const [active, setActive] = useState(-1);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  // "Nova tag" was chosen: the field is asking for the name, with a line saying so.
+  const [naming, setNaming] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const selectedIds = selected.map((tag) => tag.id);
-  const rows = buildTagRows(options, selectedIds, query);
+  const rows = buildTagRows(options, selectedIds, query, offersNewLine);
+  const hasLine = rows.some((row) => row.kind !== 'new');
   const activeRow =
     active >= 0 && active < rows.length ? active : rows.length > 0 && query ? 0 : -1;
   const rowId = (index: number) => `${listId}-row-${String(index)}`;
@@ -78,6 +86,7 @@ export function TagPicker({
       onChange([...selectedIds, id]);
       setQuery('');
       setActive(-1);
+      setNaming(false);
     } catch (error) {
       setCreateError(error instanceof Error ? error.message : 'Não deu para criar a tag.');
     } finally {
@@ -88,7 +97,10 @@ export function TagPicker({
   function choose(row: TagPickerRow | undefined) {
     if (!row) return;
     if (row.kind === 'tag') toggle(row.id);
-    else void create(row.name);
+    else if (row.kind === 'new') {
+      setNaming(true);
+      inputRef.current?.focus();
+    } else void create(row.name);
   }
 
   const chips =
@@ -153,6 +165,7 @@ export function TagPicker({
           <div className={cx(FIELD_BOX_CLASS, 'flex items-center gap-s8')}>
             <Icon name="search" size="base" className="shrink-0 text-fg-tertiary" />
             <input
+              ref={inputRef}
               role="combobox"
               aria-label={`Buscar ou criar tag em ${categoryName}`}
               aria-expanded="true"
@@ -168,7 +181,9 @@ export function TagPicker({
                 setQuery(event.target.value);
                 setActive(-1);
                 setCreateError(null);
+                setNaming(false);
               }}
+              onBlur={() => setNaming(false)}
               onKeyDown={(event) => {
                 if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
                   event.preventDefault();
@@ -184,11 +199,20 @@ export function TagPicker({
                   event.stopPropagation();
                   setQuery('');
                   setActive(-1);
+                } else if (event.key === 'Escape' && naming) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setNaming(false);
                 }
               }}
               className="min-w-0 flex-1 bg-transparent text-body text-fg-primary outline-none placeholder:text-fg-tertiary"
             />
           </div>
+          {naming && query === '' ? (
+            <p role="status" className="text-meta text-fg-secondary">
+              Digite o nome da nova tag
+            </p>
+          ) : null}
           <ul
             id={listId}
             role="listbox"
@@ -196,7 +220,7 @@ export function TagPicker({
             aria-multiselectable="true"
             className="flex max-h-56 flex-col overflow-auto rounded-input border border-line p-s4"
           >
-            {rows.length === 0 ? (
+            {!hasLine ? (
               <li role="presentation" className="px-s12 py-s12 text-label text-fg-secondary">
                 {options.length === 0
                   ? `Nenhuma tag em ${categoryName} ainda. Digite um nome para criar a primeira.`
@@ -205,7 +229,7 @@ export function TagPicker({
             ) : null}
             {rows.map((row, index) => (
               <li
-                key={row.kind === 'tag' ? row.id : 'create'}
+                key={row.kind === 'tag' ? row.id : row.kind}
                 id={rowId(index)}
                 role="option"
                 aria-selected={row.kind === 'tag' ? row.selected : false}
@@ -219,12 +243,17 @@ export function TagPicker({
                   index === activeRow && 'bg-subtle',
                   row.kind === 'tag' && row.selected
                     ? 'font-emphasis text-brand'
-                    : row.kind === 'create'
+                    : row.kind !== 'tag'
                       ? 'font-emphasis text-brand'
                       : 'text-fg-primary',
                 )}
               >
-                {row.kind === 'create' ? (
+                {row.kind === 'new' ? (
+                  <>
+                    <Icon name="plus-circle" size="sm" />
+                    <span className="min-w-0 flex-1 truncate">Nova tag</span>
+                  </>
+                ) : row.kind === 'create' ? (
                   <>
                     <Icon name="plus-circle" size="sm" />
                     <span className="min-w-0 flex-1 truncate">
